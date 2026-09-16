@@ -19,24 +19,23 @@ export function HomeworkGenerator() {
   const [targetRepeats, setTargetRepeats] = useState(3);
   const [generatedCode, setGeneratedCode] = useState<string | null>(null);
 
-  function refreshStudents() {
-    const list = getStudents();
-    setStudents(list);
-    if (!studentId && list[0]) setStudentId(list[0].id);
-  }
-
   useEffect(() => {
+    function refreshStudents() {
+      const list = getStudents();
+      setStudents(list);
+      setStudentId((current) => current || list[0]?.id || "");
+    }
     refreshStudents();
     window.addEventListener("luwipi:students-changed", refreshStudents);
     return () => window.removeEventListener("luwipi:students-changed", refreshStudents);
-  }, [studentId]);
+  }, []);
 
   const selectedStudent = students.find((student) => student.id === studentId);
 
   function generate() {
     const code = makeCode();
-    const childName = selectedStudent?.name ?? manualName.trim() || "Pequeno músico";
-    const assignment = {
+    const childName = selectedStudent?.name ?? (manualName.trim() || "Pequeno músico");
+    saveAssignment({
       code,
       childName,
       studentId: selectedStudent?.id,
@@ -45,8 +44,7 @@ export function HomeworkGenerator() {
       targetRepeats,
       validUntil: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
       createdAt: new Date().toISOString(),
-    };
-    saveAssignment(assignment);
+    });
     setGeneratedCode(code);
   }
 
