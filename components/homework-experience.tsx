@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { type CSSProperties, useEffect, useMemo, useState } from "react";
 import { getDemoAssignment, type HomeworkAssignment } from "@/lib/demo-assignments";
 import { getSong } from "@/lib/music-library";
 
@@ -110,7 +110,7 @@ export function HomeworkExperience({ code }: { code: string }) {
         <div className="mini-progress"><i style={{width:`${complete ? 100 : progress}%`}} /></div>
 
         <div className="color-piano">
-          {pianoKeys.map((key)=><button key={key.note} type="button" onClick={()=>press(key)} className={`${wrong===key.note ? "wrong" : ""} ${expected===key.note && !complete ? "expected" : ""}`} style={{"--key-color":key.color} as React.CSSProperties}><span>{key.label}</span><b>{key.label}</b></button>)}
+          {pianoKeys.map((key)=><button key={key.note} type="button" onClick={()=>press(key)} className={`${wrong===key.note ? "wrong" : ""} ${expected===key.note && !complete ? "expected" : ""}`} style={{"--key-color":key.color} as CSSProperties}><span>{key.label}</span><b>{key.label}</b></button>)}
         </div>
 
         {complete && <div className="homework-complete"><span>🌟</span><div><strong>Tarefa concluída!</strong><p>{assignment.childName} completou {assignment.targetRepeats} volta{assignment.targetRepeats>1?"s":""}.</p></div></div>}
