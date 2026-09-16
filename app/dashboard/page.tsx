@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Logo } from "@/components/logo";
+import { TrialClock } from "@/components/trial-clock";
 
 export default async function DashboardPage({ searchParams }: { searchParams: Promise<{ age?: string }> }) {
   const params = await searchParams;
@@ -22,7 +23,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
     <main className="dashboard-page">
       <header className="simple-header container"><Logo/><Link href="/">Sair</Link></header>
       <section className="container demo-dashboard">
-        <div className="trial-banner">🎁 Teste grátis · 24h disponíveis</div>
+        <div className="trial-banner">🎁 Teste grátis · <TrialClock /></div>
         <h1>Vamos tocar? 🎹</h1>
         <p>Experiência para <strong>{age}</strong>.</p>
         <div className="lesson-grid">
