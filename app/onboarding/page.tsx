@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
 import { Logo } from "@/components/logo";
 
@@ -10,8 +10,15 @@ type Age = "2-4" | "5-8";
 
 function AgePicker() {
   const params = useSearchParams();
+  const router = useRouter();
   const initial: Age | null = params.get("age") === "2-4" ? "2-4" : params.get("age") === "5-8" ? "5-8" : null;
   const [selected, setSelected] = useState<Age | null>(initial);
+
+  function continueToDashboard() {
+    if (!selected) return;
+    localStorage.setItem("luwipi_age_group", selected);
+    router.push(`/dashboard?age=${selected}`);
+  }
 
   return (
     <>
@@ -29,7 +36,7 @@ function AgePicker() {
       </div>
       <div className={`continue-panel ${selected ? "visible" : ""}`}>
         <div><small>24h grátis desbloqueadas</small><strong>{selected ? `Faixa ${selected.replace("-", " a ")} anos escolhida` : "Escolha uma faixa"}</strong></div>
-        <Link className={`btn btn-primary ${!selected ? "disabled" : ""}`} href={selected ? `/dashboard?age=${selected}` : "#"}>Começar experiência →</Link>
+        <button className={`btn btn-primary ${!selected ? "disabled" : ""}`} disabled={!selected} onClick={continueToDashboard}>Começar experiência →</button>
       </div>
     </>
   );
