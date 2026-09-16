@@ -31,6 +31,7 @@ export default function MusicLibraryPage() {
                 <p>{song.subtitle}</p>
                 <div className={styles.meta}><span>{song.age === "both" ? "2–8 anos" : `${song.age} anos`}</span><span>{song.difficulty}</span><span>{song.theme}</span></div>
                 <p className={styles.story}>{song.story}</p>
+                {song.rightsSource && <p style={{fontSize:11,color:"#8490a3",lineHeight:1.45,margin:"8px 0 0"}}>Fonte de direitos: {song.rightsSource}</p>}
                 <div className={styles.actions}>
                   {song.playable ? <Link className="btn btn-primary btn-small" href="/professor/tarefas">Criar tarefa →</Link> : <span className="btn btn-soft btn-small">Experiência em preparação</span>}
                 </div>
@@ -39,7 +40,7 @@ export default function MusicLibraryPage() {
           })}
         </div>
 
-        <div className={styles.note}><strong>Sobre repertório conhecido:</strong> podemos desenhar experiências para músicas populares como Baby Shark e repertório do 3 Palavrinhas, mas áudio, letra e melodia protegidos só entram no produto quando tivermos autorização/licença adequada. Enquanto isso, a biblioteca pode crescer com composições originais e repertório tradicional.</div>
+        <div className={styles.note}><strong>Regra da biblioteca:</strong> para repertório em domínio público, usamos a composição tradicional e criamos a nossa própria experiência, arranjo e áudio. Gravações modernas continuam protegidas. Repertório comercial como Baby Shark e 3 Palavrinhas permanece separado até existir autorização/licença adequada.</div>
       </section>
     </main>
   );
