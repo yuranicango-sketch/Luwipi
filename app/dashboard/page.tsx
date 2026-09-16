@@ -7,6 +7,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   const params = await searchParams;
   const program = getCurriculum(params.age);
   const openingLessons = program.modules[0].lessons;
+  const isPreschool = program.age === "2-4";
   const extraReady = program.modules.flatMap((module) => module.lessons).filter((lesson) => lesson.route && !openingLessons.includes(lesson));
 
   return (
@@ -18,7 +19,8 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
         <p><strong>{program.label}</strong> · {program.name} · {program.duration}</p>
 
         <div style={{display:"flex",gap:12,justifyContent:"center",flexWrap:"wrap",margin:"20px 0 30px"}}>
-          <Link className="btn btn-primary" href={`/curriculo?age=${program.age}`}>Ver currículo completo · 24 aulas →</Link>
+          {isPreschool && <Link className="btn btn-primary" href="/recursos/2-4/modulo-1">Módulo 1 · printables + sons →</Link>}
+          <Link className={isPreschool ? "btn btn-soft" : "btn btn-primary"} href={`/curriculo?age=${program.age}`}>Ver currículo completo · 24 aulas →</Link>
           <Link className="btn btn-soft" href="/onboarding">Trocar faixa etária</Link>
         </div>
 
@@ -26,6 +28,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
           <span>Módulo 1</span>
           <h2>{program.modules[0].title}</h2>
           <p>{program.modules[0].outcome}</p>
+          {isPreschool && <p style={{maxWidth:720,margin:"10px auto 0",fontSize:13}}>Para 2–4 anos, o Luwipi orienta o professor. As atividades são feitas com o piano físico e os materiais imprimíveis.</p>}
         </div>
 
         <div className="lesson-grid">
@@ -34,12 +37,12 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
               <span>{String(lesson.number).padStart(2, "0")}</span>
               <h2>{lesson.title}</h2>
               <p>{lesson.focus} · {lesson.duration}</p>
-              {lesson.route ? <Link className="lesson-link" href={lesson.route}>Começar →</Link> : <button disabled>Vamos construir</button>}
+              {isPreschool ? <Link className="lesson-link" href="/recursos/2-4/modulo-1">Ver materiais →</Link> : lesson.route ? <Link className="lesson-link" href={lesson.route}>Começar →</Link> : <button disabled>Vamos construir</button>}
             </article>
           ))}
         </div>
 
-        {extraReady.length > 0 && (
+        {!isPreschool && extraReady.length > 0 && (
           <div style={{marginTop:28,textAlign:"center"}}>
             <p style={{color:"#657497",fontWeight:800}}>Já existem também protótipos interativos de aulas posteriores:</p>
             <div style={{display:"flex",gap:10,justifyContent:"center",flexWrap:"wrap"}}>
