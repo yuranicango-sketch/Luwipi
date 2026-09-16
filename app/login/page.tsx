@@ -17,7 +17,8 @@ export default function LoginPage() {
           <Link className="btn btn-google btn-block" href="/onboarding"><span className="google-g">G</span> Continuar com Google →</Link>
           <small className="muted-center">A integração OAuth será ligada às credenciais Google do projeto.</small>
           <div className="divider"><span>ou</span></div>
-          <Link className="btn btn-soft btn-block" href="/onboarding">Continuar para demonstração →</Link>
+          <Link className="btn btn-soft btn-block" href="/demo">Acesso temporário →</Link>
+          <small className="muted-center">Entre agora sem Google para acompanhar o desenvolvimento do app.</small>
           <a className="whatsapp-card" href={whatsapp} target="_blank" rel="noreferrer"><span className="wa-icon">◔</span><span><small>Ativação e pagamento pelo WhatsApp</small><strong>+244 933 400 445</strong></span></a>
           <div className="trust-row"><span>♥ Seguro para crianças</span><span>⚡ Acesso imediato</span><span>★ Sem cobrança automática</span></div>
         </section>
