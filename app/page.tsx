@@ -14,7 +14,7 @@ export default function Home() {
           <nav className="main-nav" aria-label="Navegação principal">
             <a href="#inicio">Início</a>
             <a href="#faixas">Faixas etárias</a>
-            <a href="#como-funciona">Como funciona</a>
+            <Link href="/tarefa">Tarefa de casa</Link>
           </nav>
           <Link className="btn btn-outline btn-small" href="/login">Entrar</Link>
         </div>
@@ -73,7 +73,7 @@ export default function Home() {
 
       <section className="final-cta"><div className="container cta-card"><div><small>Comece hoje</small><h2>O primeiro passo pode ser uma única nota.</h2></div><Link className="btn btn-primary" href="/login">Quero testar grátis →</Link></div></section>
 
-      <footer className="footer"><div className="container footer-grid"><Logo compact/><div className="footer-links"><a href="#faixas">Faixas etárias</a><a href="#como-funciona">Como funciona</a><Link href="/termos">Termos</Link><Link href="/privacidade">Privacidade</Link></div><a href={whatsapp} target="_blank" rel="noreferrer">WhatsApp · +244 933 400 445</a></div></footer>
+      <footer className="footer"><div className="container footer-grid"><Logo compact/><div className="footer-links"><a href="#faixas">Faixas etárias</a><Link href="/musicas">Músicas</Link><Link href="/tarefa">Tarefa de casa</Link><Link href="/termos">Termos</Link><Link href="/privacidade">Privacidade</Link></div><a href={whatsapp} target="_blank" rel="noreferrer">WhatsApp · +244 933 400 445</a></div></footer>
     </main>
   );
 }
