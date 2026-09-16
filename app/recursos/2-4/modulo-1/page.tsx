@@ -54,7 +54,7 @@ export default function ModuleOneResourcesPage() {
             <p>Toque o som real do animal, mostre o cartão impresso e depois leve a criança ao piano para procurar um som parecido.</p>
           </div>
           <AnimalSounds className={styles.sounds} />
-          <p className={styles.attribution}>Áudios educativos provenientes do Wikimedia Commons. Elefante em CC0; passarinho e leão em domínio público; coelho sob CC BY-SA.</p>
+          <p className={styles.attribution}>Áudios do Wikimedia Commons. Elefante: King et al., CC BY 2.5; passarinho: Anc516, CC BY-SA 3.0; leão: domínio público; coelho: Themium, CC0. A fonte de cada gravação está disponível no respetivo cartão.</p>
         </section>
 
         <section className={styles.planSection}>
