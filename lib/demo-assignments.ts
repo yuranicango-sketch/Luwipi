@@ -1,10 +1,12 @@
 export type HomeworkAssignment = {
   code: string;
   childName: string;
+  studentId?: string;
   songId: string;
   teacherNote: string;
   targetRepeats: number;
   validUntil: string;
+  createdAt?: string;
 };
 
 export const demoAssignments: HomeworkAssignment[] = [
@@ -15,6 +17,7 @@ export const demoAssignments: HomeworkAssignment[] = [
     teacherNote: "Faça devagar. Primeiro diga as cores, depois toque.",
     targetRepeats: 3,
     validUntil: "2026-12-31",
+    createdAt: "2026-09-16T00:00:00.000Z",
   },
 ];
 
