@@ -18,17 +18,23 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
         <h1>Vamos tocar? 🎹</h1>
         <p><strong>{program.label}</strong> · {program.name} · {program.duration}</p>
 
-        <div style={{display:"flex",gap:12,justifyContent:"center",flexWrap:"wrap",margin:"20px 0 30px"}}>
+        <div style={{display:"flex",gap:12,justifyContent:"center",flexWrap:"wrap",margin:"20px 0 18px"}}>
           {isPreschool && <Link className="btn btn-primary" href="/recursos/2-4/modulo-1">Módulo 1 · printables + sons →</Link>}
-          <Link className={isPreschool ? "btn btn-soft" : "btn btn-primary"} href={`/curriculo?age=${program.age}`}>Ver currículo completo · 24 aulas →</Link>
+          <Link className={isPreschool ? "btn btn-soft" : "btn btn-primary"} href={`/curriculo?age=${program.age}`}>Ver currículo completo →</Link>
           <Link className="btn btn-soft" href="/onboarding">Trocar faixa etária</Link>
+        </div>
+
+        <div style={{display:"flex",gap:12,justifyContent:"center",flexWrap:"wrap",margin:"0 0 34px"}}>
+          <Link className="btn btn-soft" href="/musicas">🎵 Biblioteca musical</Link>
+          <Link className="btn btn-soft" href="/professor/tarefas">🔑 Criar tarefa por código</Link>
+          <Link className="btn btn-soft" href="/tarefa">👨‍👩‍👧 Entrada dos pais</Link>
         </div>
 
         <div className="section-heading compact" style={{marginBottom:20}}>
           <span>Módulo 1</span>
           <h2>{program.modules[0].title}</h2>
           <p>{program.modules[0].outcome}</p>
-          {isPreschool && <p style={{maxWidth:720,margin:"10px auto 0",fontSize:13}}>Para 2–4 anos, o Luwipi orienta o professor. As atividades são feitas com o piano físico e os materiais imprimíveis.</p>}
+          {isPreschool && <p style={{maxWidth:720,margin:"10px auto 0",fontSize:13}}>O Luwipi acompanha o professor e também entra em momentos de interação com a criança. A atividade alterna ecrã, materiais, movimento e piano físico.</p>}
         </div>
 
         <div className="lesson-grid">
