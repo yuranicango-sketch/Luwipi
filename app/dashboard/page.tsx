@@ -10,12 +10,12 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   const lessons = isYoung
     ? [
         { n: "01", title: "Descobrir os sons", text: "Grave, agudo, forte e suave.", href: "/aulas/sons", tone: "lesson-pink", ready: true },
-        { n: "02", title: "Ritmo em movimento", text: "Palmas, pulsação e repetição.", href: "#", tone: "lesson-yellow", ready: false },
+        { n: "02", title: "Ritmo em movimento", text: "Palmas, pulsação e repetição.", href: "/aulas/ritmo", tone: "lesson-yellow", ready: true },
         { n: "03", title: "Explorar as teclas", text: "Primeiros encontros com o piano.", href: "#", tone: "lesson-blue", ready: false },
       ]
     : [
         { n: "01", title: "Os dedos no piano", text: "Dedos 1–5 e primeiras sequências.", href: "/aulas/dedos", tone: "lesson-pink", ready: true },
-        { n: "02", title: "As teclas do piano", text: "Brancas, pretas e grupos de 2 e 3.", href: "#", tone: "lesson-yellow", ready: false },
+        { n: "02", title: "As teclas do piano", text: "Brancas, pretas e grupos de 2 e 3.", href: "/aulas/teclas", tone: "lesson-yellow", ready: true },
         { n: "03", title: "Encontre o Dó", text: "Localização e orientação no teclado.", href: "#", tone: "lesson-blue", ready: false },
       ];
 
