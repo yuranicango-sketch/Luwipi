@@ -1,19 +1,52 @@
 import Link from "next/link";
 import { Logo } from "@/components/logo";
+import { DuoAction } from "@/components/duo-action/duo-action";
 import { gamesForAge } from "@/lib/games";
+import { getGameStory } from "@/lib/game-stories";
+
+const playable = new Set([
+  "elefante-passarinho",
+  "leao-coelhinho",
+  "siga-tambor",
+  "eco-musical",
+  "caca-teclas",
+  "encontre-do",
+  "ouca-encontre",
+  "construa-acorde",
+]);
 
 function GameGroup({ age, title }: { age: "2-4" | "5-8"; title: string }) {
   const list = gamesForAge(age);
+
   return (
-    <section style={{ marginTop: 38 }}>
-      <div className="section-heading compact"><span>{age} anos</span><h2>{title}</h2><p>Jogos curtos ligados ao currículo de seis meses.</p></div>
+    <section style={{marginTop:34}}>
+      <div className="section-heading compact">
+        <span>{age} anos</span>
+        <h2>{title}</h2>
+      </div>
+
       <div className="lesson-grid">
-        {list.map((game, index) => (
-          <article key={game.id} className={`lesson-card ${index % 3 === 0 ? "lesson-pink" : index % 3 === 1 ? "lesson-yellow" : "lesson-blue"}`}>
-            <span>{game.emoji}</span><h2>{game.title}</h2><p>{game.skill} · {game.session}</p>
-            <Link className="lesson-link" href={`/jogos/${game.id}`}>Abrir ficha →</Link>
-          </article>
-        ))}
+        {list.map((game, index) => {
+          const ready = playable.has(game.id);
+          return (
+            <article
+              key={game.id}
+              className={`lesson-card ${index % 3 === 0 ? "lesson-pink" : index % 3 === 1 ? "lesson-yellow" : "lesson-blue"}`}
+              style={{display:"flex",flexDirection:"column"}}
+            >
+              <span style={{fontSize:32}}>{game.emoji}</span>
+              <h2>{game.title}</h2>
+              <p style={{fontWeight:800}}>{game.skill} · {game.session}</p>
+              <p style={{fontSize:13,lineHeight:1.5,opacity:.8}}>{getGameStory(game.id)}</p>
+
+              <div style={{marginTop:"auto",paddingTop:18}}>
+                <DuoAction href={ready ? `/jogos/${game.id}` : undefined} disabled={!ready}>
+                  JOGAR
+                </DuoAction>
+              </div>
+            </article>
+          );
+        })}
       </div>
     </section>
   );
@@ -22,13 +55,15 @@ function GameGroup({ age, title }: { age: "2-4" | "5-8"; title: string }) {
 export default function GamesPage() {
   return (
     <main className="dashboard-page">
-      <header className="simple-header container"><Logo/><Link href="/dashboard">← Dashboard</Link></header>
+      <header className="simple-header container"><Logo/><Link href="/dashboard">← Voltar</Link></header>
+
       <section className="container demo-dashboard">
-        <div className="eyebrow">Game Lab</div>
-        <h1>16 jogos para aprender brincando 🎮</h1>
-        <p>Base pronta para revisão e implementação jogo a jogo. Sem vidas, sem punição por erro e com sessões curtas.</p>
-        <GameGroup age="2-4" title="Jogos de descoberta e movimento" />
-        <GameGroup age="5-8" title="Jogos de leitura, ouvido e técnica" />
+        <div className="eyebrow">Jogos</div>
+        <h1>Ouça. Toque. Aprenda. 🎮</h1>
+        <p>Jogos curtos para usar durante a aula ou praticar em casa.</p>
+
+        <GameGroup age="2-4" title="Descoberta e movimento" />
+        <GameGroup age="5-8" title="Ouvido, leitura e teclado" />
       </section>
     </main>
   );
