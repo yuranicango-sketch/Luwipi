@@ -122,17 +122,23 @@ export function ListenChoiceGame({ gameId, story }: { gameId: GameId; story: str
       <button className="listen" type="button" onClick={hear}>🔊 {heard ? "OUVIR DE NOVO" : "OUVIR"}</button>
 
       <div className="choices">
-        {[["left", config.left], ["right", config.right]].map(([choice, item]) => (
-          <button
-            key={choice}
-            type="button"
-            disabled={!heard || result === "right"}
-            onClick={() => choose(choice as Choice)}
-          >
-            <span>{(item as typeof config.left).emoji}</span>
-            <strong>{(item as typeof config.left).label}</strong>
-          </button>
-        ))}
+        <button
+          type="button"
+          disabled={!heard || result === "right"}
+          onClick={() => choose("left")}
+        >
+          <span>{config.left.emoji}</span>
+          <strong>{config.left.label}</strong>
+        </button>
+
+        <button
+          type="button"
+          disabled={!heard || result === "right"}
+          onClick={() => choose("right")}
+        >
+          <span>{config.right.emoji}</span>
+          <strong>{config.right.label}</strong>
+        </button>
       </div>
 
       {!heard && <p className="hint">Ouça primeiro.</p>}
