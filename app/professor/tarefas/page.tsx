@@ -4,24 +4,26 @@ import { StudentManager } from "@/components/student-manager";
 import { HomeworkGenerator } from "@/components/homework-generator";
 import { HomeworkOverview } from "@/components/homework-overview";
 
-export default function TeacherHomeworkPage() {
+export default async function TeacherHomeworkPage({ searchParams }: { searchParams: Promise<{ song?: string }> }) {
+  const params = await searchParams;
+
   return (
     <main className="dashboard-page">
       <header className="simple-header container"><Logo/><Link href="/dashboard?age=5-8">← Voltar</Link></header>
       <section className="container" style={{maxWidth:980,paddingTop:36,paddingBottom:80}}>
         <div className="section-heading" style={{marginBottom:28}}>
-          <span>Espaço do professor · Fase 1</span>
-          <h1>Organize alunos e mande práticas que dão vontade de abrir.</h1>
-          <p>Cadastre a criança, escolha uma experiência musical e gere um código simples para o responsável.</p>
+          <span>Espaço do professor</span>
+          <h1>Faça a experiência na aula. Envie para casa só se quiser.</h1>
+          <p>Escolha uma música, abra e pratique dentro do próprio Luwipi. Depois você pode gerar um código para o responsável continuar exatamente a mesma experiência em casa.</p>
         </div>
 
         <StudentManager />
 
         <div className="section-heading compact" style={{margin:"34px 0 20px"}}>
-          <span>Criar tarefa</span>
-          <h2>Da aula para casa em poucos segundos.</h2>
+          <span>Música e tarefa</span>
+          <h2>Uma experiência, dois contextos: aula e casa.</h2>
         </div>
-        <HomeworkGenerator />
+        <HomeworkGenerator initialSongId={params.song} />
         <HomeworkOverview />
 
         <div style={{display:"flex",gap:12,justifyContent:"center",flexWrap:"wrap",marginTop:24}}>

@@ -16,8 +16,8 @@ export default function MusicLibraryPage() {
       <section className={`container ${styles.wrap}`}>
         <div className={styles.hero}>
           <span>Biblioteca musical</span>
-          <h1>Músicas que viram pequenas aventuras.</h1>
-          <p>Nada de “teclas secas”. Cada música pode ganhar história, personagens, cores, desafios e um caminho simples até o piano físico.</p>
+          <h1>Músicas para tocar aqui, na aula e em casa.</h1>
+          <p>O professor pode abrir a música dentro do próprio Luwipi, tocar no piano virtual ou acompanhar a criança no piano físico. Enviar ao responsável é uma opção, não o único caminho.</p>
         </div>
 
         <div className={styles.grid}>
@@ -33,7 +33,12 @@ export default function MusicLibraryPage() {
                 <p className={styles.story}>{song.story}</p>
                 {song.rightsSource && <p style={{fontSize:11,color:"#8490a3",lineHeight:1.45,margin:"8px 0 0"}}>Fonte de direitos: {song.rightsSource}</p>}
                 <div className={styles.actions}>
-                  {song.playable ? <Link className="btn btn-primary btn-small" href="/professor/tarefas">Criar tarefa →</Link> : <span className="btn btn-soft btn-small">Experiência em preparação</span>}
+                  {song.playable ? (
+                    <>
+                      <Link className="btn btn-primary btn-small" href={`/musicas/${song.id}`}>▶ Tocar agora</Link>
+                      <Link className="btn btn-soft btn-small" href={`/professor/tarefas?song=${song.id}`}>Enviar como tarefa</Link>
+                    </>
+                  ) : <span className="btn btn-soft btn-small">Experiência em preparação</span>}
                 </div>
               </article>
             );
