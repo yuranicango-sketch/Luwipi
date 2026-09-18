@@ -29,9 +29,17 @@ function firstLesson(age:AgeGroup):LessonStep[]{
 }
 
 function warmup(age:AgeGroup,lesson:EnhancedLesson):LessonStep{
-  return age==="2-4"
-    ? {id:"warmup",icon:"👋",title:"Aquecimento",duration:"2–3 min",goal:`Preparar corpo e atenção para ${lesson.focus.toLowerCase()}.`,actions:["Faça 4 pulsações com palmas ou passos.","Repita mais 4 pulsações.","Vá imediatamente ao piano e faça 2 sons simples relacionados ao tema."],say:"Faz comigo. Depois levamos a mesma ideia para o piano.",childDoes:"Imita uma sequência curta e vai para o piano.",success:"Entra na atividade sem precisar de uma longa explicação."}
-    : {id:"warmup",icon:"👋",title:"Aquecimento",duration:"3–5 min",goal:`Preparar corpo, pulso e atenção para ${lesson.focus.toLowerCase()}.`,actions:["Confira rapidamente postura e mãos.","Faça 8 pulsações com palmas.","Transfira as mesmas 8 pulsações para uma tecla confortável."],say:"Primeiro sentimos o pulso; depois levamos para o piano.",childDoes:"Mantém pulsação e transfere para o teclado.",success:"Começa a aula com corpo solto e pulso estável."};
+  if(age==="2-4"){
+    const modes=[
+      {title:"Acordar os ouvidos",icon:"👂",actions:["Feche os olhos com a criança por 5 segundos.","Faça dois sons contrastantes ligados ao tema da aula.","Peça apenas um gesto para cada som; não explique ainda."],say:"Escuta primeiro. O teu corpo vai mostrar o que ouviste.",child:"Escuta e responde com um gesto."},
+      {title:"Corpo vira música",icon:"🕺",actions:["Escolha um movimento ligado ao foco da aula.","Faça o movimento quatro vezes com a criança.","Leve imediatamente o mesmo gesto para uma tecla ou região do piano."],say:"Faz comigo no corpo. Agora fazemos no piano.",child:"Imita o movimento e transfere a ideia para o piano."},
+      {title:"Surpresa no piano",icon:"🎁",actions:["Cubra as mãos da criança ou peça que olhe para si.","Toque um exemplo curto do conceito do dia.","Pergunte o que ela percebeu sem exigir termos técnicos.","Deixe-a procurar uma resposta no teclado."],say:"Ouviste alguma coisa diferente? Mostra-me no piano.",child:"Escuta, escolhe e experimenta uma resposta."},
+      {title:"Olá musical",icon:"👋",actions:["Cante o nome da criança em duas ou três pulsações.","Peça que responda o seu nome com palmas.","Repitam a resposta numa tecla confortável."],say:"Eu canto o teu nome; tu respondes com música.",child:"Responde com palmas e depois no piano."},
+    ];
+    const m=modes[(lesson.number-2)%modes.length];
+    return {id:"warmup",icon:m.icon,title:m.title,duration:"2–3 min",goal:`Entrar em ${lesson.focus.toLowerCase()} por uma experiência curta, diferente da aula anterior.`,actions:m.actions,say:m.say,childDoes:m.child,success:"Entra na proposta e responde sem precisar de explicação longa."};
+  }
+  return {id:"warmup",icon:"👋",title:"Aquecimento",duration:"3–5 min",goal:`Preparar corpo, pulso e atenção para ${lesson.focus.toLowerCase()}.`,actions:["Confira rapidamente postura e mãos.","Faça 8 pulsações com palmas.","Transfira as mesmas 8 pulsações para uma tecla confortável."],say:"Primeiro sentimos o pulso; depois levamos para o piano.",childDoes:"Mantém pulsação e transfere para o teclado.",success:"Começa a aula com corpo solto e pulso estável."};
 }
 
 function discovery(age:AgeGroup,lesson:EnhancedLesson):LessonStep{
@@ -44,7 +52,7 @@ function activity(age:AgeGroup,lesson:EnhancedLesson,game?:{title:string;goal:st
   const guide=getManualLessonGuide(age,lesson.number);
   if(!guide) throw new Error(`Falta guia manual para ${age}:${lesson.number}`);
   if(game&&href) return {id:"activity",icon:"🎮",title:game.title,duration:age==="2-4"?"3–5 min":"5–7 min",goal:game.goal,actions:["Abra o jogo e faça uma rodada de demonstração.","Na rodada seguinte, deixe a criança responder primeiro.","Faça apenas a sessão indicada; não repita até acertar tudo.","Volte para o piano físico ao terminar."],say:"Agora és tu. Primeiro escuta ou olha; depois escolhe.",childDoes:`Completa uma sessão curta de ${game.session}.`,success:"Entende a regra e responde à maior parte sem ajuda constante.",actionLabel:"ABRIR JOGO",actionHref:href};
-  return {id:"activity",icon:"🧩",title:"Praticar a habilidade",duration:age==="2-4"?"3–5 min":"5–7 min",goal:`Praticar ${lesson.focus.toLowerCase()} sem acrescentar teoria nova.`,actions:guide.practice,say:guide.say,childDoes:guide.childDoes,success:"Consegue repetir a proposta com menos ajuda do que na primeira demonstração."};
+  return {id:"activity",icon:"🧩",title:age==="2-4"?`Desafio: ${lesson.title}`:"Praticar a habilidade",duration:age==="2-4"?"3–5 min":"5–7 min",goal:`Usar ${lesson.focus.toLowerCase()} numa tarefa concreta, sem acrescentar teoria nova.`,actions:guide.practice,say:guide.say,childDoes:guide.childDoes,success:"Consegue repetir a proposta com menos ajuda do que na primeira demonstração."};
 }
 
 function repertoire(age:AgeGroup,lesson:EnhancedLesson,songHref?:string):LessonStep{
@@ -53,7 +61,15 @@ function repertoire(age:AgeGroup,lesson:EnhancedLesson,songHref?:string):LessonS
 
 function creation(age:AgeGroup,lesson:EnhancedLesson):LessonStep{
   if(lesson.checkpoint) return {id:"checkpoint",icon:"🏁",title:"Missão Luwipi",duration:age==="2-4"?"3–5 min":"5–8 min",goal:"Ver o que já está seguro e o que vale reforçar.",actions:["Faça 1 desafio de ouvido.","Faça 1 de ritmo.","Faça 1 de teclado ou leitura.","Peça um pequeno trecho de repertório.","Registre apenas uma coisa para reforçar."],say:"São quatro missões rápidas. Não é prova.",childDoes:"Resolve quatro pequenos desafios.",success:"Mostra o que consegue sem ajuda constante e identifica um próximo foco."};
-  return {id:"create",icon:"✨",title:"Criar e responder",duration:age==="2-4"?"2–4 min":"4–6 min",goal:"Usar a habilidade do dia de forma livre.",actions:["Toque uma frase curta.","Peça uma resposta.","Aceite a primeira resposta musicalmente possível.","Repita a pergunta e peça uma segunda resposta diferente."],say:"Eu faço uma pergunta; tu inventas a resposta.",childDoes:"Cria duas respostas curtas.",success:"Faz escolhas próprias sem esperar uma nota certa."};
+  if(age==="2-4"){
+    const mode=lesson.number%5;
+    if(mode===0) return {id:"create",icon:"🎭",title:"Dar voz a um personagem",duration:"2–4 min",goal:"Transformar a habilidade em imaginação.",actions:["Peça à criança para escolher um personagem.","Pergunte como esse personagem soaria no piano.","Deixe-a tocar a resposta.","Imite a ideia dela uma vez."],say:"Como este personagem fala no piano?",childDoes:"Escolhe um som para representar um personagem.",success:"Liga uma escolha sonora a uma intenção própria."};
+    if(mode===1) return {id:"create",icon:"🧩",title:"Completar a música",duration:"2–4 min",goal:"Antecipar e escolher um final.",actions:["Toque uma sequência curta usando a habilidade do dia.","Pare antes do último som.","Deixe a criança escolher o final.","Repita com um final diferente."],say:"A música parou! Que som falta no final?",childDoes:"Escolhe dois finais possíveis.",success:"Faz uma escolha musical sem esperar uma única resposta certa."};
+    if(mode===2) return {id:"create",icon:"🎨",title:"Pintar com sons",duration:"2–4 min",goal:"Explorar contraste e intenção.",actions:["Diga uma imagem simples: chuva, gigante, passarinho ou vento.","A criança escolhe como fazê-la soar.","Faça uma segunda imagem contrastante.","Juntem as duas numa mini história."],say:"Mostra-me esta imagem usando só o piano.",childDoes:"Cria dois sons contrastantes e junta-os.",success:"Usa o piano para representar duas ideias diferentes."};
+    if(mode===3) return {id:"create",icon:"🔁",title:"Trocar de papel",duration:"2–4 min",goal:"Dar liderança musical à criança.",actions:["A criança toca uma ideia de 1 a 3 sons.","O professor imita exatamente.","Troquem novamente os papéis.","Na última rodada, a criança decide quando termina."],say:"Agora tu és o professor. Eu vou copiar.",childDoes:"Cria um padrão curto para o professor imitar.",success:"Lidera pelo menos uma rodada com intenção."};
+    return {id:"create",icon:"🪄",title:"Mudar uma coisa",duration:"2–4 min",goal:"Perceber que pequenas escolhas transformam a música.",actions:["Repita a atividade principal uma vez.","Peça para mudar apenas uma coisa: lado, força, velocidade, dedo ou final.","Toquem a versão nova.","Pergunte qual das duas prefere."],say:"Vamos mudar só uma coisa e ouvir o que acontece.",childDoes:"Altera um elemento e compara as duas versões.",success:"Consegue mudar deliberadamente um elemento musical."};
+  }
+  return {id:"create",icon:"✨",title:"Criar e responder",duration:"4–6 min",goal:"Usar a habilidade do dia de forma livre.",actions:["Toque uma frase curta.","Peça uma resposta.","Aceite a primeira resposta musicalmente possível.","Repita a pergunta e peça uma segunda resposta diferente."],say:"Eu faço uma pergunta; tu inventas a resposta.",childDoes:"Cria duas respostas curtas.",success:"Faz escolhas próprias sem esperar uma nota certa."};
 }
 
 function close(age:AgeGroup,lesson:EnhancedLesson,homeworkHref:string):LessonStep{
