@@ -17,7 +17,7 @@ export type EnhancedLesson = CurriculumLesson & {
   checkpoint: boolean;
 };
 
-export type EnhancedModule = CurriculumModule & {
+export type EnhancedModule = Omit<CurriculumModule, "lessons"> & {
   accent: string;
   surface: string;
   illustration:
