@@ -4,6 +4,7 @@ import Link from "next/link";
 import { type CSSProperties, useMemo, useRef, useState } from "react";
 import type { KidsSong } from "@/lib/music-library";
 import { playPianoRate, preloadPianoSamples } from "@/lib/piano-sampler";
+import { MusicScore } from "@/components/music-score";
 
 type Key = { note: string; color: string; rate: number };
 type Mode = "site" | "piano";
@@ -19,125 +20,27 @@ const KEYS: Key[] = [
   { note: "Si", color: "#d264d7", rate: Math.pow(2, 11 / 12) },
 ];
 
-const SPECIAL: Record<
-  string,
-  { theme: Theme; scene: string; finish: string; goal: string }
-> = {
-  "passeio-das-cores": {
-    theme: "candy",
-    scene: "garden",
-    finish: "As cores chegaram à festa!",
-    goal: "🎉",
-  },
-  estrelinha: {
-    theme: "star",
-    scene: "night",
-    finish: "A estrelinha encontrou o céu!",
-    goal: "🌌",
-  },
-  "maria-cordeirinho": {
-    theme: "paw",
-    scene: "field",
-    finish: "Nino encontrou Maria!",
-    goal: "🏫",
-  },
-  "irmao-joao": {
-    theme: "bell",
-    scene: "village",
-    finish: "Os sinos acordaram a vila!",
-    goal: "🔔",
-  },
-  "rema-rema-barco": {
-    theme: "water",
-    scene: "river",
-    finish: "O barquinho chegou à margem!",
-    goal: "🏝️",
-  },
+const SPECIAL: Record<string,{ theme: Theme; scene: string; finish: string; goal: string }> = {
+  "passeio-das-cores": { theme: "candy", scene: "garden", finish: "As cores chegaram à festa!", goal: "🎉" },
+  estrelinha: { theme: "star", scene: "night", finish: "A estrelinha encontrou o céu!", goal: "🌌" },
+  "maria-cordeirinho": { theme: "paw", scene: "field", finish: "Nino encontrou Maria!", goal: "🏫" },
+  "irmao-joao": { theme: "bell", scene: "village", finish: "Os sinos acordaram a vila!", goal: "🔔" },
+  "rema-rema-barco": { theme: "water", scene: "river", finish: "O barquinho chegou à margem!", goal: "🏝️" },
 };
 
-function sound(key: Key) {
-  void playPianoRate(key.rate);
-}
+function sound(key: Key) { void playPianoRate(key.rate); }
+const wait = (ms: number) => new Promise<void>((resolve) => window.setTimeout(resolve, ms));
 
-const wait = (ms: number) =>
-  new Promise<void>((resolve) => window.setTimeout(resolve, ms));
-
-function NoteToken({
-  theme,
-  color,
-  note,
-  active,
-  done,
-}: {
-  theme: Theme;
-  color: string;
-  note: string;
-  active: boolean;
-  done: boolean;
-}) {
+function NoteToken({theme,color,note,active,done}:{theme:Theme;color:string;note:string;active:boolean;done:boolean}) {
   return (
     <div className={`token ${active ? "active" : ""} ${done ? "done" : ""}`}>
       <svg viewBox="0 0 64 64" aria-hidden="true">
-        {theme === "candy" && (
-          <>
-            <path
-              d="M15 23 3 16l3 16-3 16 12-7M49 23l12-7-3 16 3 16-12-7"
-              fill={color}
-              opacity=".55"
-            />
-            <circle cx="32" cy="32" r="19" fill={color} />
-            <path
-              d="M20 28c8-7 16-8 24-3M20 39c8-7 16-8 24-3"
-              fill="none"
-              stroke="#fff"
-              strokeWidth="4"
-              opacity=".55"
-            />
-          </>
-        )}
-        {theme === "star" && (
-          <path
-            d="m32 5 8 16 17 2-12 12 3 17-16-8-16 8 3-17L7 23l17-2Z"
-            fill={color}
-          />
-        )}
-        {theme === "paw" && (
-          <>
-            <ellipse cx="32" cy="40" rx="14" ry="11" fill={color} />
-            <circle cx="16" cy="28" r="6" fill={color} />
-            <circle cx="28" cy="20" r="6" fill={color} />
-            <circle cx="42" cy="22" r="6" fill={color} />
-            <circle cx="50" cy="33" r="5" fill={color} />
-          </>
-        )}
-        {theme === "bell" && (
-          <>
-            <path
-              d="M16 43h32c-5-7-7-12-7-20 0-7-4-12-9-12s-9 5-9 12c0 8-2 13-7 20Z"
-              fill={color}
-            />
-            <circle cx="32" cy="48" r="5" fill={color} />
-          </>
-        )}
-        {theme === "water" && (
-          <path
-            d="M32 5C24 19 14 30 14 41a18 18 0 0 0 36 0C50 30 40 19 32 5Z"
-            fill={color}
-          />
-        )}
-        {theme === "music" && (
-          <>
-            <circle cx="24" cy="45" r="9" fill={color} />
-            <circle cx="45" cy="39" r="9" fill={color} />
-            <path
-              d="M32 44V15l21-5v29"
-              fill="none"
-              stroke={color}
-              strokeWidth="6"
-              strokeLinecap="round"
-            />
-          </>
-        )}
+        {theme === "candy" && <><path d="M15 23 3 16l3 16-3 16 12-7M49 23l12-7-3 16 3 16-12-7" fill={color} opacity=".55"/><circle cx="32" cy="32" r="19" fill={color}/><path d="M20 28c8-7 16-8 24-3M20 39c8-7 16-8 24-3" fill="none" stroke="#fff" strokeWidth="4" opacity=".55"/></>}
+        {theme === "star" && <path d="m32 5 8 16 17 2-12 12 3 17-16-8-16 8 3-17L7 23l17-2Z" fill={color}/>}
+        {theme === "paw" && <><ellipse cx="32" cy="40" rx="14" ry="11" fill={color}/><circle cx="16" cy="28" r="6" fill={color}/><circle cx="28" cy="20" r="6" fill={color}/><circle cx="42" cy="22" r="6" fill={color}/><circle cx="50" cy="33" r="5" fill={color}/></>}
+        {theme === "bell" && <><path d="M16 43h32c-5-7-7-12-7-20 0-7-4-12-9-12s-9 5-9 12c0 8-2 13-7 20Z" fill={color}/><circle cx="32" cy="48" r="5" fill={color}/></>}
+        {theme === "water" && <path d="M32 5C24 19 14 30 14 41a18 18 0 0 0 36 0C50 30 40 19 32 5Z" fill={color}/>}
+        {theme === "music" && <><circle cx="24" cy="45" r="9" fill={color}/><circle cx="45" cy="39" r="9" fill={color}/><path d="M32 44V15l21-5v29" fill="none" stroke={color} strokeWidth="6" strokeLinecap="round"/></>}
       </svg>
       <b>{note}</b>
     </div>
@@ -145,75 +48,49 @@ function NoteToken({
 }
 
 function Scene({ song, progress }: { song: KidsSong; progress: number }) {
-  const meta =
-    SPECIAL[song.id] ??
-    ({
-      theme: "music" as Theme,
-      scene: "garden",
-      finish: "História concluída!",
-      goal: "🏁",
-    } as const);
-
+  const meta = SPECIAL[song.id] ?? ({ theme: "music" as Theme, scene: "garden", finish: "História concluída!", goal: "🏁" } as const);
   return (
     <div className={`scene ${meta.scene}`}>
-      <div className="sun">☀️</div>
-      <div className="cloud c1">☁️</div>
-      <div className="cloud c2">☁️</div>
-      {meta.scene === "night" && (
-        <>
-          <div className="moon">🌙</div>
-          <div className="stars">✦　✧　✦　✧　✦</div>
-        </>
-      )}
-      {meta.scene === "field" && (
-        <>
-          <div className="school">🏫</div>
-          <div className="flowers">🌼　🌷　🌼　🌷</div>
-        </>
-      )}
-      {meta.scene === "village" && (
-        <div className="houses">🏠　🏡　🏠　⛪</div>
-      )}
-      {meta.scene === "river" && (
-        <>
-          <div className="mountains">⛰️　⛰️　⛰️</div>
-          <div className="waterline">〰️〰️〰️〰️〰️</div>
-        </>
-      )}
-      {meta.scene === "garden" && (
-        <>
-          <div className="rainbow">🌈</div>
-          <div className="flowers">🌸　🌼　🌷　🌸</div>
-        </>
-      )}
+      <div className="sun">☀️</div><div className="cloud c1">☁️</div><div className="cloud c2">☁️</div>
+      {meta.scene === "night" && <><div className="moon">🌙</div><div className="stars">✦　✧　✦　✧　✦</div></>}
+      {meta.scene === "field" && <><div className="school">🏫</div><div className="flowers">🌼　🌷　🌼　🌷</div></>}
+      {meta.scene === "village" && <div className="houses">🏠　🏡　🏠　⛪</div>}
+      {meta.scene === "river" && <><div className="mountains">⛰️　⛰️　⛰️</div><div className="waterline">〰️〰️〰️〰️〰️</div></>}
+      {meta.scene === "garden" && <><div className="rainbow">🌈</div><div className="flowers">🌸　🌼　🌷　🌸</div></>}
       <div className="path" />
-      <span className="traveler" style={{ left: `${5 + progress * 0.82}%` }}>
-        {song.emoji}
-      </span>
+      <span className="traveler" style={{ left: `${5 + progress * 0.82}%` }}>{song.emoji}</span>
       <span className="goal">{meta.goal}</span>
     </div>
   );
 }
 
+function buildSections(song: KidsSong) {
+  if (song.sections?.length) return song.sections;
+  return [{ label: "Música", notes: song.sequence ?? [] }];
+}
+
+function sectionForStep(sections: { label: string; notes: string[] }[], step: number) {
+  let cursor = 0;
+  for (let index = 0; index < sections.length; index += 1) {
+    const section = sections[index];
+    const end = cursor + section.notes.length;
+    if (step < end) return { index, start: cursor, end, section };
+    cursor = end;
+  }
+  const lastIndex = Math.max(0, sections.length - 1);
+  const last = sections[lastIndex] ?? { label: "Música", notes: [] };
+  return { index: lastIndex, start: Math.max(0, cursor - last.notes.length), end: cursor, section: last };
+}
+
 export function SongPractice({ song }: { song: KidsSong }) {
-  const seq = song.sequence ?? [];
+  const sections = useMemo(() => buildSections(song), [song]);
+  const seq = useMemo(() => sections.flatMap((section) => section.notes), [sections]);
   const piano = useMemo(() => {
     const colors = new Map(song.colors?.map((item) => [item.note, item.color]) ?? []);
-    return KEYS.map((key) => ({
-      ...key,
-      color: colors.get(key.note) ?? key.color,
-    }));
+    return KEYS.map((key) => ({ ...key, color: colors.get(key.note) ?? key.color }));
   }, [song.colors]);
 
-  const meta =
-    SPECIAL[song.id] ??
-    ({
-      theme: "music" as Theme,
-      scene: "garden",
-      finish: "História concluída!",
-      goal: "🏁",
-    } as const);
-
+  const meta = SPECIAL[song.id] ?? ({ theme: "music" as Theme, scene: "garden", finish: "História concluída!", goal: "🏁" } as const);
   const [started, setStarted] = useState(false);
   const [mode, setMode] = useState<Mode>("site");
   const [step, setStep] = useState(0);
@@ -223,31 +100,18 @@ export function SongPractice({ song }: { song: KidsSong }) {
 
   const done = step >= seq.length;
   const expected = done ? undefined : seq[step];
-  const progress = seq.length
-    ? Math.min(100, Math.round((step / seq.length) * 100))
-    : 0;
+  const progress = seq.length ? Math.min(100, Math.round((step / seq.length) * 100)) : 0;
+  const currentSection = sectionForStep(sections, step);
+  const visibleNotes = currentSection.section.notes;
+  const localStep = Math.max(0, step - currentSection.start);
 
-  function reset() {
-    token.current += 1;
-    setStep(0);
-    setWrong(null);
-    setListening(false);
-    setStarted(true);
-  }
-
-  function start() {
-    void preloadPianoSamples();
-    setStarted(true);
-  }
+  function reset() { token.current += 1; setStep(0); setWrong(null); setListening(false); setStarted(true); }
+  function start() { void preloadPianoSamples(); setStarted(true); }
 
   function press(key: Key) {
     sound(key);
     if (mode !== "site" || !expected) return;
-    if (key.note !== expected) {
-      setWrong(key.note);
-      window.setTimeout(() => setWrong(null), 350);
-      return;
-    }
+    if (key.note !== expected) { setWrong(key.note); window.setTimeout(() => setWrong(null), 350); return; }
     setStep((value) => value + 1);
   }
 
@@ -255,132 +119,57 @@ export function SongPractice({ song }: { song: KidsSong }) {
     if (listening) return;
     const id = ++token.current;
     setListening(true);
-
-    for (const note of seq) {
+    for (const note of visibleNotes) {
       if (token.current !== id) return;
       const key = piano.find((item) => item.note === note);
       if (key) sound(key);
       await wait(470);
     }
-
     if (token.current === id) setListening(false);
   }
 
   if (!started) {
-    return (
-      <section className="card intro">
-        <div className="heroEmoji">{song.emoji}</div>
-        <small>Historinha</small>
-        <h1>{song.title}</h1>
-        <p>{song.story}</p>
-        <button className="duo" type="button" onClick={start}>
-          COMEÇAR
-        </button>
-        <style jsx>{css}</style>
-      </section>
-    );
+    return <section className="card intro"><div className="heroEmoji">{song.emoji}</div><small>Historinha</small><h1>{song.title}</h1><p>{song.story}</p><button className="duo" type="button" onClick={start}>COMEÇAR</button><style jsx>{css}</style></section>;
   }
 
   if (done) {
-    return (
-      <section className="card intro">
-        <div className="heroEmoji">🌟</div>
-        <h1>Muito bem!</h1>
-        <p>{meta.finish}</p>
-        <button className="duo" type="button" onClick={reset}>
-          TOCAR DE NOVO
-        </button>
-        <Link className="homework" href={`/professor/tarefas?song=${song.id}`}>
-          Enviar como tarefa
-        </Link>
-        <style jsx>{css}</style>
-      </section>
-    );
+    return <section className="card intro"><div className="heroEmoji">🌟</div><h1>Muito bem!</h1><p>{meta.finish}</p><button className="duo" type="button" onClick={reset}>TOCAR DE NOVO</button><Link className="homework" href={`/professor/tarefas?song=${song.id}`}>Enviar como tarefa</Link><style jsx>{css}</style></section>;
   }
 
   return (
     <section className="card">
       <div className="head">
-        <div>
-          <small>
-            {step + 1} de {seq.length}
-          </small>
-          <h1>Agora: {expected}</h1>
-        </div>
+        <div><small>Parte {currentSection.index + 1} de {sections.length} · {currentSection.section.label}</small><h1>Agora: {expected}</h1></div>
         <div className="mode">
-          <button
-            type="button"
-            className={mode === "site" ? "active" : ""}
-            onClick={() => setMode("site")}
-          >
-            No site
-          </button>
-          <button
-            type="button"
-            className={mode === "piano" ? "active" : ""}
-            onClick={() => setMode("piano")}
-          >
-            Piano físico
-          </button>
+          <button type="button" className={mode === "site" ? "active" : ""} onClick={() => setMode("site")}>No site</button>
+          <button type="button" className={mode === "piano" ? "active" : ""} onClick={() => setMode("piano")}>Piano físico</button>
         </div>
       </div>
 
       <Scene song={song} progress={progress} />
+      <button className="listen" type="button" onClick={() => void listen()}>{listening ? "Tocando…" : "🔊 OUVIR ESTA PARTE"}</button>
 
-      <button className="listen" type="button" onClick={() => void listen()}>
-        {listening ? "Tocando…" : "🔊 OUVIR"}
-      </button>
+      {song.sheetMusic ? (
+        <MusicScore notes={visibleNotes} currentIndex={localStep} timeSignature={song.timeSignature ?? "4/4"} />
+      ) : (
+        <div className="notes">
+          {visibleNotes.map((note, index) => {
+            const key = piano.find((item) => item.note === note)!;
+            return <NoteToken key={`${note}-${currentSection.index}-${index}`} theme={meta.theme} color={key.color} note={note} active={index === localStep} done={index < localStep}/>;
+          })}
+        </div>
+      )}
 
-      <div className="notes">
-        {seq.map((note, index) => {
-          const key = piano.find((item) => item.note === note)!;
-          return (
-            <NoteToken
-              key={`${note}-${index}`}
-              theme={meta.theme}
-              color={key.color}
-              note={note}
-              active={index === step}
-              done={index < step}
-            />
-          );
-        })}
-      </div>
+      <div className="songProgress" aria-label="progresso da música completa"><i style={{ width: `${progress}%` }} /></div>
 
       {mode === "piano" ? (
-        <div className="physical">
-          <span>Toque no piano real</span>
-          <strong>{expected}</strong>
-          <button
-            className="duo"
-            type="button"
-            onClick={() => expected && setStep((value) => value + 1)}
-          >
-            TOCOU · CONTINUAR
-          </button>
-        </div>
+        <div className="physical"><span>Toque no piano real</span><strong>{expected}</strong><button className="duo" type="button" onClick={() => expected && setStep((value) => value + 1)}>TOCOU · CONTINUAR</button></div>
       ) : (
         <div className="pianoShell">
           <div className="brand">LUWIPI PIANO</div>
           <div className="pianoReal">
-            {piano.map((key) => (
-              <button
-                key={key.note}
-                type="button"
-                onClick={() => press(key)}
-                className={`white ${expected === key.note ? "expected" : ""} ${
-                  wrong === key.note ? "wrong" : ""
-                }`}
-                style={{ "--key": key.color } as CSSProperties}
-              >
-                <span>{key.note}</span>
-              </button>
-            ))}
-            <i className="black b1" />
-            <i className="black b2" />
-            <i className="black b3" />
-            <i className="black b4" />
-            <i className="black b5" />
+            {piano.map((key) => <button key={key.note} type="button" onClick={() => press(key)} className={`white ${expected === key.note ? "expected" : ""} ${wrong === key.note ? "wrong" : ""}`} style={{ "--key": key.color } as CSSProperties}><span>{key.note}</span></button>)}
+            <i className="black b1" /><i className="black b2" /><i className="black b3" /><i className="black b4" /><i className="black b5" />
           </div>
         </div>
       )}
