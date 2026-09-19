@@ -1,4 +1,4 @@
-export type AgeGroup = "2-4" | "5-8";
+export type AgeGroup = "2-4" | "5-8" | "adult";
 
 export type CurriculumLesson = {
   number: number;
@@ -251,9 +251,80 @@ export const curriculum: Record<AgeGroup, CurriculumProgram> = {
         ],
       },
     ],
-  },
+  },,
+  "adult": {
+    age: "adult",
+    label: "Adultos",
+    name: "Piano para Adultos",
+    duration: "6 meses · 24 semanas · 48 aulas · 2 por semana",
+    lessonLength: "45–60 min por aula",
+    philosophy: "Tocar música real desde o início, construindo técnica, leitura, ouvido, ritmo, acordes e autonomia sem infantilizar a experiência.",
+    finalOutcome: "O aluno lê partituras iniciais nas duas claves, toca com duas mãos, usa acordes e pedal com critério, acompanha canções simples, entende harmonia funcional básica e apresenta 2–3 peças completas.",
+    modules: [
+      { id:"adult-mes-1", title:"Mês 1 · Começar a tocar", subtitle:"Som, teclado, pulso e primeira música", outcome:"Criar base física, orientação no teclado e continuidade musical desde a primeira aula.", icon:"🎹", lessons:[
+        L(1,"Primeiro som, primeira música","Postura + produção sonora","Ajustar banco, braços e mãos e terminar a aula tocando uma pequena frase musical.","50 min"),
+        L(2,"Mapa do teclado","Grupos de 2 e 3 + Dó","Orientar-se rapidamente no teclado e encontrar os Dós sem etiquetas.","50 min"),
+        L(3,"Dedos sem tensão","Dedos 1–5","Usar os cinco dedos com movimento pequeno, natural e sem rigidez.","50 min"),
+        L(4,"Pulso e valores","Semínima, mínima e semibreve","Contar e tocar durações básicas mantendo pulsação estável.","50 min"),
+        L(5,"Dó–Sol na mão direita","Pentacorde","Tocar padrões e uma frase curta em posição de cinco dedos.","50 min"),
+        L(6,"Dó–Sol na mão esquerda","Pentacorde","Repetir a lógica na mão esquerda sem perder relaxamento.","50 min"),
+        L(7,"Duas mãos em conversa","Alternância","Alternar frases curtas entre as mãos mantendo o pulso.","55 min"),
+        L(8,"Primeira música completa","Fecho do mês","Tocar uma versão inicial completa do repertório do mês com continuidade.","55 min"),
+      ]},
+      { id:"adult-mes-2", title:"Mês 2 · Ler para tocar", subtitle:"Pauta, ritmo e duas claves", outcome:"Ler por referências e padrões, evitando dependência de decorar nota por nota.", icon:"🎼", lessons:[
+        L(9,"A pauta como mapa","Linhas, espaços e direção","Entender a pauta como representação de altura e movimento.","50 min"),
+        L(10,"Clave de Sol","Pontos de referência","Ler a mão direita usando Dó central e Sol como referências.","50 min"),
+        L(11,"Clave de Fá","Pontos de referência","Ler a mão esquerda usando Dó central e Fá como referências.","50 min"),
+        L(12,"Grande pauta","Duas claves juntas","Ver as duas claves como um único mapa em torno do Dó central.","55 min"),
+        L(13,"Passos, saltos e repetição","Leitura por padrão","Reconhecer movimento antes de identificar cada nota isoladamente.","50 min"),
+        L(14,"Pausas e compasso","Silêncio + 4/4","Ler pausas e organizar pulsos em compassos.","50 min"),
+        L(15,"Colcheias e 3/4","Divisão + novo compasso","Tocar pares de colcheias e sentir três pulsos por compasso.","55 min"),
+        L(16,"Leitura musical completa","Aplicação","Ler e tocar uma peça curta sem escrever nomes das notas na pauta.","60 min"),
+      ]},
+      { id:"adult-mes-3", title:"Mês 3 · As duas mãos trabalham", subtitle:"Coordenação, articulação e escala", outcome:"Ganhar independência inicial entre as mãos e técnica funcional.", icon:"🤲", lessons:[
+        L(17,"Legato","Conexão","Ligar notas com transferência de peso e mão solta.","50 min"),
+        L(18,"Staccato","Ataque curto","Produzir staccato leve sem rigidez no pulso.","50 min"),
+        L(19,"Mãos juntas por blocos","Coordenação","Combinar notas simples das duas mãos sem acelerar.","55 min"),
+        L(20,"Melodia + nota-base","Independência","Tocar melodia numa mão e notas longas na outra.","55 min"),
+        L(21,"Escala de Dó maior","1 oitava","Aprender dedilhado e passagem do polegar sem tensão.","55 min"),
+        L(22,"Intervalos","2ª a 5ª","Reconhecer e tocar distâncias por forma e som.","50 min"),
+        L(23,"Dinâmica e frase","Expressão","Controlar piano, forte e direção de frase numa peça.","55 min"),
+        L(24,"Peça com duas mãos","Fecho do mês","Tocar uma peça completa combinando leitura, coordenação e expressão.","60 min"),
+      ]},
+      { id:"adult-mes-4", title:"Mês 4 · Entender os acordes", subtitle:"Harmonia que pode ser usada", outcome:"Construir acordes e começar a acompanhar músicas sem depender apenas da partitura.", icon:"🎵", lessons:[
+        L(25,"Como nasce um acorde","Tríades","Construir tríades maiores a partir de padrões de terças.","50 min"),
+        L(26,"C, F e G","I–IV–V","Tocar os três acordes principais de Dó maior e ouvir suas funções.","55 min"),
+        L(27,"Inversões","Movimento eficiente","Usar inversões para trocar acordes com menos deslocamento.","55 min"),
+        L(28,"Melodia e acordes","Textura","Combinar uma melodia simples com acompanhamento harmônico.","55 min"),
+        L(29,"Padrão de acompanhamento","Mão esquerda","Transformar acordes em um padrão regular de acompanhamento.","55 min"),
+        L(30,"Cifra sem mistério","Símbolos de acordes","Ler cifras básicas e localizar os acordes no piano.","50 min"),
+        L(31,"Acompanhar uma canção","Aplicação","Sustentar uma canção conhecida com pulso e mudanças de acorde.","60 min"),
+        L(32,"Tocar sem parar","Continuidade","Completar o repertório do mês sem interromper por pequenos erros.","60 min"),
+      ]},
+      { id:"adult-mes-5", title:"Mês 5 · Soar como música", subtitle:"Pedal, fraseado, ouvido e criação", outcome:"Sair da execução mecânica e controlar som, forma e expressão.", icon:"✨", lessons:[
+        L(33,"Pedal direito","Troca limpa","Usar o pedal depois do ataque e trocar sem borrar a harmonia.","55 min"),
+        L(34,"Frases que respiram","Fraseado","Identificar pontos de chegada e respirar musicalmente.","55 min"),
+        L(35,"Ouvir antes de tocar","Treino auditivo","Reconhecer direção, repetição e pequenos intervalos.","50 min"),
+        L(36,"Tirar uma frase de ouvido","Ouvido aplicado","Encontrar no teclado uma frase curta sem partitura.","55 min"),
+        L(37,"Improvisar com segurança","Criação","Improvisar sobre um conjunto limitado de notas e acordes.","55 min"),
+        L(38,"Transpor um padrão","Transposição","Mover uma pequena ideia para outra região ou tonalidade simples.","55 min"),
+        L(39,"Prática inteligente","Método de estudo","Isolar problemas, reduzir andamento e reconstruir trechos com objetivo.","50 min"),
+        L(40,"Interpretação","Peça do mês","Tomar decisões conscientes de dinâmica, pedal, fraseado e andamento.","60 min"),
+      ]},
+      { id:"adult-mes-6", title:"Mês 6 · Pianista independente", subtitle:"Repertório, autonomia e performance", outcome:"Consolidar leitura, técnica, harmonia e prática numa pequena apresentação final.", icon:"🏆", lessons:[
+        L(41,"Escolher repertório final","Planejamento","Selecionar 2–3 peças adequadas ao nível e definir prioridades.","50 min"),
+        L(42,"Mapa dos trechos difíceis","Diagnóstico","Identificar pontos frágeis e criar estratégias específicas para cada um.","55 min"),
+        L(43,"Mãos separadas com propósito","Correção","Usar estudo separado apenas onde ele resolve um problema real.","50 min"),
+        L(44,"Do trecho à peça","Integração","Recolocar trechos trabalhados no contexto da música completa.","55 min"),
+        L(45,"Memória segura","Referências","Usar forma, harmonia, ouvido e pontos de partida para fortalecer memória.","55 min"),
+        L(46,"Gravar e avaliar","Autoavaliação","Gravar uma execução e escolher no máximo dois pontos concretos para melhorar.","55 min"),
+        L(47,"Ensaio geral","Performance","Tocar o programa completo, treinar entradas, finais e recuperação de erros.","60 min"),
+        L(48,"Recital Luwipi","Conclusão","Apresentar 2–3 peças e definir o próximo objetivo de estudo.","60 min"),
+      ]},
+    ],
+  }
 };
 
 export function getCurriculum(age: string | undefined) {
-  return curriculum[age === "2-4" ? "2-4" : "5-8"];
+  return curriculum[age === "2-4" ? "2-4" : age === "adult" ? "adult" : "5-8"];
 }
