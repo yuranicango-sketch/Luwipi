@@ -5,7 +5,7 @@ import {
   type CurriculumModule,
 } from "@/lib/curriculum";
 
-export type AgeVariant = "2-3" | "3-4" | "5-6" | "7-8";
+export type AgeVariant = "2-3" | "3-4" | "5-6" | "7-8" | "adult";
 
 export type EnhancedLesson = CurriculumLesson & {
   activityRoute?: string;
@@ -64,6 +64,7 @@ const variants: Record<AgeGroup, CurriculumVariant[]> = {
     { id: "5-6", label: "5–6 anos", lessonLength: "30–35 min", note: "Mais jogo, leitura por padrões e técnica sem pressa. Escala completa é opcional." },
     { id: "7-8", label: "7–8 anos", lessonLength: "35–45 min", note: "Mais autonomia de leitura, grande pauta e repertório com partitura." },
   ],
+  adult: [{ id:"adult", label:"Adultos", lessonLength:"45–60 min", note:"Abordagem direta, musical e não infantilizada, com autonomia crescente." }],
 };
 
 const moduleTheme: Record<AgeGroup, Record<string,{accent:string;surface:string;illustration:EnhancedModule["illustration"]}>> = {
@@ -84,6 +85,14 @@ const moduleTheme: Record<AgeGroup, Record<string,{accent:string;surface:string;
     "ouvido-criatividade": { accent: "#42c6b5", surface: "#eafbf8", illustration: "creativity" },
     "repertorio-musicalidade": { accent: "#ff7e62", surface: "#fff1ed", illustration: "reading" },
     performance: { accent: "#e5a528", surface: "#fff8e4", illustration: "performance" },
+  },
+  adult: {
+    "adult-mes-1": {accent:"#2f9cf4",surface:"#edf7ff",illustration:"keyboard"},
+    "adult-mes-2": {accent:"#7e6ce7",surface:"#f4f0ff",illustration:"reading"},
+    "adult-mes-3": {accent:"#55bd75",surface:"#eefaf1",illustration:"hands"},
+    "adult-mes-4": {accent:"#ec6ebd",surface:"#fff0fa",illustration:"harmony"},
+    "adult-mes-5": {accent:"#42c6b5",surface:"#eafbf8",illustration:"creativity"},
+    "adult-mes-6": {accent:"#e5a528",surface:"#fff8e4",illustration:"performance"},
   },
 };
 
@@ -187,6 +196,14 @@ function masteryFor(age: AgeGroup, lesson: CurriculumLesson) {
     if (lesson.number <= 42) return "A criança entra na história, usa o piano para dar voz aos personagens e participa de um pedacinho da música.";
     return "A criança escolhe, toca e compartilha uma brincadeira ou música conhecida com confiança crescente.";
   }
+  if (age === "adult") {
+    if (lesson.number <= 8) return "Executa o conceito com postura funcional e aplica-o no repertório do mês sem interromper a pulsação.";
+    if (lesson.number <= 16) return "Lê por referências e padrões, mantendo ritmo e evitando escrever nomes das notas na pauta.";
+    if (lesson.number <= 24) return "Coordena as duas mãos em textura inicial e mantém técnica relaxada numa peça completa.";
+    if (lesson.number <= 32) return "Constrói e aplica acordes básicos numa canção, mantendo mudanças e pulso estáveis.";
+    if (lesson.number <= 40) return "Toma decisões conscientes de pedal, fraseado, ouvido e prática no repertório.";
+    return "Prepara e executa repertório completo com autonomia crescente e estratégia de estudo própria.";
+  }
   if (lesson.number <= 12) return "Executa o conceito em dois exemplos seguidos e aplica-o numa frase musical curta.";
   if (lesson.number <= 24) return "Lê ou executa quatro de cinco exemplos e aplica o padrão numa pequena peça.";
   if (lesson.number <= 36) return "Aplica a habilidade numa peça/atividade com pulso e técnica funcional.";
@@ -195,6 +212,7 @@ function masteryFor(age: AgeGroup, lesson: CurriculumLesson) {
 
 function homeFor(age: AgeGroup, lesson: CurriculumLesson) {
   if (age === "2-4") return "2–3 minutinhos: repetir em casa a brincadeira favorita da aula uma ou duas vezes e parar enquanto ainda está divertido.";
+  if (age === "adult") return "15–25 minutos: aquecer apenas o necessário, trabalhar 1–2 trechos com objetivo claro e terminar tocando música em continuidade.";
   return "5–10 minutos: praticar um trecho curto, depois tocar a peça/atividade uma vez do início ao fim.";
 }
 
@@ -210,6 +228,8 @@ function adaptationFor(age: AgeGroup, lesson: CurriculumLesson) {
     };
   }
 
+  if (age === "adult") return { younger:"Se for iniciante absoluto: reduza notas e andamento, mantendo a mesma meta musical.", older:"Se já tiver experiência: aumente autonomia, leitura à primeira vista ou complexidade do acompanhamento sem saltar fundamentos." };
+
   return {
     younger: lesson.number === 26
       ? "5–6 anos: trabalhar pentacorde/tetracordes; escala de uma oitava só se o movimento surgir sem tensão."
@@ -221,7 +241,7 @@ function adaptationFor(age: AgeGroup, lesson: CurriculumLesson) {
 }
 
 function pillarsFor(age: AgeGroup, lesson: CurriculumLesson) {
-  const base = age === "2-4" ? ["Ouvido","Ritmo","Piano","Música"] : ["Ritmo","Técnica","Leitura","Repertório"];
+  const base = age === "2-4" ? ["Ouvido","Ritmo","Piano","Música"] : age === "adult" ? ["Técnica","Leitura","Harmonia","Repertório"] : ["Ritmo","Técnica","Leitura","Repertório"];
   if (lesson.focus.toLowerCase().includes("cri") || lesson.focus.toLowerCase().includes("impro")) return [...base.slice(0,3),"Criação"];
   return base;
 }
@@ -229,7 +249,7 @@ function pillarsFor(age: AgeGroup, lesson: CurriculumLesson) {
 function enhanceLesson(age: AgeGroup, lesson: CurriculumLesson): EnhancedLesson {
   const key = `${age}:${lesson.number}`;
   const override = keyOverrides[key] ?? {};
-  const repertoire = age === "2-4" ? repertoire24[lesson.number - 1] : repertoire58[lesson.number - 1];
+  const repertoire = age === "2-4" ? repertoire24[lesson.number - 1] : age === "5-8" ? repertoire58[lesson.number - 1] : "Repertório conhecido do mês · versão adequada ao nível";
 
   return {
     ...lesson,
@@ -245,21 +265,25 @@ function enhanceLesson(age: AgeGroup, lesson: CurriculumLesson): EnhancedLesson 
 }
 
 export function getEnhancedCurriculum(ageValue: string | undefined): EnhancedProgram {
-  const age: AgeGroup = ageValue === "2-4" ? "2-4" : "5-8";
+  const age: AgeGroup = ageValue === "2-4" ? "2-4" : ageValue === "adult" ? "adult" : "5-8";
   const base = getBaseProgram(age);
 
   return {
     ...base,
     philosophy: age === "2-4"
       ? "Ouvir, mover, tocar e imaginar em todas as aulas. O repertório começa na primeira semana e as cores funcionam como ponte, não como dependência."
-      : "Técnica, leitura, ouvido, ritmo, criatividade e repertório aparecem em espiral. A criança toca música desde o início e aprende a ler porque já tem algo musical para dizer.",
+      : age === "adult"
+        ? "Tocar música real desde o início. Técnica, leitura, ouvido, harmonia e repertório evoluem juntos, sem infantilizar a experiência."
+        : "Técnica, leitura, ouvido, ritmo, criatividade e repertório aparecem em espiral. A criança toca música desde o início e aprende a ler porque já tem algo musical para dizer.",
     finalOutcome: age === "2-4"
       ? "A criança reconhece contrastes, mantém pulsações curtas, orienta-se no teclado, usa mãos e dedos de forma relaxada, imita padrões e toca pequenas músicas completas."
-      : "A criança lê padrões em clave de Sol e referências da clave de Fá, controla ritmos fundamentais incluindo colcheias e 3/4, toca peças simples com duas mãos e apresenta 2–3 peças completas.",
+      : age === "adult"
+        ? "O aluno lê nas duas claves, toca com duas mãos, usa acordes e pedal com critério, acompanha canções simples e apresenta 2–3 peças completas."
+        : "A criança lê padrões em clave de Sol e referências da clave de Fá, controla ritmos fundamentais incluindo colcheias e 3/4, toca peças simples com duas mãos e apresenta 2–3 peças completas.",
     variants: variants[age],
     spiralPillars: age === "2-4"
       ? ["Ouvido","Ritmo","Piano","Música","Jogo/criação"]
-      : ["Ouvido","Ritmo","Técnica","Leitura","Repertório/criação"],
+      : age === "adult" ? ["Técnica","Leitura","Ouvido","Harmonia","Repertório","Autonomia"] : ["Ouvido","Ritmo","Técnica","Leitura","Repertório/criação"],
     modules: base.modules.map((module) => ({
       ...module,
       ...moduleTheme[age][module.id],
