@@ -92,7 +92,7 @@ const repertoire24 = [
   ...Array(8).fill("Marcha, Soldado"),
   ...Array(8).fill("O Sapo Não Lava o Pé"),
   ...Array(8).fill("Ciranda, Cirandinha"),
-  ...Array(8).fill("Peixe Vivo"),
+  ...Array(8).fill("A Canoa Virou"),
   ...Array(8).fill("Maria Tinha um Cordeirinho"),
 ];
 

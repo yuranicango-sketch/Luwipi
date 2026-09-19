@@ -7,7 +7,7 @@ import { getCompletePreschoolLessonSteps } from "@/lib/preschool-lesson-map";
 export type LessonStep = {
   id:string; icon:string; title:string; duration:string; goal:string;
   actions:string[]; say?:string; childDoes:string; success:string; tip?:string;
-  actionLabel?:string; actionHref?:string;
+  actionLabel?:string; actionHref?:string; example?:string; songId?:string; songEmoji?:string; songStory?:string;
 };
 
 function firstLesson(age:AgeGroup):LessonStep[]{
