@@ -8,6 +8,7 @@ type RepertoirePlan={title:string;actions:string[];say:string;child:string;succe
 const p=(title:string,actions:string[],say:string,child:string,success:string):RepertoirePlan=>({title,actions,say,child,success});
 
 const repertoire:Record<number,RepertoirePlan>={};
+const lessonExamples:Record<number,string>={7:"EXEMPLO DE PULSAÇÃO: TUM · TUM · TUM · TUM, sempre com a mesma distância. Bata nas pernas 1 — 2 — 3 — 4 e depois faça igual numa tecla: Dó — Dó — Dó — Dó. Não acelere.",9:"EXEMPLO DE ECO: PALMA · PALMA; espere; a criança responde PALMA · PALMA.",10:"EXEMPLO: tartaruga = TUM ... TUM ... TUM ... TUM. Coelhinho = TUM-TUM-TUM-TUM.",11:"EXEMPLO: Dó — Dó — [SILÊNCIO] — Dó — Dó. Na pausa, mãos fora da tecla.",14:"EXEMPLO: mostre um grupo de DUAS teclas pretas e depois um de TRÊS. Procurem o desenho 2–3 pelo teclado.",17:"EXEMPLO: Dó → Ré → Mi = sobe. Mi → Ré → Dó = desce.",20:"EXEMPLO: polegar=1, indicador=2, médio=3. Mostre primeiro na mão e depois no piano.",22:"EXEMPLO: direita toca Dó; espere; esquerda toca um Dó grave. Direita — esquerda — direita — esquerda.",26:"EXEMPLO: Dó → Mi; esconda as mãos e diga Agora tu. Se difícil, use Dó → Ré.",27:"EXEMPLO: PALMA · PALMA · pausa · PALMA; depois Dó · Dó · pausa · Dó.",29:"EXEMPLO: professor toca Dó → Mi e para. Criança responde com 1–2 sons.",31:"EXEMPLO: vermelho=Dó, amarelo=Ré, azul=Mi. Não mude a associação durante a atividade.",34:"EXEMPLO: Dó–Ré–Mi / Dó–Ré–Mi = IGUAL. Dó–Ré–Mi / Dó–Mi–Ré = SURPRESA.",39:"EXEMPLO: Dó · Dó · Dó · Dó igualmente espaçados; ESTAÇÃO = 2–3 segundos de silêncio; depois retome no mesmo andamento.",45:"EXEMPLO: professor toca Dó–Mi e passa a bola; criança responde com 1–2 notas. Não toque por cima dela."};
 function month(start:number,title:string,steps:Array<Omit<RepertoirePlan,"title">>){
  steps.forEach((x,i)=>repertoire[start+i]={title,...x});
 }
@@ -22,7 +23,7 @@ month(1,"Brilha, Brilha, Estrelinha",[
  p("",["Deixe a criança escolher cantar, tocar partes, ou fazer ambos.","Professor acompanha discretamente.","Termine com aplauso e marque a música como aprendida, mesmo que a versão seja simples."],"Hoje é dia de tocar a música que aprendeste este mês.","Apresenta sua versão da canção.","Participa do começo ao fim com confiança crescente.")
 ].map(({actions,say,child,success})=>({actions,say,child,success})));
 
-const songs=[["Marcha, Soldado",9],["O Sapo Não Lava o Pé",17],["Ciranda, Cirandinha",25],["Peixe Vivo",33],["Maria Tinha um Cordeirinho",41]] as const;
+const songs=[["Marcha, Soldado",9],["O Sapo Não Lava o Pé",17],["Ciranda, Cirandinha",25],["A Canoa Virou",33],["Maria Tinha um Cordeirinho",41]] as const;
 for(const [title,start] of songs){
  const phases=[
   ["Ouvir e cantar",["Cante a música inteira com a criança. Descubra o que ela já conhece.","Não leve ao piano antes de ela reconhecer a canção."],"Este mês vamos aprender "+title+". Hoje vamos cantá-la.","Ouve e canta.","Reconhece a música e participa."],
