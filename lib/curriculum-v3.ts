@@ -68,14 +68,12 @@ const variants: Record<AgeGroup, CurriculumVariant[]> = {
 
 const moduleTheme: Record<AgeGroup, Record<string,{accent:string;surface:string;illustration:EnhancedModule["illustration"]}>> = {
   "2-4": {
-    "descoberta-sonora": { accent: "#ff76a8", surface: "#fff0f6", illustration: "sound" },
-    "ritmo-movimento": { accent: "#ffb32f", surface: "#fff6df", illustration: "rhythm" },
-    "mapa-piano": { accent: "#43a4f5", surface: "#edf7ff", illustration: "keyboard" },
-    "maos-dedos": { accent: "#8d73ec", surface: "#f4f0ff", illustration: "hands" },
-    "ouvido-imitacao": { accent: "#47c6b4", surface: "#eafbf7", illustration: "ear" },
-    "cores-padroes": { accent: "#ed6ad5", surface: "#fff0fb", illustration: "colors" },
-    "historias-musicas": { accent: "#55b96c", surface: "#eefaf0", illustration: "story" },
-    "consolidacao-performance": { accent: "#f28f3b", surface: "#fff4e9", illustration: "performance" },
+    "mes-1-descoberta": { accent:"#ff76a8", surface:"#fff0f6", illustration:"sound" },
+    "mes-2-eu-mando": { accent:"#ffb32f", surface:"#fff6df", illustration:"rhythm" },
+    "mes-3-minhas-maos": { accent:"#8d73ec", surface:"#f4f0ff", illustration:"hands" },
+    "mes-4-ouvir-lembrar": { accent:"#47c6b4", surface:"#eafbf7", illustration:"ear" },
+    "mes-5-minha-musica": { accent:"#ed6ad5", surface:"#fff0fb", illustration:"colors" },
+    "mes-6-pequeno-musico": { accent:"#55b96c", surface:"#eefaf0", illustration:"performance" },
   },
   "5-8": {
     fundamentos: { accent: "#2f9cf4", surface: "#edf7ff", illustration: "keyboard" },
@@ -90,14 +88,12 @@ const moduleTheme: Record<AgeGroup, Record<string,{accent:string;surface:string;
 };
 
 const repertoire24 = [
-  "O Gigante e a Estrelinha","Passos do Elefante","O Leão Acordou o Coelho","Chuva de Cores","O Trem Pequenino","Mini concerto: escolha da criança",
-  "Marcha, Soldado","O Trem Pequenino","Dança dos Animais","Marcha, Soldado","Balões no Céu","Marcha, Soldado ou O Trem Pequenino",
-  "Passinhos do Ursinho","Barquinho Azul","Boi da Cara Preta","Brilha, Brilha, Estrelinha","O Passeio das Cores","O Passeio das Cores ou Brilha, Brilha",
-  "Passinhos do Ursinho","Festa dos Sinos","Chuva de Cores","Eco Musical","Maria Tinha um Cordeirinho","Maria ou Festa dos Sinos",
-  "Sapo Cururu","O Sapo Não Lava o Pé","Ciranda, Cirandinha","Boi da Cara Preta","Peixe Vivo","Música favorita de memória",
-  "O Passeio das Cores","Chuva de Cores","O Passeio das Cores","Brilha, Brilha, Estrelinha","Maria Tinha um Cordeirinho","O Passeio das Cores",
-  "Boi da Cara Preta","Chuva de Cores","Marcha, Soldado","Brilha, Brilha, Estrelinha","Maria Tinha um Cordeirinho","Peça original da criança",
-  "Repertório favorito","Ciranda ou Marcha, Soldado","Música escolhida","Repertório final","Repertório final","1–2 músicas completas",
+  ...Array(8).fill("O Gigante e a Estrelinha"),
+  ...Array(8).fill("O Trenzinho Vai Parar"),
+  ...Array(8).fill("Acorda, Dedinho!"),
+  ...Array(8).fill("O Sapinho"),
+  ...Array(8).fill("O Trenzinho das Cores"),
+  ...Array(8).fill("A Chuva e o Sol"),
 ];
 
 const repertoire58 = [
