@@ -182,10 +182,14 @@ const keyOverrides: Partial<Record<string, Partial<Pick<EnhancedLesson,"title"|"
 
 function masteryFor(age: AgeGroup, lesson: CurriculumLesson) {
   if (age === "2-4") {
-    if (lesson.number <= 6) return "Realiza a proposta principal em 4 de 5 tentativas, sem tensão e com ajuda mínima.";
-    if (lesson.number <= 18) return "Mantém a tarefa por uma sequência curta e consegue repeti-la duas vezes com segurança.";
-    if (lesson.number <= 36) return "Completa o padrão ou mini música com no máximo duas ajudas do professor.";
-    return "Completa uma música/história curta do início ao fim com continuidade apropriada à idade.";
+    if (lesson.number <= 6) return "A criança já entra na brincadeira e começa a mostrar a diferença que ouviu, mesmo que ainda copie ou peça ajuda.";
+    if (lesson.number <= 12) return "A criança acompanha a brincadeira com o corpo, palmas ou piano e já percebe quando é hora de continuar ou parar.";
+    if (lesson.number <= 18) return "A criança encontra no piano o lugar pedido e começa a fazer pequenas escolhas sem o professor mostrar tudo primeiro.";
+    if (lesson.number <= 24) return "A criança usa mãos e dedinhos com conforto e participa sem ficar presa à ideia de tocar perfeito.";
+    if (lesson.number <= 30) return "A criança escuta uma ideia curtinha e tenta responder ou fazer algo parecido no piano.";
+    if (lesson.number <= 36) return "A criança segue o caminho visual ou sonoro e consegue chegar ao fim da brincadeira com a ajuda que precisar.";
+    if (lesson.number <= 42) return "A criança entra na história, usa o piano para dar voz aos personagens e participa de um pedacinho da música.";
+    return "A criança escolhe, toca e compartilha uma brincadeira ou música conhecida com confiança crescente.";
   }
   if (lesson.number <= 12) return "Executa o conceito em dois exemplos seguidos e aplica-o numa frase musical curta.";
   if (lesson.number <= 24) return "Lê ou executa quatro de cinco exemplos e aplica o padrão numa pequena peça.";
@@ -194,7 +198,7 @@ function masteryFor(age: AgeGroup, lesson: CurriculumLesson) {
 }
 
 function homeFor(age: AgeGroup, lesson: CurriculumLesson) {
-  if (age === "2-4") return "3–5 minutos: repetir a brincadeira principal e tocar a pequena sequência uma vez.";
+  if (age === "2-4") return "2–3 minutinhos: repetir em casa a brincadeira favorita da aula uma ou duas vezes e parar enquanto ainda está divertido.";
   return "5–10 minutos: praticar um trecho curto, depois tocar a peça/atividade uma vez do início ao fim.";
 }
 
@@ -202,11 +206,11 @@ function adaptationFor(age: AgeGroup, lesson: CurriculumLesson) {
   if (age === "2-4") {
     return {
       younger: lesson.number >= 19 && lesson.number <= 24
-        ? "2–3 anos: priorizar mão inteira e dedos 1–3; não exigir independência dos cinco dedos."
-        : "2–3 anos: reduzir a sequência, usar mais movimento e modelagem, com uma instrução por vez.",
+        ? "2–3 anos: deixe a mão brincar inteira ou use só os dedinhos que se mexem naturalmente. Não force todos os dedos."
+        : "2–3 anos: faça uma coisa de cada vez, mostre primeiro e use mais corpo, personagens e imitação.",
       older: lesson.number >= 31 && lesson.number <= 36
-        ? "3–4 anos: dizer o nome da nota junto com a cor e reduzir gradualmente o tamanho da pista colorida."
-        : "3–4 anos: aumentar para 3–5 elementos e pedir uma pequena repetição com mais autonomia.",
+        ? "3–4 anos: continue com as cores e comece a dizer o nome da nota naturalmente, sem transformar isso numa pergunta."
+        : "3–4 anos: quando estiver fácil, acrescente só mais um passo à brincadeira e deixe a criança tentar primeiro.",
     };
   }
 
