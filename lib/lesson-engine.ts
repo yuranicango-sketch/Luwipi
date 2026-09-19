@@ -24,7 +24,7 @@ function firstLesson(age:AgeGroup):LessonStep[]{
     {id:"activity",icon:"🎯",title:"Jogo dos três dedos",duration:"4–5 min",goal:"Reconhecer 1–2–3 e responder rapidamente.",actions:["Diga um número entre 1, 2 e 3.","O aluno toca uma vez com esse dedo.","Faça 6 chamadas aleatórias.","Depois faça duas chamadas juntas, como 1–2 ou 3–2."],say:"Quando eu disser o número, toca uma vez com esse dedo.",childDoes:"Responde aos números com o dedo correspondente.",success:"Acerta 5 de 6 chamadas simples sem tensão."},
     {id:"repertoire",icon:"🎹",title:"Primeira peça: Três Passos",duration:"10 min",goal:"Tocar uma peça curta na primeira aula.",actions:["Escolha três teclas brancas vizinhas para 1–2–3.","Ensine 1–2–3.","Depois 3–2–1.","Una: 1–2–3 | 3–2–1.","Repita 3 vezes devagar."],say:"Vamos subir três passos e voltar para casa.",childDoes:"Toca 1–2–3 | 3–2–1.",success:"Toca a sequência completa duas vezes sem perder a posição."},
     {id:"create",icon:"✨",title:"Mudar o final",duration:"3–4 min",goal:"Juntar técnica e criatividade.",actions:["Toque Três Passos novamente.","Na última nota, deixe escolher uma das três teclas.","Compare o final original com o novo."],say:"Muda só a última nota. Qual final gostas mais?",childDoes:"Escolhe outro final e toca novamente.",success:"Altera o final sem perder toda a sequência."},
-    {id:"close",icon:"🌟",title:"Fechar a aula",duration:"2–3 min",goal:"Sair sabendo exatamente o que praticar.",actions:["Peça uma última execução.","Diga uma coisa específica que melhorou.","Mostre a tarefa: duas execuções em casa."],say:"Hoje já tens uma primeira peça. Em casa, toca duas vezes e para.",childDoes:"Faz uma execução final.",success:"Toca com postura funcional e sabe a tarefa.",tip:"Se houver tensão, marque “Precisa reforçar”; não bloqueie a aula seguinte."}
+    {id:"close",icon:"🌟",title:age==="2-4"?"Tchau, piano!":"Fechar a aula",duration:"2–3 min",goal:"Sair sabendo exatamente o que praticar.",actions:["Peça uma última execução.","Diga uma coisa específica que melhorou.","Mostre a tarefa: duas execuções em casa."],say:"Hoje já tens uma primeira peça. Em casa, toca duas vezes e para.",childDoes:"Faz uma execução final.",success:"Toca com postura funcional e sabe a tarefa.",tip:"Se houver tensão, marque “Precisa reforçar”; não bloqueie a aula seguinte."}
   ];
 }
 
@@ -45,14 +45,14 @@ function warmup(age:AgeGroup,lesson:EnhancedLesson):LessonStep{
 function discovery(age:AgeGroup,lesson:EnhancedLesson):LessonStep{
   const guide=getManualLessonGuide(age,lesson.number);
   if(!guide) throw new Error(`Falta guia manual para ${age}:${lesson.number}`);
-  return {id:"discover",icon:"🎯",title:"Ensinar a ideia do dia",duration:age==="2-4"?"4–6 min":"7–10 min",goal:lesson.objective,actions:guide.teach,say:guide.say,childDoes:guide.childDoes,success:lesson.mastery};
+  return {id:"discover",icon:"🎯",title:"Vamos descobrir",duration:age==="2-4"?"4–6 min":"7–10 min",goal:age==="2-4"?`Hoje a criança vai brincar com ${lesson.title.toLowerCase()}.`:lesson.objective,actions:guide.teach,say:guide.say,childDoes:guide.childDoes,success:lesson.mastery};
 }
 
 function activity(age:AgeGroup,lesson:EnhancedLesson,game?:{title:string;goal:string;session:string},href?:string):LessonStep{
   const guide=getManualLessonGuide(age,lesson.number);
   if(!guide) throw new Error(`Falta guia manual para ${age}:${lesson.number}`);
   if(game&&href) return {id:"activity",icon:"🎮",title:game.title,duration:age==="2-4"?"3–5 min":"5–7 min",goal:game.goal,actions:["Abra o jogo e faça uma rodada de demonstração.","Na rodada seguinte, deixe a criança responder primeiro.","Faça apenas a sessão indicada; não repita até acertar tudo.","Volte para o piano físico ao terminar."],say:"Agora és tu. Primeiro escuta ou olha; depois escolhe.",childDoes:`Completa uma sessão curta de ${game.session}.`,success:"Entende a regra e responde à maior parte sem ajuda constante.",actionLabel:"ABRIR JOGO",actionHref:href};
-  return {id:"activity",icon:"🧩",title:age==="2-4"?`Desafio: ${lesson.title}`:"Praticar a habilidade",duration:age==="2-4"?"3–5 min":"5–7 min",goal:`Usar ${lesson.focus.toLowerCase()} numa tarefa concreta, sem acrescentar teoria nova.`,actions:guide.practice,say:guide.say,childDoes:guide.childDoes,success:"Consegue repetir a proposta com menos ajuda do que na primeira demonstração."};
+  return {id:"activity",icon:"🧩",title:age==="2-4"?`Vamos brincar: ${lesson.title}`:"Praticar a habilidade",duration:age==="2-4"?"3–5 min":"5–7 min",goal:age==="2-4"?"Repetir a descoberta de hoje através de uma brincadeira curta.":`Usar ${lesson.focus.toLowerCase()} numa tarefa concreta, sem acrescentar teoria nova.`,actions:guide.practice,say:guide.say,childDoes:guide.childDoes,success:"Consegue repetir a proposta com menos ajuda do que na primeira demonstração."};
 }
 
 function repertoire(age:AgeGroup,lesson:EnhancedLesson,songHref?:string):LessonStep{
@@ -73,7 +73,7 @@ function creation(age:AgeGroup,lesson:EnhancedLesson):LessonStep{
 }
 
 function close(age:AgeGroup,lesson:EnhancedLesson,homeworkHref:string):LessonStep{
-  return {id:"close",icon:"🌟",title:"Fechar a aula",duration:"2–3 min",goal:"Sair sabendo o que conseguiu e o que fará em casa.",actions:["Peça uma última tentativa curta.","Escolha “Conseguiu” ou “Precisa reforçar”.","Diga UMA tarefa para casa.","Pare a aula; não acrescente exercício novo no final."],say:age==="2-4"?"Hoje fizeste isto. Em casa vamos repetir só um bocadinho.":"Hoje o foco foi este. Em casa pratica só o trecho combinado e depois toca a peça uma vez.",childDoes:"Faz uma tentativa final e ouve a tarefa.",success:lesson.mastery,tip:`Tarefa: ${lesson.homePractice}`,actionLabel:"PREPARAR TAREFA",actionHref:homeworkHref};
+  return {id:"close",icon:"🌟",title:"Fechar a aula",duration:"2–3 min",goal:age==="2-4"?"Terminar feliz e repetir só uma coisa que funcionou hoje.":"Sair sabendo o que conseguiu e o que fará em casa.",actions:["Peça uma última tentativa curta.","Escolha “Conseguiu” ou “Precisa reforçar”.","Diga UMA tarefa para casa.","Pare a aula; não acrescente exercício novo no final."],say:age==="2-4"?"Hoje fizeste isto. Em casa vamos repetir só um bocadinho.":"Hoje o foco foi este. Em casa pratica só o trecho combinado e depois toca a peça uma vez.",childDoes:"Faz uma tentativa final e ouve a tarefa.",success:lesson.mastery,tip:`Tarefa: ${lesson.homePractice}`,actionLabel:"PREPARAR TAREFA",actionHref:homeworkHref};
 }
 
 export function buildLessonSteps(args:{age:AgeGroup;module:EnhancedModule;lesson:EnhancedLesson;variant:CurriculumVariant;}):LessonStep[]{
