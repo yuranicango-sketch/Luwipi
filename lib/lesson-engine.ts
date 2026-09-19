@@ -2,6 +2,7 @@ import type { CurriculumVariant, EnhancedLesson, EnhancedModule } from "@/lib/cu
 import type { AgeGroup } from "@/lib/curriculum";
 import { lessonResourceSummary } from "@/lib/curriculum-resources";
 import { getManualLessonGuide } from "@/lib/lesson-guides";
+import { getCompletePreschoolLessonSteps } from "@/lib/preschool-lesson-map";
 
 export type LessonStep = {
   id:string; icon:string; title:string; duration:string; goal:string;
@@ -86,6 +87,11 @@ function close(age:AgeGroup,lesson:EnhancedLesson,homeworkHref:string):LessonSte
 export function buildLessonSteps(args:{age:AgeGroup;module:EnhancedModule;lesson:EnhancedLesson;variant:CurriculumVariant;}):LessonStep[]{
   const {age,lesson}=args;
   const resources=lessonResourceSummary(age,lesson.number,lesson.repertoire);
+  if(age==="2-4"){
+    const preschool=getCompletePreschoolLessonSteps(lesson.number);
+    if(!preschool) throw new Error(`Falta experiência infantil individual para a aula ${lesson.number}`);
+    return preschool;
+  }
   if(lesson.number===1) return firstLesson(age);
   const href=resources.gameHref??lesson.activityRoute;
   return [warmup(age,lesson),discovery(age,lesson),activity(age,lesson,resources.game,href),repertoire(age,lesson,resources.songHref),creation(age,lesson),close(age,lesson,resources.homeworkHref)];
