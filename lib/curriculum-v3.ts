@@ -88,12 +88,12 @@ const moduleTheme: Record<AgeGroup, Record<string,{accent:string;surface:string;
 };
 
 const repertoire24 = [
-  ...Array(8).fill("O Gigante e a Estrelinha"),
-  ...Array(8).fill("O Trenzinho Vai Parar"),
-  ...Array(8).fill("Acorda, Dedinho!"),
-  ...Array(8).fill("O Sapinho"),
-  ...Array(8).fill("O Trenzinho das Cores"),
-  ...Array(8).fill("A Chuva e o Sol"),
+  ...Array(8).fill("Brilha, Brilha, Estrelinha"),
+  ...Array(8).fill("Marcha, Soldado"),
+  ...Array(8).fill("O Sapo Não Lava o Pé"),
+  ...Array(8).fill("Ciranda, Cirandinha"),
+  ...Array(8).fill("Peixe Vivo"),
+  ...Array(8).fill("Maria Tinha um Cordeirinho"),
 ];
 
 const repertoire58 = [
