@@ -1,75 +1,16 @@
-const g=(teach:string[],say:string,practice:string[],childDoes:string)=>({teach,say,practice,childDoes});
-export const guides58_37_48={
-"5-8:37":g(
-["Toque uma frase em piano e depois em forte.","Repita com crescendo ao longo de 4 notas.","Mostre p, f e crescendo na partitura.","Aplique em uma frase da peça."],
-"Dinâmica é escolher como a frase fala, não apenas tocar mais alto.",
-["Marque 2 dinâmicas na peça.","Toque cada frase com o contraste planejado.","Grave e escute se necessário."],
-"Controla níveis de dinâmica sem perder qualidade do som."
-),
-"5-8:38":g(
-["Leia uma frase da peça e marque onde ela termina.","Toque sem respirar entre cada nota.","Faça uma pequena liberação no fim da frase.","Repita com a frase seguinte."],
-"As notas pertencem a frases, como palavras pertencem a uma sentença.",
-["Marque 3–4 frases.","Toque duas seguidas mostrando direção.","Evite parar no meio sem razão."],
-"Mostra começo, direção e fim de frases musicais."
-),
-"5-8:39":g(
-["Escolha andamento confortável e bata 8 pulsos antes de tocar.","Comece a peça mantendo esse pulso.","Se errar, continue até o próximo ponto seguro.","Só depois analise onde acelerou ou desacelerou."],
-"O objetivo é manter a estrada, mesmo se uma pedra aparecer.",
-["Toque uma vez sem parar.","Identifique um lugar de instabilidade.","Pratique só esse trecho e repita a peça."],
-"Mantém andamento e continua após pequenos erros."
-),
-"5-8:40":g(
-["Divida Brilha, Brilha em frases curtas.","Leia ou ouça a primeira frase.","Defina posição inicial e dedilhado.","Pratique uma frase por vez antes de juntar."],
-"Vamos aprender a peça inteira, mas nunca toda de uma vez.",
-["Faça frase 1, frase 2 e junte.","Continue até completar a forma.","Faça uma execução final com dinâmica simples."],
-"Toca a música completa em frases conectadas."
-),
-"5-8:41":g(
-["Defina posição inicial de Maria Tinha um Cordeirinho.","Leia o desenho da primeira frase antes de tocar.","Confirme dedilhado consistente.","Trabalhe ritmo e articulação em uma frase por vez."],
-"Primeiro vemos o desenho; depois tocamos com os mesmos dedos todas as vezes.",
-["Pratique cada frase 2 vezes no máximo.","Junte duas por vez.","Faça uma execução completa no final."],
-"Integra leitura, dedilhado, ritmo e continuidade numa peça completa."
-),
-"5-8:42":g(
-["Abra a partitura da peça Luwipi.","Identifique compasso, primeira nota e padrão principal.","Pratique a seção A em andamento lento.","Repita o mesmo processo na seção B.","Junte A+B e escolha uma dinâmica."],
-"Antes de tocar, vamos descobrir como a peça foi construída.",
-["Leia por seções.","Toque cada seção sem parar.","Finalize com a peça inteira e uma escolha expressiva."],
-"Lê e interpreta uma peça original em seções."
-),
-"5-8:43":g(
-["Coloque 3–5 peças já estudadas à vista.","Peça ao aluno para tocar o início de cada.","Escolha 2–3 contrastantes em dificuldade e caráter.","Defina uma meta concreta para cada peça."],
-"Não escolhemos só as mais difíceis; escolhemos um programa que mostre coisas diferentes.",
-["Registre a ordem provisória.","Toque cada peça uma vez.","Marque um trecho prioritário por peça."],
-"Seleciona repertório realista e sabe o objetivo de cada peça."
-),
-"5-8:44":g(
-["Escolha um trecho de 1–2 compassos que falha.","Toque apenas até encontrar o erro específico.","Reduza a velocidade.","Repita corretamente 3 vezes.","Recoloque o trecho dentro da frase."],
-"Não vamos repetir a peça inteira para consertar dois compassos.",
-["Trabalhe dois trechos difíceis.","Faça 3 repetições corretas de cada.","Depois toque a peça inteira uma vez."],
-"Melhora trechos isolados e reintegra-os na peça."
-),
-"5-8:45":g(
-["Defina a regra: não voltar ao início.","Toque a peça inteira.","Se houver erro, continue no pulso até um ponto conhecido.","Depois anote só 1–2 lugares para corrigir."],
-"Num concerto não existe botão de voltar. Aprende a continuar.",
-["Faça duas execuções completas.","Entre elas, corrija apenas os pontos marcados.","Compare a continuidade."],
-"Mantém a peça fluindo apesar de pequenos erros."
-),
-"5-8:46":g(
-["Escolha uma peça curta para memorizar.","Memorize início, fim e pontos de referência internos.","Pratique começar do compasso 1, de um ponto do meio e do final.","Simule levantar, sentar e começar."],
-"Confiança vem de saber começar em mais de um lugar.",
-["Faça 3 inícios diferentes.","Toque a peça de memória.","Treine recuperar após uma pausa proposital."],
-"Inicia e recupera a peça sem depender de um único ponto de memória."
-),
-"5-8:47":g(
-["Grave uma execução completa.","Assista ou escute sem interromper.","Pergunte ao aluno qual UMA coisa quer melhorar.","Pratique esse ponto por alguns minutos.","Grave uma segunda execução."],
-"Não vamos procurar dez erros. Escolhe uma melhoria que realmente possamos ouvir.",
-["Compare as duas gravações.","Registre uma melhoria concreta.","Defina a ordem do recital."],
-"Usa gravação para identificar e corrigir um ponto específico."
-),
-"5-8:48":g(
-["Defina a ordem das 2–3 peças.","Faça aquecimento curto, não um ensaio completo.","Simule entrada, pausa entre peças e final.","Apresente sem interrupção."],
-"Hoje não é aula de corrigir; é dia de mostrar o caminho percorrido.",
-["Apresente 2–3 peças.","Após o recital, diga duas conquistas concretas e uma próxima meta.","Celebre o ciclo."],
-"Apresenta um pequeno programa com postura, continuidade e intenção musical."
-)
+import type { ManualLessonGuide } from "@/lib/lesson-guides";
+const g=(teach:string[],say:string,practice:string[],childDoes:string):ManualLessonGuide=>({teach,say,practice,childDoes});
+export const guides58_37_48:Record<string,ManualLessonGuide>={
+"5-8:37":g(["Toque a mesma frase primeiro piano e depois forte.","Mostre p e f na partitura.","Faça crescendo em quatro a oito notas sem acelerar.","Peça que a criança escolha onde uma frase cresce e onde volta a ficar suave."],"Dinâmica muda a voz da música; forte não significa bater.",["Toque duas frases com contraste p/f.","Faça um crescendo claro.","Aplique as escolhas a um trecho do repertório."],"Controla intensidade sem perder qualidade do som."),
+"5-8:38":g(["Toque uma frase toda com o mesmo peso e depois com direção até um ponto de chegada.","Pergunte qual parece contar melhor a história.","Marque o fim de duas frases na partitura.","Faça uma pequena liberação no fim sem criar uma pausa enorme."],"Uma frase musical também respira e vai a algum lugar.",["Toque duas frases mostrando começo, direção e fim.","Cante a frase antes de tocar se necessário.","Evite acentuar cada nota igualmente."],"Toca frases com direção e final perceptíveis."),
+"5-8:39":g(["Escolha uma melodia conhecida curta.","Toque a melodia sozinha.","Na esquerda, experimente primeiro apenas a nota-base no início do compasso.","Se estiver confortável, substitua algumas bases por C, F ou G."],"A esquerda apoia a música; ela não precisa ficar ocupada o tempo todo.",["Faça quatro compassos com notas-base.","Passe para acordes apenas onde estiver seguro.","Junte em andamento em que a criança consiga ouvir as mudanças."],"Acompanha uma melodia com base ou acordes simples sem perder o pulso."),
+"5-8:40":g(["Escolha a música conhecida do mês e toque-a inteira para lembrar a forma.","Marque duas decisões expressivas: por exemplo, uma frase suave e outra crescente.","Trabalhe somente o trecho em que técnica ou acompanhamento atrapalha a música.","Faça uma execução final sem parar."],"Agora não estamos a aprender mais notas; estamos a fazer a música soar como música.",["Toque a peça uma vez e identifique um ponto a melhorar.","Trabalhe esse ponto por poucos minutos.","Toque novamente do início ao fim com as decisões expressivas."],"Integra técnica, dinâmica e fraseado numa execução contínua."),
+"5-8:41":g(["Toque uma frase de três notas sem deixar a criança ver as mãos.","Espere dois segundos antes da resposta.","Repita uma segunda vez apenas se necessário.","Passe para quatro notas somente quando três estiverem confortáveis."],"Primeiro guarda o som na cabeça. Depois procura no piano.",["Faça cinco ecos de três notas.","Troque os papéis e copie uma frase criada pela criança.","Finalize repetindo o eco mais difícil."],"Reproduz pequenas frases por ouvido sem depender da visão."),
+"5-8:42":g(["Toque uma pergunta de quatro pulsos.","Deixe quatro pulsos para a resposta.","Mostre que a resposta pode usar notas diferentes e ainda combinar.","Troque os papéis."],"Não precisas copiar. A tua música só precisa responder à minha.",["Faça quatro perguntas e respostas.","Mantenha o mesmo tamanho das frases.","Na última, a criança faz pergunta e resposta."],"Cria respostas curtas com pulso e intenção."),
+"5-8:43":g(["Escolha cinco teclas pretas ou cinco notas conhecidas.","Defina quatro pulsos por frase.","Improvisa uma frase e deixe quatro pulsos de silêncio.","Mostre como repetir uma pequena ideia dá unidade."],"Aqui não procuramos a nota certa; procuramos uma frase que tenha começo e fim.",["Crie quatro frases de quatro pulsos.","Repita um motivo em pelo menos duas.","Professor acompanha com uma base simples se isso ajudar."],"Improvisa dentro de limites simples mantendo frase e pulso."),
+"5-8:44":g(["Peça uma ideia de duas a quatro notas.","Use-a no compasso 1.","No compasso 2, repita ou mude uma coisa.","Faça contraste no 3 e crie um final no 4.","Registre com notação simples ou desenho rítmico adequado ao aluno."],"Quatro compassos já podem contar uma pequena história: ideia, volta, surpresa e final.",["Toque os quatro compassos.","Mude apenas um elemento se a forma não estiver clara.","Dê um título e faça uma execução completa."],"Organiza e repete uma composição curta de quatro compassos."),
+"5-8:45":g(["Escolha apenas um trecho de um ou dois compassos que falha.","Pergunte o que exatamente quebra: nota, dedo, ritmo ou troca de mão.","Reduza o andamento e resolva esse problema isolado.","Faça três repetições corretas e recoloque o trecho dentro da frase."],"Não repetimos a peça inteira para consertar dois compassos.",["Trabalhe dois trechos, um de cada vez.","Faça no máximo três repetições corretas seguidas.","Depois toque a peça inteira uma vez."],"Sabe isolar um problema e reintegrá-lo na música."),
+"5-8:46":g(["Defina antes de tocar: não voltar ao início por causa de um erro pequeno.","Faça uma execução completa em andamento confortável.","Se houver falha, continue no pulso ou salte para o próximo ponto conhecido.","Só depois escolha um lugar para corrigir."],"No concerto a música continua. Aprender a recuperar também é tocar bem.",["Faça duas execuções completas.","Entre elas, corrija apenas um ponto.","Compare qual teve melhor continuidade."],"Mantém a peça fluindo e recupera-se de pequenos erros."),
+"5-8:47":g(["Grave uma execução completa.","Assista ou escute sem interromper.","Pergunte à criança qual uma coisa ficou boa e qual uma quer melhorar.","Trabalhe apenas esse ponto e grave novamente."],"Não vamos caçar erros. Vamos ouvir uma melhoria que conseguimos fazer hoje.",["Compare as duas gravações.","Escolha a ordem das peças do recital.","Faça uma passagem curta das entradas e finais, não outro concerto inteiro."],"Usa gravação para reconhecer progresso e melhorar um ponto concreto."),
+"5-8:48":g(["Defina a ordem das duas ou três peças.","Faça um aquecimento de dois minutos e pare.","Treine entrada, pausa entre peças e agradecimento final.","Apresente sem interrupção e sem correções do professor durante a execução."],"Hoje é dia de tocar e compartilhar, não de aprender coisa nova.",["Apresente o programa completo.","Depois diga duas conquistas específicas.","Escolha com a criança uma próxima música ou habilidade para o ciclo seguinte."],"Apresenta um pequeno programa com continuidade, intenção e confiança.")
 };

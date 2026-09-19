@@ -1,70 +1,15 @@
 import type { ManualLessonGuide } from "@/lib/lesson-guides";
-
-export const guides58_2_12: Record<string, ManualLessonGuide> = {
-  "5-8:2": {
-    teach: ["Mostre a numeração 1–5 na mão direita.", "Peça ao aluno para tocar cada dedo no ar antes do teclado.", "Coloque 1–5 sobre cinco teclas vizinhas.", "Toque 1–2–3–4–5 e volte 5–4–3–2–1, devagar."],
-    say: "Cada dedo tem um número. Primeiro encontramos o dedo; depois encontramos a tecla.",
-    practice: ["Chame 6 números aleatórios.", "O aluno toca o dedo correspondente.", "Finalize com 1–2–3–4–5 uma vez sem parar."],
-    childDoes: "Reconhece dedos 1–5 e toca uma sequência simples.",
-  },
-  "5-8:3": {
-    teach: ["Aponte um grupo de 2 teclas pretas e outro de 3.", "Peça ao aluno para encontrar mais dois grupos de cada.", "Mostre que o padrão se repete por todo o teclado.", "Faça o aluno percorrer o teclado da esquerda para a direita apontando 2–3–2–3."],
-    say: "O teclado parece enorme, mas repete sempre o mesmo mapa: duas pretas, três pretas.",
-    practice: ["Faça 6 pedidos rápidos: 'grupo de 2', 'grupo de 3'.", "Mude de região a cada pedido.", "Finalize encontrando o grupo mais perto do meio do piano."],
-    childDoes: "Reconhece o padrão 2–3 sem precisar contar tecla por tecla.",
-  },
-  "5-8:4": {
-    teach: ["Encontre um grupo de 2 pretas.", "Mostre a tecla branca imediatamente à esquerda: Dó.", "Repita em três oitavas diferentes.", "Depois peça ao aluno para encontrar sozinho."],
-    say: "Dó mora imediatamente antes da casa de duas teclas pretas.",
-    practice: ["Peça 5 Dós em regiões diferentes.", "Depois toque Dó–Ré–Mi a partir de um deles.", "Finalize com o jogo Encontre o Dó."],
-    childDoes: "Localiza Dó usando o padrão de duas pretas.",
-  },
-  "5-8:5": {
-    teach: ["Divida o teclado em esquerda, meio e direita.", "Toque uma nota em cada região.", "Peça ao aluno para nomear grave, médio ou agudo.", "Depois o aluno toca um exemplo de cada."],
-    say: "Não precisamos decorar teclas agora; precisamos saber em que bairro do piano estamos.",
-    practice: ["Faça 6 exemplos auditivos.", "Depois 3 pedidos visuais: 'toca médio', 'toca grave', 'toca agudo'.", "Finalize com uma sequência grave–médio–agudo."],
-    childDoes: "Identifica três registros pelo ouvido e pela posição.",
-  },
-  "5-8:6": {
-    teach: ["Peça postura em 20 segundos.", "Peça um dedo pelo número.", "Peça um grupo de 2 pretas.", "Peça um Dó.", "Peça um som grave, médio e agudo."],
-    say: "Hoje é uma missão: vou pedir cinco coisas e tu mostras no piano.",
-    practice: ["Faça as cinco missões em ordem aleatória.", "Anote apenas onde houve hesitação.", "Repita somente as duas missões menos seguras."],
-    childDoes: "Resolve as principais referências do módulo sem ajuda constante.",
-  },
-  "5-8:7": {
-    teach: ["Bata 8 pulsações regulares.", "Mostre uma semínima e diga que ocupa 1 pulso.", "Bata 4 semínimas contando 1–2–3–4.", "Toque 4 notas no piano, uma por pulso."],
-    say: "Uma semínima ocupa um passo do nosso pulso.",
-    practice: ["Leia 4 padrões só de semínimas.", "Bata antes de tocar.", "Depois toque numa nota confortável mantendo o pulso."],
-    childDoes: "Mantém pulso e executa semínimas de um tempo.",
-  },
-  "5-8:8": {
-    teach: ["Mostre uma mínima ao lado de duas semínimas.", "Conte 1–2 enquanto segura a mínima.", "Compare com semibreve contando 1–2–3–4.", "Toque exemplos no piano sem repetir a tecla durante a sustentação."],
-    say: "A nota começa uma vez e continua viva enquanto contamos.",
-    practice: ["Faça padrões 1–2 tempos.", "Acrescente uma semibreve de 4 tempos.", "Peça ao aluno para contar em voz baixa enquanto sustenta."],
-    childDoes: "Sustenta 2 e 4 tempos sem perder a pulsação.",
-  },
-  "5-8:9": {
-    teach: ["Bata 4 pulsos e fique em silêncio no pulso 3.", "Continue movendo a mão para mostrar que o pulso não parou.", "Mostre a pausa correspondente.", "Repita no piano."],
-    say: "Pausa não é parar de contar; é contar sem tocar.",
-    practice: ["Faça 4 compassos com uma pausa simples.", "O aluno conta e toca.", "Se entrar cedo, faça primeiro só com palmas."],
-    childDoes: "Respeita pausas e retorna no tempo correto.",
-  },
-  "5-8:10": {
-    teach: ["Fale duas sílabas rápidas dentro de um pulso, como 'ta-ka'.", "Bata semínimas e depois pares de colcheias.", "Alterne: 1 pulso = uma palma; 1 pulso = duas palmas.", "Transfira para uma nota do piano."],
-    say: "O pulso continua igual; o que muda é quantos sons cabem dentro dele.",
-    practice: ["Faça 4 padrões curtos com semínima + duas colcheias.", "Primeiro fale, depois bata, depois toque.", "Mantenha andamento lento."],
-    childDoes: "Executa pares de colcheias sem acelerar o pulso.",
-  },
-  "5-8:11": {
-    teach: ["Conte 1–2–3 andando em círculo e acentue o 1.", "Depois conte 1–2–3–4 com acento no 1.", "Mostre 3/4 e 4/4 na pauta.", "Peça ao aluno para identificar qual contagem combina com cada fórmula."],
-    say: "O número de cima diz quantos pulsos cabem em cada caixa do compasso.",
-    practice: ["Faça 3 compassos em 3/4 e 3 em 4/4.", "Bata o primeiro tempo mais claro.", "Depois toque uma nota por pulso."],
-    childDoes: "Distingue 3/4 e 4/4 e organiza pulsos em compassos.",
-  },
-  "5-8:12": {
-    teach: ["Mostre cartões de semínima, mínima, pausa e pares de colcheias.", "Peça para montar exatamente 4 tempos.", "Conte o compasso montado.", "Toque o ritmo numa única nota."],
-    say: "Primeiro construímos o compasso; depois fazemos ele soar.",
-    practice: ["Monte 3 compassos diferentes.", "Bata cada um.", "Toque dois deles no piano sem perder a contagem."],
-    childDoes: "Combina figuras para completar um compasso e executa o resultado.",
-  },
+const g=(teach:string[],say:string,practice:string[],childDoes:string):ManualLessonGuide=>({teach,say,practice,childDoes});
+export const guides58_2_12:Record<string,ManualLessonGuide>={
+"5-8:2":g(["Mostre as duas mãos abertas e numere: polegar 1, indicador 2, médio 3, anelar 4, mindinho 5.","Diga números fora de ordem e peça que a criança levante o dedo sem tocar.","Pouse a mão direita relaxada em cinco teclas vizinhas.","Toque apenas 1–2–3 e depois 3–2–1; repita com a esquerda."],"O polegar é sempre 1. O mindinho é sempre 5. Vamos ver se os dedos respondem pelo nome.",["Faça 8 chamadas aleatórias entre 1 e 5, alternando as mãos.","Toque 1–2–3 | 3–2–1 com cada mão.","Termine com uma pequena pergunta numa mão e resposta na outra."],"Reconhece os cinco números nas duas mãos e usa 1–2–3 sem tensão."),
+"5-8:3":g(["Mostre um grupo de duas pretas e um de três.","Peça que encontre outro grupo igual longe do primeiro.","Percorram o teclado apontando 2–3–2–3 sem contar teclas brancas.","Faça uma corrida lenta: professor aponta uma região, criança encontra 2 ou 3."],"O piano repete duas famílias: duas pretas e três pretas. Quando reconheces as famílias, o teclado deixa de parecer gigante.",["Faça 8 pedidos misturando grupo de 2 e de 3.","Mude de região em cada pedido.","Peça que a criança escolha um grupo e desafie o professor."],"Encontra grupos de duas e três pretas em qualquer região sem contar uma a uma."),
+"5-8:4":g(["Encontre duas teclas pretas juntas.","Aponte a branca imediatamente à esquerda e diga Dó.","Repita o processo em quatro regiões.","Depois afaste as mãos e peça que a criança encontre os Dós sozinha."],"Sempre que encontrares duas pretas, o Dó está logo antes delas.",["Peça quatro Dós: grave, médio, outro médio e agudo.","Escolha um deles e toque Dó–Ré–Mi.","Feche os olhos e peça à criança que lhe mostre outro Dó."],"Localiza Dó pelo padrão de duas pretas sem etiquetas."),
+"5-8:5":g(["Toque uma nota muito grave, uma média e uma muito aguda.","Peça que a criança aponte a região antes de dizer o nome.","Caminhe pelo teclado de grave para agudo tocando notas sucessivas.","Faça o caminho inverso e pergunte em que direção o som viajou."],"O piano tem bairros. À esquerda os sons ficam graves; à direita ficam agudos.",["Faça seis exemplos auditivos sem deixar a criança olhar.","Depois peça: grave, médio, agudo, em ordem aleatória.","Crie um caminho grave → médio → agudo e deixe a criança criar outro."],"Reconhece regiões e direção sonora pelo ouvido e pela posição."),
+"5-8:6":g(["Escolha três teclas brancas vizinhas.","Toque a mesma tecla três vezes e diga 'repetiu'.","Toque três vizinhas para a direita e diga 'subiu'.","Faça o mesmo para a esquerda e diga 'desceu'."],"Antes de ler notas, vamos aprender a enxergar o desenho da música: repete, sobe ou desce.",["Toque seis padrões de três sons para a criança classificar.","Depois a criança toca um padrão de cada tipo.","Junte dois padrões numa frase de seis sons."],"Distingue repetição, subida e descida e consegue produzir cada padrão."),
+"5-8:7":g(["Marche oito passos iguais sem piano.","Continue os passos e bata uma palma em cada um.","Sente ao piano e toque uma tecla por pulso.","Mostre a semínima somente depois de o pulso estar estável."],"O pulso é o passo da música. Ele não corre quando a nota muda.",["Conte 1–2–3–4 por quatro compassos.","Toque uma nota por pulso.","Depois use Dó–Ré–Mi–Ré mantendo exatamente o mesmo passo."],"Mantém pulsação regular enquanto muda de nota."),
+"5-8:8":g(["Relembre rapidamente postura, Dó, dedos e pulso.","Toque a primeira frase da música conhecida do mês para a criança ouvir inteira.","Ensine apenas a primeira frase por imitação ou leitura adequada ao nível.","Acrescente a segunda frase e una as duas sem voltar ao início a cada erro."],"Hoje não é uma prova. Vamos mostrar a música que construímos durante o mês.",["Toque as frases separadamente uma vez.","Faça uma execução contínua da versão aprendida.","Repita apenas um trecho que realmente precise e faça uma última apresentação."],"Toca a versão mensal com começo, continuidade e final."),
+"5-8:9":g(["Marque quatro pulsações com a mão.","Toque uma nota em cada pulso e mostre quatro semínimas.","Faça a criança contar e tocar ao mesmo tempo.","Troque as alturas sem mudar a duração."],"Semínima quer dizer: um som começa em cada pulso.",["Leia três compassos só com semínimas.","Depois use duas ou três alturas diferentes.","Faça uma rodada sem contar em voz alta, mantendo o pulso interno."],"Lê semínimas como um som por pulso sem acelerar."),
+"5-8:10":g(["Toque uma nota e conte 1–2 sem repetir.","Mostre a mínima e compare visualmente com duas semínimas.","Faça quatro mínimas seguidas com contagem.","Aplique duas mínimas numa pequena frase."],"A mínima começa uma vez e fica viva durante dois pulsos.",["Alterne semínima–semínima–mínima.","Conte primeiro, depois toque.","Peça que a criança invente um compasso de quatro tempos usando as duas figuras."],"Sustenta mínimas por dois pulsos e combina-as com semínimas."),
+"5-8:11":g(["Conte quatro pulsos continuamente.","No terceiro, não toque, mas mantenha a mão marcando o pulso.","Mostre a pausa correspondente ao valor trabalhado.","Repita até a entrada depois do silêncio acontecer no tempo."],"Silêncio não apaga o pulso. Continuamos a contar por dentro.",["Faça três padrões com uma pausa.","Bata primeiro e toque depois.","Peça que a criança crie um padrão com um silêncio e o professor copie."],"Mantém a contagem durante a pausa e volta no pulso correto."),
+"5-8:12":g(["Toque uma nota e conte 1–2–3–4 sem repetir.","Mostre a semibreve e compare com quatro semínimas.","Faça a criança ouvir a ressonância até ao quarto pulso.","Use pedal apenas se for necessário para demonstrar sustentação, não como técnica ainda."],"Uma nota pode começar agora e continuar a soar enquanto quatro pulsos passam.",["Alterne uma semibreve com quatro semínimas.","Faça dois compassos em sequência.","Aplique uma nota longa no final de uma frase da música."],"Sustenta quatro pulsos sem repetir a tecla nem perder a contagem.")
 };

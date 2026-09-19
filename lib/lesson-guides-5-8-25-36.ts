@@ -1,75 +1,16 @@
-const g=(teach:string[],say:string,practice:string[],childDoes:string)=>({teach,say,practice,childDoes});
-export const guides58_25_36={
-"5-8:25":g(
-["Posicione 1–5 em Dó–Sol.","Toque a subida lentamente, um som por pulso.","Volte mantendo a mesma posição.","Observe dedos arredondados sem rigidez."],
-"O pentacorde é uma casa de cinco notas; não precisamos mover a mão.",
-["Faça duas subidas e duas descidas.","Depois use o mesmo desenho numa peça.","Mantenha andamento confortável."],
-"Toca o pentacorde de Dó com dedilhado estável."
-),
-"5-8:26":g(
-["Para 5–6: faça Dó–Ré–Mi–Fá–Sol e depois Sol–Lá–Si–Dó como dois blocos separados.","Para 7–8: demonstre lentamente a passagem do polegar na escala completa.","Treine só a passagem 3 vezes, sem correr.","Só depois tente uma oitava."],
-"A passagem do polegar não é corrida. Primeiro aprendemos o movimento pequeno.",
-["Escolha a versão adequada à idade.","Faça 2 tentativas lentas.","Se houver tensão, volte ao pentacorde ou aos tetracordes."],
-"Executa a versão da escala adequada à idade sem tensão."
-),
-"5-8:27":g(
-["Toque duas notas vizinhas e chame de 2ª.","Toque notas com uma tecla branca entre elas e chame de 3ª.","Mostre o mesmo desenho na pauta.","Compare som e distância."],
-"Intervalo é a distância entre duas notas.",
-["Faça 6 exemplos misturando 2ª e 3ª.","O aluno identifica e toca.","Depois encontre duas de cada no repertório."],
-"Reconhece 2as e 3as visual e auditivamente."
-),
-"5-8:28":g(
-["Mostre uma 4ª e uma 5ª em Dó.","Toque separadamente e depois juntas se confortável.","Compare tamanho com 2ª e 3ª.","Mostre a distância na pauta."],
-"Agora os saltos são maiores: quatro ou cinco notas de distância.",
-["Faça 6 exemplos de 4ª e 5ª.","O aluno classifica e toca.","Finalize encontrando uma 5ª em uma peça."],
-"Reconhece 4as e 5as no teclado e na pauta."
-),
-"5-8:29":g(
-["Construa Dó–Mi–Sol e diga Dó maior.","Mostre Fá–Lá–Dó e Sol–Si–Ré.","Toque cada acorde e escute a sensação.","Mostre Dó maior como sensação de casa."],
-"Três notas juntas podem formar um acorde. Estes três vão acompanhar muitas músicas.",
-["Construa C, F e G com cartões de nota.","Toque cada um duas vezes.","Faça C–F–G–C lentamente."],
-"Constrói os três acordes básicos e reconhece repouso em C."
-),
-"5-8:30":g(
-["Escolha uma melodia conhecida curta.","Toque só a melodia.","Acrescente uma nota-base ou acorde na mão esquerda no início de cada compasso.","Treine a esquerda sozinha antes de juntar."],
-"A mão esquerda não precisa tocar muito; ela só sustenta a história da direita.",
-["Faça 4–8 compassos de acompanhamento.","Comece com uma nota-base se o acorde for difícil.","Junte em andamento lento."],
-"Acompanha uma melodia simples com base harmônica inicial."
-),
-"5-8:31":g(
-["Toque 3 notas e espere.","O aluno repete por ouvido.","Passe para 4 notas se acertar confortavelmente.","Use notas dentro de uma posição de mão conhecida."],
-"Não olha para a minha mão; escuta primeiro e responde depois.",
-["Faça 5 ecos.","Permita segunda audição em dois deles.","Depois o aluno cria um eco para o professor."],
-"Imita pequenas frases melódicas por ouvido."
-),
-"5-8:32":g(
-["Toque dois sons: o segundo mais alto.","Pergunte se subiu, desceu ou repetiu.","Faça os três casos.","Depois use frases de 3 sons."],
-"Não precisamos saber o nome da nota para ouvir para onde ela foi.",
-["Faça 6 exemplos.","O aluno responde sem olhar o teclado.","Depois desenha uma seta para dois exemplos."],
-"Reconhece direção melódica apenas pelo ouvido."
-),
-"5-8:33":g(
-["Mostre um grupo de 2 e um de 3 teclas pretas.","Peça para tocar qualquer padrão usando só pretas.","Mantenha um pulso simples de 4 tempos.","Acompanhe com notas graves simples se ajudar."],
-"Aqui não há nota errada. O desafio é fazer frases com começo e fim.",
-["Crie 4 frases de 4 pulsos.","Deixe silêncio entre as frases.","Na última, repita uma ideia da primeira."],
-"Improvisa frases curtas mantendo pulso e forma."
-),
-"5-8:34":g(
-["Toque uma pergunta de 4 pulsos.","Conte 4 pulsos em silêncio para a resposta.","O aluno cria uma resposta do mesmo tamanho.","Repita com outra pergunta."],
-"A resposta não copia; ela conversa com a pergunta.",
-["Faça 4 perguntas e respostas.","Troque os papéis.","Mantenha duração semelhante entre pergunta e resposta."],
-"Cria respostas musicais com tamanho e pulso coerentes."
-),
-"5-8:35":g(
-["Escolha um motivo de 2–4 notas.","Use-o no compasso 1.","Repita ou varie no compasso 2.","Crie contraste no 3 e um final no 4.","Toque os quatro compassos completos."],
-"Uma música curta precisa de uma ideia, uma repetição, uma mudança e um final.",
-["Escreva ou desenhe os 4 compassos.","Toque devagar.","Dê um título à composição."],
-"Organiza uma ideia própria em quatro compassos repetíveis."
-),
-"5-8:36":g(
-["Escolha uma peça curta já aprendida.","Divida em 2–3 frases.","Peça para tocar a primeira sem partitura.","Pense no início da frase seguinte antes de tocar."],
-"Memória não é adivinhar; é saber como a música está organizada.",
-["Memorize por frases.","Comece do meio uma vez.","Faça uma execução completa sem partitura no final."],
-"Toca uma peça curta de memória e sabe onde suas frases começam."
-)
+import type { ManualLessonGuide } from "@/lib/lesson-guides";
+const g=(teach:string[],say:string,practice:string[],childDoes:string):ManualLessonGuide=>({teach,say,practice,childDoes});
+export const guides58_25_36:Record<string,ManualLessonGuide>={
+"5-8:25":g(["Pouse cinco dedos em cinco teclas vizinhas, sem esticar.","Toque 1–2–3–4–5 lentamente e volte.","Observe ombro, pulso e articulações; pare se algum dedo obrigar a mão a torcer.","Repita na outra mão em região confortável."],"Cinco dedos têm cinco teclas, mas a mão continua macia.",["Faça duas subidas e descidas em cada mão.","Mude dinâmica sem mudar a forma da mão.","Use o padrão numa frase curtíssima."],"Toca um pentacorde com cada mão mantendo conforto e pulso."),
+"5-8:26":g(["Coloque a mão direita numa posição de cinco dedos.","Ensine uma frase curta com direção clara e dedilhado estável.","Peça que a criança encontre onde a frase sobe, repete e termina.","Toque a frase inteira sem interromper para corrigir cada nota."],"A mão direita vai contar uma frase inteira, não uma coleção de notas.",["Toque a frase duas vezes.","Mude apenas a dinâmica na terceira.","Peça que a criança diga onde sente o final."],"Toca uma frase curta de mão direita com continuidade e direção."),
+"5-8:27":g(["Crie uma resposta de mão esquerda com duas ou três notas.","Leia o desenho antes de tocar.","Use a mesma pulsação da frase da mão direita da aula anterior.","Faça pergunta MD e resposta ME."],"Agora a esquerda responde sem correr atrás da direita.",["Repita quatro conversas MD → ME.","Troque a resposta uma vez.","Mantenha a troca sem pausa extra entre as mãos."],"Toca uma resposta simples de mão esquerda mantendo o pulso."),
+"5-8:28":g(["Toque três notas separadas e depois as mesmas ligadas.","Mostre que o dedo seguinte recebe o peso antes do anterior sair.","Faça 1–2–3 e 3–2–1 lentamente.","Aplique a ligação numa frase real."],"Legato é passar o som de um dedo para o outro sem buraco e sem apertar.",["Faça três grupos de três notas ligadas.","Compare com uma versão deliberadamente separada.","Toque uma frase inteira em legato."],"Liga notas com transferência confortável entre os dedos."),
+"5-8:29":g(["Toque três notas curtas usando movimento pequeno e elástico.","Evite puxar os dedos para cima ou endurecer o punho.","Compare com legato usando as mesmas notas.","Aplique numa pequena figura musical."],"Staccato é leve e curto; não é bater nem arrancar a mão do piano.",["Alterne cartões 'ligado' e 'saltitante'.","Toque a mesma frase das duas formas.","Faça quatro compassos em staccato mantendo o pulso."],"Produz staccato curto e leve sem tensão."),
+"5-8:30":g(["Toque uma frase curta com a direita.","Responda com a esquerda no pulso seguinte.","Conte continuamente para impedir uma pausa entre as mãos.","Reduza cada frase a duas notas se a troca ficar difícil."],"Uma mão termina e a outra continua a conversa no mesmo pulso.",["Faça seis trocas MD ↔ ME.","Use uma frase diferente na última rodada.","Aplique a alternância num trecho da música."],"Alterna frases entre as mãos sem quebrar o pulso."),
+"5-8:31":g(["Segure uma nota longa com a esquerda.","Enquanto ela continua, toque duas ou três notas na direita.","Treine cada mão separadamente uma vez.","Junte apenas um compasso e pare para relaxar."],"Uma mão pode ficar parada enquanto a outra se mexe. Esse é o primeiro encontro.",["Faça dois compassos com nota longa na esquerda.","Troque a nota-base e repita.","Se estiver seguro, una quatro compassos."],"Mantém uma mão sustentada enquanto a outra toca uma frase curta."),
+"5-8:32":g(["Pegue a música conhecida do mês e marque onde cada mão entra.","Treine apenas as entradas da esquerda.","Acrescente a direita em blocos de um compasso.","Una as frases sem transformar a aula numa repetição mecânica."],"Hoje as duas mãos entram na música que já conhecemos.",["Toque mãos separadas apenas nos pontos difíceis.","Junte duas frases.","Faça uma execução contínua da versão mensal."],"Aplica coordenação inicial das duas mãos no repertório."),
+"5-8:33":g(["Para 5–6 anos, toque Dó–Ré–Mi–Fá–Sol e volte como pentacorde.","Para 7–8, se a mão estiver pronta, mostre a escala de Dó em uma oitava e isole a passagem do polegar.","Nunca aumente velocidade antes de o movimento ficar solto.","Compare subida e descida como um único desenho sonoro."],"A escada tem de ficar suave. Se a mão aperta, diminuímos o caminho.",["Escolha pentacorde ou oitava conforme a criança.","Faça duas tentativas lentas, não dez.","Aplique apenas um pequeno fragmento na música."],"Executa a versão adequada da escala sem tensão."),
+"5-8:34":g(["Toque duas notas vizinhas e conte a distância como 2ª.","Mostre 3ª, 4ª e 5ª a partir do mesmo Dó.","Observe a forma no teclado e na pauta.","Toque os intervalos melodicamente para comparar o tamanho do salto."],"Intervalo é a distância entre uma nota e outra. Quanto maior o número, maior o caminho.",["Faça oito exemplos entre 2ª e 5ª.","A criança identifica antes de tocar.","Encontre dois intervalos dentro da música."],"Reconhece 2ª a 5ª por forma e distância em exemplos simples."),
+"5-8:35":g(["Construa Dó–Mi–Sol a partir de Dó.","Mostre que usamos uma nota, pulamos uma, usamos outra, pulamos outra e usamos a terceira.","Toque as três juntas e depois separadas.","Transfira o mesmo desenho para outra tecla branca apenas como exploração."],"Três notas organizadas assim formam uma tríade. Primeiro vemos o desenho; depois ouvimos.",["Monte três tríades a partir de notas indicadas pelo professor.","Toque quebradas e juntas.","Volte a Dó maior e reconheça sua forma."],"Constrói uma tríade simples e entende sua organização."),
+"5-8:36":g(["Construa C: Dó–Mi–Sol, F: Fá–Lá–Dó e G: Sol–Si–Ré.","Toque cada um e dê tempo para ouvir.","Faça C–F–G–C lentamente.","Mostre que C traz sensação de chegada dentro desta tonalidade."],"Estes três acordes vão aparecer muitas vezes juntos. Vamos aprender o caminho entre eles.",["Faça C–F–G–C quatro vezes sem correr.","Peça os acordes em ordem aleatória.","Use apenas notas-base se a mão ainda não alcançar a tríade confortavelmente."],"Encontra C, F e G e troca entre eles em andamento lento.")
 };

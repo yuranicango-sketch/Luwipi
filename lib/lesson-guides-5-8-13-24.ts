@@ -1,76 +1,16 @@
 import type { ManualLessonGuide } from "@/lib/lesson-guides";
-
-export const guides58_13_24: Record<string, ManualLessonGuide> = {
-  "5-8:13": {
-    teach: ["Encontre Dó central.", "Mostre Ré à direita e Mi depois dele.", "Toque Dó–Ré–Mi e volte Mi–Ré–Dó.", "Mostre as três notas na pauta usando uma referência visual."],
-    say: "No teclado elas são vizinhas; na pauta também caminham passo a passo.",
-    practice: ["Leia 4 padrões usando só Dó–Ré–Mi.", "Aponte cada nota antes de tocar.", "Depois toque sem dizer os nomes em voz alta."],
-    childDoes: "Relaciona Dó–Ré–Mi no teclado e na pauta.",
-  },
-  "5-8:14": {
-    teach: ["Acrescente Fá e Sol ao Dó–Ré–Mi.", "Toque Dó–Ré–Mi–Fá–Sol com dedos 1–5.", "Mostre que notas vizinhas na pauta formam passos.", "Faça subida e descida."],
-    say: "Cinco dedos, cinco notas vizinhas. Primeiro sobe, depois volta.",
-    practice: ["Leia 3 padrões dentro de Dó–Sol.", "Identifique se sobem, descem ou repetem.", "Toque cada padrão uma vez."],
-    childDoes: "Usa o pentacorde Dó–Sol e reconhece direção.",
-  },
-  "5-8:15": {
-    teach: ["Mostre as cinco linhas e quatro espaços.", "Apresente a clave de Sol como sinal que organiza a pauta.", "Mostre Dó central e Sol como dois pontos de referência.", "Leia notas próximas por passo, em vez de decorar listas."],
-    say: "Não vamos decorar todas as notas. Vamos usar pontos conhecidos e contar passos.",
-    practice: ["Mostre 5 notas próximas de Dó/Sol.", "O aluno diz se está acima/abaixo e encontra por relação.", "Toque 3 exemplos no piano."],
-    childDoes: "Usa referências da clave de Sol para encontrar notas próximas.",
-  },
-  "5-8:16": {
-    teach: ["Desenhe três padrões: repetição, passo e salto.", "Toque cada um.", "Peça ao aluno para identificar pelo desenho e pelo som.", "Mostre que leitura começa pelo formato antes do nome."],
-    say: "Antes de perguntar 'qual nota?', pergunta: repetiu, andou ou saltou?",
-    practice: ["Classifique 6 pequenos padrões.", "Toque 4 deles.", "Finalize lendo um padrão sem nomear nota por nota."],
-    childDoes: "Reconhece repetição, passos e saltos na pauta.",
-  },
-  "5-8:17": {
-    teach: ["Mostre um padrão de 3–5 notas na pauta.", "Identifique a primeira nota usando referência.", "Observe direção e intervalos.", "Só então leve a mão para o teclado e toque."],
-    say: "Primeiro lê o desenho; depois procura a primeira nota; só então toca.",
-    practice: ["Faça 4 padrões.", "Em cada um siga sempre: olhar → dizer direção → achar primeira nota → tocar.", "Evite começar a tocar antes de ler."],
-    childDoes: "Transforma um padrão visual em movimento no teclado.",
-  },
-  "5-8:18": {
-    teach: ["Escolha uma melodia curta de 4–8 compassos.", "Divida em frases de 2 compassos.", "Leia a primeira frase sem tocar.", "Toque devagar e repita; depois passe à frase 2.", "Una as duas sem voltar ao início a cada erro."],
-    say: "Vamos ler como uma história: uma frase de cada vez.",
-    practice: ["Pratique 2 frases separadas.", "Junte-as.", "Faça uma execução completa com no máximo três paragens."],
-    childDoes: "Toca uma pequena melodia lida em frases.",
-  },
-  "5-8:19": {
-    teach: ["Posicione a mão direita em Dó–Sol.", "Toque 1–2–3–4–5 lentamente.", "Observe se punho e ombro ficam soltos.", "Volte 5–4–3–2–1."],
-    say: "Os dedos trabalham, mas a mão não precisa endurecer.",
-    practice: ["Faça subida/descida 3 vezes.", "Depois aplique o padrão numa frase de repertório.", "Pare se houver tensão."],
-    childDoes: "Mantém padrão de cinco dedos com mão direita estável.",
-  },
-  "5-8:20": {
-    teach: ["Posicione a mão esquerda em cinco notas confortáveis.", "Mostre a numeração espelhada: 5–4–3–2–1 ao subir.", "Apresente a clave de Fá e mostre uma referência simples de Fá/Dó.", "Toque um padrão curto olhando primeiro a pauta."],
-    say: "A mão esquerda também tem um mapa. A clave de Fá ajuda a encontrá-lo.",
-    practice: ["Faça 3 padrões de mão esquerda.", "Aponte a referência na clave de Fá antes de tocar.", "Finalize com 5 notas ascendentes e descendentes."],
-    childDoes: "Usa a mão esquerda e reconhece referências iniciais na clave de Fá.",
-  },
-  "5-8:21": {
-    teach: ["Mostre clave de Sol em cima e clave de Fá em baixo.", "Marque o Dó central entre as duas pautas.", "Peça ao aluno para apontar qual mão toca cada clave.", "Leia 4 notas em torno do Dó central."],
-    say: "A grande pauta é um único mapa: direita em cima, esquerda em baixo, Dó central no meio.",
-    practice: ["Mostre 6 notas e pergunte qual mão/clave.", "Toque 4 delas.", "Depois alterne uma nota da direita e uma da esquerda."],
-    childDoes: "Entende a relação entre as duas claves e o Dó central.",
-  },
-  "5-8:22": {
-    teach: ["Toque 3 notas ligadas sem levantar os dedos cedo.", "Depois toque as mesmas 3 curtas, com movimento pequeno.", "Nomeie legato e staccato.", "Peça ao aluno para comparar o som."],
-    say: "Mesmas notas, dois jeitos de falar: ligado ou saltadinho.",
-    practice: ["Faça 4 cartões legato/staccato.", "O aluno toca a mesma sequência conforme o cartão.", "Alterne sem aumentar velocidade."],
-    childDoes: "Controla legato e staccato com movimento confortável.",
-  },
-  "5-8:23": {
-    teach: ["Toque uma frase curta com a mão direita.", "Responda com a esquerda.", "Peça ao aluno para fazer direita → esquerda.", "Use 2–3 notas por frase."],
-    say: "Uma mão termina a frase e passa a conversa para a outra.",
-    practice: ["Faça 4 trocas.", "Depois toque 8 pulsos alternando mãos sem pausa extra.", "Finalize com um padrão escolhido pelo aluno."],
-    childDoes: "Alterna frases entre as mãos mantendo o pulso.",
-  },
-  "5-8:24": {
-    teach: ["Escolha uma nota longa na mão esquerda.", "Toque uma pequena frase de 3–5 notas na direita enquanto a esquerda sustenta.", "Treine mãos separadas.", "Junte apenas um compasso por vez."],
-    say: "A esquerda segura a base; a direita conta a história.",
-    practice: ["Faça 2 compassos com duas mãos.", "Repita sem tensão.", "Depois junte 4 compassos se estiver confortável."],
-    childDoes: "Toca um padrão inicial com duas mãos sem perder postura.",
-  },
+const g=(teach:string[],say:string,practice:string[],childDoes:string):ManualLessonGuide=>({teach,say,practice,childDoes});
+export const guides58_13_24:Record<string,ManualLessonGuide>={
+"5-8:13":g(["Mantenha um pulso lento de quatro tempos.","No mesmo pulso, fale 'ta-ka' duas vezes por batida.","Troque a fala por duas palmas iguais dentro de cada pulso.","Mostre o par de colcheias e leve-o para uma única tecla."],"O pulso continua igual; agora cabem dois sons dentro dele.",["Alterne um pulso com semínima e outro com duas colcheias.","Faça quatro padrões curtos: falar → bater → tocar.","Não permita que as colcheias façam o pulso acelerar."],"Executa pares de colcheias dentro de uma pulsação estável."),
+"5-8:14":g(["Desenhe quatro caixas e conte 1–2–3–4.","Toque um som por pulso, dando ligeiro apoio ao 1.","Mostre 4/4 e explique apenas que há quatro pulsos em cada compasso.","Use semínimas, mínimas e pausas já conhecidas para preencher caixas."],"Cada compasso é uma caixa com quatro pulsos. Quando enche, começa outra.",["Monte três compassos de quatro tempos.","Conte e bata antes de tocar.","Peça que a criança confira se cada caixa tem exatamente quatro pulsos."],"Organiza figuras conhecidas dentro de 4/4 e sente o primeiro pulso."),
+"5-8:15":g(["Caminhe em grupos de três: 1–2–3, 1–2–3.","Dê leve apoio ao 1 sem transformar em pancada.","Mostre 3/4 ao lado de 4/4 e compare o tamanho da caixa.","Toque três compassos com uma nota por pulso."],"Agora cada caixa termina no três. Um–dois–três, e começa de novo.",["Alterne exemplos de 3/4 e 4/4 para identificar.","Toque três compassos em 3/4.","Faça uma pequena valsa usando uma nota grave no 1 e duas leves no 2–3."],"Distingue 3/4 de 4/4 e mantém grupos de três."),
+"5-8:16":g(["Separe quatro cartões: semínima, mínima, semibreve e pausa.","Monte um compasso de 4/4 e conte-o.","Troque uma figura mantendo o total correto.","Leve o ritmo montado para uma única nota e depois para a frase do repertório."],"Primeiro construímos o ritmo. Depois fazemos esse ritmo virar música.",["Monte três compassos diferentes.","Bata cada um sem piano.","Toque dois deles e identifique um padrão parecido na música do mês."],"Combina valores conhecidos e executa o compasso sem perder o pulso."),
+"5-8:17":g(["Mostre a pauta sem nomes de notas.","Aponte uma sequência que sobe linha–espaço–linha e toque três teclas vizinhas subindo.","Faça o mesmo descendo.","Mostre uma nota repetida e compare o desenho com a repetição no teclado."],"A pauta é um mapa: quando o desenho sobe, o som sobe; quando desce, o som desce.",["Classifique seis desenhos como sobe, desce ou repete.","Trace com o dedo antes de tocar.","Crie um desenho simples e peça que a criança o transforme em movimento no teclado."],"Relaciona direção visual da pauta com direção no teclado."),
+"5-8:18":g(["Encontre o Dó central no teclado usando as duas pretas.","Mostre onde ele fica entre as pautas da grande pauta.","Toque o Dó central e depois notas vizinhas para cima e para baixo.","Volte sempre ao Dó como ponto de partida."],"Este Dó fica no meio do nosso grande mapa. Ele vai ajudar a encontrar os vizinhos.",["Peça cinco retornos ao Dó central a partir de notas próximas.","Mostre pequenos padrões que começam no Dó.","Toque um padrão sem escrever nomes nas notas."],"Encontra Dó central no teclado e na pauta e usa-o como referência."),
+"5-8:19":g(["Mostre a clave de Sol e a linha que passa pelo Sol.","Encontre esse Sol no teclado.","Mostre uma nota um passo acima e outra abaixo sem dar o nome primeiro.","Use direção e distância para encontrá-las."],"Não precisamos decorar a pauta inteira. Conhecemos o Sol e caminhamos a partir dele.",["Mostre seis notas próximas do Sol.","A criança diz primeiro a direção e só depois encontra a tecla.","Leia uma frase de quatro notas usando o Sol como âncora."],"Usa Sol como referência para ler notas próximas na clave de Sol."),
+"5-8:20":g(["Mostre a clave de Fá e a linha do Fá de referência.","Encontre esse Fá na região da mão esquerda.","Mostre notas vizinhas acima e abaixo.","Compare a posição com o Dó central já conhecido."],"A clave de Fá é o mapa da região onde a mão esquerda vai trabalhar mais.",["Mostre seis notas próximas do Fá.","Leia três pequenos padrões antes de tocar.","Faça a criança localizar Fá novamente sem ajuda."],"Usa Fá como referência inicial na clave de Fá."),
+"5-8:21":g(["Desenhe três padrões: nota repetida, passo e salto.","Peça que a criança descreva o formato antes de dizer qualquer nota.","Toque os três e compare também pelo ouvido.","Mostre o mesmo princípio numa frase real da partitura."],"Antes de perguntar 'qual nota?', pergunta: repetiu, andou ou saltou?",["Classifique oito pequenos padrões.","Toque quatro deles a partir de uma nota conhecida.","Encontre um passo e um salto no repertório do mês."],"Reconhece repetição, passos e saltos antes de nomear cada nota."),
+"5-8:22":g(["Mostre uma frase de quatro a seis notas.","Encontre somente a primeira nota usando Dó, Sol ou Fá de referência.","Leia o desenho inteiro com o dedo: repete, sobe, desce, salta.","Só então toque a frase."],"Primeiro lê o caminho inteiro. Só depois colocamos as mãos no piano.",["Faça quatro frases curtas seguindo sempre olhar → referência → padrão → tocar.","Não permita escrever letras sobre as notas.","Repita apenas a frase em que a leitura quebrou."],"Lê uma frase curta por referência e padrão sem escrever nomes na pauta."),
+"5-8:23":g(["Mostre clave de Sol em cima e clave de Fá em baixo.","Marque o Dó central entre as duas.","Aponte notas e pergunte primeiro qual mão/região pertence.","Alterne uma nota da direita e uma da esquerda."],"Não são dois mapas separados. É um piano inteiro desenhado em duas pautas.",["Faça oito apontamentos rápidos: clave, região e tecla.","Leia dois compassos alternando as mãos.","Termine voltando ao Dó central como referência comum."],"Relaciona as duas claves e alterna referências sem se perder."),
+"5-8:24":g(["Abra a partitura simples da música do mês.","Antes de tocar, identifique compasso, primeira nota e padrões repetidos.","Leia a primeira frase com o dedo e depois toque.","Faça o mesmo com a segunda e una as duas."],"A partitura não serve para dizer cada resposta; ela mostra o caminho da música que já estamos aprendendo.",["Leia duas frases separadas.","Junte-as sem parar a cada erro.","Faça uma execução contínua da versão aprendida no mês."],"Usa a partitura como guia para tocar a versão mensal com continuidade.")
 };
