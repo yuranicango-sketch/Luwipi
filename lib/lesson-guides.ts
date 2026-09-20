@@ -15,6 +15,7 @@ import { guides58_2_12 } from "@/lib/lesson-guides-5-8-2-12";
 import { guides58_13_24 } from "@/lib/lesson-guides-5-8-13-24";
 import { guides58_25_36 } from "@/lib/lesson-guides-5-8-25-36";
 import { guides58_37_48 } from "@/lib/lesson-guides-5-8-37-48";
+import { guidesAdult } from "@/lib/lesson-guides-adult";
 
 export const manualLessonGuides: Record<string, ManualLessonGuide> = {
   ...guides24_2_12,
@@ -24,7 +25,8 @@ export const manualLessonGuides: Record<string, ManualLessonGuide> = {
   ...guides58_2_12,
   ...guides58_13_24,
   ...guides58_25_36,
-  ...guides58_37_48
+  ...guides58_37_48,
+  ...guidesAdult
 };
 
 export function getManualLessonGuide(age: AgeGroup, lessonNumber: number) {
