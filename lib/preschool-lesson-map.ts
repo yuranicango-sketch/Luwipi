@@ -3,6 +3,7 @@ import { getPreschoolLessonSteps } from "@/lib/preschool-lessons";
 import { preschool13_24 } from "@/lib/preschool-lessons-13-24";
 import { preschool25_36 } from "@/lib/preschool-lessons-25-36";
 import { preschool37_48 } from "@/lib/preschool-lessons-37-48";
+import { getSong } from "@/lib/music-library";
 
 type RepertoirePlan={title:string;actions:string[];say:string;child:string;success:string};
 const p=(title:string,actions:string[],say:string,child:string,success:string):RepertoirePlan=>({title,actions,say,child,success});
@@ -24,6 +25,7 @@ month(1,"Brilha, Brilha, Estrelinha",[
 ].map(({actions,say,child,success})=>({actions,say,child,success})));
 
 const songs=[["Marcha, Soldado",9],["O Sapo Não Lava o Pé",17],["Ciranda, Cirandinha",25],["A Canoa Virou",33],["Maria Tinha um Cordeirinho",41]] as const;
+const songIds=["estrelinha","marcha-soldado","sapo-nao-lava-pe","ciranda-cirandinha","a-canoa-virou","maria-cordeirinho"] as const;
 for(const [title,start] of songs){
  const phases=[
   ["Ouvir e cantar",["Cante a música inteira com a criança. Descubra o que ela já conhece.","Não leve ao piano antes de ela reconhecer a canção."],"Este mês vamos aprender "+title+". Hoje vamos cantá-la.","Ouve e canta.","Reconhece a música e participa."],
@@ -46,6 +48,6 @@ export function getCompletePreschoolLessonSteps(n:number):LessonStep[]|undefined
  const x=base(n),r=repertoire[n]; if(!x||!r)return;
  const first=x[0],discover=x[1],mission=x[2];
  const example=lessonExamples[n];
- const music:LessonStep={id:"repertoire",icon:"🎹",title:"Repertório · "+r.title,duration:"5–8 min",goal:"Aprender uma música conhecida ao longo do mês, um pequeno trecho de cada vez.",actions:r.actions,say:r.say,childDoes:r.child,success:r.success,tip:n%8===0?"Fecho do mês: a meta é reconhecer e fazer música, não tocar uma versão adulta perfeita.":"Na próxima aula, comece sempre pelo último trecho que a criança já conhece."};
+ const songId=songIds[Math.floor((n-1)/8)]; const song=getSong(songId);\n const music:LessonStep={id:"repertoire",icon:"🎹",title:"Repertório · "+r.title,duration:"5–8 min",songId:song?.id,songEmoji:song?.emoji,songStory:song?.story,goal:"Aprender uma música conhecida ao longo do mês, um pequeno trecho de cada vez.",actions:r.actions,say:r.say,childDoes:r.child,success:r.success,tip:n%8===0?"Fecho do mês: a meta é reconhecer e fazer música, não tocar uma versão adulta perfeita.":"Na próxima aula, comece sempre pelo último trecho que a criança já conhece."};
  return [{...first,id:"arrive"},{...discover,id:"story",example:example??discover.example},{...mission,id:"mission"},music];
 }

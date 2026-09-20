@@ -8,6 +8,7 @@ import type { AgeGroup } from "@/lib/curriculum";
 import type { CurriculumVariant, EnhancedLesson, EnhancedModule } from "@/lib/curriculum-v3";
 import { buildLessonSteps } from "@/lib/lesson-engine";
 import { getSong } from "@/lib/music-library";
+import { PreschoolInlineSong } from "@/components/preschool-inline-song";
 import { completeLesson, saveLessonStep, type MasteryState } from "@/lib/curriculum-progress";
 import styles from "./lesson-runner.module.css";
 
@@ -69,7 +70,7 @@ export function LessonRunner({age,module,lesson,variant,studentId}:Props){
 
       {step.example&&<section className={styles.example}><span className={styles.sectionLabel}>EXEMPLO PRONTO</span><p>{step.example}</p></section>}
 
-      {lessonSong&&<section className={styles.songCard}><div className={styles.songArt}><span>{lessonSong.emoji}</span></div><div><small>MÚSICA DO MÊS · JÁ ESTÁ NO LUWIPI</small><h3>{lessonSong.title}</h3><p>{lessonSong.story}</p><Link href={`/musicas/${lessonSong.id}`}>ABRIR MÚSICA E DESENHO →</Link></div></section>}
+      {lessonSong&&age==="2-4"&&step.id==="repertoire"&&<PreschoolInlineSong song={lessonSong} lessonNumber={lesson.number}/>}\n\n      {lessonSong&&!(age==="2-4"&&step.id==="repertoire")&&<section className={styles.songCard}><div className={styles.songArt}><span>{lessonSong.emoji}</span></div><div><small>MÚSICA DO MÊS · JÁ ESTÁ NO LUWIPI</small><h3>{lessonSong.title}</h3><p>{lessonSong.story}</p><Link href={`/musicas/${lessonSong.id}`}>ABRIR MÚSICA E DESENHO →</Link></div></section>}
 
       {step.say&&<section className={styles.say}><span className={styles.sectionLabel}>DIGA ASSIM</span><p>“{step.say}”</p></section>}
 
