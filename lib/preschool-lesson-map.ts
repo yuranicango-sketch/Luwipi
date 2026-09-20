@@ -48,6 +48,8 @@ export function getCompletePreschoolLessonSteps(n:number):LessonStep[]|undefined
  const x=base(n),r=repertoire[n]; if(!x||!r)return;
  const first=x[0],discover=x[1],mission=x[2];
  const example=lessonExamples[n];
- const songId=songIds[Math.floor((n-1)/8)]; const song=getSong(songId);\n const music:LessonStep={id:"repertoire",icon:"🎹",title:"Repertório · "+r.title,duration:"5–8 min",songId:song?.id,songEmoji:song?.emoji,songStory:song?.story,goal:"Aprender uma música conhecida ao longo do mês, um pequeno trecho de cada vez.",actions:r.actions,say:r.say,childDoes:r.child,success:r.success,tip:n%8===0?"Fecho do mês: a meta é reconhecer e fazer música, não tocar uma versão adulta perfeita.":"Na próxima aula, comece sempre pelo último trecho que a criança já conhece."};
+ const songId=songIds[Math.floor((n-1)/8)];
+ const song=getSong(songId);
+ const music:LessonStep={id:"repertoire",icon:"🎹",title:"Repertório · "+r.title,duration:"5–8 min",songId:song?.id,songEmoji:song?.emoji,songStory:song?.story,goal:"Aprender uma música conhecida ao longo do mês, um pequeno trecho de cada vez.",actions:r.actions,say:r.say,childDoes:r.child,success:r.success,tip:n%8===0?"Fecho do mês: a meta é reconhecer e fazer música, não tocar uma versão adulta perfeita.":"Na próxima aula, comece sempre pelo último trecho que a criança já conhece."};
  return [{...first,id:"arrive"},{...discover,id:"story",example:example??discover.example},{...mission,id:"mission"},music];
 }
