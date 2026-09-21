@@ -24,6 +24,8 @@ export function HomeworkGenerator({ initialSongId }: { initialSongId?: string })
   const [teacherNote, setTeacherNote] = useState("Faça devagar. Primeiro diga as cores, depois toque.");
   const [targetRepeats, setTargetRepeats] = useState(3);
   const [generatedCode, setGeneratedCode] = useState<string | null>(null);
+  const [sending, setSending] = useState(false);
+  const [sendError, setSendError] = useState("");
 
   useEffect(() => {
     function refreshStudents() {
@@ -39,20 +41,18 @@ export function HomeworkGenerator({ initialSongId }: { initialSongId?: string })
   const selectedStudent = students.find((student) => student.id === studentId);
   const selectedSong = availableSongs.find((song) => song.id === songId);
 
-  function generate() {
-    const code = makeCode();
-    const childName = selectedStudent?.name ?? (manualName.trim() || "Pequeno músico");
-    saveAssignment({
-      code,
-      childName,
-      studentId: selectedStudent?.id,
-      songId,
-      teacherNote: teacherNote.trim(),
-      targetRepeats,
-      validUntil: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-      createdAt: new Date().toISOString(),
-    });
-    setGeneratedCode(code);
+  async function generate() {
+    if(!songId)return;
+    setSending(true);setSendError("");
+    const code=makeCode();
+    const childName=selectedStudent?.name ?? (manualName.trim() || "Pequeno músico");
+    const assignment={code,childName,studentId:selectedStudent?.id,songId,teacherNote:teacherNote.trim(),targetRepeats,validUntil:new Date(Date.now()+7*24*60*60*1000).toISOString(),createdAt:new Date().toISOString()};
+    try{
+      const response=await fetch("/api/homework",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(assignment)});
+      if(!response.ok)throw new Error("save_failed");
+      saveAssignment(assignment);setGeneratedCode(code);
+    }catch{setSendError("Não foi possível criar o código. Tente novamente.");}
+    finally{setSending(false);}
   }
 
   return (
@@ -100,8 +100,10 @@ export function HomeworkGenerator({ initialSongId }: { initialSongId?: string })
 
       <div className="generator-actions">
         {selectedSong && <Link className="btn btn-soft" href={`/musicas/${selectedSong.id}`}>Experimentar música</Link>}
-        <button type="button" className="btn btn-primary" onClick={generate}>Gerar código para casa</button>
+        <button type="button" className="btn btn-primary" onClick={generate} disabled={sending}>{sending?"A criar código…":"Gerar código para casa"}</button>
       </div>
+
+      {sendError && <p style={{color:"#b42318",fontWeight:800}}>{sendError}</p>}
 
       {generatedCode && (
         <div className="homework-code-result">
