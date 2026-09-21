@@ -3,11 +3,11 @@
 import Link from "next/link";
 import { type CSSProperties, useRef, useState } from "react";
 import { playPianoRate } from "@/lib/piano-sampler";
+import { LuwipiPiano, type LuwipiPianoKey } from "@/components/luwipi-piano";
 
 type Note = "Dó" | "Ré" | "Mi" | "Sol";
 type Phase = "story" | "ready" | "play" | "success";
 
-const sample = "https://tonejs.github.io/audio/salamander/C4.mp3";
 const notes: Array<{ note: Note; color: string; rate: number }> = [
   { note:"Dó", color:"#ff5f86", rate:1 },
   { note:"Ré", color:"#ffbf3f", rate:Math.pow(2,2/12) },
@@ -26,10 +26,7 @@ function wait(ms:number){return new Promise<void>((resolve)=>window.setTimeout(r
 function playNote(note:Note){
   const item=notes.find((value)=>value.note===note);
   if(!item)return;
-  const audio=new Audio(sample);
-  audio.playbackRate=item.rate;
-  audio.volume=.65;
-  void audio.play();
+  void playPianoRate(item.rate);
 }
 
 export function EchoMusicalGame({ story }: { story: string }) {
@@ -57,7 +54,8 @@ export function EchoMusicalGame({ story }: { story: string }) {
     setMessage("Agora faça o eco.");
   }
 
-  function press(note:Note){
+  function pressKey(key:LuwipiPianoKey){
+    const note=key.note as Note;
     if(phase!=="play"||!pattern)return;
     playNote(note);
     const next=[...input,note];
@@ -107,15 +105,7 @@ export function EchoMusicalGame({ story }: { story: string }) {
     <h1>{message}</h1>
     <button className="hear" type="button" onClick={()=>void hear()}>🔊 OUVIR</button>
 
-    <div className="pads">
-      {notes.map((item)=><button
-        key={item.note}
-        type="button"
-        onClick={()=>press(item.note)}
-        disabled={phase!=="play"}
-        style={{"--pad":item.color} as CSSProperties}
-      ><span>{item.note}</span></button>)}
-    </div>
+    <LuwipiPiano compact disabled={phase!=="play"} onPress={pressKey}/>
 
     {phase==="success"&&<div className="success"><strong>✓ Muito bem!</strong><button className="duo small" type="button" onClick={next}>CONTINUAR</button></div>}
     <style jsx>{css}</style>
