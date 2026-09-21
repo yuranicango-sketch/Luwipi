@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { type CSSProperties, useMemo, useRef, useState } from "react";
-import type { KidsSong } from "@/lib/music-library";
+import { noteName, noteOctave, noteRate, type KidsSong } from "@/lib/music-library";
 import { playPianoRate, preloadPianoSamples } from "@/lib/piano-sampler";
 import { MusicScore } from "@/components/music-score";
 
@@ -39,6 +39,7 @@ const POSITION:Record<string,string>={
 };
 
 function sound(key:Key){void playPianoRate(key.rate);}
+function samePitch(key:Key,note:string){return key.note===noteName(note)&&(key.octave??4)===noteOctave(note);}
 const wait=(ms:number)=>new Promise<void>(resolve=>window.setTimeout(resolve,ms));
 
 function NoteToken({theme,color,note,active,done}:{theme:Theme;color:string;note:string;active:boolean;done:boolean}){
@@ -121,7 +122,7 @@ export function SongPractice({song}:{song:KidsSong}){
     const id=++token.current;setListening(true);
     for(const note of visibleNotes){
       if(token.current!==id)return;
-      const key=piano.find(item=>item.note===note);if(key)sound(key);
+      const key=piano.find(item=>samePitch(item,note));if(key)sound(key);
       await wait(470);
     }
     if(token.current===id)setListening(false);
@@ -141,20 +142,20 @@ export function SongPractice({song}:{song:KidsSong}){
 
   return <section className="card">
     <div className="head">
-      <div><small>Parte {currentSection.index+1} de {sections.length} · {currentSection.section.label}</small><h1>{mode==="piano"?"Pratique esta frase":`Agora: ${expected}`}</h1></div>
+      <div><small>Parte {currentSection.index+1} de {sections.length} · {currentSection.section.label}</small><h1>{mode==="piano"?"Pratique esta frase":`Agora: ${expected?noteName(expected):""}${expected&&piano.length>7?noteOctave(expected):""}`}</h1></div>
       <div className="mode"><button type="button" className={mode==="site"?"active":""} onClick={()=>setMode("site")}>No Luwipi</button><button type="button" className={mode==="piano"?"active":""} onClick={()=>setMode("piano")}>Piano físico</button></div>
     </div>
 
     <Scene song={song} progress={progress}/>
     <button className="listen" type="button" onClick={()=>void listen()}>{listening?"Tocando…":"🔊 OUVIR ESTA PARTE"}</button>
 
-    {song.sheetMusic?<MusicScore notes={visibleNotes} currentIndex={mode==="piano"?-1:localStep} timeSignature={song.timeSignature??"4/4"}/>:<div className="notes">{visibleNotes.map((note,index)=>{const key=piano.find(item=>item.note===note)!;return <NoteToken key={`${note}-${currentSection.index}-${index}`} theme={meta.theme} color={key.color} note={note} active={mode==="site"&&index===localStep} done={mode==="site"&&index<localStep}/>;})}</div>}
+    {song.sheetMusic?<MusicScore notes={visibleNotes} currentIndex={mode==="piano"?-1:localStep} timeSignature={song.timeSignature??"4/4"}/>:<div className="notes">{visibleNotes.map((note,index)=>{const key=piano.find(item=>samePitch(item,note))??piano.find(item=>item.note===noteName(note))!;return <NoteToken key={`${note}-${currentSection.index}-${index}`} theme={meta.theme} color={key.color} note={noteName(note)} active={mode==="site"&&index===localStep} done={mode==="site"&&index<localStep}/>;})}</div>}
 
     <div className="songProgress"><i style={{width:`${progress}%`}}/></div>
 
     {mode==="piano"?<PhysicalGuide notes={visibleNotes} firstNote={visibleNotes[0]??"Dó"} age={song.age} onDone={()=>setStep(currentSection.end)}/>
     :<div className="pianoShell"><div className="brand">LUWIPI PIANO</div><div className="pianoReal">
-      {piano.map(key=><button key={key.note} type="button" onClick={()=>press(key)} className={`white ${expected===key.note?"expected":""} ${wrong===key.note?"wrong":""}`} style={{"--key":key.color} as CSSProperties}><span>{key.note}</span></button>)}
+      {piano.map(key=><button key={key.note} type="button" onClick={()=>press(key)} className={`white ${expected&&samePitch(key,expected)?"expected":""} ${wrong===key.note?"wrong":""}`} style={{"--key":key.color} as CSSProperties}><span>{key.note}</span></button>)}
       <i className="black b1"/><i className="black b2"/><i className="black b3"/><i className="black b4"/><i className="black b5"/>
     </div></div>}
     <style jsx>{css}</style>
