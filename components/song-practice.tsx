@@ -91,7 +91,7 @@ export function SongPractice({song}:{song:KidsSong}){
   const seq=useMemo(()=>sections.flatMap(s=>s.notes),[sections]);
   const piano=useMemo(()=>{
     const colors=new Map(song.colors?.map(item=>[item.note,item.color])??[]);
-    return KEYS.map(key=>({...key,color:colors.get(key.note)??key.color}));
+    const octaves=song.pianoOctaves??1;\n    return Array.from({length:octaves},(_,index)=>KEYS.map(key=>({...key,octave:index+4,rate:key.rate*Math.pow(2,index),color:colors.get(key.note)??key.color}))).flat();
   },[song.colors]);
   const meta=SPECIAL[song.id]??({theme:"music" as Theme,scene:"garden",finish:"História concluída!",goal:"🏁"} as const);
 
@@ -114,7 +114,7 @@ export function SongPractice({song}:{song:KidsSong}){
   function press(key:Key){
     sound(key);
     if(mode!=="site"||!expected)return;
-    if(key.note!==expected){setWrong(key.note);window.setTimeout(()=>setWrong(null),350);return;}
+    if(!samePitch(key,expected)){setWrong(`${key.note}${key.octave??4}`);window.setTimeout(()=>setWrong(null),350);return;}
     setStep(value=>value+1);
   }
   async function listen(){
@@ -155,7 +155,7 @@ export function SongPractice({song}:{song:KidsSong}){
 
     {mode==="piano"?<PhysicalGuide notes={visibleNotes} firstNote={visibleNotes[0]??"Dó"} age={song.age} onDone={()=>setStep(currentSection.end)}/>
     :<div className="pianoShell"><div className="brand">LUWIPI PIANO</div><div className="pianoReal">
-      {piano.map(key=><button key={key.note} type="button" onClick={()=>press(key)} className={`white ${expected&&samePitch(key,expected)?"expected":""} ${wrong===key.note?"wrong":""}`} style={{"--key":key.color} as CSSProperties}><span>{key.note}</span></button>)}
+      {piano.map(key=><button key={`${key.note}-${key.octave??4}`} type="button" onClick={()=>press(key)} className={`white ${expected&&samePitch(key,expected)?"expected":""} ${wrong===`${key.note}${key.octave??4}`?"wrong":""}`} style={{"--key":key.color} as CSSProperties}><span>{key.note}{piano.length>7?<small>{key.octave}</small>:null}</span></button>)}
       <i className="black b1"/><i className="black b2"/><i className="black b3"/><i className="black b4"/><i className="black b5"/>
     </div></div>}
     <style jsx>{css}</style>
