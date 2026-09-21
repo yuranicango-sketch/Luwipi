@@ -27,7 +27,7 @@ export async function GET(request:Request,{params}:{params:Promise<{code:string}
     await admin.from("homework_code_attempts").insert({code_hash:ch,ip_hash:ih});
   }
 
-  const {data,error}=await s.rpc("get_public_homework",{p_code:code});
+  // Prefer the server credential when configured; fall back to the public client.\n  // The RPC itself only exposes the safe public homework projection.\n  const lookup = async (client: typeof server) => client.rpc("get_public_homework",{p_code:code});\n  let {data,error}=await lookup(server);\n  if(error && admin){({data,error}=await lookup(admin as typeof server));}
   if(error){console.error("public homework lookup failed",{code,error});return NextResponse.json({error:"database_error",detail:error.code||"rpc_failed"},{status:500});}
   const row=Array.isArray(data)?data[0]:data;
   if(!row)return NextResponse.json({error:"not_found"},{status:404});
