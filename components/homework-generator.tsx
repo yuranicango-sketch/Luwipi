@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { kidsSongs } from "@/lib/music-library";
-import { getStudents, saveAssignment, type Student } from "@/lib/teacher-local";
+import { saveAssignment } from "@/lib/teacher-local";
+type Student={id:string;name:string;ageGroup:"2-4"|"5-8"|"adult";parentName?:string};
 
 const CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 
@@ -28,14 +29,10 @@ export function HomeworkGenerator({ initialSongId }: { initialSongId?: string })
   const [sendError, setSendError] = useState("");
 
   useEffect(() => {
-    function refreshStudents() {
-      const list = getStudents();
-      setStudents(list);
-      setStudentId((current) => current || list[0]?.id || "");
-    }
-    refreshStudents();
-    window.addEventListener("luwipi:students-changed", refreshStudents);
-    return () => window.removeEventListener("luwipi:students-changed", refreshStudents);
+    fetch("/api/students").then(r=>r.ok?r.json():{students:[]}).then(({students:list})=>{
+      const mapped=(list??[]).map((x:any)=>({id:x.id,name:x.name,ageGroup:x.age_group,parentName:x.guardian_name}));
+      setStudents(mapped);setStudentId(current=>current||mapped[0]?.id||"");
+    }).catch(()=>setStudents([]));
   }, []);
 
   const selectedStudent = students.find((student) => student.id === studentId);
@@ -109,7 +106,7 @@ export function HomeworkGenerator({ initialSongId }: { initialSongId?: string })
         <div className="homework-code-result">
           <small>Código para enviar ao responsável</small>
           <strong>{generatedCode}</strong>
-          <p>A mesma experiência que você pode fazer aqui fica disponível ao responsável através deste código.</p>
+          <p>Envie o link e o código ao responsável. O link abre diretamente esta tarefa.</p><p><strong>{window.location.origin}/tarefa/{generatedCode}</strong></p>
           <div className="result-actions">
             <Link className="btn btn-primary btn-small" href={`/musicas/${songId}`}>Fazer aqui novamente</Link>
             <Link className="btn btn-soft btn-small" href={`/tarefa/${generatedCode}`}>Testar como responsável →</Link>

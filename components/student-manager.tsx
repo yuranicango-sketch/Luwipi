@@ -1,74 +1,8 @@
-"use client";
-
-import { useEffect, useState } from "react";
-import { getStudents, removeStudent, saveStudent, type Student } from "@/lib/teacher-local";
-
-function makeId() {
-  return `aluno-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
-}
-
-export function StudentManager() {
-  const [students, setStudents] = useState<Student[]>([]);
-  const [name, setName] = useState("");
-  const [ageGroup, setAgeGroup] = useState<"2-4" | "5-8">("2-4");
-  const [parentName, setParentName] = useState("");
-
-  function refresh() {
-    setStudents(getStudents());
-  }
-
-  useEffect(() => {
-    refresh();
-    window.addEventListener("luwipi:students-changed", refresh);
-    return () => window.removeEventListener("luwipi:students-changed", refresh);
-  }, []);
-
-  function addStudent() {
-    const cleanName = name.trim();
-    if (!cleanName) return;
-    saveStudent({
-      id: makeId(),
-      name: cleanName,
-      ageGroup,
-      parentName: parentName.trim() || undefined,
-      createdAt: new Date().toISOString(),
-    });
-    setName("");
-    setParentName("");
-  }
-
-  return (
-    <section className="student-manager">
-      <div className="student-head">
-        <div><small>Meus alunos</small><h2>Quem está aprendendo comigo?</h2></div>
-        <span>{students.length} aluno{students.length === 1 ? "" : "s"}</span>
-      </div>
-
-      <div className="student-form">
-        <input value={name} onChange={(event) => setName(event.target.value)} placeholder="Nome da criança" />
-        <select value={ageGroup} onChange={(event) => setAgeGroup(event.target.value as "2-4" | "5-8")}>
-          <option value="2-4">2 a 4 anos</option>
-          <option value="5-8">5 a 8 anos</option>
-        </select>
-        <input value={parentName} onChange={(event) => setParentName(event.target.value)} placeholder="Responsável (opcional)" />
-        <button type="button" className="btn btn-primary btn-small" onClick={addStudent}>Adicionar aluno</button>
-      </div>
-
-      {students.length > 0 ? (
-        <div className="student-list">
-          {students.map((student) => (
-            <article key={student.id}>
-              <div className="avatar">{student.ageGroup === "2-4" ? "🧸" : "🎹"}</div>
-              <div><strong>{student.name}</strong><span>{student.ageGroup === "2-4" ? "2 a 4 anos" : "5 a 8 anos"}{student.parentName ? ` · ${student.parentName}` : ""}</span></div>
-              <button type="button" onClick={() => removeStudent(student.id)} aria-label={`Remover ${student.name}`}>×</button>
-            </article>
-          ))}
-        </div>
-      ) : <div className="empty-students">Adicione o primeiro aluno para começar a organizar tarefas e progresso.</div>}
-
-      <style jsx>{`
-        .student-manager{background:#fff;border:1px solid #e6edf5;border-radius:28px;padding:26px;box-shadow:0 18px 48px rgba(44,71,106,.08);margin-bottom:22px}.student-head{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;margin-bottom:20px}.student-head small{font-size:11px;text-transform:uppercase;letter-spacing:.08em;font-weight:900;color:#6375dc}.student-head h2{font-size:26px;margin:4px 0}.student-head>span{background:#f1f5ff;color:#5867c8;padding:8px 11px;border-radius:99px;font-size:12px;font-weight:900}.student-form{display:grid;grid-template-columns:1.2fr .8fr 1fr auto;gap:10px}.student-form input,.student-form select{border:1px solid #d8e1ed;background:#fbfdff;border-radius:14px;padding:12px 13px;color:#20324d;font:inherit}.student-list{display:grid;gap:9px;margin-top:18px}.student-list article{display:flex;align-items:center;gap:12px;border:1px solid #edf1f5;border-radius:16px;padding:11px 13px}.avatar{width:42px;height:42px;border-radius:13px;background:#f6f8ff;display:grid;place-items:center;font-size:22px}.student-list div:nth-child(2){display:flex;flex-direction:column;gap:2px;flex:1}.student-list strong{color:#243651}.student-list span{color:#77869b;font-size:12px}.student-list button{border:0;background:#fff1f1;color:#b94a4a;border-radius:10px;width:31px;height:31px;cursor:pointer;font-size:20px}.empty-students{margin-top:16px;padding:16px;border-radius:15px;background:#f8fafc;color:#7a8799;font-size:13px}@media(max-width:780px){.student-form{grid-template-columns:1fr 1fr}.student-form button{grid-column:1/-1}}@media(max-width:520px){.student-form{grid-template-columns:1fr}}
-      `}</style>
-    </section>
-  );
-}
+"use client";import {useEffect,useState} from "react";
+type Student={id:string;name:string;age_group:string;guardian_name?:string|null};type Group={id:string;name:string;student_group_members?:{student_id:string}[]};
+export function StudentManager(){const [students,setStudents]=useState<Student[]>([]),[groups,setGroups]=useState<Group[]>([]),[name,setName]=useState(""),[age,setAge]=useState("2-4"),[guardian,setGuardian]=useState(""),[bulk,setBulk]=useState(""),[groupName,setGroupName]=useState("");
+async function refresh(){const [s,g]=await Promise.all([fetch("/api/students").then(r=>r.json()),fetch("/api/groups").then(r=>r.json())]);setStudents(s.students??[]);setGroups(g.groups??[])}useEffect(()=>{void refresh()},[]);
+async function add(){if(!name.trim())return;await fetch("/api/students",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({name,ageGroup:age,guardianName:guardian})});setName("");setGuardian("");await refresh()}
+async function importList(){const rows=bulk.split(/\r?\n/).map(l=>l.split(/[,;\t]/)).filter(x=>x[0]?.trim()).map(x=>({name:x[0].trim(),ageGroup:(x[1]||"5-8").trim(),guardianName:(x[2]||"").trim()}));if(!rows.length)return;await fetch("/api/students",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({students:rows})});setBulk("");await refresh()}
+async function group(){if(!groupName.trim()||!students.length)return;await fetch("/api/groups",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({name:groupName,studentIds:students.map(s=>s.id)})});setGroupName("");await refresh()}
+return <section className="student-manager"><div className="student-head"><div><small>Meus alunos</small><h2>Alunos de piano</h2></div><span>{students.length}</span></div><div className="student-form"><input value={name} onChange={e=>setName(e.target.value)} placeholder="Nome do aluno"/><select value={age} onChange={e=>setAge(e.target.value)}><option value="2-4">2–4 anos</option><option value="5-8">5–8 anos</option><option value="adult">Adulto</option></select><input value={guardian} onChange={e=>setGuardian(e.target.value)} placeholder="Responsável"/><button className="btn btn-primary btn-small" onClick={add}>Adicionar</button></div><details><summary>Importar vários alunos</summary><p>Cole linhas no formato: Nome, idade, responsável. Aceita CSV, tabulação ou ponto e vírgula.</p><textarea value={bulk} onChange={e=>setBulk(e.target.value)} rows={6} placeholder={"Maria,2-4,Ana\nJoão,5-8,Carlos"}/><button className="btn btn-soft btn-small" onClick={importList}>Importar lista</button></details>{students.length?<div className="student-list">{students.map(s=><article key={s.id}><div>🎹</div><div><strong>{s.name}</strong><span>{s.age_group}{s.guardian_name?` · ${s.guardian_name}`:""}</span></div></article>)}</div>:<p>Nenhum aluno ainda.</p>}<div className="group"><input value={groupName} onChange={e=>setGroupName(e.target.value)} placeholder="Nome da turma"/><button className="btn btn-soft btn-small" onClick={group}>Criar turma com estes alunos</button></div>{groups.length>0&&<p><strong>Turmas:</strong> {groups.map(g=>g.name).join(" · ")}</p>}<style jsx>{`.student-manager{background:#fff;border:1px solid #e6edf5;border-radius:28px;padding:26px;margin-bottom:22px}.student-head{display:flex;justify-content:space-between}.student-head h2{margin:4px 0 20px}.student-form{display:grid;grid-template-columns:1fr .7fr 1fr auto;gap:10px}.student-form input,.student-form select,textarea,.group input{border:1px solid #d8e1ed;border-radius:14px;padding:12px;font:inherit}details{margin:18px 0;padding:14px;background:#f8fafc;border-radius:16px}details textarea{width:100%;margin:10px 0}.student-list{display:grid;gap:8px}.student-list article{display:flex;gap:12px;padding:11px;border:1px solid #edf1f5;border-radius:14px}.student-list article div:last-child{display:flex;flex-direction:column}.student-list span{font-size:12px;color:#77869b}.group{display:flex;gap:10px;margin-top:18px}.group input{flex:1}@media(max-width:760px){.student-form{grid-template-columns:1fr}.group{flex-direction:column}}`}</style></section>}
