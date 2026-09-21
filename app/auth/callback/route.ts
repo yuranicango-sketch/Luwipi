@@ -23,20 +23,24 @@ export async function GET(request: Request) {
   const { data, error } = await supabase.auth.exchangeCodeForSession(code);
   if (error || !data.user) return NextResponse.redirect(new URL("/login?error=oauth", requestUrl.origin));
 
-  if (data.session?.provider_refresh_token) {
+  const refreshToken = data.session?.provider_refresh_token;
+  if (refreshToken) {
     try {
-      const encrypted = encrypt(data.session.provider_refresh_token);
+      const encrypted = encrypt(refreshToken);
       const admin = createAdminSupabaseClient();
       const db = admin ?? supabase;
       const { error: saveError } = await db.from("profiles").update({
         google_drive_refresh_token_enc: encrypted,
         google_drive_connected_at: new Date().toISOString(),
       }).eq("id", data.user.id);
-      if (saveError) return NextResponse.redirect(new URL("/dashboard?drive=connect_error", requestUrl.origin));
+      if (saveError) return NextResponse.redirect(new URL("/dashboard?drive=save_error", requestUrl.origin));
+      return NextResponse.redirect(new URL(next, requestUrl.origin));
     } catch {
-      return NextResponse.redirect(new URL("/dashboard?drive=connect_error", requestUrl.origin));
+      return NextResponse.redirect(new URL("/dashboard?drive=config_error", requestUrl.origin));
     }
   }
 
-  return NextResponse.redirect(new URL(next, requestUrl.origin));
+  // Google may omit a refresh token when an old grant is reused.
+  // Never mark Drive as connected unless a refresh token was actually persisted.
+  return NextResponse.redirect(new URL("/dashboard?drive=refresh_token_missing", requestUrl.origin));
 }
