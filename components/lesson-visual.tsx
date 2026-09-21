@@ -1,8 +1,9 @@
 import type { CSSProperties } from "react";
 import styles from "./lesson-visual.module.css";
 import { LuwipiPiano } from "@/components/luwipi-piano";
+import type { AgeGroup } from "@/lib/curriculum";
 
-type Props={stepId:string;icon:string;title:string;age:"2-4"|"5-8";accent:string;instruction?:string};
+type Props={stepId:string;icon:string;title:string;age:AgeGroup;accent:string;instruction?:string};
 
 export function LessonVisual({stepId,icon,title,age,accent,instruction=""}:Props){
  const words=`${title} ${instruction}`.toLowerCase();
