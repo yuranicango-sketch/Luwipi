@@ -3,11 +3,11 @@
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { getDemoAssignment, type HomeworkAssignment } from "@/lib/demo-assignments";
-import { getSong } from "@/lib/music-library";
+import { getSong, noteName, noteOctave } from "@/lib/music-library";
 import { getHomeworkProgress, saveHomeworkProgress } from "@/lib/teacher-local";
 import { playPianoRate, preloadPianoSamples } from "@/lib/piano-sampler";
 
-type PianoKey = { note: string; color: string; playbackRate: number };
+type PianoKey = { note: string; color: string; playbackRate: number; octave?: number };
 
 const baseSample = "https://tonejs.github.io/audio/salamander/C4.mp3";
 const pianoKeys: PianoKey[] = [
@@ -77,6 +77,7 @@ export function HomeworkExperience({ code }: { code: string }) {
 
   const song = useMemo(() => assignment ? getSong(assignment.songId) : undefined, [assignment]);
   const sequence = song?.sequence ?? [];
+  const homeworkKeys = useMemo(() => song?.pianoOctaves===2 ? [0,1].flatMap(octave=>pianoKeys.map(key=>({...key,octave:octave+4,playbackRate:key.playbackRate*Math.pow(2,octave)}))) : pianoKeys.map(key=>({...key,octave:4})), [song?.pianoOctaves]);
   const expired = Boolean(assignment && new Date(assignment.validUntil).getTime() < Date.now());
   const complete = assignment ? repeats >= assignment.targetRepeats : false;
   const expected = sequence[step];
@@ -93,7 +94,7 @@ export function HomeworkExperience({ code }: { code: string }) {
     playPiano(key);
     if (!assignment || !sequence.length || complete || expired) return;
 
-    if (key.note !== expected) {
+    if (key.note !== noteName(expected) || (song?.pianoOctaves===2 && (key.octave??4)!==noteOctave(expected))) {
       setWrong(key.note);
       setMessage("Quase! Procure a cor que está brilhando 👀");
       window.setTimeout(() => setWrong(null), 450);
@@ -141,7 +142,7 @@ export function HomeworkExperience({ code }: { code: string }) {
         </div>
         <div className="world" aria-hidden="true">
           <div className="sky">☀️ ☁️</div>
-          <div className="track">{sequence.map((note,index)=><i key={`${note}-${index}`} className={index < step ? "done" : index === step ? "active" : ""} style={{background:pianoKeys.find((key)=>key.note===note)?.color}} />)}</div>
+          <div className="track">{sequence.map((note,index)=><i key={`${note}-${index}`} className={index < step ? "done" : index === step ? "active" : ""} style={{background:pianoKeys.find((key)=>key.note===noteName(note))?.color}} />)}</div>
           <div className="character" style={{left:`${Math.min(84,8+(step/Math.max(1,sequence.length))*76)}%`}}>{song.emoji}</div>
           <div className="finish">🏁</div>
         </div>
@@ -151,7 +152,7 @@ export function HomeworkExperience({ code }: { code: string }) {
         <div className="playHead"><div><small>Missão</small><strong>{message}</strong></div><div className="stars">{Array.from({length:assignment.targetRepeats}).map((_,i)=><span key={i} className={i<repeats?"earned":""}>★</span>)}</div></div>
         <div className="next-note" aria-live="polite"><small>Agora toca</small><strong>{complete?"🌟":expected}</strong></div>
         <div className="progress"><i style={{width:`${complete?100:phraseProgress}%`}} /></div>
-        <div className="pianoScroll"><div className="piano">{pianoKeys.map((key)=><button key={key.note} type="button" onClick={()=>press(key)} className={`${wrong===key.note?"wrong":""} ${expected===key.note&&!complete?"expected":""}`} style={expected===key.note&&!complete?{background:key.color,borderColor:key.color}:{}}><span>{key.note}</span><b>{key.note}</b></button>)}</div></div>
+        <div className="pianoScroll"><div className="piano">{homeworkKeys.map((key)=><button key={`${key.note}-${key.octave??4}`} type="button" onClick={()=>press(key)} className={`${wrong===key.note?"wrong":""} ${expected===key.note&&!complete?"expected":""}`} style={expected===key.note&&!complete?{background:key.color,borderColor:key.color}:{}}><span>{key.note}</span><b>{key.note}</b></button>)}</div></div>
         {complete && <div className="complete"><span>🌟</span><div><strong>Tarefa concluída!</strong><p>{assignment.childName} completou {assignment.targetRepeats} repetição{assignment.targetRepeats>1?"ões":""}.</p></div></div>}
       </section>
       <footer>Piano: amostras Salamander Grand Piano · CC BY 3.0 · Alexander Holm</footer>
