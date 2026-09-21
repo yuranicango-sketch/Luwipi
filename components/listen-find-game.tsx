@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { type CSSProperties, useState } from "react";
+import { playPianoRate } from "@/lib/piano-sampler";
 
 type Note = "Dó" | "Ré" | "Mi" | "Fá" | "Sol";
 
