@@ -3,10 +3,10 @@
 import Link from "next/link";
 import { type CSSProperties, useState } from "react";
 import { playPianoRate } from "@/lib/piano-sampler";
+import { LuwipiPiano, type LuwipiPianoKey } from "@/components/luwipi-piano";
 
 type Note = "Dó" | "Ré" | "Mi" | "Fá" | "Sol";
 
-const sample = "https://tonejs.github.io/audio/salamander/C4.mp3";
 const noteData: Array<{note:Note;color:string;rate:number}> = [
   {note:"Dó",color:"#ff5f86",rate:1},
   {note:"Ré",color:"#ffbf3f",rate:Math.pow(2,2/12)},
@@ -19,7 +19,7 @@ const rounds:Note[]=["Dó","Mi","Ré","Sol","Fá"];
 function play(note:Note){
   const item=noteData.find((value)=>value.note===note);
   if(!item)return;
-  const audio=new Audio(sample);audio.playbackRate=item.rate;audio.volume=.68;void audio.play();
+  void playPianoRate(item.rate);
 }
 
 export function ListenFindGame({story}:{story:string}){
@@ -31,7 +31,8 @@ export function ListenFindGame({story}:{story:string}){
   const complete=round>=rounds.length;
 
   function hear(){if(!target)return;play(target);setHeard(true);setMessage(null)}
-  function choose(note:Note){
+  function chooseKey(key:LuwipiPianoKey){
+    const note=key.note as Note;
     play(note);
     if(!heard||!target)return;
     if(note===target){
@@ -47,9 +48,7 @@ export function ListenFindGame({story}:{story:string}){
   return <section className="shell center">
     <small>Rodada {round+1} de {rounds.length}</small><h1>Qual tecla tocou?</h1>
     <button className="hear" type="button" onClick={hear}>🔊 {heard?"OUVIR DE NOVO":"OUVIR"}</button>
-    <div className="keys">
-      {noteData.map((item)=><button key={item.note} disabled={!heard} onClick={()=>choose(item.note)} style={{"--key":item.color} as CSSProperties}>{item.note}</button>)}
-    </div>
+    <LuwipiPiano compact disabled={!heard} onPress={chooseKey}/>
     {!heard&&<p>Ouça primeiro.</p>}
     {message&&<div className={`message ${message.startsWith("✓")?"ok":""}`}>{message}</div>}
     <style jsx>{css}</style>
