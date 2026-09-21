@@ -81,9 +81,9 @@ export function HomeworkExperience({ code }: { code: string }) {
   const phraseProgress = sequence.length ? Math.round((step / sequence.length) * 100) : 0;
 
 
-  async function syncProgress(assignmentCode:string,nextRepeats:number,sessionStarted=false,completed=false){
+  async function syncProgress(assignmentCode:string,_nextRepeats:number,sessionStarted=false,noteCompleted=false){
     try{
-      await fetch(`/api/homework/${encodeURIComponent(assignmentCode)}/progress`,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({repeats:nextRepeats,sessionStarted,completed})});
+      await fetch(`/api/homework/${encodeURIComponent(assignmentCode)}/progress`,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({sessionStarted,noteCompleted})});
     }catch{/* local progress remains available offline */}
   }
 
