@@ -33,7 +33,6 @@ export function ListenFindGame({story}:{story:string}){
   function hear(){if(!target)return;play(target);setHeard(true);setMessage(null)}
   function chooseKey(key:LuwipiPianoKey){
     const note=key.note as Note;
-    play(note);
     if(!heard||!target)return;
     if(note===target){
       setMessage("✓ Muito bem!");
