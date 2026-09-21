@@ -7,6 +7,7 @@ import { musicDataE } from "@/lib/music-data-e";
 import { musicDataF } from "@/lib/music-data-f";
 import { musicDataG } from "@/lib/music-data-g";
 import { musicDataH } from "@/lib/music-data-h";
+import { musicDataI } from "@/lib/music-data-i";
 export type { KidsSong, MusicRights, SongSection } from "@/lib/music-types";
-export const kidsSongs: KidsSong[] = [...musicDataA,...musicDataB,...musicDataC,...musicDataD,...musicDataE,...musicDataF,...musicDataG,...musicDataH];
+export const kidsSongs: KidsSong[] = [...musicDataA,...musicDataB,...musicDataC,...musicDataD,...musicDataE,...musicDataF,...musicDataG,...musicDataH,...musicDataI];
 export function getSong(id:string){return kidsSongs.find((song)=>song.id===id);}

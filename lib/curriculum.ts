@@ -123,8 +123,8 @@ export const curriculum: Record<AgeGroup, CurriculumProgram> = {
 
   "5-8": {
     age: "5-8",
-    label: "5 a 8 anos",
-    name: "Piano Infantil Estruturado",
+    label: "5 a 9 anos",
+    name: "Piano Infantil Estruturado · 5–9 anos",
     duration: "6 meses · 24 semanas · 48 aulas · 2 por semana",
     lessonLength: "35–45 min por aula",
     philosophy: "Tocar música desde a primeira semana. Leitura, técnica, ouvido, ritmo e criatividade aparecem dentro de experiências musicais concretas; repertório conhecido é aprendido progressivamente e não confundido com exercício.",
