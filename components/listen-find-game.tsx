@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { type CSSProperties, useState } from "react";
+import { useState } from "react";
 import { playPianoRate } from "@/lib/piano-sampler";
 import { LuwipiPiano, type LuwipiPianoKey } from "@/components/luwipi-piano";
 
@@ -59,7 +59,6 @@ const css=`
 .center{text-align:center}.big{font-size:72px}small{font-size:11px;text-transform:uppercase;letter-spacing:.08em;font-weight:900;color:#6c75cd}h1{font-size:clamp(30px,5vw,45px);margin:6px 0 12px}p{color:#68768b;line-height:1.6}
 .duo{display:block;width:min(360px,100%);min-height:52px;margin:25px auto 14px;border:0;border-radius:16px;background:#58cc02;color:#fff;font-weight:950;letter-spacing:.06em;box-shadow:0 5px 0 #46a302}.back{display:block;font-weight:900;color:#5b7193;text-decoration:none}
 .hear{width:min(320px,100%);padding:16px;border:0;border-radius:16px;background:#1cb0f6;color:#fff;font-weight:950;box-shadow:0 5px 0 #1689bf;margin:18px auto 26px}
-.keys{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}.keys button{--key:#8090a5;height:155px;border:3px solid #e0e5ec;border-radius:16px 16px 21px 21px;background:#fff;color:var(--key);font-weight:950;box-shadow:inset 0 -9px 0 #e9edf2}.keys button:not(:disabled):active{transform:translateY(3px)}.keys button:disabled{opacity:.55}
 .message{margin-top:18px;padding:15px;border-radius:16px;background:#fff3e1;color:#765b29;font-weight:900}.message.ok{background:#efffe9;color:#3a7341}
-@media(max-width:620px){.shell{margin:15px 12px;padding:20px}.keys{overflow-x:auto}.keys button{min-width:90px;height:135px}}
+@media(max-width:620px){.shell{margin:15px 12px;padding:20px}}
 `;
