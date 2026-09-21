@@ -28,7 +28,7 @@ export async function GET(request:Request,{params}:{params:Promise<{code:string}
   }
 
   const {data,error}=await s.rpc("get_public_homework",{p_code:code});
-  if(error)return NextResponse.json({error:"database_error",detail:error.code},{status:500});
+  if(error){console.error("public homework lookup failed",{code,error});return NextResponse.json({error:"database_error",detail:error.code||"rpc_failed"},{status:500});}
   const row=Array.isArray(data)?data[0]:data;
   if(!row)return NextResponse.json({error:"not_found"},{status:404});
   if(row.revoked_at)return NextResponse.json({error:"not_found"},{status:404});
