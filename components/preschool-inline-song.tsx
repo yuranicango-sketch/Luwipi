@@ -2,14 +2,10 @@
 import {useEffect,useMemo,useState} from "react";
 import type {KidsSong} from "@/lib/music-types";
 import styles from "./preschool-inline-song.module.css";
+import {playPianoRate,preloadPianoSamples} from "@/lib/piano-sampler";
 
-const freq:Record<string,number>={"Dó":261.63,"Ré":293.66,"Mi":329.63,"Fá":349.23,"Sol":392,"Lá":440,"Si":493.88};
-function sound(note:string){
- const Ctx=window.AudioContext||((window as unknown as {webkitAudioContext:typeof AudioContext}).webkitAudioContext);
- const ctx=new Ctx(),o=ctx.createOscillator(),g=ctx.createGain(); o.type="sine";o.frequency.value=freq[note]??330;
- g.gain.setValueAtTime(.0001,ctx.currentTime);g.gain.exponentialRampToValueAtTime(.22,ctx.currentTime+.015);g.gain.exponentialRampToValueAtTime(.0001,ctx.currentTime+.65);
- o.connect(g);g.connect(ctx.destination);o.start();o.stop(ctx.currentTime+.7);o.onended=()=>ctx.close();
-}
+const semitones:Record<string,number>={"Dó":0,"Ré":2,"Mi":4,"Fá":5,"Sol":7,"Lá":9,"Si":11};
+function sound(note:string){void playPianoRate(Math.pow(2,(semitones[note]??0)/12));}
 export function PreschoolInlineSong({song,lessonNumber}:{song:KidsSong;lessonNumber:number}){
  const phase=(lessonNumber-1)%8;
  const sequence=song.sequence??song.sections?.flatMap(section=>section.notes)??[];
@@ -17,6 +13,7 @@ export function PreschoolInlineSong({song,lessonNumber}:{song:KidsSong;lessonNum
  const notes=useMemo(()=>sequence.slice(0,max),[sequence,max]);
  const[i,setI]=useState(0); const[pop,setPop]=useState(false);
  useEffect(()=>setI(0),[song.id,lessonNumber]);
+ useEffect(()=>{void preloadPianoSamples();},[]);
  function hit(){if(!notes.length)return;const n=notes[i%notes.length];sound(n);setI(v=>(v+1)%notes.length);setPop(true);setTimeout(()=>setPop(false),180);}
  if(phase===0)return <div className={styles.wrap}>
    <div className={styles.kicker}>MÚSICA DO MÊS · PRIMEIRO ENCONTRO</div><h3>{song.title}</h3>
