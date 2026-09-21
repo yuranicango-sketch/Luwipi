@@ -1,6 +1,6 @@
 import {NextResponse} from "next/server";
 import {createServerSupabaseClient} from "@/lib/supabase/server";
-type ProgressBody={sessionStarted?:boolean;durationSeconds?:number;noteCompleted?:boolean};
+type ProgressBody={sessionStarted?:boolean;durationSeconds?:number;noteCompleted?:boolean;repetitionCompleted?:boolean};
 const CODE_RE=/^LUWI-[A-HJ-NP-Z2-9]{8}$/;
 export async function POST(request:Request,{params}:{params:Promise<{code:string}>}){
  const code=(await params).code.trim().toUpperCase();
@@ -11,7 +11,8 @@ export async function POST(request:Request,{params}:{params:Promise<{code:string
    p_code:code,
    p_session_started:Boolean(body.sessionStarted),
    p_note_completed:Boolean(body.noteCompleted),
-   p_duration_seconds:Math.min(86400,Math.max(0,Math.floor(body.durationSeconds??0)))
+   p_duration_seconds:Math.min(86400,Math.max(0,Math.floor(body.durationSeconds??0))),
+   p_repetition_completed:Boolean(body.repetitionCompleted)
  });
  if(error){
    const msg=String(error.message||"");
