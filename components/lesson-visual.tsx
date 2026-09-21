@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import styles from "./lesson-visual.module.css";
 
 type Props={stepId:string;icon:string;title:string;age:"2-4"|"5-8";accent:string};
@@ -5,7 +6,7 @@ type Props={stepId:string;icon:string;title:string;age:"2-4"|"5-8";accent:string
 export function LessonVisual({stepId,icon,title,age,accent}:Props){
  const young=age==="2-4";
  const kind=stepId==="warmup"?"listen":stepId==="discover"?"discover":stepId==="activity"?"game":stepId==="repertoire"?"piano":stepId==="create"||stepId==="checkpoint"?"create":"celebrate";
- return <div className={styles.visual} style={{"--accent":accent} as React.CSSProperties} aria-label={`Visual da etapa: ${title}`}>
+ return <div className={styles.visual} style={{"--accent":accent} as CSSProperties} aria-label={`Visual da etapa: ${title}`}>
    <div className={styles.sky}><i/><i/><i/></div>
    <div className={styles.badge}>{icon}</div>
    {kind==="listen"&&<div className={styles.listen}><span>👂</span><div className={styles.waves}><i/><i/><i/><i/></div><b>{young?"Escuta primeiro":"Ouvir · sentir · tocar"}</b></div>}
