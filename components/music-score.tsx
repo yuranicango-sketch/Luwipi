@@ -18,16 +18,6 @@ const DIATONIC: Record<string, number> = {
   "Si": 6,
 };
 
-const NOTE_Y: Record<string, number> = {
-  "Dó": 86,
-  "Ré": 80,
-  "Mi": 74,
-  "Fá": 68,
-  "Sol": 62,
-  "Lá": 56,
-  "Si": 50,
-};
-
 
 function parseStaffNote(note:string){
   const match=note.match(/^(Dó|Ré|Mi|Fá|Sol|Lá|Si)([45])?$/);
@@ -50,7 +40,7 @@ export function MusicScore({
   const staffOffset=topPad;
   const svgHeight=132+topPad+bottomPad;
   const width = useMemo(() => Math.max(720, 150 + notes.length * 64), [notes.length]);
-  const staffLeft = 112;
+  const staffLeft = 150;
   const noteGap = 64;
 
   return (
@@ -73,13 +63,13 @@ export function MusicScore({
             <line key={y} x1="18" y1={y} x2={width - 18} y2={y} stroke="#334155" strokeWidth="1.6" />
           );})}
 
-          <text x="28" y={80+staffOffset} fontSize="76" fontFamily="Noto Music, Bravura Text, Segoe UI Symbol, serif" fill="#26364d">
+          <text x="30" y={76+staffOffset} fontSize="62" fontFamily="Noto Music, Bravura Text, Segoe UI Symbol, serif" fill="#26364d">
             𝄞
           </text>
 
           <g fill="#334155" fontFamily="system-ui, sans-serif" fontWeight="800">
-            <text x="84" y={47+staffOffset} fontSize="20">{timeSignature.split("/")[0]}</text>
-            <text x="84" y={68+staffOffset} fontSize="20">{timeSignature.split("/")[1]}</text>
+            <text x="104" y={47+staffOffset} fontSize="18">{timeSignature.split("/")[0]}</text>
+            <text x="104" y={68+staffOffset} fontSize="18">{timeSignature.split("/")[1]}</text>
           </g>
 
           {notes.map((note, index) => {
@@ -91,7 +81,8 @@ export function MusicScore({
             const ledgerYs:number[]=[];
             if(parsed.step<=0) for(let ly=86+staffOffset;ly>=y;ly-=12) ledgerYs.push(ly);
             if(parsed.step>=12) for(let ly=14+staffOffset;ly<=y;ly+=12) ledgerYs.push(ly);
-            const stemUp = y >= 50;
+            const middleLine=50+staffOffset;
+            const stemUp = y >= middleLine;
             const barAfter = (index + 1) % beatsPerMeasure === 0 && index < notes.length - 1;
 
             return (
