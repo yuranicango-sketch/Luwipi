@@ -1,81 +1,23 @@
-import { randomUUID } from "crypto";
-import { NextResponse } from "next/server";
-import { createServerSupabaseClient } from "@/lib/supabase/server";
-import { readRoster, writeRoster } from "@/lib/google-drive-roster";
-import { sameOrigin } from "@/lib/request-security";
-
-async function user() {
-  const s = await createServerSupabaseClient();
-  return (await s.auth.getUser()).data.user;
+import {NextResponse} from "next/server";
+import {createServerSupabaseClient} from "@/lib/supabase/server";
+import {sameOrigin} from "@/lib/request-security";
+async function ctx(){const s=await createServerSupabaseClient();const u=(await s.auth.getUser()).data.user;return {s,u}}
+export async function GET(){
+ const {s,u}=await ctx();if(!u)return NextResponse.json({error:"unauthorized"},{status:401});
+ const {data,error}=await s.from("student_groups").select("id,name,created_at,student_group_members(student_id)").eq("teacher_id",u.id).order("created_at",{ascending:false});
+ if(error)return NextResponse.json({error:"database_error",detail:error.code},{status:500});
+ return NextResponse.json({groups:data??[]});
 }
-
-export async function GET() {
-  const u = await user();
-  if (!u) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
-
-  try {
-    const r = await readRoster(u.id);
-    return NextResponse.json({
-      groups: r.groups.map((g) => ({
-        ...g,
-        student_group_members: g.studentIds.map((student_id) => ({ student_id })),
-      })),
-    });
-  } catch (e) {
-    return NextResponse.json(
-      { error: e instanceof Error ? e.message : "drive_error" },
-      { status: 503 },
-    );
-  }
-}
-
-export async function POST(r: Request) {
-  if (!sameOrigin(r)) {
-    return NextResponse.json({ error: "forbidden_origin" }, { status: 403 });
-  }
-
-  const u = await user();
-  if (!u) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
-
-  try {
-    const raw = await r.text();
-    if (raw.length > 50000) {
-      return NextResponse.json({ error: "payload_too_large" }, { status: 413 });
-    }
-
-    const b: unknown = JSON.parse(raw);
-    const body = b && typeof b === "object" ? (b as Record<string, unknown>) : {};
-    const roster = await readRoster(u.id);
-    const name = String(body.name ?? "").trim().slice(0, 120);
-
-    if (!name) {
-      return NextResponse.json({ error: "invalid_group" }, { status: 400 });
-    }
-
-    const studentIds = Array.isArray(body.studentIds) ? body.studentIds : [];
-    const requested: string[] = [
-      ...new Set(studentIds.filter((x): x is string => typeof x === "string")),
-    ].slice(0, 200);
-
-    const allowed = new Set<string>(roster.students.map((s) => s.id));
-    if (requested.some((id) => !allowed.has(id))) {
-      return NextResponse.json({ error: "invalid_students" }, { status: 403 });
-    }
-
-    const group = {
-      id: randomUUID(),
-      name,
-      studentIds: requested,
-      created_at: new Date().toISOString(),
-    };
-
-    roster.groups = [group, ...roster.groups].slice(0, 500);
-    await writeRoster(u.id, roster);
-    return NextResponse.json({ group });
-  } catch (e) {
-    return NextResponse.json(
-      { error: e instanceof Error ? e.message : "drive_error" },
-      { status: 503 },
-    );
-  }
+export async function POST(r:Request){
+ if(!sameOrigin(r))return NextResponse.json({error:"forbidden_origin"},{status:403});
+ const {s,u}=await ctx();if(!u)return NextResponse.json({error:"unauthorized"},{status:401});
+ const raw=await r.text();if(raw.length>50000)return NextResponse.json({error:"payload_too_large"},{status:413});
+ const b:unknown=JSON.parse(raw),body=b&&typeof b==="object"?b as Record<string,unknown>:{};
+ const name=String(body.name??"").trim().slice(0,120);if(!name)return NextResponse.json({error:"invalid_group"},{status:400});
+ const ids=[...new Set((Array.isArray(body.studentIds)?body.studentIds:[]).filter((x):x is string=>typeof x==="string"))].slice(0,200);
+ if(ids.length){const {data}=await s.from("students").select("id").eq("teacher_id",u.id).in("id",ids);if((data??[]).length!==ids.length)return NextResponse.json({error:"invalid_students"},{status:403})}
+ const {data:g,error}=await s.from("student_groups").insert({teacher_id:u.id,name}).select("id,name,created_at").single();
+ if(error)return NextResponse.json({error:"database_error",detail:error.code},{status:500});
+ if(ids.length){const {error:me}=await s.from("student_group_members").insert(ids.map(student_id=>({group_id:g.id,student_id})));if(me){await s.from("student_groups").delete().eq("id",g.id);return NextResponse.json({error:"database_error",detail:me.code},{status:500})}}
+ return NextResponse.json({group:{...g,student_group_members:ids.map(student_id=>({student_id}))}});
 }
