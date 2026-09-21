@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { type CSSProperties, useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { noteName, noteOctave, noteRate, type KidsSong } from "@/lib/music-library";
 import { playPianoRate, preloadPianoSamples } from "@/lib/piano-sampler";
+import { LuwipiPiano, type LuwipiPianoKey } from "@/components/luwipi-piano";
 import { MusicScore } from "@/components/music-score";
 
 type Key={note:string;color:string;rate:number;octave?:number};
@@ -94,6 +95,7 @@ export function SongPractice({song}:{song:KidsSong}){
     const octaves=song.pianoOctaves??1;
     return Array.from({length:octaves},(_,index)=>KEYS.map(key=>({...key,octave:index+4,rate:key.rate*Math.pow(2,index),color:colors.get(key.note)??key.color}))).flat();
   },[song.colors,song.pianoOctaves]);
+  const pianoColors=useMemo(()=>new Map(song.colors?.map(item=>[item.note,item.color])??[]),[song.colors]);
   const meta=SPECIAL[song.id]??({theme:"music" as Theme,scene:"garden",finish:"História concluída!",goal:"🏁"} as const);
 
   const[started,setStarted]=useState(false);
@@ -112,8 +114,7 @@ export function SongPractice({song}:{song:KidsSong}){
 
   function start(selected:Mode){void preloadPianoSamples();setMode(selected);setStarted(true);}
   function reset(){token.current+=1;setStep(0);setWrong(null);setListening(false);setStarted(false);}
-  function press(key:Key){
-    sound(key);
+  function press(key:LuwipiPianoKey){
     if(mode!=="site"||!expected)return;
     if(!samePitch(key,expected)){setWrong(`${key.note}${key.octave??4}`);window.setTimeout(()=>setWrong(null),350);return;}
     setStep(value=>value+1);
@@ -155,11 +156,7 @@ export function SongPractice({song}:{song:KidsSong}){
     <div className="songProgress"><i style={{width:`${progress}%`}}/></div>
 
     {mode==="piano"?<PhysicalGuide notes={visibleNotes} firstNote={visibleNotes[0]??"Dó"} age={song.age} onDone={()=>setStep(currentSection.end)}/>
-    :<div className="pianoShell"><div className="brand">LUWIPI PIANO</div><div className="pianoReal">
-      {piano.map(key=><button key={`${key.note}-${key.octave??4}`} type="button" onClick={()=>press(key)} className={`white ${expected&&samePitch(key,expected)?"expected":""} ${wrong===`${key.note}${key.octave??4}`?"wrong":""}`} style={{"--key":key.color} as CSSProperties}><span>{key.note}{piano.length>7?<small>{key.octave}</small>:null}</span></button>)}
-      <i className="black b1"/><i className="black b2"/><i className="black b3"/><i className="black b4"/><i className="black b5"/>
-      {piano.length>7&&<><i className="black b6"/><i className="black b7"/><i className="black b8"/><i className="black b9"/><i className="black b10"/></>}
-    </div></div>}
+:<LuwipiPiano octaves={song.pianoOctaves??1} expected={expected} wrong={wrong} colors={pianoColors} onPress={press}/>}
     <style jsx>{css}</style>
   </section>;
 }
