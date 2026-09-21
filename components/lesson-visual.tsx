@@ -12,7 +12,7 @@ export function LessonVisual({stepId,icon,title,age,accent,instruction=""}:Props
     <div className={styles.sun}/><div className={styles.cloud}/><div className={styles.hill}/>
     <div className={styles.badge}>{icon}</div>
     {kind==="highlow"&&<div className={styles.highlow}><div><span>🐘</span><small>{young?"SOM GRANDÃO":"GRAVE"}</small></div><div className={styles.floatingNotes}>♪　♫</div><div><span>🐦</span><small>{young?"SOM PEQUENINO":"AGUDO"}</small></div></div>}
-    {kind==="hands"&&<div className={styles.hands}><div className={styles.hand}>✋<i>1</i><i>2</i><i>3</i><i>4</i><i>5</i></div><b>MÃO SOLTA · DEDOS PRONTOS</b></div>}
+    {kind==="hands"&&<div className={styles.hands}><img className={styles.handAsset} src="/assets/lessons/hand-finger-numbers.svg" alt="Mão aberta com os dedos numerados de 1 a 5"/><b>MÃO SOLTA · DEDOS PRONTOS</b></div>}
     {kind==="rhythm"&&<div className={styles.rhythm}><span>🥁</span><div><i/><i/><i/><i/></div><b>OUVE · SENTE · REPETE</b></div>}
     {kind==="listen"&&<div className={styles.listen}><span>👂</span><div className={styles.waves}><i/><i/><i/><i/></div><b>{young?"Escuta a surpresa":"Escuta antes de tocar"}</b></div>}
     {kind==="game"&&<div className={styles.game}><span>⭐</span><span>🎯</span><span>✨</span><b>OUVE · ESCOLHE · DESCOBRE</b></div>}
