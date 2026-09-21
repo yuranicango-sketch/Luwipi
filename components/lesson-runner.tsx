@@ -62,7 +62,7 @@ export function LessonRunner({age,module,lesson,variant,studentId}:Props){
 
     <article className={styles.stage}>
       <header className={styles.stageHeading}>
-        <div><small>AULA ${lesson.number} · ${step.id==="repertoire"?"MÚSICA DO MÊS":step.title.toUpperCase()}</small><h2>{step.title}</h2><p>{step.goal}</p></div>
+        <div><small>AULA {lesson.number} · {step.id==="repertoire"?"MÚSICA DO MÊS":step.title.toUpperCase()}</small><h2>{step.title}</h2><p>{step.goal}</p></div>
         <span className={styles.duration}>{step.duration}</span>
       </header>
 
