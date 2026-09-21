@@ -5,19 +5,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { getDemoAssignment, type HomeworkAssignment } from "@/lib/demo-assignments";
 import { getSong, noteName, noteOctave } from "@/lib/music-library";
 import { getHomeworkProgress, saveHomeworkProgress } from "@/lib/teacher-local";
-import { playPianoRate, preloadPianoSamples } from "@/lib/piano-sampler";
-
-type PianoKey = { note: string; color: string; playbackRate: number; octave?: number };
-
-const pianoKeys: PianoKey[] = [
-  { note: "Dó", color: "#ff5f86", playbackRate: 1 },
-  { note: "Ré", color: "#ffbf3f", playbackRate: Math.pow(2, 2/12) },
-  { note: "Mi", color: "#64c96b", playbackRate: Math.pow(2, 4/12) },
-  { note: "Fá", color: "#4fc8c1", playbackRate: Math.pow(2, 5/12) },
-  { note: "Sol", color: "#4b9df8", playbackRate: Math.pow(2, 7/12) },
-  { note: "Lá", color: "#8f74eb", playbackRate: Math.pow(2, 9/12) },
-  { note: "Si", color: "#d264d7", playbackRate: Math.pow(2, 11/12) },
-];
+import { LuwipiPiano, type LuwipiPianoKey } from "@/components/luwipi-piano";
 
 function readLocalAssignment(code: string): HomeworkAssignment | undefined {
   if (typeof window === "undefined") return undefined;
@@ -29,10 +17,6 @@ function readLocalAssignment(code: string): HomeworkAssignment | undefined {
   }
 }
 
-function playPiano(key: PianoKey) {
-  void playPianoRate(key.playbackRate);
-}
-
 export function HomeworkExperience({ code }: { code: string }) {
   const [assignment, setAssignment] = useState<HomeworkAssignment | null | undefined>(undefined);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -41,8 +25,6 @@ export function HomeworkExperience({ code }: { code: string }) {
   const [message, setMessage] = useState("Toque a primeira cor ✨");
   const [wrong, setWrong] = useState<string | null>(null);
   const startedSession = useRef<string | null>(null);
-
-  useEffect(() => { void preloadPianoSamples(); }, []);
 
   useEffect(() => {
     let cancelled=false;
@@ -74,7 +56,6 @@ export function HomeworkExperience({ code }: { code: string }) {
 
   const song = useMemo(() => assignment ? getSong(assignment.songId) : undefined, [assignment]);
   const sequence = song?.sequence ?? [];
-  const homeworkKeys = useMemo(() => song?.pianoOctaves===2 ? [0,1].flatMap(octave=>pianoKeys.map(key=>({...key,octave:octave+4,playbackRate:key.playbackRate*Math.pow(2,octave)}))) : pianoKeys.map(key=>({...key,octave:4})), [song?.pianoOctaves]);
   const expired = Boolean(assignment && new Date(assignment.validUntil).getTime() < Date.now());
   const complete = assignment ? repeats >= assignment.targetRepeats : false;
   const expected = sequence[step];
@@ -88,8 +69,7 @@ export function HomeworkExperience({ code }: { code: string }) {
     }catch{/* local progress remains available offline */}
   }
 
-  function press(key: PianoKey) {
-    playPiano(key);
+  function press(key: LuwipiPianoKey) {
     if (!assignment || !sequence.length || complete || expired) return;
 
     if (key.note !== noteName(expected) || (song?.pianoOctaves===2 && (key.octave??4)!==noteOctave(expected))) {
@@ -140,7 +120,7 @@ export function HomeworkExperience({ code }: { code: string }) {
         </div>
         <div className="world" aria-hidden="true">
           <div className="sky">☀️ ☁️</div>
-          <div className="track">{sequence.map((note,index)=><i key={`${note}-${index}`} className={index < step ? "done" : index === step ? "active" : ""} style={{background:pianoKeys.find((key)=>key.note===noteName(note))?.color}} />)}</div>
+          <div className="track">{sequence.map((note,index)=><i key={`${note}-${index}`} className={index < step ? "done" : index === step ? "active" : ""}  />)}</div>
           <div className="character" style={{left:`${Math.min(84,8+(step/Math.max(1,sequence.length))*76)}%`}}>{song.emoji}</div>
           <div className="finish">🏁</div>
         </div>
@@ -150,7 +130,7 @@ export function HomeworkExperience({ code }: { code: string }) {
         <div className="playHead"><div><small>Missão</small><strong>{message}</strong></div><div className="stars">{Array.from({length:assignment.targetRepeats}).map((_,i)=><span key={i} className={i<repeats?"earned":""}>★</span>)}</div></div>
         <div className="next-note" aria-live="polite"><small>Agora toca</small><strong>{complete?"🌟":expectedPitch}</strong></div>
         <div className="progress"><i style={{width:`${complete?100:phraseProgress}%`}} /></div>
-        <div className="pianoScroll"><div className="piano">{homeworkKeys.map((key)=><button key={`${key.note}-${key.octave??4}`} type="button" onClick={()=>press(key)} className={`${wrong===`${key.note}${key.octave??4}`?"wrong":""} ${expected&&!complete&&key.note===noteName(expected)&&(song?.pianoOctaves!==2||(key.octave??4)===noteOctave(expected))?"expected":""}`} style={expected&&!complete&&key.note===noteName(expected)&&(song?.pianoOctaves!==2||(key.octave??4)===noteOctave(expected))?{background:key.color,borderColor:key.color}:{}}><span>{key.note}</span><b>{key.note}</b></button>)}</div></div>
+        <LuwipiPiano octaves={song.pianoOctaves??1} expected={expected?`${noteName(expected)}${song.pianoOctaves===2?noteOctave(expected):""}`:undefined} wrong={wrong} onPress={press}/>
         {complete && <div className="complete"><span>🌟</span><div><strong>Tarefa concluída!</strong><p>{assignment.childName} completou {assignment.targetRepeats} repetição{assignment.targetRepeats>1?"ões":""}.</p></div></div>}
       </section>
       <footer>Piano: amostras Salamander Grand Piano · CC BY 3.0 · Alexander Holm</footer>
