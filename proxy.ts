@@ -1,44 +1,6 @@
-import { createServerClient } from "@supabase/ssr";
-import { NextResponse, type NextRequest } from "next/server";
-
-const SUPABASE_URL=process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const SUPABASE_KEY=process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!;
-
-function isProtected(path:string,method:string){
-  if (["/dashboard","/curriculo","/aulas","/jogos","/musicas","/recursos","/professor"].some(p=>path===p||path.startsWith(p+"/"))) return true;
-  if (path==="/api/students"||path==="/api/groups") return true;
-  if (path==="/api/homework" && method!=="GET") return true;
-  return false;
-}
-function trialAllowed(path:string){
-  if(path==="/dashboard") return true;
-  const lesson=path.match(/^\/aulas\/(2-4|5-8)\/(\d+)$/);
-  if(lesson) return Number(lesson[2])<=8;
-  if(path.startsWith("/recursos/2-4/modulo-1")) return true;
-  if(/^\/musicas\/[^/]+$/.test(path)||/^\/jogos\/[^/]+$/.test(path)) return true;
-  return false;
-}
-export async function proxy(request:NextRequest){
-  const path=request.nextUrl.pathname;
-  if(!isProtected(path,request.method)) return NextResponse.next();
-  let response=NextResponse.next({request});
-  const supabase=createServerClient(SUPABASE_URL,SUPABASE_KEY,{cookies:{
-    getAll:()=>request.cookies.getAll(),
-    setAll:(items)=>{items.forEach(({name,value})=>request.cookies.set(name,value));response=NextResponse.next({request});items.forEach(({name,value,options})=>response.cookies.set(name,value,options));}
-  }});
-  const user=(await supabase.auth.getUser()).data.user;
-  if(!user){
-    if(path.startsWith("/api/")) return NextResponse.json({error:"unauthorized"},{status:401});
-    const u=request.nextUrl.clone();u.pathname="/login";u.searchParams.set("next",path);return NextResponse.redirect(u);
-  }
-  const {data}=await supabase.from("profiles").select("role,access_status,trial_ends_at,access_until").eq("id",user.id).maybeSingle();
-  if(data?.role==="admin") return response;
-  const now=Date.now();
-  const active=data?.access_status==="active"&&(!data.access_until||new Date(data.access_until).getTime()>now);
-  if(active) return response;
-  const trial=data?.access_status==="trial"&&data.trial_ends_at&&new Date(data.trial_ends_at).getTime()>now;
-  if(trial&&trialAllowed(path)) return response;
-  if(path.startsWith("/api/")) return NextResponse.json({error:trial?"subscription_required":"trial_expired"},{status:403});
-  const u=request.nextUrl.clone();u.pathname="/assinar";u.searchParams.set("reason",trial?"trial_limit":"trial_expired");return NextResponse.redirect(u);
-}
+import {createServerClient} from "@supabase/ssr";import {NextResponse,type NextRequest} from "next/server";
+const URL=process.env.SUPABASE_URL??process.env.NEXT_PUBLIC_SUPABASE_URL??"";const KEY=process.env.SUPABASE_PUBLISHABLE_KEY??process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY??"";
+function protectedPath(p:string,m:string){if(["/dashboard","/curriculo","/aulas","/jogos","/musicas","/recursos","/professor"].some(x=>p===x||p.startsWith(x+"/")))return true;if(p==="/api/students"||p==="/api/groups")return true;return p==="/api/homework"&&m!=="GET"}
+function trialAllowed(p:string){if(p==="/dashboard")return true;const l=p.match(/^\/aulas\/(2-4|5-8)\/(\d+)$/);if(l)return Number(l[2])<=8;if(p.startsWith("/recursos/2-4/modulo-1"))return true;if(/^\/musicas\/[^/]+$/.test(p)||/^\/jogos\/[^/]+$/.test(p))return true;return false}
+export async function proxy(r:NextRequest){const p=r.nextUrl.pathname;if(!protectedPath(p,r.method))return NextResponse.next();if(!URL||!KEY)return NextResponse.json({error:"server_not_configured"},{status:503});let res=NextResponse.next({request:r});const s=createServerClient(URL,KEY,{cookies:{getAll:()=>r.cookies.getAll(),setAll:(items)=>{items.forEach(({name,value})=>r.cookies.set(name,value));res=NextResponse.next({request:r});items.forEach(({name,value,options})=>res.cookies.set(name,value,options))}}});const user=(await s.auth.getUser()).data.user;if(!user){if(p.startsWith("/api/"))return NextResponse.json({error:"unauthorized"},{status:401});const u=r.nextUrl.clone();u.pathname="/login";u.searchParams.set("next",p);return NextResponse.redirect(u)}const {data}=await s.from("profiles").select("role,access_status,trial_ends_at,access_until").eq("id",user.id).maybeSingle();if(data?.role==="admin")return res;const now=Date.now(),active=data?.access_status==="active"&&(!data.access_until||new Date(data.access_until).getTime()>now);if(active)return res;const trial=data?.access_status==="trial"&&data.trial_ends_at&&new Date(data.trial_ends_at).getTime()>now;if(trial&&trialAllowed(p))return res;if(p.startsWith("/api/"))return NextResponse.json({error:trial?"subscription_required":"trial_expired"},{status:403});const u=r.nextUrl.clone();u.pathname="/assinar";u.searchParams.set("reason",trial?"trial_limit":"trial_expired");return NextResponse.redirect(u)}
 export const config={matcher:["/dashboard/:path*","/curriculo/:path*","/aulas/:path*","/jogos/:path*","/musicas/:path*","/recursos/:path*","/professor/:path*","/api/students/:path*","/api/groups/:path*","/api/homework"]};

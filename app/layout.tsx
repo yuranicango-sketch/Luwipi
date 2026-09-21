@@ -1,15 +1,5 @@
-import type { Metadata } from "next";
-import "./globals.css";
-
-export const metadata: Metadata = {
-  title: "Luwipi — Piano para crianças",
-  description: "Aprendizagem musical lúdica para crianças dos 2 aos 8 anos.",
-};
-
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return (
-    <html lang="pt">
-      <body>{children}</body>
-    </html>
-  );
-}
+import type {Metadata,Viewport} from "next";import "./globals.css";
+const base=new URL(process.env.APP_URL||"https://luwipi.vercel.app");
+export const metadata:Metadata={metadataBase:base,title:{default:"Luwipi — Piano infantil para professores",template:"%s · Luwipi"},description:"Currículo, repertório, jogos e tarefas para professores de piano infantil.",applicationName:"Luwipi",alternates:{canonical:"/"},openGraph:{type:"website",locale:"pt_AO",url:"/",siteName:"Luwipi",title:"Luwipi — Piano infantil para professores",description:"Uma aula de piano que a criança quer continuar."},twitter:{card:"summary_large_image",title:"Luwipi — Piano infantil para professores",description:"Currículo, repertório, jogos e tarefas para professores de piano infantil."},icons:{icon:"/icon.svg"},robots:{index:true,follow:true}};
+export const viewport:Viewport={themeColor:"#ffffff",width:"device-width",initialScale:1};
+export default function RootLayout({children}:{children:React.ReactNode}){const url=process.env.SUPABASE_URL??process.env.NEXT_PUBLIC_SUPABASE_URL??"";const key=process.env.SUPABASE_PUBLISHABLE_KEY??process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY??"";return <html lang="pt" data-supabase-url={url} data-supabase-key={key}><body>{children}</body></html>}

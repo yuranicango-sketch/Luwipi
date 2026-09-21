@@ -1,8 +1,8 @@
 "use client";
-
-import { createBrowserClient } from "@supabase/ssr";
-import { SUPABASE_PUBLISHABLE_KEY, SUPABASE_URL } from "./config";
-
-export function createBrowserSupabaseClient() {
-  return createBrowserClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+import {createBrowserClient} from "@supabase/ssr";
+export function createBrowserSupabaseClient(){
+ const url=document.documentElement.dataset.supabaseUrl;
+ const key=document.documentElement.dataset.supabaseKey;
+ if(!url||!key)throw new Error("Supabase client configuration unavailable");
+ return createBrowserClient(url,key);
 }
