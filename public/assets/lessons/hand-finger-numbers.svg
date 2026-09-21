@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 520" role="img" aria-labelledby="t d">
+<title id="t">Mão aberta com dedos numerados</title><desc id="d">Ilustração pedagógica de mão aberta para numeração dos dedos no piano.</desc>
+<path d="M129 445c-31-29-48-67-48-109V191c0-18 12-31 28-31 15 0 27 12 27 29v68h8V95c0-19 13-33 30-33s30 14 30 33v151h8V67c0-20 14-35 31-35 18 0 31 15 31 35v179h8V91c0-19 13-33 30-33 17 0 30 14 30 33v174h7l25-43c11-20 34-27 52-16 18 11 23 34 12 54l-75 132c-24 43-67 70-116 70h-57c-38 0-73-6-101-17z" fill="#f4b183" stroke="#283447" stroke-width="12" stroke-linejoin="round"/>
+<path d="M143 258c20 5 36 17 47 35M204 247c18 5 32 15 43 29M274 247c17 5 30 13 41 25" fill="none" stroke="#d68b63" stroke-width="7" stroke-linecap="round"/>
+<g font-family="Arial,sans-serif" font-weight="800" font-size="22" text-anchor="middle">
+<g><circle cx="86" cy="286" r="24" fill="#ef7894"/><text x="86" y="294" fill="white">1</text></g>
+<g><circle cx="171" cy="78" r="24" fill="#ef7894"/><text x="171" y="86" fill="white">2</text></g>
+<g><circle cx="243" cy="46" r="24" fill="#ef7894"/><text x="243" y="54" fill="white">3</text></g>
+<g><circle cx="312" cy="76" r="24" fill="#ef7894"/><text x="312" y="84" fill="white">4</text></g>
+<g><circle cx="382" cy="206" r="24" fill="#ef7894"/><text x="382" y="214" fill="white">5</text></g>
+</g></svg>
