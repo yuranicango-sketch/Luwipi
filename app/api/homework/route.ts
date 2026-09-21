@@ -15,15 +15,20 @@ export async function POST(request: Request) {
   if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
   const admin = createAdminSupabaseClient();
-  const db = admin ?? server;
 
-  const { data: profile, error: profileError } = await db
+  // Profile reads should use the authenticated user's client. This keeps the
+  // request working even when the production service key is missing/stale,
+  // while RLS still limits the read to the current user's own profile.
+  const { data: profile, error: profileError } = await server
     .from("profiles")
     .select("access_status,access_until,role")
     .eq("id", user.id)
     .maybeSingle();
 
-  if (profileError) return NextResponse.json({ error: "profile_unavailable" }, { status: 503 });
+  if (profileError) {
+    return NextResponse.json({ error: "profile_unavailable", detail: profileError.code }, { status: 503 });
+  }
+  if (!profile) return NextResponse.json({ error: "profile_missing" }, { status: 409 });
 
   const active =
     profile?.role === "admin" ||
@@ -55,7 +60,9 @@ export async function POST(request: Request) {
       until.getTime() > Date.now() + 31 * 86400000
     ) return NextResponse.json({ error: "invalid_assignment" }, { status: 400 });
 
-    const { error } = await db.from("homework_assignments").insert({
+    // Prefer the authenticated client: RLS already enforces teacher ownership
+    // and product access. The service client is only a compatibility fallback.
+    let { error } = await server.from("homework_assignments").insert({
       code,
       teacher_id: user.id,
       child_name: name,
@@ -65,6 +72,14 @@ export async function POST(request: Request) {
       target_repeats: repeats,
       valid_until: until.toISOString(),
     });
+
+    if (error && admin && error.code !== "23505") {
+      const fallback = await admin.from("homework_assignments").insert({
+        code, teacher_id: user.id, child_name: name, student_id: null, song_id: songId,
+        teacher_note: note, target_repeats: repeats, valid_until: until.toISOString(),
+      });
+      error = fallback.error;
+    }
 
     if (error) {
       if (error.code === "23505") return NextResponse.json({ error: "code_collision" }, { status: 409 });
