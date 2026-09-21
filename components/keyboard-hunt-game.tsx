@@ -2,25 +2,10 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { playPianoRate } from "@/lib/piano-sampler";
+import { LuwipiPiano, type LuwipiPianoKey } from "@/components/luwipi-piano";
 
 type GameId = "caca-teclas" | "encontre-do";
-type Key = { id: string; label: string; kind: "white" | "black"; target?: boolean };
-
-const keys: Key[] = [
-  { id:"c1", label:"Dó", kind:"white", target:true },
-  { id:"cs1", label:"", kind:"black" },
-  { id:"d1", label:"Ré", kind:"white" },
-  { id:"ds1", label:"", kind:"black" },
-  { id:"e1", label:"Mi", kind:"white" },
-  { id:"f1", label:"Fá", kind:"white" },
-  { id:"fs1", label:"", kind:"black" },
-  { id:"g1", label:"Sol", kind:"white" },
-  { id:"gs1", label:"", kind:"black" },
-  { id:"a1", label:"Lá", kind:"white" },
-  { id:"as1", label:"", kind:"black" },
-  { id:"b1", label:"Si", kind:"white" },
-];
+type Key = { label:string; kind:"white"|"black" };
 
 export function KeyboardHuntGame({ gameId, story }: { gameId: GameId; story: string }) {
   const [started, setStarted] = useState(false);
@@ -87,13 +72,7 @@ export function KeyboardHuntGame({ gameId, story }: { gameId: GameId; story: str
       <small>Missão {round + 1} de {missions.length}</small>
       <h1>{mission.text}</h1>
 
-      <div className="keyboard">
-        {keys.map((key) => (
-          <button key={key.id} type="button" className={key.kind} onClick={() => press(key)}>
-            {key.kind === "white" && <span>{key.label}</span>}
-          </button>
-        ))}
-      </div>
+      <LuwipiPiano compact onPress={(key:LuwipiPianoKey)=>press({label:key.note,kind:"white"})} onBlackPress={()=>press({label:"",kind:"black"})}/>
 
       {message && <div className={`message ${message.startsWith("✓") ? "ok" : ""}`}>{message}</div>}
 
