@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { playPianoRate } from "@/lib/piano-sampler";
 
 type GameId = "caca-teclas" | "encontre-do";
 type Key = { id: string; label: string; kind: "white" | "black"; target?: boolean };
