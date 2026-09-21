@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { type CSSProperties, useState } from "react";
+import { LuwipiPiano, type LuwipiPianoKey } from "@/components/luwipi-piano";
 
 type Note="Dó"|"Ré"|"Mi"|"Fá"|"Sol"|"Lá"|"Si";
 const allNotes:Note[]=["Dó","Ré","Mi","Fá","Sol","Lá","Si"];
@@ -45,6 +46,7 @@ export function ChordBuildGame({story}:{story:string}){
       {allNotes.map((note)=><button key={note} type="button" className={selected.includes(note)?"selected":""} onClick={()=>toggle(note)} style={{"--note":colors[note]} as CSSProperties}>{note}</button>)}
     </div>
     <div className="slots">{[0,1,2].map((index)=><span key={index}>{selected[index]??"?"}</span>)}</div>
+    <LuwipiPiano compact onPress={(key:LuwipiPianoKey)=>toggle(key.note as Note)}/>
     <button className="duo" type="button" onClick={message?.startsWith("✓")?next:check} disabled={selected.length!==3}>{message?.startsWith("✓")?"CONTINUAR":"VERIFICAR"}</button>
     {message&&<div className={`message ${message.startsWith("✓")?"ok":""}`}>{message}</div>}
     <style jsx>{css}</style>
