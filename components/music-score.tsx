@@ -28,6 +28,14 @@ const NOTE_Y: Record<string, number> = {
   "Si": 50,
 };
 
+
+function parseStaffNote(note:string){
+  const match=note.match(/^(Dó|Ré|Mi|Fá|Sol|Lá|Si)([45])?$/);
+  const name=match?.[1]??"Mi";
+  const octave=Number(match?.[2]??4);
+  const step=(DIATONIC[name]??2)+(octave-4)*7;
+  return {name,octave,step,y:86-step*6};
+}
 export function MusicScore({
   notes,
   currentIndex,
@@ -69,10 +77,10 @@ export function MusicScore({
 
           {notes.map((note, index) => {
             const x = staffLeft + index * noteGap;
-            const y = NOTE_Y[note] ?? 74;
+            const parsed = parseStaffNote(note);\n            const y = parsed.y;
             const active = index === currentIndex;
             const done = index < currentIndex;
-            const needsLedger = (DIATONIC[note] ?? 2) <= 0;
+            const ledgerYs:number[]=[];\n            if(parsed.step<=0) for(let ly=86;ly>=y;ly-=12) ledgerYs.push(ly);\n            if(parsed.step>=12) for(let ly=14;ly<=y;ly+=12) ledgerYs.push(ly);
             const stemUp = y >= 50;
             const barAfter = (index + 1) % beatsPerMeasure === 0 && index < notes.length - 1;
 
