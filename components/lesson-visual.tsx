@@ -3,13 +3,7 @@ import styles from "./lesson-visual.module.css";
 import type { AgeGroup } from "@/lib/curriculum";
 
 type Props={stepId:string;icon:string;title:string;age:AgeGroup;accent:string;instruction?:string};
-const A={
- hand:"https://freesvg.org/img/Human_hand_palm_inside_remix.png",
- elephant:"https://freesvg.org/img/1424662818.png",
- bird:"https://freesvg.org/img/1454781466.png",
- drum:"https://freesvg.org/img/Drum_Set.png",
- ear:"https://freesvg.org/img/ear.png"
-};
+const A={ hand:"/assets/lessons/hand-finger-numbers.svg" };
 
 export function LessonVisual({stepId,icon,title,age,accent,instruction=""}:Props){
  const w=`${title} ${instruction}`.toLowerCase(), young=age==="2-4";
@@ -17,8 +11,8 @@ export function LessonVisual({stepId,icon,title,age,accent,instruction=""}:Props
  return <div className={styles.visual} style={{"--accent":accent} as CSSProperties} aria-label={`Cena da etapa: ${title}`}>
   <div className={styles.sceneLabel}>CENA DA AULA</div>
   {kind==="hands"&&<div className={styles.assetScene}><div className={styles.handWrap}><img src={A.hand} alt="Mão aberta"/><i className={styles.f1}>1</i><i className={styles.f2}>2</i><i className={styles.f3}>3</i><i className={styles.f4}>4</i><i className={styles.f5}>5</i></div><b>1 POLEGAR · 2 INDICADOR · 3 MÉDIO · 4 ANELAR · 5 MÍNIMO</b></div>}
-  {kind==="highlow"&&<div className={styles.highlow}><div><img src={A.elephant} alt="Elefante"/><small>{young?"SOM GRANDÃO":"GRAVE"}</small></div><strong>♪</strong><div><img src={A.bird} alt="Passarinho"/><small>{young?"SOM PEQUENINO":"AGUDO"}</small></div></div>}
-  {kind==="rhythm"&&<div className={styles.assetScene}><img className={styles.mainAsset} src={A.drum} alt="Tambor"/><div className={styles.beats}><i/><i/><i/><i/></div><b>OUVE · SENTE · REPETE</b></div>}
+  {kind==="highlow"&&<div className={styles.highlow}><div><span className={styles.assetEmoji}>🐘</span><small>{young?"SOM GRANDÃO":"GRAVE"}</small></div><strong>♪</strong><div><span className={styles.assetEmoji}>🐦</span><small>{young?"SOM PEQUENINO":"AGUDO"}</small></div></div>}
+  {kind==="rhythm"&&<div className={styles.assetScene}><div className={styles.assetEmoji}>🥁</div><div className={styles.beats}><i/><i/><i/><i/></div><b>OUVE · SENTE · REPETE</b></div>}
   {kind==="listen"&&<div className={styles.assetScene}><div className={styles.symbol}>👂</div><div className={styles.waves}><i/><i/><i/><i/></div><b>{young?"ESCUTA A SURPRESA":"ESCUTA PRIMEIRO"}</b></div>}
   {kind==="tempo"&&<div className={styles.concept}><div>🐢<small>DEVAGAR</small></div><span>→ → →</span><div>🚂<small>RÁPIDO</small></div></div>}
   {kind==="dynamics"&&<div className={styles.concept}><div>🦁<small>FORTE</small></div><span>♪</span><div>🐇<small>SUAVE</small></div></div>}
