@@ -5,6 +5,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { getDemoAssignment, type HomeworkAssignment } from "@/lib/demo-assignments";
 import { getSong } from "@/lib/music-library";
 import { getHomeworkProgress, saveHomeworkProgress } from "@/lib/teacher-local";
+import { playPianoRate, preloadPianoSamples } from "@/lib/piano-sampler";
 
 type PianoKey = { note: string; color: string; playbackRate: number };
 
@@ -82,9 +83,9 @@ export function HomeworkExperience({ code }: { code: string }) {
   const phraseProgress = sequence.length ? Math.round((step / sequence.length) * 100) : 0;
 
 
-  async function syncProgress(assignmentCode:string,_nextRepeats:number,sessionStarted=false,noteCompleted=false){
+  async function syncProgress(assignmentCode:string,_nextRepeats:number,sessionStarted=false,noteCompleted=false,repetitionCompleted=false){
     try{
-      await fetch(`/api/homework/${encodeURIComponent(assignmentCode)}/progress`,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({sessionStarted,noteCompleted})});
+      await fetch(`/api/homework/${encodeURIComponent(assignmentCode)}/progress`,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({sessionStarted,noteCompleted,repetitionCompleted})});
     }catch{/* local progress remains available offline */}
   }
 
@@ -106,6 +107,7 @@ export function HomeworkExperience({ code }: { code: string }) {
       return;
     }
 
+    void syncProgress(assignment.code,repeats,false,true,true);
     const nextRepeats = repeats + 1;
     setRepeats(nextRepeats);
     setStep(0);
@@ -119,7 +121,7 @@ export function HomeworkExperience({ code }: { code: string }) {
       lastPracticedAt: new Date().toISOString(),
       completedAt: finished ? current?.completedAt ?? new Date().toISOString() : undefined,
     });
-    void syncProgress(assignment.code,nextRepeats,false,finished);
+
     setMessage(finished ? "Conseguimos! 🌟" : "Muito bem! Vamos outra vez? 🎉");
   }
 
