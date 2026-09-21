@@ -38,7 +38,7 @@ function playPiano(key: PianoKey) {
 }
 
 export function HomeworkExperience({ code }: { code: string }) {
-  const [assignment, setAssignment] = useState<HomeworkAssignment | null | undefined>(undefined);
+  const [assignment, setAssignment] = useState<HomeworkAssignment | null | undefined>(undefined);\n  const [loadError, setLoadError] = useState<string | null>(null);
   const [step, setStep] = useState(0);
   const [repeats, setRepeats] = useState(0);
   const [message, setMessage] = useState("Toque a primeira cor ✨");
@@ -123,7 +123,7 @@ export function HomeworkExperience({ code }: { code: string }) {
   }
 
   if (assignment === undefined) return <div className="state">Abrindo tarefa…</div>;
-  if (!assignment || !song) return <div className="state"><span>🔎</span><h2>Código não encontrado.</h2><p>Confira o código enviado pelo professor.</p><Link className="btn btn-soft" href="/tarefa">Tentar outro código</Link></div>;
+  if (!assignment) return <div className="state"><span>🔎</span><h2>{loadError==="not_found"?"Código não encontrado.":"Não foi possível abrir a tarefa."}</h2><p>{loadError==="not_found"?"Confira o código enviado pelo professor.":"A tarefa existe, mas houve uma falha ao carregá-la. Tente novamente."}</p><Link className="btn btn-soft" href={`/tarefa/${encodeURIComponent(code)}`}>Tentar novamente</Link></div>;\n  if (!song) return <div className="state"><span>🎵</span><h2>Música da tarefa indisponível.</h2><p>Peça ao professor para gerar uma nova tarefa.</p><Link className="btn btn-soft" href="/tarefa">Usar outro código</Link></div>;
   if (expired) return <div className="state"><span>⏳</span><h2>Esta tarefa expirou.</h2><p>Peça ao professor um novo código para continuar.</p><Link className="btn btn-soft" href="/tarefa">Usar outro código</Link></div>;
 
   return (
