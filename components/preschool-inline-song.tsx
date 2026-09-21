@@ -14,7 +14,9 @@ export function PreschoolInlineSong({song,lessonNumber}:{song:KidsSong;lessonNum
  const[i,setI]=useState(0); const[pop,setPop]=useState(false);
  useEffect(()=>setI(0),[song.id,lessonNumber]);
  useEffect(()=>{void preloadPianoSamples();},[]);
- function hit(){if(!notes.length)return;const n=notes[i%notes.length];sound(n);setI(v=>(v+1)%notes.length);setPop(true);setTimeout(()=>setPop(false),180);}
+ function advance(){setI(v=>(v+1)%notes.length);}
+ function hit(){if(!notes.length)return;const n=notes[i%notes.length];sound(n);advance();setPop(true);setTimeout(()=>setPop(false),180);}
+ function playKey(note:string){sound(note);if(notes.length&&note===notes[i%notes.length])advance();}
  if(phase===0)return <div className={styles.wrap}>
    <div className={styles.kicker}>MÚSICA DO MÊS · PRIMEIRO ENCONTRO</div><h3>{song.title}</h3>
    <p>Cante com a criança. Cada toque no personagem toca a próxima nota. Hoje não mostramos o piano.</p>
@@ -27,7 +29,7 @@ export function PreschoolInlineSong({song,lessonNumber}:{song:KidsSong;lessonNum
   <div className={styles.kicker}>MÚSICA DO MÊS · AULA {phase+1} DE 8</div><h3>{song.title}</h3>
   <p>Toque somente o trecho desta aula. A próxima tecla pisca; a criança também pode tocar livremente.</p>
   <div className={styles.scene}><button className={`${styles.miniHero} ${pop?styles.pop:""}`} onClick={hit}>{song.emoji}<small>próxima nota</small></button><div><b>{notes[i%notes.length]}</b><span>{i+1} / {notes.length}</span></div></div>
-  <div className={styles.piano}><div className={styles.whiteKeys}>{white.map(n=><button key={n} onClick={()=>sound(n)} className={n===notes[i%notes.length]?styles.next:""}><span>{n}</span></button>)}</div><div className={styles.blackKeys}>{black.map(k=><button key={k.note} style={{left:k.left}} onClick={()=>sound(k.note)} aria-label={k.note}/>)}</div></div>
-  <div className={styles.controls}><button onClick={()=>setI(0)}>↺ RECOMEÇAR TRECHO</button><button onClick={hit}>▶ PRÓXIMA NOTA</button></div>
+  <div className={styles.piano}><div className={styles.whiteKeys}>{white.map(n=><button key={n} onClick={()=>playKey(n)} className={n===notes[i%notes.length]?styles.next:""}><span>{n}</span></button>)}</div><div className={styles.blackKeys}>{black.map(k=><button key={k.note} style={{left:k.left}} onClick={()=>playKey(k.note)} aria-label={k.note}/>)}</div></div>
+  <div className={styles.controls}><button onClick={()=>setI(0)}>↺ RECOMEÇAR TRECHO</button></div>
  </div>;
 }
