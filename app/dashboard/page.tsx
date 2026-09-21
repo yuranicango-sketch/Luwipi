@@ -34,7 +34,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
         <div className="lesson-grid">
           {openingLessons.map((lesson, index) => {
             const cardTone = index % 3 === 0 ? "lesson-pink" : index % 3 === 1 ? "lesson-yellow" : "lesson-blue";
-            const route = lesson.route;
+            const route = `/aulas/${program.age}/${lesson.number}`;
 
             return (
               <article key={lesson.number} className={`lesson-card ${cardTone}`}>
@@ -43,9 +43,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
                 <p>{lesson.focus} · {lesson.duration}</p>
 
                 <div style={{marginTop:"auto",paddingTop:20}}>
-                  <DuoAction href={route} disabled={!route}>
-                    COMEÇAR
-                  </DuoAction>
+                  <DuoAction href={route}>COMEÇAR</DuoAction>
                 </div>
               </article>
             );
