@@ -61,14 +61,16 @@ export function HomeworkExperience({ code }: { code: string }) {
     const existing = getHomeworkProgress(assignment.code);
     setRepeats(Math.min(existing?.completedRepeats ?? 0, assignment.targetRepeats));
     startedSession.current = assignment.code;
+    const startingRepeats=existing?.completedRepeats ?? 0;
     saveHomeworkProgress({
       code: assignment.code,
-      completedRepeats: existing?.completedRepeats ?? 0,
+      completedRepeats: startingRepeats,
       targetRepeats: assignment.targetRepeats,
       sessionCount: (existing?.sessionCount ?? 0) + 1,
       lastPracticedAt: new Date().toISOString(),
       completedAt: existing?.completedAt,
     });
+    void syncProgress(assignment.code,startingRepeats,true,false);
   }, [assignment]);
 
   const song = useMemo(() => assignment ? getSong(assignment.songId) : undefined, [assignment]);
@@ -77,6 +79,13 @@ export function HomeworkExperience({ code }: { code: string }) {
   const complete = assignment ? repeats >= assignment.targetRepeats : false;
   const expected = sequence[step];
   const phraseProgress = sequence.length ? Math.round((step / sequence.length) * 100) : 0;
+
+
+  async function syncProgress(assignmentCode:string,nextRepeats:number,sessionStarted=false,completed=false){
+    try{
+      await fetch(`/api/homework/${encodeURIComponent(assignmentCode)}/progress`,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({repeats:nextRepeats,sessionStarted,completed})});
+    }catch{/* local progress remains available offline */}
+  }
 
   function press(key: PianoKey) {
     playPiano(key);
@@ -109,6 +118,7 @@ export function HomeworkExperience({ code }: { code: string }) {
       lastPracticedAt: new Date().toISOString(),
       completedAt: finished ? current?.completedAt ?? new Date().toISOString() : undefined,
     });
+    void syncProgress(assignment.code,nextRepeats,false,finished);
     setMessage(finished ? "Conseguimos! 🌟" : "Muito bem! Vamos outra vez? 🎉");
   }
 
