@@ -91,8 +91,9 @@ export function SongPractice({song}:{song:KidsSong}){
   const seq=useMemo(()=>sections.flatMap(s=>s.notes),[sections]);
   const piano=useMemo(()=>{
     const colors=new Map(song.colors?.map(item=>[item.note,item.color])??[]);
-    const octaves=song.pianoOctaves??1;\n    return Array.from({length:octaves},(_,index)=>KEYS.map(key=>({...key,octave:index+4,rate:key.rate*Math.pow(2,index),color:colors.get(key.note)??key.color}))).flat();
-  },[song.colors]);
+    const octaves=song.pianoOctaves??1;
+    return Array.from({length:octaves},(_,index)=>KEYS.map(key=>({...key,octave:index+4,rate:key.rate*Math.pow(2,index),color:colors.get(key.note)??key.color}))).flat();
+  },[song.colors,song.pianoOctaves]);
   const meta=SPECIAL[song.id]??({theme:"music" as Theme,scene:"garden",finish:"História concluída!",goal:"🏁"} as const);
 
   const[started,setStarted]=useState(false);
