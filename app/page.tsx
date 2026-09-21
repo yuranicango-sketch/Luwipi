@@ -28,10 +28,10 @@ export default function Home() {
             <h1>Piano para crianças, <span>de forma lúdica</span> e inteligente.</h1>
             <p>Aulas interativas para desenvolver música, coordenação e criatividade desde cedo.</p>
             <div className="hero-actions">
-              <Link className="btn btn-primary btn-pulse" href="/login">▶ Experimentar 24h grátis</Link>
+              <Link className="btn btn-primary btn-pulse" href="/login">▶ Experimentar 3 dias grátis</Link>
               <Link className="btn btn-google" href="/login"><span className="google-g">G</span> Entrar com Google</Link>
             </div>
-            <a className="whatsapp-line" href={whatsapp} target="_blank" rel="noreferrer"><span className="wa-icon">◔</span>Pagamento por WhatsApp: <strong>+244 933 400 445</strong></a>
+            <a className="whatsapp-line" href={whatsapp} target="_blank" rel="noreferrer"><span className="wa-icon">◔</span>3 dias para experimentar o primeiro módulo</a>
             <div className="hero-benefits"><span>♥ Mais confiança</span><span>▥ Melhor coordenação</span><span>★ Mais criatividade</span></div>
           </div>
           <div className="hero-visual">
@@ -65,8 +65,8 @@ export default function Home() {
           <div className="section-heading compact"><span>Como funciona</span><h2>Começar é simples.</h2></div>
           <div className="steps">
             <article><b>1</b><div><h3>Entrar</h3><p>Crie a conta em poucos cliques.</p></div></article>
-            <article><b>2</b><div><h3>Experimentar 24h grátis</h3><p>Explore as atividades sem compromisso.</p></div></article>
-            <article><b>3</b><div><h3>Ativar pelo WhatsApp</h3><p>Continue quando a família decidir.</p></div></article>
+            <article><b>2</b><div><h3>Experimentar 3 dias grátis</h3><p>Explore as atividades sem compromisso.</p></div></article>
+            <article><b>3</b><div><h3>Escolher subscrição</h3><p>Continue com acesso completo através da Paddle.</p></div></article>
           </div>
         </div>
       </section>

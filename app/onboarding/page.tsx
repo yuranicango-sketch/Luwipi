@@ -35,7 +35,7 @@ function AgePicker() {
         </button>
       </div>
       <div className={`continue-panel ${selected ? "visible" : ""}`}>
-        <div><small>24h grátis desbloqueadas</small><strong>{selected ? `Faixa ${selected.replace("-", " a ")} anos escolhida` : "Escolha uma faixa"}</strong></div>
+        <div><small>3 dias grátis desbloqueadas</small><strong>{selected ? `Faixa ${selected.replace("-", " a ")} anos escolhida` : "Escolha uma faixa"}</strong></div>
         <button className={`btn btn-primary ${!selected ? "disabled" : ""}`} disabled={!selected} onClick={continueToDashboard}>Começar experiência →</button>
       </div>
     </>
@@ -48,7 +48,7 @@ export default function OnboardingPage() {
       <header className="simple-header container"><Logo/><Link href="/">Início</Link></header>
       <section className="container onboarding-wrap">
         <div className="step-indicator"><span className="done">✓</span><i/><span>2</span><small>Passo 2 de 2</small></div>
-        <div className="section-heading"><span>24h grátis</span><h1>Escolha a fase da criança</h1><p>Selecione a faixa etária para personalizar a experiência.</p></div>
+        <div className="section-heading"><span>3 dias grátis</span><h1>Escolha a fase da criança</h1><p>Selecione a faixa etária para personalizar a experiência.</p></div>
         <Suspense fallback={<div className="loading-card">A preparar as opções…</div>}><AgePicker/></Suspense>
         <a className="onboarding-whatsapp" href={whatsapp} target="_blank" rel="noreferrer"><span className="wa-icon">◔</span><strong>Precisa de ajuda?</strong> Fale connosco · +244 933 400 445 →</a>
       </section>
