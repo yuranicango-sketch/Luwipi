@@ -1,4 +1,42 @@
-import {createCipheriv,randomBytes} from "crypto";import {NextResponse} from "next/server";import {createServerSupabaseClient} from "@/lib/supabase/server";import {createAdminSupabaseClient} from "@/lib/supabase/admin";
-function encrypt(value:string){const key=Buffer.from(process.env.GOOGLE_TOKEN_ENCRYPTION_KEY||"","base64");if(key.length!==32)throw new Error("encryption_not_configured");const iv=randomBytes(12),cipher=createCipheriv("aes-256-gcm",key,iv),data=Buffer.concat([cipher.update(value,"utf8"),cipher.final()]);return [iv.toString("base64"),cipher.getAuthTag().toString("base64"),data.toString("base64")].join(".")}
-function safeNext(value:string|null){return value&&value.startsWith("/")&&!value.startsWith("//")?value:"/onboarding"}
-export async function GET(request:Request){const requestUrl=new URL(request.url),code=requestUrl.searchParams.get("code"),next=safeNext(requestUrl.searchParams.get("next"));if(code){const supabase=await createServerSupabaseClient();const {data,error}=await supabase.auth.exchangeCodeForSession(code);if(!error&&data.user){if(data.session?.provider_refresh_token){const admin=createAdminSupabaseClient();if(admin)await admin.from("profiles").update({google_drive_refresh_token_enc:encrypt(data.session.provider_refresh_token),google_drive_connected_at:new Date().toISOString()}).eq("id",data.user.id)}return NextResponse.redirect(new URL(next,requestUrl.origin))}}return NextResponse.redirect(new URL("/login?error=oauth",requestUrl.origin))}
+import { createCipheriv, randomBytes } from "crypto";
+import { NextResponse } from "next/server";
+import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { createAdminSupabaseClient } from "@/lib/supabase/admin";
+
+function encrypt(value: string) {
+  const key = Buffer.from(process.env.GOOGLE_TOKEN_ENCRYPTION_KEY || "", "base64");
+  if (key.length !== 32) throw new Error("encryption_not_configured");
+  const iv = randomBytes(12);
+  const cipher = createCipheriv("aes-256-gcm", key, iv);
+  const data = Buffer.concat([cipher.update(value, "utf8"), cipher.final()]);
+  return [iv.toString("base64"), cipher.getAuthTag().toString("base64"), data.toString("base64")].join(".");
+}
+function safeNext(value: string | null) { return value && value.startsWith("/") && !value.startsWith("//") ? value : "/onboarding"; }
+
+export async function GET(request: Request) {
+  const requestUrl = new URL(request.url);
+  const code = requestUrl.searchParams.get("code");
+  const next = safeNext(requestUrl.searchParams.get("next"));
+  if (!code) return NextResponse.redirect(new URL("/login?error=oauth", requestUrl.origin));
+
+  const supabase = await createServerSupabaseClient();
+  const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+  if (error || !data.user) return NextResponse.redirect(new URL("/login?error=oauth", requestUrl.origin));
+
+  if (data.session?.provider_refresh_token) {
+    try {
+      const encrypted = encrypt(data.session.provider_refresh_token);
+      const admin = createAdminSupabaseClient();
+      const db = admin ?? supabase;
+      const { error: saveError } = await db.from("profiles").update({
+        google_drive_refresh_token_enc: encrypted,
+        google_drive_connected_at: new Date().toISOString(),
+      }).eq("id", data.user.id);
+      if (saveError) return NextResponse.redirect(new URL("/dashboard?drive=connect_error", requestUrl.origin));
+    } catch {
+      return NextResponse.redirect(new URL("/dashboard?drive=connect_error", requestUrl.origin));
+    }
+  }
+
+  return NextResponse.redirect(new URL(next, requestUrl.origin));
+}
