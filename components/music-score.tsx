@@ -42,6 +42,13 @@ export function MusicScore({
   timeSignature = "4/4",
 }: Props) {
   const beatsPerMeasure = timeSignature === "3/4" ? 3 : 4;
+  const parsedNotes=useMemo(()=>notes.map(parseStaffNote),[notes]);
+  const minY=Math.min(86,...parsedNotes.map(n=>n.y));
+  const maxY=Math.max(14,...parsedNotes.map(n=>n.y));
+  const topPad=Math.max(0,20-minY);
+  const bottomPad=Math.max(0,maxY-92);
+  const staffOffset=topPad;
+  const svgHeight=132+topPad+bottomPad;
   const width = useMemo(() => Math.max(720, 150 + notes.length * 64), [notes.length]);
   const staffLeft = 112;
   const noteGap = 64;
@@ -56,31 +63,34 @@ export function MusicScore({
       <div className="scroll">
         <svg
           className="score"
-          viewBox={`0 0 ${width} 132`}
+          viewBox={`0 0 ${width} ${svgHeight}`}
           role="img"
           aria-label={`Partitura em ${timeSignature}`}
         >
-          <rect x="0" y="0" width={width} height="132" rx="18" fill="#fff" />
+          <rect x="0" y="0" width={width} height={svgHeight} rx="18" fill="#fff" />
 
-          {[26, 38, 50, 62, 74].map((y) => (
+          {[26, 38, 50, 62, 74].map((baseY) => { const y=baseY+staffOffset; return (
             <line key={y} x1="18" y1={y} x2={width - 18} y2={y} stroke="#334155" strokeWidth="1.6" />
-          ))}
+          );})}
 
-          <text x="28" y="80" fontSize="76" fontFamily="Noto Music, Bravura Text, Segoe UI Symbol, serif" fill="#26364d">
+          <text x="28" y={80+staffOffset} fontSize="76" fontFamily="Noto Music, Bravura Text, Segoe UI Symbol, serif" fill="#26364d">
             𝄞
           </text>
 
           <g fill="#334155" fontFamily="system-ui, sans-serif" fontWeight="800">
-            <text x="84" y="47" fontSize="20">{timeSignature.split("/")[0]}</text>
-            <text x="84" y="68" fontSize="20">{timeSignature.split("/")[1]}</text>
+            <text x="84" y={47+staffOffset} fontSize="20">{timeSignature.split("/")[0]}</text>
+            <text x="84" y={68+staffOffset} fontSize="20">{timeSignature.split("/")[1]}</text>
           </g>
 
           {notes.map((note, index) => {
             const x = staffLeft + index * noteGap;
-            const parsed = parseStaffNote(note);\n            const y = parsed.y;
+            const parsed = parseStaffNote(note);
+            const y = parsed.y+staffOffset;
             const active = index === currentIndex;
             const done = index < currentIndex;
-            const ledgerYs:number[]=[];\n            if(parsed.step<=0) for(let ly=86;ly>=y;ly-=12) ledgerYs.push(ly);\n            if(parsed.step>=12) for(let ly=14;ly<=y;ly+=12) ledgerYs.push(ly);
+            const ledgerYs:number[]=[];
+            if(parsed.step<=0) for(let ly=86+staffOffset;ly>=y;ly-=12) ledgerYs.push(ly);
+            if(parsed.step>=12) for(let ly=14+staffOffset;ly<=y;ly+=12) ledgerYs.push(ly);
             const stemUp = y >= 50;
             const barAfter = (index + 1) % beatsPerMeasure === 0 && index < notes.length - 1;
 
@@ -107,12 +117,12 @@ export function MusicScore({
                   <line x1={x - 8} y1={y + 1} x2={x - 8} y2={y + 34} stroke={active ? "#58cc02" : done ? "#78b95b" : "#26364d"} strokeWidth="2" />
                 )}
 
-                <text x={x} y="116" textAnchor="middle" fontSize="12" fontFamily="system-ui, sans-serif" fontWeight="800" fill={active ? "#3f8f1e" : "#7b8798"}>
+                <text x={x} y={svgHeight-16} textAnchor="middle" fontSize="12" fontFamily="system-ui, sans-serif" fontWeight="800" fill={active ? "#3f8f1e" : "#7b8798"}>
                   {note}
                 </text>
 
                 {barAfter && (
-                  <line x1={x + noteGap / 2} y1="26" x2={x + noteGap / 2} y2="74" stroke="#334155" strokeWidth="1.8" />
+                  <line x1={x + noteGap / 2} y1={26+staffOffset} x2={x + noteGap / 2} y2={74+staffOffset} stroke="#334155" strokeWidth="1.8" />
                 )}
               </g>
             );
