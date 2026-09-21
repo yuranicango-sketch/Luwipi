@@ -1,2 +1,19 @@
-import Link from "next/link";import {Logo} from "@/components/logo";import {LessonPreview} from "@/components/lesson-preview";import {GoogleLoginButton} from "@/components/google-login-button";
-export default function LoginPage(){return <main className="auth-page"><header className="simple-header container"><Logo/><Link href="/">← Voltar ao site</Link></header><div className="container auth-grid"><section className="auth-art"><div className="auth-quote">Grandes sonhos começam com uma nota <span>♥</span></div><LessonPreview/></section><section className="auth-card"><div className="eyebrow">3 dias para experimentar</div><h1>Entrar na Luwipi</h1><p>Entre com Google. O Luwipi usa o seu Drive apenas para guardar a sua lista de alunos e turmas num ficheiro criado pela própria aplicação.</p><GoogleLoginButton/><small className="muted-center">Login Google via Supabase Auth · acesso limitado aos ficheiros criados pelo Luwipi.</small><div className="trust-row"><span>♥ Dados dos alunos no seu Drive</span><span>⚡ 3 dias grátis</span><span>★ Pagamento seguro</span></div></section></div></main>}
+import { redirect } from "next/navigation";
+import Link from "next/link";
+import { Logo } from "@/components/logo";
+import { LessonPreview } from "@/components/lesson-preview";
+import { GoogleLoginButton } from "@/components/google-login-button";
+import { createServerSupabaseClient } from "@/lib/supabase/server";
+
+export default async function LoginPage({ searchParams }: { searchParams: Promise<{ next?: string }> }) {
+  const params = await searchParams;
+  const supabase = await createServerSupabaseClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (user) {
+    const next = params.next && params.next.startsWith("/") && !params.next.startsWith("//") ? params.next : "/dashboard";
+    redirect(next);
+  }
+
+  return <main className="auth-page"><header className="simple-header container"><Logo/><Link href="/">← Voltar ao site</Link></header><div className="container auth-grid"><section className="auth-art"><div className="auth-quote">Grandes sonhos começam com uma nota <span>♥</span></div><LessonPreview/></section><section className="auth-card"><div className="eyebrow">3 dias para experimentar</div><h1>Entrar na Luwipi</h1><p>Entre com Google. O Luwipi usa o seu Drive apenas para guardar a sua lista de alunos e turmas num ficheiro criado pela própria aplicação.</p><GoogleLoginButton/><small className="muted-center">Login Google via Supabase Auth · acesso limitado aos ficheiros criados pelo Luwipi.</small><div className="trust-row"><span>♥ Dados dos alunos no seu Drive</span><span>⚡ 3 dias grátis</span><span>★ Pagamento seguro</span></div></section></div></main>;
+}
