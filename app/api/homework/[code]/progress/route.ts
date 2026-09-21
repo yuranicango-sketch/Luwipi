@@ -1,5 +1,23 @@
-import {NextResponse} from "next/server";import {createAdminSupabaseClient} from "@/lib/supabase/admin";
+import {NextResponse} from "next/server";
+import {createServerSupabaseClient} from "@/lib/supabase/server";
 type ProgressBody={sessionStarted?:boolean;durationSeconds?:number;noteCompleted?:boolean};
 const CODE_RE=/^LUWI-[A-HJ-NP-Z2-9]{8}$/;
-export async function POST(request:Request,{params}:{params:Promise<{code:string}>}){const code=(await params).code.trim().toUpperCase();if(!CODE_RE.test(code))return NextResponse.json({error:"invalid_code"},{status:400});const body=(await request.json().catch(()=>({}))) as ProgressBody;const supabase=createAdminSupabaseClient();if(!supabase)return NextResponse.json({error:"server_not_configured"},{status:503});const {data:assignment,error}=await supabase.from("homework_assignments").select("id,target_repeats,valid_until,revoked_at").eq("code",code).maybeSingle();if(error)return NextResponse.json({error:"database_error"},{status:500});if(!assignment||assignment.revoked_at)return NextResponse.json({error:"not_found"},{status:404});if(new Date(assignment.valid_until).getTime()<Date.now())return NextResponse.json({error:"expired"},{status:410});const {data:current}=await supabase.from("homework_progress").select("sessions,repeats,completed,first_practiced_at,completed_at,last_practiced_at").eq("assignment_id",assignment.id).maybeSingle();const now=Date.now();const last=current?.last_practiced_at?new Date(current.last_practiced_at).getTime():0;if(body.noteCompleted&&now-last<1500)return NextResponse.json({ok:true,progress:{sessions:current?.sessions??0,repeats:current?.repeats??0,completed:current?.completed??false}});
-const repeats=Math.min(assignment.target_repeats,(current?.repeats??0)+(body.noteCompleted?1:0));const sessions=Math.min(10000,(current?.sessions??0)+(body.sessionStarted?1:0));const completed=Boolean(current?.completed||repeats>=assignment.target_repeats);const iso=new Date(now).toISOString();const {error:pe}=await supabase.from("homework_progress").upsert({assignment_id:assignment.id,sessions,repeats,completed,first_practiced_at:current?.first_practiced_at??iso,last_practiced_at:iso,completed_at:completed?current?.completed_at??iso:null,updated_at:iso},{onConflict:"assignment_id"});if(pe)return NextResponse.json({error:"database_error"},{status:500});if(body.sessionStarted||body.durationSeconds){await supabase.from("homework_practice_sessions").insert({assignment_id:assignment.id,repetitions:repeats,duration_seconds:Math.min(86400,Math.max(0,Math.floor(body.durationSeconds??0))),completed,ended_at:body.durationSeconds?iso:null});}return NextResponse.json({ok:true,progress:{sessions,repeats,completed}});}
+export async function POST(request:Request,{params}:{params:Promise<{code:string}>}){
+ const code=(await params).code.trim().toUpperCase();
+ if(!CODE_RE.test(code))return NextResponse.json({error:"invalid_code"},{status:400});
+ const body=(await request.json().catch(()=>({}))) as ProgressBody;
+ const supabase=await createServerSupabaseClient();
+ const {data,error}=await supabase.rpc("update_public_homework_progress",{
+   p_code:code,
+   p_session_started:Boolean(body.sessionStarted),
+   p_note_completed:Boolean(body.noteCompleted),
+   p_duration_seconds:Math.min(86400,Math.max(0,Math.floor(body.durationSeconds??0)))
+ });
+ if(error){
+   const msg=String(error.message||"");
+   if(msg.includes("not_found"))return NextResponse.json({error:"not_found"},{status:404});
+   if(msg.includes("expired"))return NextResponse.json({error:"expired"},{status:410});
+   return NextResponse.json({error:"database_error",detail:error.code},{status:500});
+ }
+ return NextResponse.json({ok:true,progress:data});
+}
