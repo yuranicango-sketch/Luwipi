@@ -66,7 +66,7 @@ export function LessonRunner({age,module,lesson,variant,studentId}:Props){
         <div><small>{step.duration}</small><h2>{step.title}</h2><p>{step.goal}</p></div>
       </div>
 
-      <LessonVisual stepId={step.id} icon={step.icon} title={step.title} age={age} accent={module.accent}/>
+      <LessonVisual stepId={step.id} icon={step.icon} title={step.title} age={age} accent={module.accent} instruction={step.doNow.join(" ")}/>
 
       <section className={styles.doNow}>
         <span className={styles.sectionLabel}>FAÇA AGORA</span>
