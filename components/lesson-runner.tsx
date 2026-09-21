@@ -61,36 +61,34 @@ export function LessonRunner({age,module,lesson,variant,studentId}:Props){
     </nav></details>
 
     <article className={styles.stage}>
-      <div className={styles.stageHeading}>
-        <div className={styles.icon}>{step.icon}</div>
-        <div><small>{step.duration}</small><h2>{step.title}</h2><p>{step.goal}</p></div>
+      <header className={styles.stageHeading}>
+        <div><small>AULA ${lesson.number} · ${step.id==="repertoire"?"MÚSICA DO MÊS":step.title.toUpperCase()}</small><h2>{step.title}</h2><p>{step.goal}</p></div>
+        <span className={styles.duration}>{step.duration}</span>
+      </header>
+
+      <div className={styles.lessonGrid}>
+        <div className={styles.scenePanel}>
+          <span className={styles.sceneLabel}>CENA DA AULA</span>
+          <LessonVisual stepId={step.id} icon={step.icon} title={step.title} age={age} accent={module.accent} instruction={step.actions.join(" ")}/>
+        </div>
+
+        <div className={styles.teacherPanel}>
+          <span className={styles.sectionLabel}>GUIA DO PROFESSOR</span>
+          <h3>Faça só isto agora</h3>
+          <ol className={styles.teacherSteps}>{step.actions.map((action,index)=><li key={`${step.id}-${index}`}><b>{index+1}</b><span>{action}</span></li>)}</ol>
+          {(step.example||step.say||step.tip)&&<button type="button" className={styles.guideToggle} onClick={()=>setShowGuide(v=>!v)}>{showGuide?"Fechar ajuda":"💬 Ver o que posso dizer"}</button>}
+          {showGuide&&step.say&&<section className={styles.say}><span className={styles.sectionLabel}>DIGA ASSIM</span><p>“{step.say}”</p></section>}
+          {showGuide&&step.example&&<section className={styles.example}><span className={styles.sectionLabel}>EXEMPLO</span><p>{step.example}</p></section>}
+          {showGuide&&step.tip&&<aside className={styles.tip}><strong>Dica</strong><span>{step.tip}</span></aside>}
+          {step.actionHref&&step.actionLabel&&<Link className={styles.action} href={step.actionHref}>{step.actionLabel}</Link>}
+        </div>
       </div>
 
-      <LessonVisual stepId={step.id} icon={step.icon} title={step.title} age={age} accent={module.accent} instruction={step.actions.join(" ")}/>
+      {lessonSong&&age==="2-4"&&step.id==="repertoire"&&<div className={styles.monthSong}><PreschoolInlineSong song={lessonSong} lessonNumber={lesson.number}/></div>}
+      {lessonSong&&age!=="2-4"&&step.id==="repertoire"&&<section className={styles.songCard}><div className={styles.songArt}><span>{lessonSong.emoji}</span></div><div><small>MÚSICA DO MÊS</small><h3>{lessonSong.title}</h3><p>{lessonSong.story}</p><Link href={`/musicas/${lessonSong.id}`}>PRATICAR MÚSICA →</Link></div></section>}
 
-      <section className={styles.doNow}>
-        <span className={styles.sectionLabel}>FAÇA AGORA</span>
-        <ol>{step.actions.map((action,index)=><li key={`${step.id}-${index}`}><b>{index+1}</b><span>{action}</span></li>)}</ol>
-      </section>
-
-      {(step.example||step.say||step.tip)&&<button type="button" className={styles.guideToggle} onClick={()=>setShowGuide(v=>!v)}>{showGuide?"Fechar ajuda":"Precisa de ajuda? · exemplo, fala e dica"}</button>}
-      {showGuide&&step.example&&<section className={styles.example}><span className={styles.sectionLabel}>EXEMPLO PRONTO</span><p>{step.example}</p></section>}
-
-      {lessonSong&&age==="2-4"&&step.id==="repertoire"&&<PreschoolInlineSong song={lessonSong} lessonNumber={lesson.number}/>}
-
-      {lessonSong&&!(age==="2-4"&&step.id==="repertoire")&&<section className={styles.songCard}><div className={styles.songArt}><span>{lessonSong.emoji}</span></div><div><small>MÚSICA DO MÊS · JÁ ESTÁ NO LUWIPI</small><h3>{lessonSong.title}</h3><p>{lessonSong.story}</p><Link href={`/musicas/${lessonSong.id}`}>ABRIR MÚSICA E DESENHO →</Link></div></section>}
-
-      {showGuide&&step.say&&<section className={styles.say}><span className={styles.sectionLabel}>DIGA ASSIM</span><p>“{step.say}”</p></section>}
-
-      <div className={styles.twoColumns}>
-        <section><span className={styles.sectionLabel}>A CRIANÇA FAZ</span><p>{step.childDoes}</p></section>
-        <section><span className={styles.sectionLabel}>PODE AVANÇAR QUANDO</span><p>{step.success}</p></section>
-      </div>
-
-      {showGuide&&step.tip&&<aside className={styles.tip}><strong>Dica</strong><span>{step.tip}</span></aside>}
-      {step.actionHref&&step.actionLabel&&<Link className={styles.action} href={step.actionHref}>{step.actionLabel}</Link>}
+      <div className={styles.observe}><span>👀</span><div><small>OBSERVE</small><strong>{step.childDoes}</strong><p>Pode avançar quando: {step.success}</p></div></div>
     </article>
-
     {isLast&&<section className={styles.mastery}>
       <div><small>ANTES DE TERMINAR</small><h3>Como a criança terminou?</h3><p>Escolha uma opção. “Reforçar” não impede a próxima aula.</p></div>
       <div className={styles.masteryButtons}>
