@@ -96,9 +96,9 @@ export function MusicScore({
 
             return (
               <g key={`${note}-${index}`}>
-                {needsLedger && (
-                  <line x1={x - 13} y1="86" x2={x + 13} y2="86" stroke="#334155" strokeWidth="1.6" />
-                )}
+                {ledgerYs.map((ly) => (
+                  <line key={ly} x1={x - 13} y1={ly} x2={x + 13} y2={ly} stroke="#334155" strokeWidth="1.6" />
+                ))}
 
                 {active && <circle cx={x} cy={y} r="18" fill="#dff7cf" />}
 
