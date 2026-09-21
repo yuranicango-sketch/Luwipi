@@ -12,12 +12,12 @@ function sound(note:string){
 }
 export function PreschoolInlineSong({song,lessonNumber}:{song:KidsSong;lessonNumber:number}){
  const phase=(lessonNumber-1)%8;
- const sequence=song.sequence??song.sections.flatMap(section=>section.notes);
+ const sequence=song.sequence??song.sections?.flatMap(section=>section.notes)??[];
  const max=phase===0?Math.min(7,sequence.length):Math.min(sequence.length,phase<3?7+phase*3:phase<6?14+phase*3:sequence.length);
  const notes=useMemo(()=>sequence.slice(0,max),[sequence,max]);
  const[i,setI]=useState(0); const[pop,setPop]=useState(false);
  useEffect(()=>setI(0),[song.id,lessonNumber]);
- function hit(){const n=notes[i%notes.length];sound(n);setI(v=>(v+1)%notes.length);setPop(true);setTimeout(()=>setPop(false),180);}
+ function hit(){if(!notes.length)return;const n=notes[i%notes.length];sound(n);setI(v=>(v+1)%notes.length);setPop(true);setTimeout(()=>setPop(false),180);}
  if(phase===0)return <div className={styles.wrap}>
    <div className={styles.kicker}>MÚSICA DO MÊS · PRIMEIRO ENCONTRO</div><h3>{song.title}</h3>
    <p>Cante com a criança. Cada toque no personagem toca a próxima nota. Hoje não mostramos o piano.</p>
