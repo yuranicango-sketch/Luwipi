@@ -57,7 +57,6 @@ export function EchoMusicalGame({ story }: { story: string }) {
   function pressKey(key:LuwipiPianoKey){
     const note=key.note as Note;
     if(phase!=="play"||!pattern)return;
-    playNote(note);
     const next=[...input,note];
     setInput(next);
 
