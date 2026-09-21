@@ -9,6 +9,7 @@ import type { CurriculumVariant, EnhancedLesson, EnhancedModule } from "@/lib/cu
 import { buildLessonSteps } from "@/lib/lesson-engine";
 import { getSong } from "@/lib/music-library";
 import { PreschoolInlineSong } from "@/components/preschool-inline-song";
+import { LessonVisual } from "@/components/lesson-visual";
 import { completeLesson, saveLessonStep, type MasteryState } from "@/lib/curriculum-progress";
 import styles from "./lesson-runner.module.css";
 
@@ -19,6 +20,7 @@ export function LessonRunner({age,module,lesson,variant,studentId}:Props){
   const steps=useMemo(()=>buildLessonSteps({age,module,lesson,variant}),[age,module,lesson,variant]);
   const[stepIndex,setStepIndex]=useState(0);
   const[mastery,setMastery]=useState<MasteryState>(null);
+  const[showGuide,setShowGuide]=useState(false);
   const step=steps[stepIndex];
   const lessonSong=step.songId?getSong(step.songId):undefined;
   const isLast=stepIndex===steps.length-1;
@@ -27,6 +29,7 @@ export function LessonRunner({age,module,lesson,variant,studentId}:Props){
   function goTo(index:number){
     const safe=Math.max(0,Math.min(steps.length-1,index));
     setStepIndex(safe);
+    setShowGuide(false);
     saveLessonStep(studentId,age,lesson.number,safe);
     window.scrollTo({top:0,behavior:"smooth"});
   }
@@ -51,11 +54,11 @@ export function LessonRunner({age,module,lesson,variant,studentId}:Props){
 
     <div className={styles.progress}><div><i style={{width:`${percent}%`}}/></div><span>Etapa {stepIndex+1} de {steps.length}</span></div>
 
-    <nav className={styles.steps} aria-label="Etapas da aula">
+    <details className={styles.stepDrawer}><summary>Ver todas as etapas <span>{stepIndex+1}/{steps.length}</span></summary><nav className={styles.steps} aria-label="Etapas da aula">
       {steps.map((item,index)=><button key={item.id} className={`${index===stepIndex?styles.activeStep:""} ${index<stepIndex?styles.doneStep:""}`} onClick={()=>goTo(index)}>
         <b>{index<stepIndex?"✓":index+1}</b><span>{item.title}</span>
       </button>)}
-    </nav>
+    </nav></details>
 
     <article className={styles.stage}>
       <div className={styles.stageHeading}>
@@ -63,23 +66,28 @@ export function LessonRunner({age,module,lesson,variant,studentId}:Props){
         <div><small>{step.duration}</small><h2>{step.title}</h2><p>{step.goal}</p></div>
       </div>
 
+      <LessonVisual stepId={step.id} icon={step.icon} title={step.title} age={age} accent={module.accent}/>
+
       <section className={styles.doNow}>
         <span className={styles.sectionLabel}>FAÇA AGORA</span>
         <ol>{step.actions.map((action,index)=><li key={`${step.id}-${index}`}><b>{index+1}</b><span>{action}</span></li>)}</ol>
       </section>
 
-      {step.example&&<section className={styles.example}><span className={styles.sectionLabel}>EXEMPLO PRONTO</span><p>{step.example}</p></section>}
+      {(step.example||step.say||step.tip)&&<button type="button" className={styles.guideToggle} onClick={()=>setShowGuide(v=>!v)}>{showGuide?"Fechar ajuda":"Precisa de ajuda? · exemplo, fala e dica"}</button>}
+      {showGuide&&step.example&&<section className={styles.example}><span className={styles.sectionLabel}>EXEMPLO PRONTO</span><p>{step.example}</p></section>}
 
-      {lessonSong&&age==="2-4"&&step.id==="repertoire"&&<PreschoolInlineSong song={lessonSong} lessonNumber={lesson.number}/>}\n\n      {lessonSong&&!(age==="2-4"&&step.id==="repertoire")&&<section className={styles.songCard}><div className={styles.songArt}><span>{lessonSong.emoji}</span></div><div><small>MÚSICA DO MÊS · JÁ ESTÁ NO LUWIPI</small><h3>{lessonSong.title}</h3><p>{lessonSong.story}</p><Link href={`/musicas/${lessonSong.id}`}>ABRIR MÚSICA E DESENHO →</Link></div></section>}
+      {lessonSong&&age==="2-4"&&step.id==="repertoire"&&<PreschoolInlineSong song={lessonSong} lessonNumber={lesson.number}/>}
 
-      {step.say&&<section className={styles.say}><span className={styles.sectionLabel}>DIGA ASSIM</span><p>“{step.say}”</p></section>}
+      {lessonSong&&!(age==="2-4"&&step.id==="repertoire")&&<section className={styles.songCard}><div className={styles.songArt}><span>{lessonSong.emoji}</span></div><div><small>MÚSICA DO MÊS · JÁ ESTÁ NO LUWIPI</small><h3>{lessonSong.title}</h3><p>{lessonSong.story}</p><Link href={`/musicas/${lessonSong.id}`}>ABRIR MÚSICA E DESENHO →</Link></div></section>}
+
+      {showGuide&&step.say&&<section className={styles.say}><span className={styles.sectionLabel}>DIGA ASSIM</span><p>“{step.say}”</p></section>}
 
       <div className={styles.twoColumns}>
         <section><span className={styles.sectionLabel}>A CRIANÇA FAZ</span><p>{step.childDoes}</p></section>
         <section><span className={styles.sectionLabel}>PODE AVANÇAR QUANDO</span><p>{step.success}</p></section>
       </div>
 
-      {step.tip&&<aside className={styles.tip}><strong>Dica</strong><span>{step.tip}</span></aside>}
+      {showGuide&&step.tip&&<aside className={styles.tip}><strong>Dica</strong><span>{step.tip}</span></aside>}
       {step.actionHref&&step.actionLabel&&<Link className={styles.action} href={step.actionHref}>{step.actionLabel}</Link>}
     </article>
 
@@ -93,7 +101,7 @@ export function LessonRunner({age,module,lesson,variant,studentId}:Props){
 
     <footer className={styles.controls}>
       <button className={styles.secondary} onClick={()=>goTo(stepIndex-1)} disabled={stepIndex===0}>VOLTAR</button>
-      {!isLast?<button className={styles.primary} onClick={()=>goTo(stepIndex+1)}>FEITO · PRÓXIMO</button>
+      {!isLast?<button className={styles.primary} onClick={()=>goTo(stepIndex+1)}>CONCLUÍDO · PRÓXIMO →</button>
       :<button className={styles.primary} onClick={finish} disabled={!mastery}>CONCLUIR AULA</button>}
     </footer>
   </section>;
