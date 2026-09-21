@@ -6,7 +6,8 @@ import {playPianoRate,preloadPianoSamples} from "@/lib/piano-sampler";
 import {LuwipiPiano,type LuwipiPianoKey} from "@/components/luwipi-piano";
 
 const semitones:Record<string,number>={"Dó":0,"Dó♯":1,"Ré":2,"Ré♯":3,"Mi":4,"Fá":5,"Fá♯":6,"Sol":7,"Sol♯":8,"Lá":9,"Lá♯":10,"Si":11};
-function sound(note:string){void playPianoRate(Math.pow(2,(semitones[note]??0)/12));}
+function baseNote(note:string){return note.replace(/[45]$/,"")}
+function sound(note:string){void playPianoRate(Math.pow(2,(semitones[baseNote(note)]??0)/12));}
 export function PreschoolInlineSong({song,lessonNumber}:{song:KidsSong;lessonNumber:number}){
  const phase=(lessonNumber-1)%8;
  const sequence=song.sequence??song.sections?.flatMap(section=>section.notes)??[];
@@ -17,7 +18,7 @@ export function PreschoolInlineSong({song,lessonNumber}:{song:KidsSong;lessonNum
  useEffect(()=>{void preloadPianoSamples();},[]);
  function advance(){setI(v=>(v+1)%notes.length);}
  function hit(){if(!notes.length)return;const n=notes[i%notes.length];sound(n);advance();setPop(true);setTimeout(()=>setPop(false),180);}
- function playKey(key:LuwipiPianoKey){if(notes.length&&key.note===notes[i%notes.length])advance();}
+ function playKey(key:LuwipiPianoKey){if(notes.length&&key.note===baseNote(notes[i%notes.length]))advance();}
  if(phase===0)return <div className={styles.wrap}>
    <div className={styles.kicker}>MÚSICA DO MÊS · PRIMEIRO ENCONTRO</div><h3>{song.title}</h3>
    <p>Cante com a criança. Cada toque no personagem toca a próxima nota. Hoje não mostramos o piano.</p>
