@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { CSSProperties } from "react";
 import type { AgeGroup } from "@/lib/curriculum";
@@ -10,7 +10,7 @@ import { buildLessonSteps } from "@/lib/lesson-engine";
 import { getSong } from "@/lib/music-library";
 import { PreschoolInlineSong } from "@/components/preschool-inline-song";
 import { LessonVisual } from "@/components/lesson-visual";
-import { completeLesson, saveLessonStep, type MasteryState } from "@/lib/curriculum-progress";
+import { completeLesson, readCurriculumProgress, saveLessonStep, type MasteryState } from "@/lib/curriculum-progress";
 import styles from "./lesson-runner.module.css";
 
 type Props={age:AgeGroup;module:EnhancedModule;lesson:EnhancedLesson;variant:CurriculumVariant;studentId:string};
@@ -20,21 +20,30 @@ export function LessonRunner({age,module,lesson,variant,studentId}:Props){
   const steps=useMemo(()=>buildLessonSteps({age,module,lesson,variant}),[age,module,lesson,variant]);
   const[stepIndex,setStepIndex]=useState(0);
   const[mastery,setMastery]=useState<MasteryState>(null);
-  const[showGuide,setShowGuide]=useState(false);\n  const[actionIndex,setActionIndex]=useState(0);
+  const[showGuide,setShowGuide]=useState(false);
+  const[actionIndex,setActionIndex]=useState(0);
   const step=steps[stepIndex];
   const lessonSong=step.songId?getSong(step.songId):undefined;
   const isLast=stepIndex===steps.length-1;
-  const currentAction=step.actions[Math.min(actionIndex,Math.max(0,step.actions.length-1))];\n  const actionCount=Math.max(1,step.actions.length);\n  const isLastAction=actionIndex>=actionCount-1;\n  const totalUnits=steps.reduce((sum,item)=>sum+Math.max(1,item.actions.length),0);\n  const completedUnits=steps.slice(0,stepIndex).reduce((sum,item)=>sum+Math.max(1,item.actions.length),0)+actionIndex+1;\n  const percent=Math.round((completedUnits/Math.max(1,totalUnits))*100);
+  const currentAction=step.actions[Math.min(actionIndex,Math.max(0,step.actions.length-1))]??"Explore esta ideia com a criança.";
+  const actionCount=Math.max(1,step.actions.length);
+  const isLastAction=actionIndex>=actionCount-1;
+  const totalUnits=steps.reduce((sum,item)=>sum+Math.max(1,item.actions.length),0);
+  const completedUnits=steps.slice(0,stepIndex).reduce((sum,item)=>sum+Math.max(1,item.actions.length),0)+actionIndex+1;
+  const percent=Math.round((completedUnits/Math.max(1,totalUnits))*100);
+  useEffect(()=>{const saved=readCurriculumProgress(studentId,age)[String(lesson.number)];if(!saved||saved.completed)return;const s=Math.max(0,Math.min(steps.length-1,saved.step??0));setStepIndex(s);setActionIndex(Math.max(0,Math.min(Math.max(0,steps[s].actions.length-1),saved.action??0)));},[studentId,age,lesson.number,steps]);
 
   function goTo(index:number){
     const safe=Math.max(0,Math.min(steps.length-1,index));
     setStepIndex(safe);
-    setShowGuide(false);
-    saveLessonStep(studentId,age,lesson.number,safe);
+    setShowGuide(false);setActionIndex(0);setMastery(null);
+    saveLessonStep(studentId,age,lesson.number,safe,0);
     window.scrollTo({top:0,behavior:"smooth"});
   }
 
-  function advance(){\n    if(!isLastAction){setActionIndex(value=>value+1);setShowGuide(false);return;}\n    if(!isLast)goTo(stepIndex+1);\n  }\n\n  function finish(){
+  function advance(){if(!isLastAction){const next=actionIndex+1;setActionIndex(next);setShowGuide(false);saveLessonStep(studentId,age,lesson.number,stepIndex,next);return;}if(!isLast)goTo(stepIndex+1);}
+
+  function finish(){
     if(!mastery)return;
     completeLesson(studentId,age,lesson.number,mastery);
     const nextLesson=Math.min(48,lesson.number+1);
@@ -68,14 +77,13 @@ export function LessonRunner({age,module,lesson,variant,studentId}:Props){
 
       <div className={styles.lessonGrid}>
         <div className={styles.scenePanel}>
-          <span className={styles.sceneLabel}>CENA DA AULA</span>
           <LessonVisual stepId={step.id} icon={step.icon} title={step.title} age={age} accent={module.accent} instruction={step.actions.join(" ")}/>
         </div>
 
         <div className={styles.teacherPanel}>
           <span className={styles.sectionLabel}>GUIA DO PROFESSOR</span>
           <h3>Faça só isto agora</h3>
-          <ol className={styles.teacherSteps}>{step.actions.map((action,index)=><li key={`${step.id}-${index}`}><b>{index+1}</b><span>{action}</span></li>)}</ol>
+          <div className={styles.microAction}><b>{actionIndex+1}</b><p>{currentAction}</p></div><div className={styles.actionDots}>{Array.from({length:actionCount}).map((_,i)=><i key={i} className={i<=actionIndex?styles.actionDone:""}/>)}</div>
           {(step.example||step.say||step.tip)&&<button type="button" className={styles.guideToggle} onClick={()=>setShowGuide(v=>!v)}>{showGuide?"Fechar ajuda":"💬 Ver o que posso dizer"}</button>}
           {showGuide&&step.say&&<section className={styles.say}><span className={styles.sectionLabel}>DIGA ASSIM</span><p>“{step.say}”</p></section>}
           {showGuide&&step.example&&<section className={styles.example}><span className={styles.sectionLabel}>EXEMPLO</span><p>{step.example}</p></section>}
@@ -99,8 +107,7 @@ export function LessonRunner({age,module,lesson,variant,studentId}:Props){
 
     <footer className={styles.controls}>
       <button className={styles.secondary} onClick={()=>goTo(stepIndex-1)} disabled={stepIndex===0}>VOLTAR</button>
-      {!isLast?<button className={styles.primary} onClick={()=>goTo(stepIndex+1)}>CONCLUÍDO · PRÓXIMO →</button>
-      :<button className={styles.primary} onClick={finish} disabled={!mastery}>CONCLUIR AULA</button>}
+      {!isLast||!isLastAction?<button className={styles.primary} onClick={advance}>{isLastAction?"ETAPA CONCLUÍDA · PRÓXIMA →":"FEITO · PRÓXIMA AÇÃO →"}</button>:<button className={styles.primary} onClick={finish} disabled={!mastery}>CONCLUIR AULA</button>}
     </footer>
   </section>;
 }
