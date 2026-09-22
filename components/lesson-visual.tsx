@@ -1,5 +1,6 @@
 "use client";
 import{useEffect,useRef,useState,type CSSProperties}from"react";
+import{createBrowserSupabaseClient}from"@/lib/supabase/browser";
 import styles from"./lesson-visual.module.css";
 import type{AgeGroup}from"@/lib/curriculum";
 import{pedagogyAssets,type PedagogyVisualKind,type PedagogyAsset}from"@/lib/pedagogy-assets";
@@ -14,7 +15,14 @@ export function LessonVisual({stepId,title,age,accent,instruction=""}:Props){
  const kind:PedagogyVisualKind=resolved?.startsWith("posture-")?"posture":resolved==="hand-shape"||resolved==="finger-numbering"?"hands":(resolved??"story") as PedagogyVisualKind;
  const fallback=(resolved?.startsWith("posture-")||resolved==="hand-shape"||resolved==="finger-numbering")?[]:(pedagogyAssets[kind]??[]);
  const[stored,setStored]=useState<StoredAsset[]>([]),[loaded,setLoaded]=useState(false),[busy,setBusy]=useState<string|null>(null),[error,setError]=useState(""),ref=useRef<HTMLDivElement>(null),[active,setActive]=useState(0);
- async function reload(){setLoaded(false);if(!resolved){setStored([]);setLoaded(true);return}try{const r=await fetch(`/api/pedagogy-assets?visual_key=${encodeURIComponent(resolved)}`,{cache:"no-store",credentials:"include"});const j=await r.json().catch(()=>null);if(!r.ok)throw new Error(j?.error||"Falha ao carregar imagens");setStored(j?.assets??[])}catch(e){setStored([]);setError(e instanceof Error?e.message:"Falha ao carregar imagens")}finally{setLoaded(true)}}
+ async function reload(){setLoaded(false);if(!resolved){setStored([]);setLoaded(true);return}try{
+  const supabase=createBrowserSupabaseClient();
+  const {data,error}=await supabase.from("pedagogy_assets").select("*").eq("visual_key",resolved).order("created_at");
+  if(error)throw error;
+  const rows=(data??[]) as StoredAsset[];
+  const base=document.documentElement.dataset.supabaseUrl??"";
+  setStored(rows.map(x=>({...x,public_url:x.storage_path?`${base}/storage/v1/object/public/pedagogy-assets/${x.storage_path}`:null})));
+ }catch(e){setStored([]);setError(e instanceof Error?e.message:"Falha ao carregar imagens")}finally{setLoaded(true)}}
  useEffect(()=>{setActive(0);setError("");void reload()},[resolved,instruction]);
  const approved=stored.filter(x=>x.status==="approved"&&x.public_url).map(x=>({src:x.public_url!,alt:x.alt_text,focus:x.focus,source:"Luwipi",license:"approved"}));
  const candidate=stored.find(x=>x.status==="candidate");
