@@ -1,15 +1,26 @@
 export type PedagogyVisualKind="posture"|"hands"|"highlow"|"dynamics"|"rhythm"|"tempo"|"direction"|"listen"|"story"|"create"|"celebrate";
-export type PedagogyAsset={src:string;alt:string;source:string;license:string;focus:string;role?:"good"|"bad"|"detail"};
+export type PedagogyAsset={src:string;alt:string;source:string;license:string;focus:string};
 export const pedagogyAssets:Partial<Record<PedagogyVisualKind,PedagogyAsset[]>>={
 posture:[
-{src:"https://images.squarespace-cdn.com/content/v1/60f721304b43371202e967dd/1629662576636-RPTZE5QIMZ0LT5VU4IK9/IMG_4511.jpg",alt:"Criança vista de lado ao piano com banco e apoio dos pés.",source:"Edmonton Suzuki Piano · referência de postura",license:"Reference only",focus:"CORPO · BRAÇOS · APOIO",role:"good"},
-{src:"https://1.bp.blogspot.com/-keszKKJYEvw/W9egs_rHBqI/AAAAAAAADeE/t9D11pZnnEoDsswSX9ytpSp9BuD0JbM3wCLcBGAs/s1600/piano%2Bbench.JPG",alt:"Comparação lateral de alturas de banco e apoio dos pés ao piano.",source:"Cecil Messer · referência de altura do banco",license:"Reference only",focus:"ALTURA DO BANCO · PÉS",role:"detail"},
-{src:"https://static.wixstatic.com/media/a27d24_04cb4b381831495faf65f181071cef78~mv2.jpg/v1/fill/w_934,h_852,al_c,q_85,enc_avif,quality_auto/a27d24_04cb4b381831495faf65f181071cef78~mv2.jpg",alt:"Guia lateral mostrando cabeça, costas, cotovelos, banco, joelhos e pés.",source:"MJ Piano Lessons · referência de alinhamento",license:"Reference only",focus:"ALINHAMENTO DO CORPO",role:"detail"}
+{src:"https://openclipart.org/image/800px/301207",alt:"Criança ao teclado para observar posição geral do corpo em relação ao instrumento.",source:"OpenClipart · Playing keyboard #1",license:"Public domain",focus:"CORPO E DISTÂNCIA"},
+{src:"https://openclipart.org/image/800px/317141",alt:"Criança ao teclado vista numa posição útil para conversar sobre braços e aproximação ao piano.",source:"OpenClipart · Playing keyboard #2",license:"Public domain",focus:"BRAÇOS E TECLADO"},
+{src:"https://openclipart.org/image/800px/317669",alt:"Criança e professora ao teclado para observar preparação antes de tocar.",source:"OpenClipart · Playing keyboard #3",license:"Public domain",focus:"PREPARAR PARA TOCAR"}
 ],
-hands:[
-{src:"https://freesvg.org/img/Human_hand_palm_inside_remix.png",alt:"Mão aberta mostrando claramente os cinco dedos.",source:"FreeSVG / OpenClipart",license:"Public domain / CC0",focus:"DEDOS 1–5",role:"detail"},
-{src:"https://sneakymusic.com.au/cdn/shop/files/Ladybug-Piano-Hand-Position-Toy-Sneaky-Music-66469588074569.jpg?v=1771304557",alt:"Comparação visual entre dedos arredondados com pulso alinhado e dedos achatados com pulso caído.",source:"Sneaky Music · referência de posição da mão",license:"Reference only",focus:"CURVAR DEDOS · ALINHAR PULSO",role:"good"}
+hands:[{src:"https://freesvg.org/img/Human_hand_palm_inside_remix.png",alt:"Mão aberta mostrando os cinco dedos.",source:"FreeSVG / OpenClipart",license:"Public domain / CC0",focus:"DEDOS 1–5"}],
+listen:[
+{src:"https://openclipart.org/image/800px/318254",alt:"Criança com auscultadores representando escuta atenta.",source:"OpenClipart · Headphones",license:"Public domain",focus:"OUVIR COM ATENÇÃO"},
+{src:"https://openclipart.org/image/800px/334621",alt:"Criança ouvindo música.",source:"OpenClipart · Girl Listening to Music",license:"Public domain",focus:"DESCOBRIR O SOM"}
 ],
-highlow:[{src:"https://openclipart.org/image/800px/298035",alt:"Elefante associado ao som grave.",source:"OpenClipart",license:"Public domain",focus:"SOM GRANDÃO · GRAVE",role:"detail"}],
-dynamics:[{src:"https://openclipart.org/image/800px/300870",alt:"Coelho associado ao toque suave.",source:"OpenClipart",license:"Public domain",focus:"SUAVE",role:"detail"}]
+rhythm:[
+{src:"https://openclipart.org/image/800px/279772",alt:"Tambor de caixa para representar pulsação e ritmo.",source:"OpenClipart · Snare drum",license:"Public domain",focus:"PULSO E BATIDA"},
+{src:"https://openclipart.org/image/800px/317725",alt:"Criança regendo música para representar pulsação corporal.",source:"OpenClipart · Conducting Music",license:"Public domain",focus:"SENTIR O PULSO"}
+],
+tempo:[
+{src:"https://openclipart.org/image/800px/325110",alt:"Tartaruga alegre associada ao andamento devagar.",source:"OpenClipart · Happy turtle",license:"Public domain",focus:"DEVAGAR"},
+{src:"https://openclipart.org/image/800px/321311",alt:"Comboio associado ao movimento e mudança de velocidade.",source:"OpenClipart · Steam Train",license:"Public domain",focus:"ANDAMENTO"}
+],
+highlow:[{src:"https://openclipart.org/image/800px/298035",alt:"Elefante associado ao som grave.",source:"OpenClipart · Elephant",license:"Public domain",focus:"GRAVE"}],
+dynamics:[{src:"https://openclipart.org/image/800px/300870",alt:"Coelho associado ao toque suave.",source:"OpenClipart · Rabbit",license:"Public domain",focus:"SUAVE"}],
+celebrate:[{src:"https://openclipart.org/image/800px/317183",alt:"Crianças celebrando uma conquista.",source:"OpenClipart · Students Can Do",license:"Public domain",focus:"CONSEGUIU!"}],
+story:[{src:"https://openclipart.org/image/800px/317750",alt:"Crianças com teclado e notas musicais.",source:"OpenClipart · Flowing Notes",license:"Public domain",focus:"HISTÓRIA MUSICAL"}]
 };
