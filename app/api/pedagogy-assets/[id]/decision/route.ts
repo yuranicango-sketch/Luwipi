@@ -2,11 +2,19 @@ import { NextRequest,NextResponse } from "next/server";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { createHash } from "crypto";
+import sharp from "sharp";
 
 async function allowed(){
  const s=await createServerSupabaseClient(); const {data:{user}}=await s.auth.getUser();
  if(!user)return false; const a=createAdminSupabaseClient(); if(!a)return false;
  const {data}=await a.from("profiles").select("role").eq("id",user.id).maybeSingle(); return data?.role==="admin";
+}
+async function optimize(raw:Buffer,contentType:string){
+ if(contentType==="image/svg+xml") return {buffer:raw,type:contentType,ext:"svg",width:null,height:null};
+ const image=sharp(raw,{failOn:"warning"}).rotate();
+ const meta=await image.metadata();
+ const buffer=await image.resize({width:1600,height:1600,fit:"inside",withoutEnlargement:true}).webp({quality:78,effort:5,smartSubsample:true}).toBuffer();
+ return {buffer,type:"image/webp",ext:"webp",width:meta.width??null,height:meta.height??null};
 }
 export async function POST(req:NextRequest,{params}:{params:Promise<{id:string}>}){
  if(!await allowed())return NextResponse.json({error:"Não autorizado"},{status:401});
@@ -24,12 +32,14 @@ export async function POST(req:NextRequest,{params}:{params:Promise<{id:string}>
   const raw=Buffer.from(await upstream.arrayBuffer()); if(raw.length>12*1024*1024)throw new Error("Imagem original demasiado grande.");
   const contentType=(upstream.headers.get("content-type")??"image/jpeg").split(";")[0];
   if(!contentType.startsWith("image/"))throw new Error("A origem não devolveu uma imagem.");
-  const ext=contentType.includes("png")?"png":contentType.includes("webp")?"webp":contentType.includes("svg")?"svg":"jpg";
-  const checksum=createHash("sha256").update(raw).digest("hex"); const path=`${asset.visual_key}/${checksum.slice(0,20)}.${ext}`;
-  const {error:uploadError}=await admin.storage.from("pedagogy-assets").upload(path,raw,{contentType,upsert:true,cacheControl:"31536000"});
+  const optimized=await optimize(raw,contentType);
+  if(optimized.buffer.length>2*1024*1024)throw new Error("A imagem otimizada continua acima do limite de 2 MB.");
+  const checksum=createHash("sha256").update(optimized.buffer).digest("hex");
+  const path=`${asset.visual_key}/${checksum.slice(0,20)}.${optimized.ext}`;
+  const {error:uploadError}=await admin.storage.from("pedagogy-assets").upload(path,optimized.buffer,{contentType:optimized.type,upsert:true,cacheControl:"31536000"});
   if(uploadError)throw uploadError;
   const {data:pub}=admin.storage.from("pedagogy-assets").getPublicUrl(path);
-  const {data,error}=await admin.from("pedagogy_assets").update({status:"approved",storage_path:path,mime_type:contentType,original_bytes:raw.length,stored_bytes:raw.length,checksum_sha256:checksum,approved_at:new Date().toISOString(),updated_at:new Date().toISOString()}).eq("id",id).select().single();
-  if(error)throw error; return NextResponse.json({asset:{...data,url:pub.publicUrl}});
- }catch(e){return NextResponse.json({error:e instanceof Error?e.message:"Falha ao guardar imagem"},{status:422});}
+  const {data,error}=await admin.from("pedagogy_assets").update({status:"approved",storage_path:path,mime_type:optimized.type,width:optimized.width,height:optimized.height,original_bytes:raw.length,stored_bytes:optimized.buffer.length,checksum_sha256:checksum,approved_at:new Date().toISOString(),updated_at:new Date().toISOString()}).eq("id",id).select().single();
+  if(error)throw error; return NextResponse.json({asset:{...data,url:pub.publicUrl,saved_bytes:raw.length-optimized.buffer.length}});
+ }catch(e){return NextResponse.json({error:e instanceof Error?e.message:"Falha ao comprimir e guardar imagem"},{status:422});}
 }
