@@ -1,7 +1,10 @@
 export type PedagogyVisualKind="posture"|"hands"|"highlow"|"dynamics"|"rhythm"|"tempo"|"direction"|"listen"|"story"|"create"|"celebrate";
-export const pedagogyAssets:Partial<Record<PedagogyVisualKind,{src:string;alt:string;source:string;license:string}>>={
-posture:{src:"https://openclipart.org/image/800px/326854",alt:"Criança sentada ao piano, usada como referência visual para ajustar banco, corpo e distância do teclado.",source:"OpenClipart · African Kid Playing Piano",license:"Public domain"},
-hands:{src:"https://freesvg.org/img/Human_hand_palm_inside_remix.png",alt:"Mão aberta mostrando palma e dedos para trabalhar numeração e consciência dos dedos.",source:"FreeSVG / OpenClipart · Human Hand Palm Inside Remix",license:"Public domain / CC0"},
-highlow:{src:"https://openclipart.org/image/800px/298035",alt:"Elefante usado como associação visual para sons graves e pesados.",source:"OpenClipart · Elephant #1",license:"Public domain"},
-dynamics:{src:"https://openclipart.org/image/800px/300870",alt:"Coelho usado como associação visual para toque suave.",source:"OpenClipart · Rabbit",license:"Public domain"}
+export type PedagogyAsset={src:string;alt:string;source:string;license:string;role:"teach"|"associate"};
+export const pedagogyAssets:Partial<Record<PedagogyVisualKind,PedagogyAsset[]>>={
+posture:[
+{src:"https://upload.wikimedia.org/wikipedia/commons/thumb/7/7d/The_posture_of_school_children%2C_with_its_home_hygiene_and_new_efficiency_methods_for_school_training_%281913%29_%2814592050670%29.jpg/500px-The_posture_of_school_children%2C_with_its_home_hygiene_and_new_efficiency_methods_for_school_training_%281913%29_%2814592050670%29.jpg",alt:"Vista lateral histórica mostrando uma posição incorreta ao piano quando os pés ficam sem apoio.",source:"Wikimedia Commons · The Posture of School Children (1913)",license:"No known copyright restrictions",role:"teach"},
+{src:"https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Piano_Lesson.jpg/640px-Piano_Lesson.jpg",alt:"Referência fotográfica de uma aula de piano para observar relação entre corpo, banco e teclado.",source:"Wikimedia Commons · Piano Lesson",license:"CC0 1.0",role:"teach"}],
+hands:[{src:"https://freesvg.org/img/Human_hand_palm_inside_remix.png",alt:"Mão aberta para identificar polegar e dedos 1 a 5.",source:"FreeSVG / OpenClipart · Human Hand Palm Inside Remix",license:"Public domain / CC0",role:"teach"}],
+highlow:[{src:"https://openclipart.org/image/800px/298035",alt:"Elefante como associação visual para som grave e pesado.",source:"OpenClipart · Elephant",license:"Public domain",role:"associate"}],
+dynamics:[{src:"https://openclipart.org/image/800px/300870",alt:"Coelho como associação visual para toque suave.",source:"OpenClipart · Rabbit",license:"Public domain",role:"associate"}]
 };
