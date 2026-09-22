@@ -42,17 +42,17 @@ export default function SubscribePage() {
         <Logo />
         <Link href="/">Início</Link>
       </header>
-      <section className="container" style={{ maxWidth: 920, padding: "54px 20px 80px", textAlign: "center" }}>
+      <section className="container" style={{ maxWidth: 980, padding: "64px 20px 90px", textAlign: "center" }}>
         <div className="eyebrow">Luwipi completo</div>
-        <h1 style={{ fontSize: "clamp(2.2rem,6vw,4.8rem)", margin: "12px 0" }}>
+        <h1 style={{ fontSize: "clamp(2.7rem,6vw,4.8rem)", margin: "12px 0" }}>
           Continue a ensinar sem interrupções.
         </h1>
-        <p style={{ maxWidth: 650, margin: "0 auto 34px" }}>
+        <p style={{ maxWidth: 700, margin: "0 auto 38px", fontSize: 18, lineHeight: 1.6 }}>
           O teste gratuito dá acesso ao primeiro módulo durante 3 dias. Para continuar com os 6 meses de currículo, alunos, tarefas, músicas e jogos, escolha uma subscrição.
         </p>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(210px,1fr))", gap: 16 }}>
           {plans.map(([id, title, period]) => (
-            <article key={id} style={{ background: "#fff", border: "1px solid #e7e1d8", borderRadius: 24, padding: 24, textAlign: "left" }}>
+            <article key={id} style={{ background: "#fff", border: "1px solid #e7e1d8", borderRadius: 20, padding: 28, textAlign: "left" }}>
               <small>{period}</small>
               <h2>{title}</h2>
               <p>Acesso completo ao Luwipi enquanto a subscrição estiver ativa.</p>
@@ -63,7 +63,7 @@ export default function SubscribePage() {
           ))}
         </div>
         {error && <p style={{ marginTop: 18 }}>{error}</p>}
-        <p style={{ marginTop: 26, fontSize: 14, opacity: 0.7 }}>
+        <p style={{ marginTop: 30, fontSize: 16, opacity: 0.72 }}>
           O administrador também pode conceder acesso manualmente quando necessário.
         </p>
       </section>

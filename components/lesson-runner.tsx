@@ -20,6 +20,7 @@ export function LessonRunner({age,module,lesson,variant,studentId}:Props){
   const steps=useMemo(()=>buildLessonSteps({age,module,lesson,variant}),[age,module,lesson,variant]);
   const[stepIndex,setStepIndex]=useState(0);
   const[mastery,setMastery]=useState<MasteryState>(null);
+  const[attempts,setAttempts]=useState(0);
   const[showGuide,setShowGuide]=useState(false);
   const[actionIndex,setActionIndex]=useState(0);
   const step=steps[stepIndex];
@@ -36,12 +37,12 @@ export function LessonRunner({age,module,lesson,variant,studentId}:Props){
   function goTo(index:number){
     const safe=Math.max(0,Math.min(steps.length-1,index));
     setStepIndex(safe);
-    setShowGuide(false);setActionIndex(0);setMastery(null);
+    setShowGuide(false);setActionIndex(0);setMastery(null);setAttempts(0);
     saveLessonStep(studentId,age,lesson.number,safe,0);
     window.scrollTo({top:0,behavior:"smooth"});
   }
 
-  function advance(){if(!isLastAction){const next=actionIndex+1;setActionIndex(next);setShowGuide(false);saveLessonStep(studentId,age,lesson.number,stepIndex,next);return;}if(!isLast)goTo(stepIndex+1);}
+  function advance(){if(!isLastAction){const next=actionIndex+1;setActionIndex(next);setShowGuide(false);setAttempts(0);saveLessonStep(studentId,age,lesson.number,stepIndex,next);return;}if(!isLast)goTo(stepIndex+1);}
 
   function finish(){
     if(!mastery)return;
@@ -83,19 +84,19 @@ export function LessonRunner({age,module,lesson,variant,studentId}:Props){
         <div className={styles.teacherPanel}>
           <span className={styles.sectionLabel}>GUIA DO PROFESSOR</span>
           <h3>Faça só isto agora</h3>
-          <div className={styles.microAction}><b>{actionIndex+1}</b><p>{currentAction}</p></div><div className={styles.actionDots}>{Array.from({length:actionCount}).map((_,i)=><i key={i} className={i<=actionIndex?styles.actionDone:""}/>)}</div>
+          <div className={styles.microAction}><b>{actionIndex+1}</b><p>{currentAction}</p></div>{attempts>0&&<p className={styles.adaptiveHint}>{attempts===1?"Quase. Dê mais uma tentativa antes de ajudar.":attempts===2?"Mostre a pista visual e tente novamente.":"Faça uma vez junto e depois devolva a vez à criança."}</p>}<div className={styles.actionDots}>{Array.from({length:actionCount}).map((_,i)=><i key={i} className={i<=actionIndex?styles.actionDone:""}/>)}</div>
           {(step.example||step.say||step.tip)&&<button type="button" className={styles.guideToggle} onClick={()=>setShowGuide(v=>!v)}>{showGuide?"Fechar ajuda":"💬 Ver o que posso dizer"}</button>}
           {showGuide&&step.say&&<section className={styles.say}><span className={styles.sectionLabel}>DIGA ASSIM</span><p>“{step.say}”</p></section>}
           {showGuide&&step.example&&<section className={styles.example}><span className={styles.sectionLabel}>EXEMPLO</span><p>{step.example}</p></section>}
           {showGuide&&step.tip&&<aside className={styles.tip}><strong>Dica</strong><span>{step.tip}</span></aside>}
-          {step.actionHref&&step.actionLabel&&<Link className={styles.action} href={step.actionHref}>{step.actionLabel}</Link>}
+          {step.actionHref&&step.actionLabel&&<Link className={styles.action} href={step.actionHref}>{step.actionLabel}</Link>}<button type="button" className={styles.needHelp} onClick={()=>setAttempts(v=>Math.min(3,v+1))}>Ainda não conseguiu</button>
         </div>
       </div>
 
       {lessonSong&&age==="2-4"&&step.id==="repertoire"&&<div className={styles.monthSong}><PreschoolInlineSong song={lessonSong} lessonNumber={lesson.number}/></div>}
       {lessonSong&&age!=="2-4"&&step.id==="repertoire"&&<section className={styles.songCard}><div className={styles.songArt}><span>{lessonSong.emoji}</span></div><div><small>MÚSICA DO MÊS</small><h3>{lessonSong.title}</h3><p>{lessonSong.story}</p><Link href={`/musicas/${lessonSong.id}`}>PRATICAR MÚSICA →</Link></div></section>}
 
-      <div className={styles.observe}><span>👀</span><div><small>OBSERVE</small><strong>{step.childDoes}</strong><p>Pode avançar quando: {step.success}</p></div></div>
+      <div className={styles.observe}><span aria-hidden="true">◉</span><div><small>OBSERVE</small><strong>{step.childDoes}</strong><p>Pode avançar quando: {step.success}</p></div></div>
     </article>
     {isLast&&<section className={styles.mastery}>
       <div><small>ANTES DE TERMINAR</small><h3>Como a criança terminou?</h3><p>Escolha uma opção. “Reforçar” não impede a próxima aula.</p></div>
