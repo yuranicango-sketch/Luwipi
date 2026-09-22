@@ -6,6 +6,7 @@ export type MasteryState = "mastered" | "reinforce" | null;
 
 export type LessonProgress = {
   step: number;
+  action?: number;
   completed: boolean;
   mastery: MasteryState;
   updatedAt: string;
@@ -44,11 +45,13 @@ export function saveLessonStep(
   age: AgeGroup,
   lessonNumber: number,
   step: number,
+  action = 0,
 ) {
   const current = readCurriculumProgress(studentId, age);
   const key = String(lessonNumber);
   current[key] = {
     step,
+    action,
     completed: current[key]?.completed ?? false,
     mastery: current[key]?.mastery ?? null,
     updatedAt: new Date().toISOString(),
@@ -65,6 +68,7 @@ export function completeLesson(
   const current = readCurriculumProgress(studentId, age);
   current[String(lessonNumber)] = {
     step: 999,
+    action: 0,
     completed: true,
     mastery,
     updatedAt: new Date().toISOString(),

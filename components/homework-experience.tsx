@@ -27,9 +27,9 @@ export function HomeworkExperience({ code }: { code: string }) {
   const startedSession = useRef<string | null>(null);
 
   useEffect(() => {
-    let cancelled=false;
+    let cancelled=false;setAssignment(undefined);setLoadError(null);setStep(0);setRepeats(0);startedSession.current=null;
     const local=getDemoAssignment(code) ?? readLocalAssignment(code);
-    if(local){setAssignment(local);return;}
+    if(local){setLoadError(null);setAssignment(local);return;}
     fetch(`/api/homework/${encodeURIComponent(code)}`,{cache:"no-store"})
       .then(async response=>{if(response.ok)return (await response.json()).assignment; if(response.status===404)throw new Error("not_found"); throw new Error("load_failed");})
       .then(remote=>{if(!cancelled){setLoadError(null);setAssignment(remote??null);}})

@@ -6,6 +6,7 @@ import type { CSSProperties } from "react";
 import type { EnhancedProgram, CurriculumVariant } from "@/lib/curriculum-v3";
 import { currentLessonNumber, readCurriculumProgress, type CurriculumProgress } from "@/lib/curriculum-progress";
 import { ModuleIllustration } from "@/components/module-illustration";
+import {competencyLabels,competencySnapshot} from "@/lib/competency-progress";
 import styles from "./curriculum-journey.module.css";
 
 type Props={program:EnhancedProgram;variant:CurriculumVariant;studentId:string;initialCurrent?:number};
@@ -26,6 +27,7 @@ export function CurriculumJourney({program,variant,studentId,initialCurrent}:Pro
 
   useEffect(()=>{if(!expanded&&currentModuleId)setExpanded(currentModuleId);},[expanded,currentModuleId]);
 
+  const competencies=useMemo(()=>loaded?competencySnapshot(studentId,program.age):null,[loaded,studentId,program.age,progress]);
   const currentLessonData=program.modules.flatMap(module=>module.lessons).find(lesson=>lesson.number===currentLesson);
 
   return <div>
@@ -34,6 +36,7 @@ export function CurriculumJourney({program,variant,studentId,initialCurrent}:Pro
       <Link href={`/aulas/${program.age}/${currentLessonData.number}?variant=${variant.id}&student=${encodeURIComponent(studentId)}`}>CONTINUAR AULA</Link>
     </section>}
 
+    {competencies&&<section className={styles.skills}><div><small>MAPA DE COMPETÊNCIAS</small><h2>O que a criança está a construir</h2></div><div className={styles.skillGrid}>{Object.entries(competencies).map(([id,value])=><div key={id}><span>{competencyLabels[id as keyof typeof competencyLabels]}</span><b>{value.mastered}/{Math.max(1,value.total)}</b><i><em style={{width:`${value.total?Math.round(value.mastered/value.total*100):0}%`}}/></i>{value.reinforce>0&&<small>↻ {value.reinforce} para reforçar</small>}</div>)}</div></section>}
     <div className={styles.moduleList}>
       {program.modules.map((module,moduleIndex)=>{
         const first=module.lessons[0].number;
