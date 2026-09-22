@@ -78,7 +78,7 @@ export function LessonRunner({age,module,lesson,variant,studentId}:Props){
 
       <div className={styles.lessonGrid}>
         <div className={styles.scenePanel}>
-          <LessonVisual stepId={step.id} icon={step.icon} title={step.title} age={age} accent={module.accent} instruction={step.actions.join(" ")}/>
+          <LessonVisual stepId={step.id} icon={step.icon} title={step.title} age={age} accent={module.accent} instruction={currentAction}/>
         </div>
 
         <div className={styles.teacherPanel}>
