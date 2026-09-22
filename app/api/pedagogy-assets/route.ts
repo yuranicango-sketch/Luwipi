@@ -1,24 +1,20 @@
 import { NextRequest,NextResponse } from "next/server";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
-
-async function allowed(){
- const s=await createServerSupabaseClient(); const {data:{user}}=await s.auth.getUser();
- if(!user)return false;
- const admin=createAdminSupabaseClient(); if(!admin)return false;
- const {data}=await admin.from("profiles").select("role").eq("id",user.id).maybeSingle();
- return data?.role==="admin";
-}
+async function user(){const s=await createServerSupabaseClient();const {data:{user}}=await s.auth.getUser();return user}
 export async function GET(req:NextRequest){
- if(!await allowed())return NextResponse.json({error:"Não autorizado"},{status:401});
- const admin=createAdminSupabaseClient()!;
- const status=req.nextUrl.searchParams.get("status")??"candidate";
- const {data,error}=await admin.from("pedagogy_assets").select("*").eq("status",status).order("created_at");
- return error?NextResponse.json({error:error.message},{status:500}):NextResponse.json({assets:data??[]});
+ if(!await user())return NextResponse.json({error:"Não autorizado"},{status:401});
+ const admin=createAdminSupabaseClient();if(!admin)return NextResponse.json({assets:[]});
+ const key=req.nextUrl.searchParams.get("visual_key"),status=req.nextUrl.searchParams.get("status");
+ let q=admin.from("pedagogy_assets").select("*").order("created_at");
+ if(key)q=q.eq("visual_key",key);if(status)q=q.eq("status",status);
+ const {data,error}=await q;if(error)return NextResponse.json({error:error.message},{status:500});
+ const assets=(data??[]).map(a=>({...a,public_url:a.storage_path?admin.storage.from("pedagogy-assets").getPublicUrl(a.storage_path).data.publicUrl:null}));
+ return NextResponse.json({assets});
 }
 export async function POST(req:NextRequest){
- if(!await allowed())return NextResponse.json({error:"Não autorizado"},{status:401});
- const admin=createAdminSupabaseClient()!; const body=await req.json();
- const {data,error}=await admin.from("pedagogy_assets").upsert(body,{onConflict:"source_url"}).select().single();
+ if(!await user())return NextResponse.json({error:"Não autorizado"},{status:401});
+ const admin=createAdminSupabaseClient();if(!admin)return NextResponse.json({error:"Storage indisponível"},{status:503});
+ const body=await req.json();const {data,error}=await admin.from("pedagogy_assets").upsert(body,{onConflict:"source_url"}).select().single();
  return error?NextResponse.json({error:error.message},{status:400}):NextResponse.json({asset:data});
 }
