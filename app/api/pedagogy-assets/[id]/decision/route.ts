@@ -12,8 +12,8 @@ async function allowed(){
 async function optimize(raw:Buffer,contentType:string){
  if(contentType==="image/svg+xml") return {buffer:raw,type:contentType,ext:"svg",width:null,height:null};
  const image=sharp(raw,{failOn:"warning"}).rotate();
- const meta=await image.metadata();
  const buffer=await image.resize({width:1600,height:1600,fit:"inside",withoutEnlargement:true}).webp({quality:78,effort:5,smartSubsample:true}).toBuffer();
+ const meta=await sharp(buffer).metadata();
  return {buffer,type:"image/webp",ext:"webp",width:meta.width??null,height:meta.height??null};
 }
 export async function POST(req:NextRequest,{params}:{params:Promise<{id:string}>}){
