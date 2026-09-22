@@ -20,11 +20,11 @@ export function LessonRunner({age,module,lesson,variant,studentId}:Props){
   const steps=useMemo(()=>buildLessonSteps({age,module,lesson,variant}),[age,module,lesson,variant]);
   const[stepIndex,setStepIndex]=useState(0);
   const[mastery,setMastery]=useState<MasteryState>(null);
-  const[showGuide,setShowGuide]=useState(false);
+  const[showGuide,setShowGuide]=useState(false);\n  const[actionIndex,setActionIndex]=useState(0);
   const step=steps[stepIndex];
   const lessonSong=step.songId?getSong(step.songId):undefined;
   const isLast=stepIndex===steps.length-1;
-  const percent=Math.round(((stepIndex+1)/steps.length)*100);
+  const currentAction=step.actions[Math.min(actionIndex,Math.max(0,step.actions.length-1))];\n  const actionCount=Math.max(1,step.actions.length);\n  const isLastAction=actionIndex>=actionCount-1;\n  const totalUnits=steps.reduce((sum,item)=>sum+Math.max(1,item.actions.length),0);\n  const completedUnits=steps.slice(0,stepIndex).reduce((sum,item)=>sum+Math.max(1,item.actions.length),0)+actionIndex+1;\n  const percent=Math.round((completedUnits/Math.max(1,totalUnits))*100);
 
   function goTo(index:number){
     const safe=Math.max(0,Math.min(steps.length-1,index));
@@ -34,7 +34,7 @@ export function LessonRunner({age,module,lesson,variant,studentId}:Props){
     window.scrollTo({top:0,behavior:"smooth"});
   }
 
-  function finish(){
+  function advance(){\n    if(!isLastAction){setActionIndex(value=>value+1);setShowGuide(false);return;}\n    if(!isLast)goTo(stepIndex+1);\n  }\n\n  function finish(){
     if(!mastery)return;
     completeLesson(studentId,age,lesson.number,mastery);
     const nextLesson=Math.min(48,lesson.number+1);
@@ -52,7 +52,7 @@ export function LessonRunner({age,module,lesson,variant,studentId}:Props){
       <div className={styles.meta}><strong>{variant.label}</strong><span>{variant.lessonLength}</span></div>
     </header>
 
-    <div className={styles.progress}><div><i style={{width:`${percent}%`}}/></div><span>Etapa {stepIndex+1} de {steps.length}</span></div>
+    <div className={styles.progress}><div><i style={{width:`${percent}%`}}/></div><span>Etapa {stepIndex+1}/{steps.length} · ação {actionIndex+1}/{actionCount}</span></div>
 
     <details className={styles.stepDrawer}><summary>Ver todas as etapas <span>{stepIndex+1}/{steps.length}</span></summary><nav className={styles.steps} aria-label="Etapas da aula">
       {steps.map((item,index)=><button key={item.id} className={`${index===stepIndex?styles.activeStep:""} ${index<stepIndex?styles.doneStep:""}`} onClick={()=>goTo(index)}>
