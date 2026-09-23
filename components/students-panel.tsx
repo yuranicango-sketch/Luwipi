@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { competencyLabels, type AgeBand, type CompetencyId, type MasteryLevel } from "@/lib/suzuki-lessons";
-import { createLocalStudent, getLessonHistory, getLocalStudents, saveLocalStudent, updateLocalStudent, type LocalStudent } from "@/lib/teacher-local-v2";
+import { createLocalStudent, getLessonHistory, getLocalStudents, saveLocalStudent, updateLocalStudent, type LocalStudent, type RepertoireStatus } from "@/lib/teacher-local-v2";
+import { nextCompetencyFocus } from "@/lib/lesson-recommender";
 import { imageFileToLocalAvatar } from "@/lib/local-image";
 import { ProgressGarden } from "@/components/progress-garden";
 import styles from "./students-panel.module.css";
@@ -18,6 +19,9 @@ export function StudentsPanel() {
   const [ageBand, setAgeBand] = useState<AgeBand>("4-5");
   const [level, setLevel] = useState<LocalStudent["level"]>("iniciante");
   const [photoDataUrl, setPhotoDataUrl] = useState<string | undefined>();
+  const [methodTitle, setMethodTitle] = useState("");
+  const [pieceTitle, setPieceTitle] = useState("");
+  const [repertoireStatus, setRepertoireStatus] = useState<RepertoireStatus>("learning");
 
   function refresh(preferred?: string) {
     const next = getLocalStudents();
@@ -28,6 +32,13 @@ export function StudentsPanel() {
 
   const selected = students.find((student) => student.id === selectedId) ?? null;
   const history = selected ? getLessonHistory().filter((item) => item.studentId === selected.id) : [];
+  const nextFocus = selected ? nextCompetencyFocus(selected) : [];
+
+  useEffect(() => {
+    setMethodTitle(selected?.currentRepertoire?.methodTitle ?? "");
+    setPieceTitle(selected?.currentRepertoire?.pieceTitle ?? "");
+    setRepertoireStatus(selected?.currentRepertoire?.status ?? "learning");
+  }, [selectedId]);
 
   function create() {
     if (!name.trim()) return;
@@ -39,6 +50,25 @@ export function StudentsPanel() {
     if (!selected) return;
     const next = updateLocalStudent(selected.id, patchValue);
     if (next) refresh(next.id);
+  }
+
+  function saveCurrentRepertoire() {
+    if (!selected || !pieceTitle.trim()) return;
+    patch({
+      currentRepertoire: {
+        methodTitle: methodTitle.trim() || undefined,
+        pieceTitle: pieceTitle.trim(),
+        status: repertoireStatus,
+      },
+    });
+  }
+
+  function clearCurrentRepertoire() {
+    if (!selected) return;
+    setMethodTitle("");
+    setPieceTitle("");
+    setRepertoireStatus("learning");
+    patch({ currentRepertoire: undefined });
   }
 
   return <div className={styles.page}>
@@ -59,10 +89,21 @@ export function StudentsPanel() {
           <label><div><strong>Reduzir estímulos</strong><small>Remove animações e simplifica a interface durante a aula.</small></div><input type="checkbox" checked={selected.reducedStimulus} onChange={(e: any) => patch({ reducedStimulus: e.target.checked })}/></label>
         </div>
 
+        <div className={styles.sectionTitle}><div><span>PRÓXIMO FOCO</span><h3>Onde vale a pena insistir agora</h3></div><p>É uma sugestão. O professor decide.</p></div>
+        <div className={styles.focusStrip}>{nextFocus.map((item) => <div key={item.id}><strong>{item.label}</strong><span>{item.level ? masteryLabels[item.level] : "Ainda sem avaliação"}</span></div>)}</div>
+
         <div className={styles.sectionTitle}><div><span>DOMÍNIO REAL</span><h3>Competências observadas</h3></div><p>O Luwipi nunca sobe estes níveis sozinho.</p></div>
         <div className={styles.competencies}>{(Object.keys(competencyLabels) as CompetencyId[]).map((id) => <div key={id}><strong>{competencyLabels[id]}</strong><span data-level={selected.competencies[id] ?? "none"}>{selected.competencies[id] ? masteryLabels[selected.competencies[id]!] : "Ainda sem avaliação"}</span></div>)}</div>
 
-        <div className={styles.sectionTitle}><div><span>REPERTÓRIO</span><h3>Músicas que já fazem parte da jornada</h3></div><p>{history.length} aulas guardadas localmente.</p></div>
+        <div className={styles.sectionTitle}><div><span>REPERTÓRIO ATUAL</span><h3>A peça que está a orientar as próximas aulas</h3></div><p>Referência externa; o Luwipi não copia o método.</p></div>
+        <div className={styles.repertoireEditor}>
+          <label><span>Método / fonte</span><input value={methodTitle} onChange={(e:any)=>setMethodTitle(e.target.value)} placeholder="Ex.: Suzuki Piano School Vol. 1" /></label>
+          <label><span>Peça atual</span><input value={pieceTitle} onChange={(e:any)=>setPieceTitle(e.target.value)} placeholder="Nome da peça" /></label>
+          <label><span>Estado</span><select value={repertoireStatus} onChange={(e:any)=>setRepertoireStatus(e.target.value as RepertoireStatus)}><option value="listening">A ouvir</option><option value="learning">A aprender</option><option value="review">Em revisão</option></select></label>
+          <div className={styles.repertoireActions}><button disabled={!pieceTitle.trim()} onClick={saveCurrentRepertoire}>Guardar referência</button>{selected.currentRepertoire?.pieceTitle && <button className={styles.clearRepertoire} onClick={clearCurrentRepertoire}>Limpar</button>}</div>
+        </div>
+
+        <div className={styles.sectionTitle}><div><span>REPERTÓRIO APRENDIDO</span><h3>Músicas que já fazem parte da jornada</h3></div><p>{history.length} aulas guardadas localmente.</p></div>
         <div className={styles.repertoire}>{selected.repertoire.length ? selected.repertoire.map((song) => <span key={song}>♪ {song}</span>) : <p>O repertório aparece aqui depois das aulas concluídas.</p>}</div>
 
         <div className={styles.sectionTitle}><div><span>HISTÓRICO</span><h3>Últimas aulas e notas privadas</h3></div><p>Guardado apenas neste dispositivo.</p></div>
