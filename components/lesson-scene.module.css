@@ -26,3 +26,38 @@
 @keyframes activitySuccess{35%{transform:translateY(-5px) scale(1.018)}70%{transform:translateY(1px) scale(.996)}}
 @keyframes activityWrong{30%{transform:translateX(-4px)}65%{transform:translateX(4px)}}
 @media(max-width:760px){.activityLayer{padding:4% 3% 25%}.visual{width:96%;height:78%}.caption{z-index:23}.scene[data-kind="story"] .activityLayer,.scene[data-kind="performance"] .activityLayer,.scene[data-kind="celebration"] .activityLayer{padding:5% 5% 26%}.scene[data-kind="story"] .visual,.scene[data-kind="performance"] .visual,.scene[data-kind="celebration"] .visual{width:92%;height:70%}.photoGrid{border-width:4px;border-radius:16px}.keyboardMap,.rhythmScene,.staffScene,.sequenceScene,.listenScene,.harmonyScene,.creationScene,.stageWord{border-radius:17px}}
+
+/* Preschool scenes: show the world itself, not a white activity card over it. */
+.scene[data-age="2-4"]{border-radius:26px;border:0;box-shadow:0 18px 44px rgba(22,43,65,.14)}
+.scene[data-age="2-4"] .caption{left:22px;right:auto;bottom:20px;max-width:min(540px,62%);padding:14px 17px;background:rgba(255,255,255,.9);border:1px solid rgba(255,255,255,.85);box-shadow:0 16px 38px rgba(23,43,64,.18)}
+.scene[data-age="2-4"] .caption h2{font-size:clamp(24px,3vw,38px);letter-spacing:-1px}
+.scene[data-age="2-4"] .caption p{font-size:13px;line-height:1.35;color:#51667d}
+.scene[data-age="2-4"] .activityLayer{padding:5% 7% 23%;place-items:center}
+.scene[data-age="2-4"] .visual{width:min(700px,68%);height:min(245px,58%)}
+.scene[data-age="2-4"] .keyboardMap,
+.scene[data-age="2-4"] .rhythmScene,
+.scene[data-age="2-4"] .sequenceScene,
+.scene[data-age="2-4"] .listenScene,
+.scene[data-age="2-4"] .harmonyScene,
+.scene[data-age="2-4"] .creationScene{
+  background:rgba(255,255,255,.42);
+  border:1px solid rgba(255,255,255,.56);
+  box-shadow:0 12px 34px rgba(27,48,69,.12);
+  backdrop-filter:blur(5px)
+}
+.scene[data-age="2-4"][data-kind="listen"] .visual,
+.scene[data-age="2-4"][data-kind="contrast"] .visual{width:min(560px,52%);height:min(190px,46%);margin-left:auto}
+.scene[data-age="2-4"] .listenScene{background:rgba(239,249,255,.34)}
+.scene[data-age="2-4"] .soundBars{height:115px}
+.scene[data-age="2-4"] .rhythmScene>strong,
+.scene[data-age="2-4"] .sequenceScene>strong,
+.scene[data-age="2-4"] .listenScene>strong{font-size:17px;text-shadow:0 1px 0 rgba(255,255,255,.8)}
+@media(max-width:760px){
+  .scene[data-age="2-4"] .caption{left:8px;right:8px;bottom:8px;max-width:none;padding:9px 11px}
+  .scene[data-age="2-4"] .caption h2{font-size:18px}
+  .scene[data-age="2-4"] .caption p{font-size:10px}
+  .scene[data-age="2-4"] .activityLayer{padding:4% 4% 29%}
+  .scene[data-age="2-4"] .visual,
+  .scene[data-age="2-4"][data-kind="listen"] .visual,
+  .scene[data-age="2-4"][data-kind="contrast"] .visual{width:88%;height:58%;margin:0}
+}

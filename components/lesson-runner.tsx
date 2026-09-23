@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { CSSProperties } from "react";
 import { GrandStaffScore } from "@/components/grand-staff-score";
 import { LearningPlayer } from "@/components/learning-player";
+import { LivingLessonWorld } from "@/components/living-lesson-world";
 import { LessonMiniGame, type LessonNoteEvent } from "@/components/lesson-mini-game";
 import { LessonScene } from "@/components/lesson-scene";
 import type { LuwipiPianoKey } from "@/components/luwipi-piano";
@@ -49,7 +50,16 @@ export function LessonRunner({age,program,module,lesson,variant,studentId,maxLes
  const sessionStartedAt=useRef(Date.now()),sessionRecorded=useRef(false);
 
  const step=steps[stepIndex];
- const sceneExperience=useMemo(()=>experienceForStep(baseExperience,step.id,Boolean(step.gameId),Boolean(step.songId)),[baseExperience,step.id,step.gameId,step.songId]);
+ const sceneExperience=useMemo(()=>{
+   const experience=experienceForStep(baseExperience,step.id,Boolean(step.gameId),Boolean(step.songId));
+   if(age==="2-4"&&lesson.number===1){
+     if(step.id==="arrive")return{...experience,kind:"story" as const,visualKey:"piano-world"};
+     if(step.id==="story")return{...experience,kind:"contrast" as const,visualKey:"high-low"};
+     if(step.id==="mission")return{...experience,kind:"contrast" as const,visualKey:"sound-homes"};
+     if(step.songId)return{...experience,kind:"song" as const,visualKey:"star-song"};
+   }
+   return experience;
+ },[baseExperience,step.id,step.gameId,step.songId,age,lesson.number]);
  const policy=useMemo(()=>getVariantExperiencePolicy(variant.id,sceneExperience.kind),[variant.id,sceneExperience.kind]);
  const rawActionCount=Math.max(1,step.actions.length);
  const actionCount=step.gameId||step.songId?1:sceneExperience.gate==="teacher"?1:Math.max(1,Math.min(rawActionCount,policy.repetitions));
@@ -219,9 +229,9 @@ export function LessonRunner({age,program,module,lesson,variant,studentId,maxLes
  if(step.gameId){
    content=<LessonMiniGame gameId={step.gameId} noteEvent={noteEvent} onComplete={handleGameComplete} onExpectedChange={handleGameExpected} onMessage={handleGameMessage}/>;
  }else if(step.songId&&lessonSong){
-   content=<section className={styles.songScene}><header><small>{grandSongEvents.length?"MÚSICA · DUAS MÃOS":"MÚSICA DENTRO DA AULA"}</small><h2>{lessonSong.title}</h2><p>{message}</p></header>{grandSongEvents.length?<GrandStaffScore events={grandSongEvents} currentIndex={Math.min(songIndex,Math.max(0,grandSongEvents.length-1))} hand="both" wrong={Boolean(wrong)} timeSignature={lessonSong.timeSignature??"4/4"}/>:age==="2-4"?<div className={styles.youngSequence}>{repertoireNotes.map((note,index)=><span key={`${note}-${index}`} data-done={index<songIndex} data-active={index===songIndex}><b>{index+1}</b></span>)}</div>:<MusicScore notes={repertoireNotes} currentIndex={Math.min(songIndex,Math.max(0,repertoireNotes.length-1))} wrongIndex={wrong?Math.min(songIndex,repertoireNotes.length-1):null} timeSignature={lessonSong.timeSignature??"4/4"} hideLabels={!policy.readingLabels}/>}<strong className={styles.sceneMessage}>{message}</strong></section>;
+   content=<section className={styles.songScene} data-age={age}><LivingLessonWorld age={age} lessonNumber={lesson.number} experience={sceneExperience} reaction={wrong?"wrong":done?"success":"idle"}/><div className={styles.worldPanel}><header><small>{grandSongEvents.length?"MÚSICA · DUAS MÃOS":"MÚSICA DENTRO DA AULA"}</small><h2>{lessonSong.title}</h2><p>{message}</p></header>{grandSongEvents.length?<GrandStaffScore events={grandSongEvents} currentIndex={Math.min(songIndex,Math.max(0,grandSongEvents.length-1))} hand="both" wrong={Boolean(wrong)} timeSignature={lessonSong.timeSignature??"4/4"}/>:age==="2-4"?<div className={styles.youngSequence}>{repertoireNotes.map((note,index)=><span key={`${note}-${index}`} data-done={index<songIndex} data-active={index===songIndex}><b>{index+1}</b></span>)}</div>:<MusicScore notes={repertoireNotes} currentIndex={Math.min(songIndex,Math.max(0,repertoireNotes.length-1))} wrongIndex={wrong?Math.min(songIndex,repertoireNotes.length-1):null} timeSignature={lessonSong.timeSignature??"4/4"} hideLabels={!policy.readingLabels}/>}<strong className={styles.sceneMessage}>{message}</strong></div></section>;
  }else if((sceneExperience.kind==="staff"||sceneExperience.kind==="grand-staff")&&noteChallenge.length){
-   content=<section className={styles.scoreScene}><header><small>{sceneExperience.kind==="grand-staff"?"DUAS CLAVES · UM MAPA":"LER PARA TOCAR"}</small><h2>{childPrompt}</h2></header><div className={styles.scoreBox}>{sceneExperience.kind==="grand-staff"?<GrandStaffScore events={grandEvents(noteChallenge)} currentIndex={scoreIndex} hand="both" wrong={Boolean(wrong)}/>:<MusicScore notes={noteChallenge} currentIndex={scoreIndex} wrongIndex={wrong?scoreIndex:null} hideLabels={!policy.readingLabels}/>}</div><strong className={styles.sceneMessage}>{message}</strong></section>;
+   content=<section className={styles.scoreScene} data-age={age}><LivingLessonWorld age={age} lessonNumber={lesson.number} experience={sceneExperience} reaction={wrong?"wrong":done?"success":"idle"}/><div className={styles.worldPanel}><header><small>{sceneExperience.kind==="grand-staff"?"DUAS CLAVES · UM MAPA":"LER PARA TOCAR"}</small><h2>{childPrompt}</h2></header><div className={styles.scoreBox}>{sceneExperience.kind==="grand-staff"?<GrandStaffScore events={grandEvents(noteChallenge)} currentIndex={scoreIndex} hand="both" wrong={Boolean(wrong)}/>:<MusicScore notes={noteChallenge} currentIndex={scoreIndex} wrongIndex={wrong?scoreIndex:null} hideLabels={!policy.readingLabels}/>}</div><strong className={styles.sceneMessage}>{message}</strong></div></section>;
  }else if(sceneExperience.gate==="rhythm"){
    content=<section className={styles.rhythmScene}><LessonScene age={age} lessonNumber={lesson.number} experience={sceneExperience} title={step.title} instruction={childPrompt} reaction={wrong?"wrong":done?"success":"idle"}/><button className={styles.rhythmPad} onClick={()=>void rhythmTap()}><strong>TOQUE NO PULSO</strong><div>{[0,1,2,3].map(i=><i key={i} data-on={i<taps}/>)}</div></button></section>;
  }else if(sceneExperience.gate==="listen"||sceneExperience.gate==="choice"){
@@ -234,7 +244,7 @@ export function LessonRunner({age,program,module,lesson,variant,studentId,maxLes
  const actions=<><button type="button" onClick={onOpenMap}>MAPA</button><button type="button" onClick={()=>setShowGuide(true)}>PROFESSOR</button></>;
 
  return <>
-   <LearningPlayer onBack={onOpenMap} eyebrow={`AULA ${lesson.number} · ${sceneExperience.chapter}`} title={lesson.title} progress={percent} status={variant.label} action={actions} tone="lesson" piano={{input,onInputChange:setInput,onExternalNote:externalPress,onPress:screenPress,onBlackPress:blackPress,expected:done?undefined:expected,wrong,octaves:age==="2-4"?2:3,startOctave:age==="2-4"?4:3,showLabels:policy.showPianoLabels,blackKeysInteractive:true,attentionCue:age==="2-4"&&Boolean(expected)&&!done,hint:message}}>
+   <LearningPlayer onBack={onOpenMap} eyebrow={`AULA ${lesson.number} · ${sceneExperience.chapter}`} title={lesson.title} progress={percent} status={variant.label} action={actions} tone="lesson" audience={age==="2-4"?"preschool":age==="adult"?"adult":"child"} piano={{input,onInputChange:setInput,onExternalNote:externalPress,onPress:screenPress,onBlackPress:blackPress,expected:done?undefined:expected,wrong,octaves:age==="2-4"?2:3,startOctave:age==="2-4"?4:3,showLabels:policy.showPianoLabels,blackKeysInteractive:true,attentionCue:age==="2-4"&&Boolean(expected)&&!done,hint:message}}>
      <div className={styles.stage} style={{"--accent":module.accent,"--soft":module.surface} as CSSProperties}><div className={styles.student}>{content}</div><aside className={styles.footer}><div><small>{sceneExperience.chapter}</small><strong>{step.title}</strong></div>{controls}</aside></div>
    </LearningPlayer>
 

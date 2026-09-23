@@ -34,11 +34,12 @@ type Props = {
   children: ReactNode;
   piano: LearningPianoDeck;
   tone?: "lesson" | "song" | "game";
+  audience?: "preschool" | "child" | "adult";
 };
 
-export function LearningPlayer({ backHref, onBack, eyebrow, title, progress = 0, status, action, toolbar, children, piano, tone = "lesson" }: Props) {
+export function LearningPlayer({ backHref, onBack, eyebrow, title, progress = 0, status, action, toolbar, children, piano, tone = "lesson", audience = "child" }: Props) {
   const inputActive = piano.input === "screen";
-  return <section className={styles.shell} data-tone={tone}>
+  return <section className={styles.shell} data-tone={tone} data-audience={audience}>
     <header className={styles.topbar}>
       {onBack ? <button className={styles.back} type="button" onClick={onBack} aria-label="Abrir mapa do percurso">←</button> : <Link className={styles.back} href={backHref ?? "/dashboard"} aria-label="Voltar">←</Link>}
       <div className={styles.identity}><small>{eyebrow}</small><strong>{title}</strong></div>

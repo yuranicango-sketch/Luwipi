@@ -132,17 +132,14 @@ export function getLessonExperience(age:AgeGroup,lessonNumber:number):LessonExpe
 }
 
 export function experienceForStep(base:LessonExperience,stepId:string,hasGame=false,hasSong=false):LessonExperience{
- if(hasGame)return P("practice","choice",base.chapter,"embedded-game");
- if(hasSong)return P("song","score",base.chapter,"embedded-song");
+ if(hasGame)return P("practice","choice",base.chapter,base.visualKey);
+ if(hasSong)return P("song","score",base.chapter,base.visualKey);
  if(stepId==="repertoire")return P("performance","teacher",base.chapter,"repertoire-live");
  if(stepId==="create")return P("creation","free",base.chapter,"creation");
  if(stepId==="checkpoint")return P("celebration","teacher",base.chapter,"checkpoint");
  if(stepId==="close")return P("celebration","teacher",base.chapter,"close");
  if(stepId==="arrive"||stepId==="warmup"){
-   if(base.kind==="rhythm")return P("rhythm","rhythm",base.chapter,"warmup-pulse");
-   if(["listen","contrast","memory"].includes(base.kind))return P("listen","listen",base.chapter,"warmup-listen");
-   if(["hands","technique","duet"].includes(base.kind))return P("hands","teacher",base.chapter,"warmup-hands");
-   return P("story","teacher",base.chapter,"warmup");
+   return P(base.kind,"teacher",base.chapter,base.visualKey);
  }
  if(stepId==="story")return P("story","teacher",base.chapter,base.visualKey);
  return base;

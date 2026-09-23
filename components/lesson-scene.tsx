@@ -74,11 +74,11 @@ export function LessonScene({age,lessonNumber,experience,title,instruction,expec
  else if(experience.kind==="listen"||experience.kind==="contrast")visual=<ListenScene visualKey={experience.visualKey}/>;
  else if(experience.kind==="harmony")visual=<HarmonyScene visualKey={experience.visualKey}/>;
  else if(experience.kind==="creation"||experience.kind==="practice")visual=<CreationScene visualKey={experience.visualKey}/>;
- else visual=<div className={styles.stageWord}><span>{String(lessonNumber).padStart(2,"0")}</span><strong>{title}</strong><i/></div>;
+ else visual=age==="2-4"&&["story","performance","celebration"].includes(experience.kind)?null:<div className={styles.stageWord}><span>{String(lessonNumber).padStart(2,"0")}</span><strong>{title}</strong><i/></div>;
 
- return <section className={styles.scene} data-kind={experience.kind} data-reaction={reaction}>
+ return <section className={styles.scene} data-kind={experience.kind} data-reaction={reaction} data-age={age}>
    <LivingLessonWorld age={age} lessonNumber={lessonNumber} experience={experience} reaction={reaction}/>
-   <div className={styles.activityLayer}><div className={styles.visual}>{visual}</div></div>
+   {visual&&<div className={styles.activityLayer}><div className={styles.visual}>{visual}</div></div>}
    <div className={styles.caption}><small>{experience.chapter}</small><h2>{title}</h2><p>{instruction}</p></div>
  </section>;
 }

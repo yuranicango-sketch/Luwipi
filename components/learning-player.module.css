@@ -15,3 +15,19 @@
   .shell[data-tone=song] .toolbar{min-height:38px;padding-top:3px;padding-bottom:3px}
   .shell[data-tone=song] .deck{padding-top:5px;padding-bottom:6px}
 }
+
+/* Lesson player: the stage is primary; the piano stays present without swallowing the lesson. */
+@media(min-width:851px){
+  .shell[data-tone=lesson][data-audience=preschool]{--deck-h:clamp(168px,22svh,205px);grid-template-rows:56px minmax(0,1fr) var(--deck-h)}
+  .shell[data-tone=lesson][data-audience=child]{--deck-h:clamp(195px,25svh,235px)}
+}
+@media(min-width:851px) and (max-height:800px){
+  .shell[data-tone=lesson][data-audience=preschool]{--deck-h:clamp(155px,20svh,185px)}
+  .shell[data-tone=lesson][data-audience=child]{--deck-h:clamp(175px,23svh,210px)}
+}
+@media(max-width:850px){
+  .shell[data-tone=lesson][data-audience=preschool]{--deck-h:220px}
+}
+@media(max-width:520px){
+  .shell[data-tone=lesson][data-audience=preschool]{--deck-h:205px}
+}
