@@ -1,10 +1,14 @@
 import { competencyLabels, lessonTemplates, lessonsForAge, type CompetencyId, type LessonTemplate, type MasteryLevel, type StudentState } from "@/lib/suzuki-lessons";
 import type { LessonHistory, LocalStudent } from "@/lib/teacher-local-v2";
+import { lessonPathMeta, unmetPrerequisites } from "@/lib/lesson-path";
+import { repertoireFocusCompetencies } from "@/lib/repertoire";
 
 export type LessonRecommendation = {
   lesson: LessonTemplate;
   score: number;
   reasons: string[];
+  ready: boolean;
+  unmet: CompetencyId[];
 };
 
 const masteryRank: Record<MasteryLevel, number> = {
@@ -47,10 +51,14 @@ export function recommendLessons(
   );
 
   const currentPiece = normalize(student.currentRepertoire?.pieceTitle ?? "");
+  const repertoireFocus = student.currentRepertoire?.focus ? repertoireFocusCompetencies[student.currentRepertoire.focus] : [];
 
   return ageLessons.map((lesson) => {
     let score = 0;
     const reasons: string[] = [];
+    const path = lessonPathMeta(lesson.id);
+    const unmet = unmetPrerequisites(lesson.id, student.competencies);
+    const ready = unmet.length === 0;
 
     const distance = levelDistance(student.level, lesson.level);
     score += distance === 0 ? 5 : distance === 1 ? 1 : -4;
@@ -68,6 +76,12 @@ export function recommendLessons(
     if (weak.length) {
       score += weak.length * 1.6;
       reasons.push("Reforça " + lessonFocusLabel(weak));
+    }
+
+    const spiralReview = path.reviews.filter((id) => student.competencies[id] === "desenvolvimento");
+    if (spiralReview.length) {
+      score += spiralReview.length * .8;
+      reasons.push("Revisão em espiral");
     }
 
     const review = lesson.focus.filter((id) => {
@@ -102,6 +116,14 @@ export function recommendLessons(
       reasons.push("Entrada previsível");
     }
 
+    if (repertoireFocus.length) {
+      const support = lesson.focus.filter((id) => repertoireFocus.includes(id)).length;
+      if (support) {
+        score += support * 1.15;
+        reasons.push("Apoia a peça atual");
+      }
+    }
+
     if (currentPiece) {
       const lessonRepertoire = normalize(lesson.repertoire);
       if (lessonRepertoire.includes(currentPiece) || currentPiece.includes(lessonRepertoire)) {
@@ -113,8 +135,10 @@ export function recommendLessons(
       }
     }
 
-    return { lesson, score, reasons: Array.from(new Set(reasons)).slice(0, 3) };
+    if (!ready) score -= 10 + unmet.length * 2;
+    return { lesson, score, ready, unmet, reasons: Array.from(new Set(reasons)).slice(0, 4) };
   }).sort((a, b) => {
+    if (a.ready !== b.ready) return a.ready ? -1 : 1;
     if (b.score !== a.score) return b.score - a.score;
     return lessonTemplates.indexOf(a.lesson) - lessonTemplates.indexOf(b.lesson);
   });

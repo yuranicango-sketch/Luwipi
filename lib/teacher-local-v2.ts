@@ -1,5 +1,6 @@
 import { idbClear, idbDelete, idbGet, idbSet } from "@/lib/local-db";
 import type { AgeBand, CompetencyId, LessonBlock, MasteryLevel, StudentState } from "@/lib/suzuki-lessons";
+import type { RepertoireFocus } from "@/lib/repertoire";
 
 export type RepertoireStatus = "listening" | "learning" | "review";
 
@@ -7,6 +8,7 @@ export type RepertoireReference = {
   methodTitle?: string;
   pieceTitle: string;
   status: RepertoireStatus;
+  focus?: RepertoireFocus;
   note?: string;
 };
 
@@ -101,6 +103,7 @@ function normalizeStudent(student: LocalStudent): LocalStudent {
           methodTitle: student.currentRepertoire.methodTitle?.trim() || undefined,
           pieceTitle: student.currentRepertoire.pieceTitle.trim(),
           status: student.currentRepertoire.status ?? "learning",
+          focus: student.currentRepertoire.focus ?? "ear-memory",
           note: student.currentRepertoire.note?.trim() || undefined,
         }
       : undefined,
