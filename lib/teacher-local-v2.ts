@@ -61,34 +61,28 @@ export type LessonHistory = {
 
 export type LocalBackup = {
   format: "luwipi-local-backup";
-  version: 2;
+  version: 3;
   exportedAt: string;
   students: LocalStudent[];
   history: LessonHistory[];
 };
 
-const STUDENTS = "luwipi:v2:students";
-const ACTIVE = "luwipi:v2:active-lesson";
-const HISTORY = "luwipi:v2:history";
+const STUDENTS = "luwipi:v3:students";
+const HISTORY = "luwipi:v3:history";
+const ACTIVE = "luwipi:v3:active-lesson";
+const LEGACY_STUDENTS = "luwipi:v2:students";
+const LEGACY_HISTORY = "luwipi:v2:history";
+const LEGACY_ACTIVE = "luwipi:v2:active-lesson";
+let migration: Promise<void> | null = null;
 
-function read<T>(key: string, fallback: T): T {
+function localRead<T>(key: string, fallback: T): T {
   if (typeof window === "undefined") return fallback;
   try {
     const raw = window.localStorage.getItem(key);
-    return raw ? (JSON.parse(raw) as T) : fallback;
+    return raw ? JSON.parse(raw) as T : fallback;
   } catch {
     return fallback;
   }
-}
-
-function write<T>(key: string, value: T) {
-  if (typeof window === "undefined") return;
-  try {
-    window.localStorage.setItem(key, JSON.stringify(value));
-  } catch {
-    // IndexedDB below remains the durable local fallback when localStorage is full.
-  }
-  void idbSet(key, value);
 }
 
 function normalizeStudent(student: LocalStudent): LocalStudent {
@@ -110,27 +104,75 @@ function normalizeStudent(student: LocalStudent): LocalStudent {
   };
 }
 
-export function getLocalStudents() {
-  return read<LocalStudent[]>(STUDENTS, []).map(normalizeStudent);
+async function migrateLegacyData() {
+  if (typeof window === "undefined") return;
+  const existingStudents = await idbGet<LocalStudent[]>(STUDENTS);
+  const existingHistory = await idbGet<LessonHistory[]>(HISTORY);
+
+  if (!existingStudents) {
+    const old = localRead<LocalStudent[]>(LEGACY_STUDENTS, []);
+    if (old.length && await idbSet(STUDENTS, old.map(normalizeStudent))) {
+      window.localStorage.removeItem(LEGACY_STUDENTS);
+    }
+  }
+  if (!existingHistory) {
+    const old = localRead<LessonHistory[]>(LEGACY_HISTORY, []);
+    if (old.length && await idbSet(HISTORY, old.slice(0, 300))) {
+      window.localStorage.removeItem(LEGACY_HISTORY);
+    }
+  }
+
+  const oldActive = window.localStorage.getItem(LEGACY_ACTIVE);
+  if (oldActive && !window.localStorage.getItem(ACTIVE)) {
+    window.localStorage.setItem(ACTIVE, oldActive);
+    window.localStorage.removeItem(LEGACY_ACTIVE);
+  }
 }
 
-export function saveLocalStudents(students: LocalStudent[]) {
-  write(STUDENTS, students.map(normalizeStudent));
-  if (typeof window !== "undefined") window.dispatchEvent(new Event("luwipi:v2:students"));
+async function ready() {
+  if (!migration) migration = migrateLegacyData();
+  await migration;
 }
 
-export function saveLocalStudent(student: LocalStudent) {
-  const current = getLocalStudents();
-  saveLocalStudents([normalizeStudent(student), ...current.filter((item) => item.id !== student.id)]);
+async function durableRead<T>(key: string, fallback: T) {
+  await ready();
+  const value = await idbGet<T>(key);
+  return value ?? fallback;
 }
 
-export function getLocalStudent(id: string) {
-  return getLocalStudents().find((student) => student.id === id) ?? null;
+async function durableWrite(key: string, value: unknown) {
+  await ready();
+  const saved = await idbSet(key, value);
+  if (!saved && typeof window !== "undefined") {
+    // Compatibility fallback only for browsers where IndexedDB is unavailable.
+    window.localStorage.setItem(key, JSON.stringify(value));
+  } else if (saved && typeof window !== "undefined") {
+    window.localStorage.removeItem(key);
+  }
 }
 
-export function updateLocalStudent(id: string, patch: Partial<Omit<LocalStudent, "id" | "createdAt">>) {
-  const next = getLocalStudents().map((student) => student.id === id ? normalizeStudent({ ...student, ...patch }) : student);
-  saveLocalStudents(next);
+export async function getLocalStudents() {
+  return (await durableRead<LocalStudent[]>(STUDENTS, [])).map(normalizeStudent);
+}
+
+export async function saveLocalStudents(students: LocalStudent[]) {
+  await durableWrite(STUDENTS, students.map(normalizeStudent));
+  if (typeof window !== "undefined") window.dispatchEvent(new Event("luwipi:v3:students"));
+}
+
+export async function saveLocalStudent(student: LocalStudent) {
+  const current = await getLocalStudents();
+  await saveLocalStudents([normalizeStudent(student), ...current.filter((item) => item.id !== student.id)]);
+}
+
+export async function getLocalStudent(id: string) {
+  return (await getLocalStudents()).find((student) => student.id === id) ?? null;
+}
+
+export async function updateLocalStudent(id: string, patch: Partial<Omit<LocalStudent, "id" | "createdAt">>) {
+  const current = await getLocalStudents();
+  const next = current.map((student) => student.id === id ? normalizeStudent({ ...student, ...patch }) : student);
+  await saveLocalStudents(next);
   return next.find((student) => student.id === id) ?? null;
 }
 
@@ -150,95 +192,103 @@ export function createLocalStudent(input: Pick<LocalStudent, "name" | "ageBand" 
   };
 }
 
-export function saveActiveLesson(session: ActiveLesson) { write(ACTIVE, session); }
-export function getActiveLesson() { return read<ActiveLesson | null>(ACTIVE, null); }
+export function saveActiveLesson(session: ActiveLesson) {
+  if (typeof window === "undefined") return;
+  window.localStorage.setItem(ACTIVE, JSON.stringify(session));
+  void idbSet(ACTIVE, session);
+}
+
+export function getActiveLesson() {
+  return localRead<ActiveLesson | null>(ACTIVE, null);
+}
+
 export function clearActiveLesson() {
   if (typeof window !== "undefined") window.localStorage.removeItem(ACTIVE);
   void idbDelete(ACTIVE);
 }
 
-export function getLessonHistory() { return read<LessonHistory[]>(HISTORY, []); }
-export function getStudentHistory(studentId: string) { return getLessonHistory().filter((entry) => entry.studentId === studentId); }
-
-export function saveLessonHistory(entry: LessonHistory) {
-  const current = getLessonHistory();
-  write(HISTORY, [entry, ...current].slice(0, 300));
+export async function getLessonHistory() {
+  return durableRead<LessonHistory[]>(HISTORY, []);
 }
 
-export function updateStudentMastery(studentId: string, updates: Partial<Record<CompetencyId, MasteryLevel>>, repertoire?: string) {
-  const students = getLocalStudents();
-  const next = students.map((student) => {
+export async function getStudentHistory(studentId: string) {
+  return (await getLessonHistory()).filter((entry) => entry.studentId === studentId);
+}
+
+export async function saveLessonHistory(entry: LessonHistory) {
+  const current = await getLessonHistory();
+  await durableWrite(HISTORY, [entry, ...current.filter((item) => item.id !== entry.id)].slice(0, 300));
+  if (typeof window !== "undefined") window.dispatchEvent(new Event("luwipi:v3:history"));
+}
+
+export async function updateStudentMastery(studentId: string, updates: Partial<Record<CompetencyId, MasteryLevel>>, repertoire?: string) {
+  const students = await getLocalStudents();
+  await saveLocalStudents(students.map((student) => {
     if (student.id !== studentId) return student;
     return normalizeStudent({
       ...student,
       competencies: { ...student.competencies, ...updates },
       repertoire: repertoire && !student.repertoire.includes(repertoire) ? [repertoire, ...student.repertoire] : student.repertoire,
     });
-  });
-  saveLocalStudents(next);
+  }));
 }
 
-export function exportLocalBackup(): LocalBackup {
-  return { format: "luwipi-local-backup", version: 2, exportedAt: new Date().toISOString(), students: getLocalStudents(), history: getLessonHistory() };
+export async function exportLocalBackup(): Promise<LocalBackup> {
+  return {
+    format: "luwipi-local-backup",
+    version: 3,
+    exportedAt: new Date().toISOString(),
+    students: await getLocalStudents(),
+    history: await getLessonHistory(),
+  };
 }
 
 function validStudent(value: unknown): value is LocalStudent {
   if (!value || typeof value !== "object") return false;
-  const s = value as Partial<LocalStudent>;
-  return typeof s.id === "string" && typeof s.name === "string" && ["2-3","4-5","6-8"].includes(String(s.ageBand));
+  const student = value as Partial<LocalStudent>;
+  return typeof student.id === "string" && typeof student.name === "string" && ["2-3","4-5","6-8"].includes(String(student.ageBand));
 }
 
 function validHistory(value: unknown): value is LessonHistory {
   if (!value || typeof value !== "object") return false;
-  const h = value as Partial<LessonHistory>;
-  return typeof h.id === "string" && typeof h.studentId === "string" && typeof h.lessonId === "string";
+  const history = value as Partial<LessonHistory>;
+  return typeof history.id === "string" && typeof history.studentId === "string" && typeof history.lessonId === "string";
 }
 
-export function importLocalBackup(input: unknown) {
+export async function importLocalBackup(input: unknown) {
   if (!input || typeof input !== "object") throw new Error("backup_invalido");
-  const backup = input as Partial<LocalBackup>;
-  if (backup.format !== "luwipi-local-backup" || backup.version !== 2) throw new Error("backup_incompativel");
+  const backup = input as Partial<LocalBackup> & { version?: number };
+  if (backup.format !== "luwipi-local-backup" || ![2, 3].includes(Number(backup.version))) throw new Error("backup_incompativel");
   if (!Array.isArray(backup.students) || !backup.students.every(validStudent)) throw new Error("alunos_invalidos");
   if (!Array.isArray(backup.history) || !backup.history.every(validHistory)) throw new Error("historico_invalido");
-  saveLocalStudents(backup.students.map(normalizeStudent));
-  write(HISTORY, backup.history.slice(0, 300));
+  await durableWrite(STUDENTS, backup.students.map(normalizeStudent));
+  await durableWrite(HISTORY, backup.history.slice(0, 300));
   clearActiveLesson();
-  if (typeof window !== "undefined") window.dispatchEvent(new Event("luwipi:v2:history"));
   return { students: backup.students.length, history: backup.history.length };
 }
 
 export async function hydrateLocalLearningMirror() {
+  await ready();
   if (typeof window === "undefined") return { restored: 0 };
-  let restored = 0;
-  for (const key of [STUDENTS, ACTIVE, HISTORY] as const) {
-    const current = window.localStorage.getItem(key);
-    if (current) {
-      try { await idbSet(key, JSON.parse(current)); } catch { /* keep localStorage as source */ }
-      continue;
-    }
-    const durable = await idbGet<unknown>(key);
-    if (durable === null) continue;
-    try {
-      window.localStorage.setItem(key, JSON.stringify(durable));
-      restored += 1;
-    } catch {
-      // If storage is unavailable, IndexedDB still retains the durable copy.
+  if (!window.localStorage.getItem(ACTIVE)) {
+    const durable = await idbGet<ActiveLesson>(ACTIVE);
+    if (durable) {
+      window.localStorage.setItem(ACTIVE, JSON.stringify(durable));
+      return { restored: 1 };
     }
   }
-  if (restored) {
-    window.dispatchEvent(new Event("luwipi:v2:students"));
-    window.dispatchEvent(new Event("luwipi:v2:history"));
-    window.dispatchEvent(new Event("luwipi:v2:hydrated"));
-  }
-  return { restored };
+  return { restored: 0 };
 }
 
-export function clearAllLocalLearningData() {
-  if (typeof window === "undefined") return;
-  window.localStorage.removeItem(STUDENTS);
-  window.localStorage.removeItem(ACTIVE);
-  window.localStorage.removeItem(HISTORY);
-  void idbClear();
-  window.dispatchEvent(new Event("luwipi:v2:students"));
-  window.dispatchEvent(new Event("luwipi:v2:history"));
+export async function clearAllLocalLearningData() {
+  await ready();
+  await idbClear();
+  if (typeof window !== "undefined") {
+    window.localStorage.removeItem(ACTIVE);
+    window.localStorage.removeItem(LEGACY_ACTIVE);
+    window.localStorage.removeItem(LEGACY_STUDENTS);
+    window.localStorage.removeItem(LEGACY_HISTORY);
+    window.dispatchEvent(new Event("luwipi:v3:students"));
+    window.dispatchEvent(new Event("luwipi:v3:history"));
+  }
 }
