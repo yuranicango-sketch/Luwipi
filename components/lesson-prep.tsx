@@ -2,8 +2,9 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { applySafeRepeatVariation, lessonsForAge, stateLabel, totalMinutes, type AgeBand, type LessonTemplate, type StudentState } from "@/lib/suzuki-lessons";
+import { applySafeRepeatVariation, stateLabel, totalMinutes, type AgeBand, type StudentState } from "@/lib/suzuki-lessons";
 import { clearActiveLesson, createLocalStudent, getActiveLesson, getLessonHistory, getLocalStudents, saveActiveLesson, saveLocalStudent, updateLocalStudent, type ActiveLesson, type LocalStudent } from "@/lib/teacher-local-v2";
+import { recommendLessons } from "@/lib/lesson-recommender";
 import styles from "./lesson-prep.module.css";
 
 const states: { id: StudentState; emoji: string; description: string }[] = [
@@ -12,23 +13,6 @@ const states: { id: StudentState; emoji: string; description: string }[] = [
   { id: "tired", emoji: "🌙", description: "Menos exigência, mais escuta" },
   { id: "sensitive", emoji: "🤍", description: "Entrada suave e previsível" },
 ];
-
-function scoreLesson(lesson: LessonTemplate, student: LocalStudent, state: StudentState) {
-  let score = 0;
-  if (lesson.level === student.level) score += 5;
-  if (student.level === "iniciante" && lesson.level === "em-progresso") score += 1;
-  const history = getLessonHistory().filter((item) => item.studentId === student.id);
-  const uses = history.filter((item) => item.lessonId === lesson.id).length;
-  score -= uses * (student.repeatVariation ? 1 : .12);
-
-  if (state === "electric" && lesson.blocks.some((block) => block.kind === "movement" && block.minutes >= 4)) score += 2;
-  if (state === "tired" && lesson.focus.includes("listening")) score += 2;
-  if (state === "sensitive" && (lesson.focus.includes("memory") || lesson.focus.includes("listening"))) score += 2;
-
-  const weak = lesson.focus.filter((id) => !student.competencies[id] || student.competencies[id] === "emergente").length;
-  score += weak;
-  return score;
-}
 
 export function LessonPrep() {
   const router = useRouter();
@@ -54,8 +38,10 @@ export function LessonPrep() {
   }, []);
 
   const student = students.find((item) => item.id === studentId) ?? null;
-  const candidates = useMemo(() => student ? lessonsForAge(student.ageBand).slice().sort((a, b) => scoreLesson(b, student, state) - scoreLesson(a, student, state)) : [], [student, state]);
-  const suggested = candidates.find((lesson) => lesson.id === selectedLessonId) ?? candidates[0] ?? null;
+  const recommendations = useMemo(() => student ? recommendLessons(student, state, getLessonHistory()) : [], [student, state]);
+  const selectedRecommendation = recommendations.find((item) => item.lesson.id === selectedLessonId) ?? recommendations[0] ?? null;
+  const suggested = selectedRecommendation?.lesson ?? null;
+  const candidates = recommendations.map((item) => item.lesson);
   const lessonUses = student && suggested ? getLessonHistory().filter((item) => item.studentId === student.id && item.lessonId === suggested.id).length : 0;
 
   useEffect(() => { setSelectedLessonId(""); }, [studentId, state]);
@@ -123,7 +109,7 @@ export function LessonPrep() {
       <section className={styles.step}>
         <div className={styles.stepNumber}>1</div><div className={styles.stepBody}><div className={styles.stepTitle}><strong>Escolha o aluno</strong><span>{students.length} neste dispositivo</span></div>
         <div className={styles.students}>{students.map((item) => <button key={item.id} onClick={() => { setStudentId(item.id); setShowPreferences(false); }} data-active={item.id === studentId}><span className={styles.avatar}>{item.photoDataUrl ? <img src={item.photoDataUrl} alt="" /> : item.name.slice(0, 1).toUpperCase()}</span><span><strong>{item.name}</strong><small>{item.ageBand} anos · {item.level.replace("-", " ")}</small></span></button>)}</div>
-        {student && <div className={styles.studentMeta}><span>{student.repeatVariation ? "Variação leve ligada" : "Repetição consciente"}</span><span>{student.reducedStimulus ? "Estímulos reduzidos" : "Estímulos normais"}</span><button onClick={() => setShowPreferences((value) => !value)}>Preferências</button></div>}
+        {student && <div className={styles.studentMeta}><span>{student.repeatVariation ? "Variação leve ligada" : "Repetição consciente"}</span><span>{student.reducedStimulus ? "Estímulos reduzidos" : "Estímulos normais"}</span>{student.currentRepertoire?.pieceTitle && <span>♪ {student.currentRepertoire.pieceTitle}</span>}<button onClick={() => setShowPreferences((value) => !value)}>Preferências</button></div>}
         {student && showPreferences && <div className={styles.preferences}>
           <label><div><strong>Variações leves ao repetir</strong><small>Desligado = repetir a mesma estrutura. Ligado = o sistema muda apenas uma ação segura, sem trocar o objetivo.</small></div><input type="checkbox" checked={student.repeatVariation} onChange={(event: any) => setPreference({ repeatVariation: event.target.checked })} /></label>
           <label><div><strong>Reduzir estímulos e animações</strong><small>Para crianças que beneficiam de uma interface mais calma.</small></div><input type="checkbox" checked={student.reducedStimulus} onChange={(event: any) => setPreference({ reducedStimulus: event.target.checked })} /></label>
@@ -140,7 +126,7 @@ export function LessonPrep() {
         <div className={styles.stepNumber}>3</div><div className={styles.stepBody}>
           <div className={styles.stepTitle}><strong>Aula sugerida</strong><span>Faixa + domínio + histórico + estado de hoje.</span></div>
           <article className={styles.lessonCard}>
-            <div className={styles.lessonHead}><div><span className={styles.suggested}>RECOMENDADA PARA HOJE</span><h2>{suggested.title}</h2><p>{suggested.repertoire}</p>{lessonUses > 0 && <small className={styles.repeatNote}>{student.repeatVariation ? `Já usada ${lessonUses}x · desta vez entra uma variação leve` : `Já usada ${lessonUses}x · repetição consciente mantida`}</small>}</div><div className={styles.duration}><b>{totalMinutes(suggested.blocks)}</b><span>min</span></div></div>
+            <div className={styles.lessonHead}><div><span className={styles.suggested}>RECOMENDADA PARA HOJE</span><h2>{suggested.title}</h2><p>{suggested.repertoire}</p>{selectedRecommendation?.reasons?.length ? <div className={styles.reasons}>{selectedRecommendation.reasons.map((reason) => <span key={reason}>{reason}</span>)}</div> : null}{lessonUses > 0 && <small className={styles.repeatNote}>{student.repeatVariation ? `Já usada ${lessonUses}x · desta vez entra uma variação leve` : `Já usada ${lessonUses}x · repetição consciente mantida`}</small>}</div><div className={styles.duration}><b>{totalMinutes(suggested.blocks)}</b><span>min</span></div></div>
             <div className={styles.blocks}>{suggested.blocks.map((block, index) => <div key={block.id}><span>{index + 1}</span><div><strong>{block.title}</strong><small>{block.minutes} min · {block.objective}</small></div><em>{block.screenMode === "off" ? "sem ecrã" : block.screenMode === "minimal" ? "ecrã mínimo" : "visual"}</em></div>)}</div>
             <div className={styles.instrument}><span>Instrumento hoje</span><div><button data-active={instrumentMode === "physical"} onClick={() => setInstrumentMode("physical")}>🎹 Piano físico</button><button data-active={instrumentMode === "virtual"} onClick={() => setInstrumentMode("virtual")}>▤ Piano virtual</button><button data-active={instrumentMode === "silent"} onClick={() => setInstrumentMode("silent")}>◌ Modo silencioso</button></div></div>
             <div className={styles.lessonActions}><button className={styles.swap} onClick={() => { const next = candidates.find((lesson) => lesson.id !== suggested.id); if (next) setSelectedLessonId(next.id); }}>Trocar aula</button><button className={styles.start} onClick={startLesson}>Começar aula →</button></div>
