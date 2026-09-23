@@ -33,6 +33,11 @@ function silentVersion(block: LessonBlock) {
   return { childCue: block.childCue, teacherCue: block.teacherCue };
 }
 
+function compatibilityScore(current: LessonBlock, candidate: LessonBlock) {
+  const shared = current.competencies.filter((id) => candidate.competencies.includes(id)).length;
+  return shared * 3 + Number(current.screenMode === candidate.screenMode);
+}
+
 function elapsedMinutes(startedAt: string) {
   return Math.max(0, Math.floor((Date.now() - new Date(startedAt).getTime()) / 60000));
 }
@@ -170,7 +175,7 @@ export function LiveLesson() {
     </section>
   </main>;
 
-  const swapOptions = [...lessonTemplates.filter((lesson) => lesson.ageBand === currentSession.ageBand).flatMap((lesson) => lesson.blocks).filter((item) => item.kind === block.kind && item.id !== block.id), ...(fallbackBlocks[block.kind] ?? [])].filter((item, itemIndex, all) => all.findIndex((candidate) => candidate.title === item.title) === itemIndex).slice(0, 5);
+  const swapOptions = [...lessonTemplates.filter((lesson) => lesson.ageBand === currentSession.ageBand).flatMap((lesson) => lesson.blocks).filter((item) => item.kind === block.kind && item.id !== block.id), ...(fallbackBlocks[block.kind] ?? [])].filter((item, itemIndex, all) => all.findIndex((candidate) => candidate.title === item.title) === itemIndex).sort((a,b)=>compatibilityScore(block,b)-compatibilityScore(block,a)).slice(0, 5);
 
   return <main className={`${styles.lesson} ${student?.reducedStimulus ? styles.reduced : ""}`} data-age={currentSession.ageBand}>
     <header className={styles.topbar}>
@@ -198,7 +203,7 @@ export function LiveLesson() {
       <button className={styles.next} onClick={next}>{index === currentSession.blocks.length - 1 ? "Fechar aula" : "Próximo →"}</button>
     </footer>
 
-    {swap && <div className={styles.overlay}><section className={styles.sheet}><button className={styles.close} onClick={() => setSwap(false)}>×</button><span>TROCAR SÓ ESTE BLOCO</span><h2>Mesmo objetivo, outra forma.</h2><p>O restante da aula não muda.</p><div className={styles.choices}>{swapOptions.map((item) => <button key={item.id} onClick={() => replaceBlock(item)}><strong>{item.title}</strong><small>{item.minutes} min · {item.objective}</small></button>)}</div></section></div>}
+    {swap && <div className={styles.overlay}><section className={styles.sheet}><button className={styles.close} onClick={() => setSwap(false)}>×</button><span>TROCAR SÓ ESTE BLOCO</span><h2>Mesmo objetivo, outra forma.</h2><p>As primeiras opções preservam mais competências e a mesma modalidade. O restante da aula não muda.</p><div className={styles.choices}>{swapOptions.map((item) => <button key={item.id} onClick={() => replaceBlock(item)}><strong>{item.title}</strong><small>{item.minutes} min · {item.objective}</small></button>)}</div></section></div>}
 
     {wildcard && <div className={styles.overlay}><section className={styles.sheet}><button className={styles.close} onClick={() => setWildcard(false)}>×</button><span>CORINGA · 60–90 SEGUNDOS</span><h2>Quebre o fluxo sem transformar isso numa recompensa.</h2><p>Use para tédio, perda de foco ou pequena falha técnica. Depois volte à aula.</p><div className={styles.choices}>{wildcardActivities[currentSession.ageBand].map((item) => <button key={item.id} onClick={() => chooseWildcard(item)}><strong>{item.title}</strong><small>{item.teacherCue}</small></button>)}</div></section></div>}
 
