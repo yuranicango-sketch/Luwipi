@@ -5,3 +5,13 @@
 .deck{min-height:0;overflow:hidden;background:#1e232b;border-top:1px solid #111820;box-shadow:0 -16px 40px rgba(20,34,50,.13);padding:7px 10px 10px;display:grid;grid-template-rows:auto minmax(0,1fr);gap:5px}.deckTop{display:grid;grid-template-columns:minmax(430px,1fr) auto;align-items:center;gap:12px}.deckTop>div:first-child{background:#252c35;border-color:#39434f}.deckTop>div:first-child button{background:#313944;color:#d5dde6}.deckTop>div:first-child button[class*="active"]{background:#fff;color:#1d334e}.deckTop>div:first-child span{color:#c2ccd7}.deckHint{text-align:right;padding-right:5px}.deckHint span,.deckHint strong{display:block}.deckHint span{font-size:8px;font-weight:950;letter-spacing:.14em;color:#7f91a5}.deckHint strong{font-size:10px;color:#d3dbe5;margin-top:2px}
 @media(max-width:850px){.shell{--deck-h:clamp(220px,35svh,300px);grid-template-rows:54px minmax(0,1fr) var(--deck-h)}.topbar{grid-template-columns:36px minmax(110px,auto) minmax(80px,1fr) auto;padding:0 9px;gap:8px}.status{display:none}.identity small{display:none}.identity strong{max-width:180px}.action{grid-column:auto}.deck{padding:5px 6px 7px}.deckTop{grid-template-columns:1fr}.deckHint{display:none}.toolbar{min-height:40px;padding:4px 8px}}
 @media(max-width:520px){.shell{--deck-h:270px}.topbar{grid-template-columns:34px minmax(80px,1fr) 76px auto}.progress{height:5px}.identity strong{max-width:130px;font-size:11px}.action button,.action a{padding:0 7px;min-height:32px}.toolbar{min-height:36px}.toolbar button,.toolbar select{min-height:29px}.deckTop{display:grid;grid-template-columns:1fr}.deckTop>div:first-child span{display:none}.deck{padding-top:4px}}
+
+/* Desktop music mode: protect score readability before growing the piano deck. */
+@media(min-width:851px){
+  .shell[data-tone=song]{--deck-h:clamp(205px,27svh,275px)}
+}
+@media(min-width:851px) and (max-height:800px){
+  .shell[data-tone=song]{--deck-h:clamp(185px,24svh,220px);grid-template-rows:54px minmax(0,1fr) var(--deck-h)}
+  .shell[data-tone=song] .toolbar{min-height:38px;padding-top:3px;padding-bottom:3px}
+  .shell[data-tone=song] .deck{padding-top:5px;padding-bottom:6px}
+}
