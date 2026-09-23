@@ -122,8 +122,20 @@ export function recommendLessons(
 
 export function nextCompetencyFocus(student: LocalStudent) {
   return (Object.keys(competencyLabels) as CompetencyId[])
-    .map((id) => ({ id, rank: student.competencies[id] ? masteryRank[student.competencies[id]!] : -1 }))
-    .sort((a, b) => a.rank - b.rank)
+    .map((id) => {
+      const level = student.competencies[id] ?? null;
+      const priority = level === "emergente"
+        ? 0
+        : level === "desenvolvimento"
+          ? 1
+          : level === null
+            ? 2
+            : level === "consolidado"
+              ? 3
+              : 4;
+      return { id, level, priority };
+    })
+    .sort((a, b) => a.priority - b.priority)
     .slice(0, 3)
-    .map(({ id }) => ({ id, label: competencyLabels[id], level: student.competencies[id] ?? null }));
+    .map(({ id, level }) => ({ id, label: competencyLabels[id], level }));
 }
