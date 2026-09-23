@@ -27,5 +27,8 @@ jobs:
       - name: Domain tests
         run: npm run test:domain
 
+      - name: Production dependency audit
+        run: npm audit --omit=dev --audit-level=high
+
       - name: Build
         run: npm run build

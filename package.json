@@ -15,7 +15,7 @@
     "next": "16.3.5",
     "react": "19.2.0",
     "react-dom": "19.2.0",
-    "sharp": "^0.34.4"
+    "sharp": "0.35.4"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",
@@ -23,5 +23,8 @@
     "@types/react-dom": "^19.2.0",
     "typescript": "^5.9.0",
     "tsx": "^4.20.5"
+  },
+  "overrides": {
+    "sharp": "0.35.4"
   }
 }
