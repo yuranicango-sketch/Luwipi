@@ -4,209 +4,86 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { CSSProperties } from "react";
+import { LearningPlayer } from "@/components/learning-player";
 import { LessonVisual } from "@/components/lesson-visual";
-import { LuwipiPiano, type LuwipiPianoKey } from "@/components/luwipi-piano";
-import { PianoInputDock, type DetectedPianoNote, type PianoInputSource } from "@/components/piano-input";
-import { PreschoolInlineSong } from "@/components/preschool-inline-song";
+import type { LuwipiPianoKey } from "@/components/luwipi-piano";
+import { MusicScore } from "@/components/music-score";
+import type { DetectedPianoNote, PianoInputSource } from "@/components/piano-input";
 import type { AgeGroup } from "@/lib/curriculum";
 import type { CurriculumVariant, EnhancedLesson, EnhancedModule } from "@/lib/curriculum-v3";
 import { completeLesson, readCurriculumProgress, saveLessonStep, type MasteryState } from "@/lib/curriculum-progress";
 import { buildLessonSteps } from "@/lib/lesson-engine";
-import { getSong } from "@/lib/music-library";
+import { getSong, noteName, noteOctave } from "@/lib/music-library";
 import { playPercussionClick, playPianoRate, preloadPianoSamples } from "@/lib/piano-sampler";
 import styles from "./lesson-runner.module.css";
 
-type Props = { age: AgeGroup; module: EnhancedModule; lesson: EnhancedLesson; variant: CurriculumVariant; studentId: string };
-type InteractionKind = "note" | "piano" | "rhythm" | "listen" | "physical";
-type ListenMode = "pitch" | "dynamics" | "generic";
-const NATURAL = /(Dó|Ré|Mi|Fá|Sol|Lá|Si)/;
+type Props={age:AgeGroup;module:EnhancedModule;lesson:EnhancedLesson;variant:CurriculumVariant;studentId:string};
+type Kind="note"|"piano"|"rhythm"|"listen"|"physical";
+type ListenMode="pitch"|"dynamics"|"generic";
+const NATURAL=/(Dó|Ré|Mi|Fá|Sol|Lá|Si)/;
 
-function classify(action: string): { kind: InteractionKind; expected?: string; listenMode?: ListenMode } {
-  const expected = action.match(NATURAL)?.[1];
-  if (expected && /(toqu|encontr|tecla|nota|piano)/i.test(action)) return { kind: "note", expected };
-  if (/(ritmo|pulso|palma|tambor|batid|compasso|tempo)/i.test(action)) return { kind: "rhythm" };
-  if (/(grave|agudo)/i.test(action)) return { kind: "listen", listenMode: "pitch" };
-  if (/(forte|suave|intensidade|dinâmic)/i.test(action)) return { kind: "listen", listenMode: "dynamics" };
-  if (/(escut|ouç|ouvir|som)/i.test(action)) return { kind: "listen", listenMode: "generic" };
-  if (/(piano|tecla|toqu|tocar|dedo|mão|acorde|escala)/i.test(action)) return { kind: "piano" };
-  return { kind: "physical" };
+function classify(action:string):{kind:Kind;expected?:string;listenMode?:ListenMode}{
+ const expected=action.match(NATURAL)?.[1];
+ if(expected&&/(toqu|encontr|tecla|nota|piano)/i.test(action))return{kind:"note",expected};
+ if(/(ritmo|pulso|palma|tambor|batid|compasso|tempo)/i.test(action))return{kind:"rhythm"};
+ if(/(grave|agudo)/i.test(action))return{kind:"listen",listenMode:"pitch"};
+ if(/(forte|suave|intensidade|dinâmic)/i.test(action))return{kind:"listen",listenMode:"dynamics"};
+ if(/(escut|ouç|ouvir|som)/i.test(action))return{kind:"listen",listenMode:"generic"};
+ if(/(piano|tecla|toqu|tocar|dedo|mão|acorde|escala)/i.test(action))return{kind:"piano"};
+ return{kind:"physical"};
 }
+function pitchMatches(pitch:string,expected:string){return /[3-6]$/.test(expected)?pitch===expected:noteName(pitch)===noteName(expected)}
 
-function LessonInteraction({ action, age }: { action: string; age: AgeGroup }) {
-  const spec = useMemo(() => classify(action), [action]);
-  const [input, setInput] = useState<PianoInputSource>("screen");
-  const [message, setMessage] = useState("Experimente agora.");
-  const [wrong, setWrong] = useState<string | null>(null);
-  const [taps, setTaps] = useState(0);
-  const [done, setDone] = useState(false);
-  const [heard, setHeard] = useState<string | null>(null);
+export function LessonRunner({age,module,lesson,variant,studentId}:Props){
+ const router=useRouter();
+ const steps=useMemo(()=>buildLessonSteps({age,module,lesson,variant}),[age,module,lesson,variant]);
+ const[stepIndex,setStepIndex]=useState(0),[actionIndex,setActionIndex]=useState(0),[mastery,setMastery]=useState<MasteryState>(null),[showGuide,setShowGuide]=useState(false);
+ const[input,setInput]=useState<PianoInputSource>("screen"),[message,setMessage]=useState("Vamos descobrir."),[wrong,setWrong]=useState<string|null>(null),[done,setDone]=useState(false),[taps,setTaps]=useState(0),[heard,setHeard]=useState<string|null>(null),[songIndex,setSongIndex]=useState(0);
+ const step=steps[stepIndex],actionCount=Math.max(1,step.actions.length),currentAction=step.actions[Math.min(actionIndex,actionCount-1)]??"Explore esta ideia com a criança.";
+ const spec=useMemo(()=>classify(currentAction),[currentAction]);
+ const lessonSong=step.songId?getSong(step.songId):undefined,isRepertoire=Boolean(lessonSong&&step.id==="repertoire");
+ const repertoireNotes=useMemo(()=>isRepertoire?(lessonSong?.sections?.[0]?.notes??lessonSong?.sequence?.slice(0,8)??[]):[],[isRepertoire,lessonSong]);
+ const repertoireExpected=repertoireNotes[songIndex];
+ const isLastAction=actionIndex>=actionCount-1,isLastStep=stepIndex>=steps.length-1;
+ const total=steps.reduce((sum,item)=>sum+Math.max(1,item.actions.length),0),complete=steps.slice(0,stepIndex).reduce((sum,item)=>sum+Math.max(1,item.actions.length),0)+actionIndex;
+ const percent=Math.round(complete/Math.max(1,total)*100);
+ const expected=isRepertoire?repertoireExpected:spec.kind==="note"?spec.expected:undefined;
 
-  useEffect(() => {
-    setInput("screen"); setMessage("Experimente agora."); setWrong(null); setTaps(0); setDone(false); setHeard(null);
-    void preloadPianoSamples();
-  }, [action]);
+ useEffect(()=>{const saved=readCurriculumProgress(studentId,age)[String(lesson.number)];if(!saved||saved.completed)return;const safe=Math.max(0,Math.min(steps.length-1,saved.step??0));setStepIndex(safe);setActionIndex(Math.max(0,Math.min(Math.max(0,steps[safe].actions.length-1),saved.action??0)))},[studentId,age,lesson.number,steps]);
+ useEffect(()=>{setMessage(age==="2-4"?"Vamos experimentar!":"Faça a missão e escute o resultado.");setWrong(null);setDone(false);setTaps(0);setHeard(null);setSongIndex(0);void preloadPianoSamples()},[stepIndex,actionIndex,currentAction,age]);
 
-  function checkNote(name: string, octave: number) {
-    if (!spec.expected) return;
-    if (name === spec.expected) {
-      setDone(true); setWrong(null); setMessage("✓ Isso! Encontrou a nota certa.");
-    } else {
-      setWrong(`${name}${octave}`); setMessage(`Quase. Procure ${spec.expected}.`);
-      window.setTimeout(() => setWrong(null), 380);
-    }
-  }
+ function go(nextStep:number,nextAction=0){const s=Math.max(0,Math.min(steps.length-1,nextStep)),a=Math.max(0,Math.min(Math.max(0,steps[s].actions.length-1),nextAction));setStepIndex(s);setActionIndex(a);setMastery(null);saveLessonStep(studentId,age,lesson.number,s,a)}
+ function next(){if(!isLastAction)return go(stepIndex,actionIndex+1);if(!isLastStep)return go(stepIndex+1,0);setShowGuide(true)}
+ function previous(){if(actionIndex>0)return go(stepIndex,actionIndex-1);if(stepIndex>0)return go(stepIndex-1,Math.max(0,steps[stepIndex-1].actions.length-1))}
+ function finish(){if(!mastery)return;completeLesson(studentId,age,lesson.number,mastery);router.push(`/curriculo?age=${age}&variant=${variant.id}&student=${encodeURIComponent(studentId)}&current=${Math.min(48,lesson.number+1)}`)}
+ function success(text:string){setDone(true);setWrong(null);setMessage(text)}
+ function receive(pitch:string){
+   if(isRepertoire){if(!repertoireExpected)return;if(!pitchMatches(pitch,repertoireExpected)){setWrong(pitch);setMessage(`Quase. Procure ${noteName(repertoireExpected)}.`);window.setTimeout(()=>setWrong(null),380);return}if(songIndex+1>=repertoireNotes.length){setSongIndex(v=>v+1);success("🌟 A frase musical ficou completa!")}else{setSongIndex(v=>v+1);setMessage("✓ Certo. Continue a frase.")}return}
+   if(spec.kind==="note"&&spec.expected){if(!pitchMatches(pitch,spec.expected)){setWrong(pitch);setMessage(`Quase. Procure ${spec.expected}.`);window.setTimeout(()=>setWrong(null),380);return}success("✓ Encontrou a nota certa!");return}
+   if(spec.kind==="piano"){setHeard(pitch);success(`✓ Ouvi ${pitch}. Continue a explorar.`)}
+ }
+ function screenPress(key:LuwipiPianoKey){if(input==="screen")receive(key.pitch)}
+ function blackPress(pitch:string){if(input==="screen")receive(pitch)}
+ function externalPress(note:DetectedPianoNote){if(input!=="screen"&&note.source===input)receive(note.pitch)}
+ async function tap(){await playPercussionClick({frequency:taps===0?174:136,gain:.2});const n=Math.min(4,taps+1);setTaps(n);if(n>=4)success("✓ Pulso firme! Quatro batidas juntas.");else setMessage(`${n}/4 · continue no mesmo pulso.`)}
+ async function listen(option:"a"|"b"){
+   if(spec.listenMode==="dynamics"){await playPianoRate(1,{gain:option==="a"?.82:.18,duration:.8});setMessage(option==="a"?"Esse som foi forte.":"Esse som foi suave.");return}
+   if(spec.listenMode==="pitch"){await playPianoRate(option==="a"?.5:2,{gain:.55,duration:.8});setMessage(option==="a"?"Esse som vive na região grave.":"Esse som vive na região aguda.");return}
+   await playPianoRate(option==="a"?1:Math.pow(2,7/12),{gain:.5,duration:.7});setMessage(option==="a"?"Ouça o primeiro som.":"Compare com o segundo som.")
+ }
 
-  function freeNote(name: string, octave: number) { setHeard(`${name}${octave}`); setDone(true); setMessage(`✓ Ouvi ${name}${octave}. Continue a experiência.`); }
-  function screenPress(key: LuwipiPianoKey) { if (input === "screen") spec.kind === "note" ? checkNote(key.note, key.octave) : freeNote(key.note, key.octave); }
-  function externalPress(note: DetectedPianoNote) { if (input !== "screen" && note.source === input) spec.kind === "note" ? checkNote(note.name, note.octave) : freeNote(note.name, note.octave); }
-  async function demo(option: "a" | "b") {
-    if (spec.listenMode === "dynamics") {
-      await playPianoRate(1, { gain: option === "a" ? .82 : .2, duration: .85 });
-      setMessage(option === "a" ? "Este exemplo soa forte." : "Este exemplo soa suave.");
-      return;
-    }
-    if (spec.listenMode === "pitch") {
-      await playPianoRate(option === "a" ? .5 : 2, { gain: .58, duration: .8 });
-      setMessage(option === "a" ? "Este é o lado grave." : "Este é o lado agudo.");
-      return;
-    }
-    await playPianoRate(option === "a" ? 1 : Math.pow(2, 7 / 12), { gain: .5, duration: .72 });
-    setMessage(option === "a" ? "Ouça o primeiro som." : "Agora compare com o segundo.");
-  }
-  async function tap() {
-    await playPercussionClick({ frequency: taps === 0 ? 170 : 135 });
-    const next = Math.min(4, taps + 1); setTaps(next);
-    if (next >= 4) { setDone(true); setMessage("✓ Quatro pulsos firmes."); }
-  }
+ const studentContent=isRepertoire?<div className={styles.repertoire}><div className={styles.missionTitle}><span>{lessonSong?.emoji}</span><div><small>MÚSICA DA AULA</small><h2>{lessonSong?.title}</h2></div></div>{age==="2-4"?<div className={styles.kidSequence}>{repertoireNotes.map((note,index)=><span key={`${note}-${index}`} data-done={index<songIndex} data-active={index===songIndex}>♪</span>)}</div>:<MusicScore notes={repertoireNotes} currentIndex={Math.min(songIndex,Math.max(0,repertoireNotes.length-1))} wrongIndex={wrong?Math.min(songIndex,repertoireNotes.length-1):null} timeSignature={lessonSong?.timeSignature??"4/4"}/>}<p>{done?"Conseguimos tocar a frase.":"Toque a frase. O cursor só anda quando a nota estiver certa."}</p></div>
+ :spec.kind==="rhythm"?<div className={styles.rhythm}><button type="button" onClick={()=>void tap()}><span>🥁</span><strong>TOQUE NO PULSO</strong><i>{[0,1,2,3].map(n=><em key={n} data-on={n<taps}/>)}</i></button><p>{message}</p></div>
+ :spec.kind==="listen"?<div className={styles.listen}><header><small>OUVIR E DESCOBRIR</small><h2>{message}</h2></header><div><button onClick={()=>void listen("a")}><span>{spec.listenMode==="dynamics"?"🦁":spec.listenMode==="pitch"?"🐘":"①"}</span><b>{spec.listenMode==="dynamics"?"FORTE":spec.listenMode==="pitch"?"GRAVE":"SOM A"}</b></button><button onClick={()=>void listen("b")}><span>{spec.listenMode==="dynamics"?"🐇":spec.listenMode==="pitch"?"🐦":"②"}</span><b>{spec.listenMode==="dynamics"?"SUAVE":spec.listenMode==="pitch"?"AGUDO":"SOM B"}</b></button></div><button className={styles.confirm} onClick={()=>success("✓ Já ouvimos e comparamos.")}>{done?"✓ DESCOBRIMOS":"JÁ DESCOBRIMOS"}</button></div>
+ :<div className={styles.discovery}><div className={styles.visual}><LessonVisual stepId={step.id} icon={step.icon} title={step.title} age={age} accent={module.accent} instruction={currentAction}/></div><div className={styles.mission}><small>{spec.kind==="note"?"ENCONTRE NO PIANO":spec.kind==="piano"?"EXPERIMENTE NO PIANO":"MISSÃO"}</small><h1>{age==="2-4"&&currentAction.length>75?step.title:currentAction}</h1>{spec.kind==="note"&&<strong className={styles.target}>{spec.expected}</strong>}{heard&&<span className={styles.heard}>Ouvi {heard}</span>}{spec.kind==="physical"&&<button className={styles.confirm} onClick={()=>success("✓ Conseguimos!")}>{done?"✓ FEITO":"CONSEGUIMOS"}</button>}<p>{message}</p></div></div>;
 
-  if (spec.kind === "note") return <div className={styles.interaction}>
-    <div className={styles.interactionHead}><div><small>DESAFIO NO PIANO</small><strong>{message}</strong></div><span className={done ? styles.successBadge : styles.waitBadge}>{done ? "CERTO" : `PROCURE ${spec.expected}`}</span></div>
-    <PianoInputDock source={input} onSourceChange={setInput} onNote={externalPress} compact />
-    {input === "screen"
-      ? <LuwipiPiano compact octaves={1} expected={done ? undefined : spec.expected} wrong={wrong} onPress={screenPress} showLabels />
-      : <div className={styles.realInput}><span>🎹</span><div><b>Toque {spec.expected} no piano real</b><p>{input === "midi" ? "A nota chega diretamente pelo MIDI." : "Toque uma nota clara e espere o LuwiPi reconhecer."}</p></div></div>}
-  </div>;
-
-  if (spec.kind === "piano") return <div className={styles.interaction}>
-    <div className={styles.interactionHead}><div><small>PIANO INTERATIVO</small><strong>{heard ? `Ouvi ${heard}` : message}</strong></div><span className={done ? styles.successBadge : styles.waitBadge}>{done ? "FEITO" : "TOQUE"}</span></div>
-    <PianoInputDock source={input} onSourceChange={setInput} onNote={externalPress} compact />
-    {input === "screen"
-      ? <LuwipiPiano compact octaves={age === "2-4" ? 1 : 2} onPress={screenPress} showLabels={age !== "2-4"} />
-      : <div className={styles.realInput}><span>🎹</span><div><b>Toque no piano real</b><p>{input === "midi" ? "O LuwiPi responde a cada tecla enviada pelo MIDI." : "Toque uma nota clara; o LuwiPi mostra o que ouviu."}</p></div></div>}
-  </div>;
-
-  if (spec.kind === "rhythm") return <div className={styles.interaction}>
-    <div className={styles.interactionHead}><div><small>RITMO</small><strong>{message}</strong></div><span className={done ? styles.successBadge : styles.waitBadge}>{taps}/4</span></div>
-    <button type="button" className={styles.rhythmPad} onClick={() => void tap()}><span>🥁</span><b>TOQUE NO PULSO</b><i>{[0,1,2,3].map((n) => <em key={n} data-on={n < taps}/>)}</i></button>
-  </div>;
-
-  if (spec.kind === "listen") return <div className={styles.interaction}>
-    <div className={styles.interactionHead}><div><small>OUVIR + COMPARAR</small><strong>{message}</strong></div></div>
-    <div className={styles.soundButtons}><button type="button" onClick={() => void demo("a")}><span>{spec.listenMode === "dynamics" ? "🦁" : spec.listenMode === "pitch" ? "🐘" : "①"}</span><b>{spec.listenMode === "dynamics" ? "FORTE" : spec.listenMode === "pitch" ? "GRAVE" : "OUVIR A"}</b></button><button type="button" onClick={() => void demo("b")}><span>{spec.listenMode === "dynamics" ? "🐇" : spec.listenMode === "pitch" ? "🐦" : "②"}</span><b>{spec.listenMode === "dynamics" ? "SUAVE" : spec.listenMode === "pitch" ? "AGUDO" : "OUVIR B"}</b></button></div>
-    <button type="button" className={done ? styles.didItDone : styles.didIt} onClick={() => { setDone(true); setMessage("✓ Comparação concluída."); }}>{done ? "✓ FEITO" : "JÁ OUVIMOS E COMPARAMOS"}</button>
-  </div>;
-
-  return <div className={styles.interaction}>
-    <div className={styles.physicalCard}><span>{age === "2-4" ? "✨" : "🎯"}</span><div><small>FAÇA AGORA</small><strong>{action}</strong><p>O professor observa; a criança executa. Sem texto extra no caminho.</p></div></div>
-    <button type="button" className={done ? styles.didItDone : styles.didIt} onClick={() => { setDone(true); setMessage("✓ Ação concluída."); }}>{done ? "✓ FEITO" : "MARCAR COMO FEITO"}</button>
-  </div>;
-}
-
-export function LessonRunner({ age, module, lesson, variant, studentId }: Props) {
-  const router = useRouter();
-  const steps = useMemo(() => buildLessonSteps({ age, module, lesson, variant }), [age, module, lesson, variant]);
-  const [stepIndex, setStepIndex] = useState(0);
-  const [actionIndex, setActionIndex] = useState(0);
-  const [mastery, setMastery] = useState<MasteryState>(null);
-  const [showGuide, setShowGuide] = useState(false);
-  const step = steps[stepIndex];
-  const actionCount = Math.max(1, step.actions.length);
-  const currentAction = step.actions[Math.min(actionIndex, actionCount - 1)] ?? "Explore esta ideia com a criança.";
-  const isLastAction = actionIndex >= actionCount - 1;
-  const isLastStep = stepIndex >= steps.length - 1;
-  const lessonSong = step.songId ? getSong(step.songId) : undefined;
-  const totalUnits = steps.reduce((sum, item) => sum + Math.max(1, item.actions.length), 0);
-  const completeUnits = steps.slice(0, stepIndex).reduce((sum, item) => sum + Math.max(1, item.actions.length), 0) + actionIndex;
-  const percent = Math.round((completeUnits / Math.max(1, totalUnits)) * 100);
-
-  useEffect(() => {
-    const saved = readCurriculumProgress(studentId, age)[String(lesson.number)];
-    if (!saved || saved.completed) return;
-    const safeStep = Math.max(0, Math.min(steps.length - 1, saved.step ?? 0));
-    setStepIndex(safeStep);
-    setActionIndex(Math.max(0, Math.min(Math.max(0, steps[safeStep].actions.length - 1), saved.action ?? 0)));
-  }, [studentId, age, lesson.number, steps]);
-
-  function go(stepValue: number, actionValue = 0) {
-    const safeStep = Math.max(0, Math.min(steps.length - 1, stepValue));
-    const safeAction = Math.max(0, Math.min(Math.max(0, steps[safeStep].actions.length - 1), actionValue));
-    setStepIndex(safeStep); setActionIndex(safeAction); setMastery(null); setShowGuide(false);
-    saveLessonStep(studentId, age, lesson.number, safeStep, safeAction);
-  }
-
-  function next() {
-    if (!isLastAction) return go(stepIndex, actionIndex + 1);
-    if (!isLastStep) return go(stepIndex + 1, 0);
-  }
-
-  function previous() {
-    if (actionIndex > 0) return go(stepIndex, actionIndex - 1);
-    if (stepIndex > 0) return go(stepIndex - 1, Math.max(0, steps[stepIndex - 1].actions.length - 1));
-  }
-
-  function finish() {
-    if (!mastery) return;
-    completeLesson(studentId, age, lesson.number, mastery);
-    router.push(`/curriculo?age=${age}&variant=${variant.id}&student=${encodeURIComponent(studentId)}&current=${Math.min(48, lesson.number + 1)}`);
-  }
-
-  return <section className={styles.shell} style={{ "--accent": module.accent, "--soft": module.surface } as CSSProperties}>
-    <header className={styles.topbar}>
-      <Link href={`/curriculo?age=${age}&variant=${variant.id}&student=${encodeURIComponent(studentId)}`}>←</Link>
-      <div className={styles.lessonIdentity}><small>AULA {lesson.number} DE 48</small><strong>{lesson.title}</strong></div>
-      <div className={styles.progress}><i style={{ width: `${percent}%` }}/></div>
-      <button type="button" onClick={() => setShowGuide(true)}>GUIA</button>
-    </header>
-
-    <main className={styles.workspace}>
-      <section className={styles.visualStage}>
-        <div className={styles.stepMeta}><span>{step.icon}</span><div><small>ETAPA {stepIndex + 1} DE {steps.length}</small><h1>{step.title}</h1></div><b>{step.duration}</b></div>
-        <div className={styles.visual}><LessonVisual stepId={step.id} icon={step.icon} title={step.title} age={age} accent={module.accent} instruction={currentAction}/></div>
-        <div className={styles.prompt}><small>FAÇA SÓ ISTO AGORA</small><h2>{currentAction}</h2><div>{Array.from({ length: actionCount }).map((_, index) => <i key={index} data-done={index < actionIndex} data-active={index === actionIndex}/>)}</div></div>
-      </section>
-
-      <section className={styles.actionStage}>
-        {lessonSong && step.id === "repertoire" ? <div className={styles.repertoire}>
-          <div className={styles.repertoireHead}><span>{lessonSong.emoji}</span><div><small>MÚSICA DA AULA</small><h2>{lessonSong.title}</h2><p>Abra o modo de partitura: o LuwiPi espera pela nota certa e pode ouvir MIDI ou microfone.</p></div></div>
-          {age === "2-4"
-            ? <PreschoolInlineSong song={lessonSong} lessonNumber={lesson.number}/>
-            : <><div className={styles.scorePreview}>𝄞 <span>♪ ♪ ♩ ♪</span></div><Link className={styles.openSong} href={`/musicas/${lessonSong.id}`}>ABRIR MODO PIANO →</Link></>}
-        </div> : <LessonInteraction key={`${step.id}-${actionIndex}`} action={currentAction} age={age}/>}
-        <div className={styles.observe}><span>◉</span><div><small>OBSERVE</small><strong>{step.childDoes}</strong><p>Avance quando: {step.success}</p></div></div>
-      </section>
-    </main>
-
-    <footer className={styles.controls}>
-      <button type="button" className={styles.secondary} onClick={previous} disabled={stepIndex === 0 && actionIndex === 0}>VOLTAR</button>
-      <span>{stepIndex + 1}.{actionIndex + 1}</span>
-      {!isLastStep || !isLastAction
-        ? <button type="button" className={styles.primary} onClick={next}>FEITO · PRÓXIMO →</button>
-        : <button type="button" className={styles.primary} onClick={() => setShowGuide(true)}>TERMINAR AULA →</button>}
-    </footer>
-
-    {showGuide && <div className={styles.overlay} onClick={() => setShowGuide(false)}><aside className={styles.guide} onClick={(event) => event.stopPropagation()}>
-      <button className={styles.close} type="button" onClick={() => setShowGuide(false)}>×</button>
-      <small>GUIA DO PROFESSOR</small><h2>{step.title}</h2><p className={styles.goal}>{step.goal}</p>
-      {step.say && <div><b>DIGA ASSIM</b><p>“{step.say}”</p></div>}
-      {step.example && <div><b>EXEMPLO</b><p>{step.example}</p></div>}
-      {step.tip && <div><b>DICA</b><p>{step.tip}</p></div>}
-      {step.actionHref && step.actionLabel && <Link href={step.actionHref}>{step.actionLabel}</Link>}
-      {isLastStep && isLastAction && <section className={styles.mastery}>
-        <h3>Como terminou?</h3>
-        <button type="button" data-selected={mastery === "mastered"} onClick={() => setMastery("mastered")}>✓ Conseguiu</button>
-        <button type="button" data-selected={mastery === "reinforce"} onClick={() => setMastery("reinforce")}>↻ Precisa reforçar</button>
-        <button type="button" className={styles.finishButton} disabled={!mastery} onClick={finish}>CONCLUIR AULA</button>
-      </section>}
-    </aside></div>}
-  </section>;
+ const ready=done||spec.kind==="physical"||spec.kind==="listen";
+ const controls=<div className={styles.navControls}><button onClick={previous} disabled={stepIndex===0&&actionIndex===0}>←</button><span>{stepIndex+1}.{actionIndex+1}</span><button data-ready={ready} onClick={next}>{isLastStep&&isLastAction?"Terminar":"Próximo →"}</button></div>;
+ const teacherButton=<button type="button" onClick={()=>setShowGuide(true)}>PROFESSOR</button>;
+ return <>
+ <LearningPlayer backHref={`/curriculo?age=${age}&variant=${variant.id}&student=${encodeURIComponent(studentId)}`} eyebrow={`AULA ${lesson.number} · ${step.title}`} title={lesson.title} progress={percent} status={`${stepIndex+1}/${steps.length}`} action={teacherButton} tone="lesson" piano={{input,onInputChange:setInput,onExternalNote:externalPress,onPress:screenPress,onBlackPress:blackPress,expected:done?undefined:expected,wrong,octaves:age==="2-4"?2:3,startOctave:age==="2-4"?4:3,showLabels:age!=="2-4",blackKeysInteractive:true,hint:isRepertoire?message:spec.kind==="note"?message:spec.kind==="piano"?message:"O piano fica disponível durante toda a aula."}}>
+   <div className={styles.stage} style={{"--accent":module.accent,"--soft":module.surface} as CSSProperties}><div className={styles.student}>{studentContent}</div><aside className={styles.observation}><span>◉</span><div><small>PROFESSOR OBSERVA</small><strong>{step.childDoes}</strong></div>{controls}</aside></div>
+ </LearningPlayer>
+ {showGuide&&<div className={styles.overlay} onClick={()=>setShowGuide(false)}><aside className={styles.guide} onClick={(e:{stopPropagation:()=>void})=>e.stopPropagation()}><button className={styles.close} onClick={()=>setShowGuide(false)}>×</button><small>GUIA DO PROFESSOR</small><h2>{step.title}</h2><p className={styles.goal}>{step.goal}</p><div><b>DIGA ASSIM</b><p>{step.say?`“${step.say}”`:currentAction}</p></div>{step.example&&<div><b>EXEMPLO</b><p>{step.example}</p></div>}{step.tip&&<div><b>DICA PEDAGÓGICA</b><p>{step.tip}</p></div>}<div><b>OBSERVE</b><p>{step.childDoes}</p><p>Avance quando: {step.success}</p></div>{step.actionHref&&step.actionLabel&&<Link href={step.actionHref}>{step.actionLabel}</Link>}{isLastStep&&isLastAction&&<section className={styles.mastery}><h3>Como terminou a aula?</h3><button data-selected={mastery==="mastered"} onClick={()=>setMastery("mastered")}>★★★ Conseguiu com segurança</button><button data-selected={mastery==="reinforce"} onClick={()=>setMastery("reinforce")}>★★☆ Precisa reforçar</button><button className={styles.finishButton} disabled={!mastery} onClick={finish}>CONCLUIR AULA</button></section>}</aside></div>}
+ </>
 }

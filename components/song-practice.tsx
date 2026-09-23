@@ -2,198 +2,76 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { LuwipiPiano, type LuwipiPianoKey } from "@/components/luwipi-piano";
+import { GrandStaffScore } from "@/components/grand-staff-score";
+import { LearningPlayer } from "@/components/learning-player";
+import type { LuwipiPianoKey } from "@/components/luwipi-piano";
 import { MusicScore } from "@/components/music-score";
-import { PianoInputDock, type DetectedPianoNote, type PianoInputSource } from "@/components/piano-input";
-import { noteName, noteOctave, noteRate, type KidsSong } from "@/lib/music-library";
+import type { DetectedPianoNote, PianoInputSource } from "@/components/piano-input";
+import { noteName, noteOctave, noteRate, type KidsSong, type PianoScoreEvent, type ScoreHandMode } from "@/lib/music-library";
 import { playPercussionClick, playPianoRate, preloadPianoSamples } from "@/lib/piano-sampler";
 import styles from "./song-practice.module.css";
 
-type PracticeMode = "learn" | "practice" | "perform";
-type Tempo = 60 | 75 | 100;
+type PracticeMode="learn"|"practice"|"perform";
+type Tempo=60|75|100;
+type Section={label:string;notes:string[]};
+type GrandEvent={sourceIndex:number;event:PianoScoreEvent;expected:string[]};
 
-type Section = { label: string; notes: string[] };
+function sectionsFor(song:KidsSong):Section[]{return song.sections?.length?song.sections:[{label:"Música",notes:song.sequence??[]}];}
+function samePitch(pitch:string,expected:string,strict:boolean){return strict?pitch===expected:noteName(pitch)===noteName(expected)}
+function stars(accuracy:number){return accuracy>=95?3:accuracy>=80?2:1}
+function eventNotes(event:PianoScoreEvent,hand:ScoreHandMode){return hand==="right"?(event.right??[]):hand==="left"?(event.left??[]):[...(event.left??[]),...(event.right??[])]}
+function wait(ms:number){return new Promise<void>(resolve=>window.setTimeout(resolve,ms))}
 
-function buildSections(song: KidsSong): Section[] {
-  return song.sections?.length ? song.sections : [{ label: "Música", notes: song.sequence ?? [] }];
-}
+export function SongPractice({song}:{song:KidsSong}){
+ const sections=useMemo(()=>sectionsFor(song),[song]);
+ const fullSequence=useMemo(()=>sections.flatMap(section=>section.notes),[sections]);
+ const isGrand=Boolean(song.grandStaff&&song.scoreEvents?.length);
+ const[started,setStarted]=useState(false),[finished,setFinished]=useState(false),[listening,setListening]=useState(false);
+ const[mode,setMode]=useState<PracticeMode>("practice"),[input,setInput]=useState<PianoInputSource>("screen"),[tempo,setTempo]=useState<Tempo>(75),[metronome,setMetronome]=useState(false);
+ const[sectionIndex,setSectionIndex]=useState(0),[noteIndex,setNoteIndex]=useState(0),[hand,setHand]=useState<ScoreHandMode>("both"),[grandIndex,setGrandIndex]=useState(0),[hits,setHits]=useState<string[]>([]);
+ const[correct,setCorrect]=useState(0),[mistakes,setMistakes]=useState(0),[wrong,setWrong]=useState<string|null>(null),[message,setMessage]=useState("A partitura espera pela nota certa.");
+ const token=useRef(0),lock=useRef(false);
 
-function samePitch(name: string, octave: number, expected: string, octaveAware: boolean) {
-  if (name !== noteName(expected)) return false;
-  return !octaveAware || octave === noteOctave(expected);
-}
+ const grandEvents=useMemo<GrandEvent[]>(()=>!isGrand?[]:(song.scoreEvents??[]).map((event,sourceIndex)=>({sourceIndex,event,expected:eventNotes(event,hand)})).filter(item=>item.expected.length>0),[isGrand,song.scoreEvents,hand]);
+ const grandCurrent=grandEvents[grandIndex];
+ const activeSection=mode==="perform"?{label:"Música completa",notes:fullSequence}:sections[sectionIndex]??sections[0];
+ const sequence=activeSection?.notes??[];
+ const expectedNormal=sequence[noteIndex];
+ const strict=(song.pianoOctaves??1)>1;
+ const remainingGrand=grandCurrent?.expected.filter(pitch=>!hits.includes(pitch))??[];
+ const expectedDisplay=isGrand?remainingGrand:expectedNormal;
+ const normalProgress=sequence.length?noteIndex/sequence.length:0;
+ const sectionProgress=mode==="perform"?normalProgress:(sectionIndex+normalProgress)/Math.max(1,sections.length);
+ const grandProgress=grandEvents.length?grandIndex/grandEvents.length:0;
+ const progress=Math.round((isGrand?grandProgress:sectionProgress)*100);
+ const attempts=correct+mistakes,accuracy=attempts?Math.round(correct/attempts*100):100;
 
-function starsForAccuracy(accuracy: number) {
-  if (accuracy >= 95) return 3;
-  if (accuracy >= 80) return 2;
-  return 1;
-}
+ useEffect(()=>{void preloadPianoSamples()},[]);
+ useEffect(()=>{if(!metronome||!started||finished)return;let beat=0;const beats=song.timeSignature==="3/4"?3:4,delay=60000/(92*tempo/100);void playPercussionClick({frequency:180,gain:.18});const id=window.setInterval(()=>{beat=(beat+1)%beats;void playPercussionClick({frequency:beat===0?180:132,gain:beat===0?.18:.12})},delay);return()=>window.clearInterval(id)},[metronome,started,finished,tempo,song.timeSignature]);
+ useEffect(()=>{setGrandIndex(0);setHits([]);setWrong(null);if(started&&isGrand)setMessage(hand==="both"?"As duas pautas estão ativas.":hand==="right"?"Só a mão direita está ativa.":"Só a mão esquerda está ativa.")},[hand,isGrand,started]);
 
-function metronomeClick(strong: boolean) {
-  void playPercussionClick({ frequency: strong ? 180 : 135, gain: strong ? .2 : .14, duration: .07 });
-}
+ function resetSession(nextMode=mode){token.current+=1;lock.current=false;setMode(nextMode);setSectionIndex(0);setNoteIndex(0);setGrandIndex(0);setHits([]);setCorrect(0);setMistakes(0);setWrong(null);setFinished(false);setListening(false);setMessage(nextMode==="learn"?"Ouça, veja e toque sem pressa.":nextMode==="perform"?"Do começo ao fim. O Player acompanha você.":"A partitura espera pela nota certa.");setStarted(true)}
+ function finish(){setFinished(true);setMessage("Música concluída!")}
+ function nextNormal(){if(noteIndex+1<sequence.length){setNoteIndex(v=>v+1);return}if(mode!=="perform"&&sectionIndex<sections.length-1){setSectionIndex(v=>v+1);setNoteIndex(0);setMessage("Nova frase. Respire e continue.");return}finish()}
+ function acceptNormal(pitch:string){if(!expectedNormal||lock.current)return;setCorrect(c=>c+1);setWrong(null);setMessage("✓ Certo. A próxima nota já está à espera.");lock.current=true;window.setTimeout(()=>{lock.current=false;nextNormal()},110)}
+ function receiveGrand(pitch:string){if(!grandCurrent||lock.current)return;const target=grandCurrent.expected;if(!target.includes(pitch)){setMistakes(v=>v+1);setWrong(pitch);setMessage("Quase. Veja as notas dentro do cursor.");window.setTimeout(()=>setWrong(null),420);return}if(hits.includes(pitch))return;const nextHits=[...hits,pitch];setHits(nextHits);setCorrect(v=>v+1);setWrong(null);if(target.every(item=>nextHits.includes(item))){setMessage("✓ As notas encontraram-se.");lock.current=true;window.setTimeout(()=>{lock.current=false;setHits([]);if(grandIndex+1>=grandEvents.length)finish();else setGrandIndex(v=>v+1)},150)}else setMessage(`Boa. Falta ${target.length-nextHits.length} ${target.length-nextHits.length===1?"nota":"notas"}.`)}
+ function receivePitch(pitch:string){if(!started||finished||listening)return;if(isGrand){receiveGrand(pitch);return}if(!expectedNormal)return;setAttemptsForNormal(pitch)}
+ function setAttemptsForNormal(pitch:string){if(!expectedNormal)return;setMistakes(value=>{if(samePitch(pitch,expectedNormal,strict))return value;return value+1});if(!samePitch(pitch,expectedNormal,strict)){setWrong(pitch);setMessage(`Quase. Procure ${noteName(expectedNormal)}${strict?noteOctave(expectedNormal):""}.`);window.setTimeout(()=>setWrong(null),420);return}acceptNormal(pitch)}
+ function screenPress(key:LuwipiPianoKey){if(input!=="screen")return;receivePitch(key.pitch)}
+ function blackPress(pitch:string){if(input!=="screen")return;receivePitch(pitch)}
+ function externalPress(note:DetectedPianoNote){if(input==="screen"||note.source!==input)return;receivePitch(note.pitch)}
+ async function listen(){if(listening)return;const id=++token.current;setListening(true);setMessage("Ouça primeiro.");if(isGrand){for(const item of grandEvents){if(token.current!==id)return;for(const pitch of item.expected)void playPianoRate(noteRate(pitch),{gain:.45,duration:.6});await wait(620*100/tempo)}}else{const resume=noteIndex;for(let i=0;i<sequence.length;i+=1){if(token.current!==id)return;setNoteIndex(i);await playPianoRate(noteRate(sequence[i]),{gain:.58,duration:.55});await wait(520*100/tempo)}setNoteIndex(resume)}if(token.current===id){setListening(false);setMessage("Agora é a sua vez.")}}
 
-export function SongPractice({ song }: { song: KidsSong }) {
-  const sections = useMemo(() => buildSections(song), [song]);
-  const fullSequence = useMemo(() => sections.flatMap((section) => section.notes), [sections]);
-  const [started, setStarted] = useState(false);
-  const [mode, setMode] = useState<PracticeMode>("practice");
-  const [input, setInput] = useState<PianoInputSource>("screen");
-  const [tempo, setTempo] = useState<Tempo>(75);
-  const [metronome, setMetronome] = useState(false);
-  const [sectionIndex, setSectionIndex] = useState(0);
-  const [noteIndex, setNoteIndex] = useState(0);
-  const [correct, setCorrect] = useState(0);
-  const [mistakes, setMistakes] = useState(0);
-  const [wrongIndex, setWrongIndex] = useState<number | null>(null);
-  const [message, setMessage] = useState("Ouça. Encontre. Toque.");
-  const [listening, setListening] = useState(false);
-  const [finished, setFinished] = useState(false);
-  const listenToken = useRef(0);
-  const transitionLock = useRef(false);
+ if(!started)return <section className={styles.intro}><Link href="/musicas">← Biblioteca</Link><div className={styles.heroArt}><span>{song.emoji}</span>{isGrand&&<b>𝄞 𝄢</b>}</div><small>{isGrand?"DUAS MÃOS · GRANDE PAUTA":"PLAYER LUWIPI"}</small><h1>{song.title}</h1><p>{song.story}</p><div className={styles.modeCards}><button onClick={()=>resetSession("learn")}><b>01</b><strong>Aprender</strong><span>Ouvir, ver as notas e construir a música por etapas.</span></button><button className={styles.primaryMode} onClick={()=>resetSession("practice")}><b>02</b><strong>Praticar</strong><span>O cursor espera. Só avança depois da nota certa.</span><em>IDEAL</em></button><button onClick={()=>resetSession("perform")}><b>03</b><strong>Tocar</strong><span>Menos pistas, música contínua e resultado no fim.</span></button></div></section>;
+ if(finished){const scoreStars=stars(accuracy);return <section className={styles.finish}><div className={styles.stars}>{[1,2,3].map(n=><span key={n} data-on={n<=scoreStars}>★</span>)}</div><small>SESSÃO CONCLUÍDA</small><h1>{song.title}</h1><p>{isGrand?"As duas mãos chegaram ao fim da peça.":"A música chegou ao fim."}</p><div className={styles.stats}><div><b>{accuracy}%</b><span>precisão</span></div><div><b>{correct}</b><span>acertos</span></div><div><b>{mistakes}</b><span>a rever</span></div></div><div className={styles.finishActions}><button onClick={()=>resetSession(mode)}>TOCAR DE NOVO</button><Link href={`/professor/tarefas?song=${encodeURIComponent(song.id)}`}>ENVIAR COMO TAREFA</Link><Link href="/musicas">OUTRA MÚSICA</Link></div></section>}
 
-  const activeSection = mode === "perform" ? { label: "Música completa", notes: fullSequence } : sections[sectionIndex] ?? sections[0];
-  const sequence = activeSection?.notes ?? [];
-  const expected = sequence[noteIndex];
-  const octaveAware = (song.pianoOctaves ?? 1) === 2;
-  const progress = sequence.length ? Math.round((noteIndex / sequence.length) * 100) : 0;
-  const attempts = correct + mistakes;
-  const accuracy = attempts ? Math.round((correct / attempts) * 100) : 100;
-
-  useEffect(() => { void preloadPianoSamples(); }, []);
-
-  useEffect(() => {
-    if (!metronome || !started || finished) return;
-    let beat = 0;
-    const delay = 60000 / (92 * tempo / 100);
-    metronomeClick(true);
-    const id = window.setInterval(() => { beat = (beat + 1) % (song.timeSignature === "3/4" ? 3 : 4); metronomeClick(beat === 0); }, delay);
-    return () => window.clearInterval(id);
-  }, [metronome, started, finished, tempo, song.timeSignature]);
-
-  function restart(selectedMode = mode) {
-    listenToken.current += 1;
-    transitionLock.current = false;
-    setMode(selectedMode);
-    setSectionIndex(0);
-    setNoteIndex(0);
-    setCorrect(0);
-    setMistakes(0);
-    setWrongIndex(null);
-    setMessage(selectedMode === "learn" ? "As notas ficam iluminadas. Vá sem pressa." : selectedMode === "perform" ? "Sem pistas extras. Toque do começo ao fim." : "A partitura espera pela nota certa.");
-    setListening(false);
-    setFinished(false);
-    setStarted(true);
-  }
-
-  function finishSection() {
-    if (mode === "perform" || sectionIndex >= sections.length - 1) {
-      setFinished(true);
-      setMessage("Música concluída!");
-      return;
-    }
-    setSectionIndex((value) => value + 1);
-    setNoteIndex(0);
-    setMessage("Nova parte. Primeiro devagar.");
-  }
-
-  function receive(name: string, octave: number) {
-    if (!started || finished || listening || transitionLock.current || !expected) return;
-    if (!samePitch(name, octave, expected, octaveAware)) {
-      setMistakes((value) => value + 1);
-      setWrongIndex(noteIndex);
-      setMessage(`Quase. A partitura está à espera de ${noteName(expected)}.`);
-      window.setTimeout(() => setWrongIndex(null), 420);
-      return;
-    }
-    setCorrect((value) => value + 1);
-    setWrongIndex(null);
-    setMessage("Certo! Continue.");
-    if (noteIndex + 1 >= sequence.length) {
-      transitionLock.current = true;
-      window.setTimeout(() => { transitionLock.current = false; finishSection(); }, 220);
-    }
-    else setNoteIndex((value) => value + 1);
-  }
-
-  function screenPress(key: LuwipiPianoKey) {
-    if (input !== "screen") return;
-    receive(key.note, key.octave);
-  }
-
-  function externalPress(note: DetectedPianoNote) {
-    if (input === "screen" || note.source !== input) return;
-    receive(note.name, note.octave);
-  }
-
-  async function listen() {
-    if (listening || !sequence.length) return;
-    const id = ++listenToken.current;
-    const resumeAt = noteIndex;
-    setListening(true);
-    setMessage("Ouça esta parte.");
-    const delay = 520 * (100 / tempo);
-    for (let index = 0; index < sequence.length; index += 1) {
-      if (listenToken.current !== id) return;
-      setNoteIndex(index);
-      await playPianoRate(noteRate(sequence[index]), { gain: .62, duration: Math.max(.45, delay / 1000 * .8) });
-      await new Promise<void>((resolve) => window.setTimeout(resolve, delay));
-    }
-    if (listenToken.current === id) {
-      setNoteIndex(Math.min(resumeAt, Math.max(0, sequence.length - 1)));
-      setListening(false);
-      setMessage(resumeAt > 0 ? "Continue de onde parou." : "Agora é a sua vez.");
-    }
-  }
-
-  if (!started) return <section className={styles.intro}>
-    <Link className={styles.back} href="/musicas">← Biblioteca</Link>
-    <div className={styles.introArt}><span>{song.emoji}</span><i>♪</i></div>
-    <small>MODO PIANO · PARTITURA INTERATIVA</small>
-    <h1>{song.title}</h1>
-    <p>{song.story}</p>
-    <div className={styles.modeCards}>
-      <button type="button" onClick={() => restart("learn")}><b>1</b><strong>Aprender</strong><span>Notas iluminadas, ouvir por partes e tocar sem pressa.</span></button>
-      <button type="button" className={styles.recommended} onClick={() => restart("practice")}><b>2</b><strong>Praticar</strong><span>A partitura para e espera até tocar a nota correta.</span><em>RECOMENDADO</em></button>
-      <button type="button" onClick={() => restart("perform")}><b>3</b><strong>Tocar inteira</strong><span>Menos pistas, música completa e resultado no final.</span></button>
-    </div>
-  </section>;
-
-  if (finished) {
-    const stars = starsForAccuracy(accuracy);
-    return <section className={styles.finish}>
-      <div className={styles.finishStars}>{[1, 2, 3].map((star) => <span key={star} data-on={star <= stars}>★</span>)}</div>
-      <small>SESSÃO CONCLUÍDA</small><h1>{song.title}</h1>
-      <div className={styles.finishStats}><div><b>{accuracy}%</b><span>precisão</span></div><div><b>{correct}</b><span>notas certas</span></div><div><b>{mistakes}</b><span>tentativas a rever</span></div></div>
-      <div className={styles.finishActions}><button type="button" onClick={() => restart(mode)}>TOCAR DE NOVO</button><Link href={`/professor/tarefas?song=${encodeURIComponent(song.id)}`}>ENVIAR COMO TAREFA</Link><Link href="/musicas">OUTRA MÚSICA</Link></div>
-    </section>;
-  }
-
-  return <section className={styles.player}>
-    <header className={styles.topbar}>
-      <Link href="/musicas">←</Link>
-      <div className={styles.songTitle}><span>{song.emoji}</span><div><small>{mode === "learn" ? "APRENDER" : mode === "perform" ? "TOCAR INTEIRA" : "PRATICAR"}</small><strong>{song.title}</strong></div></div>
-      <div className={styles.globalProgress}><i style={{ width: `${mode === "perform" ? progress : Math.round(((sectionIndex + progress / 100) / sections.length) * 100)}%` }}/></div>
-      <span className={styles.accuracy}>{accuracy}%</span>
-    </header>
-
-    <div className={styles.workspace}>
-      <aside className={styles.tools}>
-        <div><small>PARTE</small><strong>{mode === "perform" ? "Completa" : `${sectionIndex + 1}/${sections.length}`}</strong><span>{activeSection?.label}</span></div>
-        <label><span>Velocidade</span><select value={tempo} onChange={(event) => setTempo(Number(event.target.value) as Tempo)}><option value={60}>60%</option><option value={75}>75%</option><option value={100}>100%</option></select></label>
-        <button type="button" className={metronome ? styles.toolActive : ""} onClick={() => setMetronome((value) => !value)}>♩ Metrónomo</button>
-        <button type="button" onClick={() => void listen()} disabled={listening}>{listening ? "A tocar…" : "▶ Ouvir parte"}</button>
-        <button type="button" onClick={() => { setNoteIndex(0); setWrongIndex(null); setMessage("Recomeçamos esta parte."); }}>↺ Recomeçar</button>
-      </aside>
-
-      <main className={styles.stage}>
-        <div className={styles.instruction}><div><small>{input === "screen" ? "PIANO NA TELA" : "PIANO REAL"}</small><h2>{message}</h2></div>{expected && <div className={styles.nextNote}><span>AGORA</span><b>{mode === "perform" ? "♪" : `${noteName(expected)}${octaveAware ? noteOctave(expected) : ""}`}</b></div>}</div>
-        <MusicScore notes={sequence} currentIndex={noteIndex} wrongIndex={wrongIndex} timeSignature={song.timeSignature ?? "4/4"} hideLabels={mode === "perform"} />
-        <PianoInputDock source={input} onSourceChange={setInput} onNote={externalPress} compact />
-        <div className={styles.pianoArea}>
-          {input === "screen" ? <LuwipiPiano octaves={song.pianoOctaves ?? 1} expected={mode === "perform" ? undefined : expected} wrong={wrongIndex === noteIndex && expected ? `${noteName(expected)}${noteOctave(expected)}` : null} onPress={screenPress} showLabels={mode !== "perform"} compact /> : <div className={styles.realPiano}><span>🎹</span><div><strong>Toque no seu piano</strong><p>{input === "midi" ? "O LuwiPi recebe cada nota diretamente do teclado MIDI." : "O LuwiPi está a ouvir o piano pelo microfone. Toque uma nota de cada vez com clareza."}</p></div></div>}
-        </div>
-      </main>
-    </div>
-  </section>;
+ const toolbar=<><button data-active={mode==="learn"} onClick={()=>resetSession("learn")}>Aprender</button><button data-active={mode==="practice"} onClick={()=>resetSession("practice")}>Praticar</button><button data-active={mode==="perform"} onClick={()=>resetSession("perform")}>Tocar inteira</button>{isGrand&&<><span className={styles.separator}/><button data-active={hand==="right"} onClick={()=>setHand("right")}>Mão direita</button><button data-active={hand==="left"} onClick={()=>setHand("left")}>Mão esquerda</button><button data-active={hand==="both"} onClick={()=>setHand("both")}>Duas mãos</button></>}<span className={styles.separator}/><select value={tempo} onChange={(e:{target:{value:string}})=>setTempo(Number(e.target.value) as Tempo)}><option value={60}>60%</option><option value={75}>75%</option><option value={100}>100%</option></select><button data-active={metronome} onClick={()=>setMetronome(v=>!v)}>♩ Metrónomo</button><button disabled={listening} onClick={()=>void listen()}>{listening?"A tocar…":"▶ Ouvir"}</button></>;
+ const status=isGrand?`${grandIndex+1}/${Math.max(1,grandEvents.length)} · ${accuracy}%`:`${mode==="perform"?"Completa":`${sectionIndex+1}/${sections.length}`} · ${accuracy}%`;
+ return <LearningPlayer backHref="/musicas" eyebrow={isGrand?"PARTITURA · DUAS MÃOS":mode==="perform"?"TOCAR INTEIRA":"MODO MÚSICA"} title={song.title} progress={progress} status={status} toolbar={toolbar} tone="song" piano={{input,onInputChange:setInput,onExternalNote:externalPress,onPress:screenPress,onBlackPress:blackPress,expected:expectedDisplay,wrong,octaves:3,startOctave:3,showLabels:mode!=="perform",blackKeysInteractive:true,hint:message}}>
+   <div className={styles.stage}>
+     <header className={styles.instruction}><div><small>{input==="screen"?"TOQUE NO PIANO":input==="midi"?"MIDI ATIVO":"MICROFONE ATIVO"}</small><h2>{message}</h2></div><div className={styles.now}><span>AGORA</span><strong>{isGrand?(remainingGrand.length?remainingGrand.join(" + "):"✓"):(expectedNormal?mode==="perform"?"♪":`${noteName(expectedNormal)}${strict?noteOctave(expectedNormal):""}`:"✓")}</strong></div></header>
+     <div className={styles.scoreArea}>{isGrand?<GrandStaffScore events={song.scoreEvents??[]} currentIndex={grandCurrent?.sourceIndex??0} hand={hand} wrong={Boolean(wrong)} timeSignature={song.timeSignature??"4/4"}/>:<MusicScore notes={sequence} currentIndex={noteIndex} wrongIndex={wrong?noteIndex:null} timeSignature={song.timeSignature??"4/4"} hideLabels={mode==="perform"}/>}</div>
+     <div className={styles.storyStrip}><span>{song.emoji}</span><div><small>{activeSection?.label??"Música"}</small><strong>{isGrand?hand==="both"?"Coordene as duas pautas sem correr.":"Construa esta mão antes de juntar as duas.":song.subtitle}</strong></div><i style={{width:`${progress}%`}}/></div>
+   </div>
+ </LearningPlayer>
 }
