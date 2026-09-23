@@ -1,56 +1,62 @@
 # Luwipi Design System
 
 ## North Star
-Luwipi is a teaching instrument: the calm structure of a teacher's desk combined with the warmth of an illustrated children's music book. Product surfaces should feel focused and trustworthy; child-facing lesson surfaces may become playful and immersive.
+Luwipi é um instrumento de ensino: estrutura calma para o professor e linguagem visual imediata para a criança. Nada entra na interface apenas para decorar.
 
-## Registers
-- Teacher/product: quiet, structured, compact, high legibility.
-- Child/lesson: visual, large, tactile, one action at a time.
-- Marketing: expressive, but built from the same palette and typography.
+## Dois registos
+- Professor: silencioso, estruturado, compacto e legível.
+- Criança: uma ação por vez, grande, tátil e visual.
+- Marketing: expressivo, mas sem parecer um jogo autónomo.
 
-## Core tokens
-- Ink: #17304F
-- Muted: #66758C
-- Brand blue: #1686F5
-- Action yellow: #FFC928
-- Progress green: #58B947
-- Playful pink: #F25591
-- Canvas: #F7F9FC
+## Faixas etárias
+### 2–3 anos
+- Accent quente e formas maiores.
+- Pouquíssimo texto destinado à criança.
+- Movimento, contraste, imitação e causa/efeito.
+- A tela recua rapidamente quando chega o piano físico.
+
+### 4–5 anos
+- Accent verde.
+- Formas + nomes curtos.
+- Padrões, sequência, grupos de teclas e primeiras músicas.
+
+### 6–8 anos
+- Accent azul.
+- Mais estrutura informacional.
+- Técnica, leitura gradual, coordenação e repertório.
+
+## Luwi
+Luwi é o guia visual consistente da aula. Só aparece para sinalizar uma ação pedagógica, uma transição ou acolhimento. Nunca é decoração solta nem recompensa por pontuação.
+
+## Cor
+Nunca comunicar apenas por matiz. Cor deve vir acompanhada de forma, posição, texto curto ou símbolo.
+- Ink: #17362D
+- Teacher green: #1F5C4C
+- 2–3 accent: #B7622F
+- 4–5 accent: #2F6B58
+- 6–8 accent: #365F87
+- Canvas: #F8FAF8
 - Paper: #FFFFFF
-- Line: #E3EAF2
-- Deep navy: #10284A
+- Line: #E2E9E5
+- Destructive only: red
 
-## Typography
-Use the system rounded sans stack for now. Headings are compact, heavy and slightly tracked inward; body copy is calm and readable. Avoid decorative type inside product workflows.
+## Tipografia
+Usar a stack rounded/system atual. Headings compactos e fortes; corpo calmo. Texto nunca deve competir com a aula.
 
-## Shape and elevation
-- Controls: 12–16px radius.
-- Product panels: 18–24px radius.
-- Hero/brand moments: up to 32px.
-- Use borders before shadows. Shadows are reserved for elevation or primary focus, not every card.
+## Interação
+- Touch targets generosos.
+- Focus-visible obrigatório.
+- Reduced motion respeitado.
+- Nenhum feedback infantil em vermelho/❌.
+- “Tenta outra vez” substitui “errado”.
+- Coringa resolve foco/técnica; Pausa resolve estado emocional.
 
-## Color semantics
-- Blue: navigation, selection and brand structure.
-- Yellow: primary commercial/marketing action.
-- Green: learning progress, completion and lesson continuation.
-- Pink: child-facing accent, never a generic status.
-- Red: errors/destructive actions only.
+## Ilustração
+Toda ilustração deve ensinar ou orientar: direção, escuta, pulso, mão, teclado, repertório ou transição. Emoji pode existir como apoio temporário, mas não como linguagem visual final.
 
-## Layout
-Teacher surfaces use a maximum 1180px content width and clear page hierarchy. Avoid turning every piece of content into a floating card. Child lesson mode uses a stage-first layout with the current activity visually dominant.
-
-## Interaction
-Every interactive element has visible hover, focus-visible, active and disabled treatment. Prefer semantic buttons and links. Respect reduced motion. Do not rely on hover to expose required actions.
-
-## Illustration
-Use coherent pedagogical illustrations rather than emoji as final artwork. Illustrations must explain or reinforce the learning task, not decorate empty space.
-
-## Responsive
-Mobile is a deliberate composition: primary action remains obvious, touch targets stay generous, and dense desktop grids collapse without losing labels or actions.
-
-## Anti-references
-- Generic SaaS dashboard full of equal cards.
-- Duolingo clone.
-- Emoji as primary illustration language.
-- Excessive gradients, floating blobs and decorative shadows.
-- Different button systems per route.
+## Anti-referências
+- Dashboard SaaS cheio de métricas.
+- Clone do Duolingo.
+- Streaks, XP e badges de culpa.
+- Gamificação autónoma longa.
+- Ecrã competindo com professor e piano.

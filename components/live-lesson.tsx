@@ -2,9 +2,10 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { competencyLabels, fallbackBlocks, wildcardActivities, type CompetencyId, type LessonBlock, type MasteryLevel } from "@/lib/suzuki-lessons";
+import { competencyLabels, fallbackBlocks, lessonTemplates, wildcardActivities, type CompetencyId, type LessonBlock, type MasteryLevel } from "@/lib/suzuki-lessons";
 import { clearActiveLesson, getActiveLesson, getLocalStudent, getStudentHistory, saveActiveLesson, saveLessonHistory, updateStudentMastery, type ActiveLesson } from "@/lib/teacher-local-v2";
 import { VirtualPiano } from "@/components/virtual-piano";
+import { LessonGuide } from "@/components/lesson-guide";
 import styles from "./live-lesson.module.css";
 
 const masteryLevels: { id: MasteryLevel; label: string }[] = [
@@ -152,7 +153,9 @@ export function LiveLesson() {
     </section>
   </main>;
 
-  return <main className={`${styles.lesson} ${student?.reducedStimulus ? styles.reduced : ""}`}>
+  const swapOptions = [...lessonTemplates.filter((lesson) => lesson.ageBand === currentSession.ageBand).flatMap((lesson) => lesson.blocks).filter((item) => item.kind === block.kind && item.id !== block.id), ...(fallbackBlocks[block.kind] ?? [])].filter((item, itemIndex, all) => all.findIndex((candidate) => candidate.title === item.title) === itemIndex).slice(0, 5);
+
+  return <main className={`${styles.lesson} ${student?.reducedStimulus ? styles.reduced : ""}`} data-age={currentSession.ageBand}>
     <header className={styles.topbar}>
       <div><strong>{currentSession.studentName}</strong><span>{currentSession.lessonTitle}{currentSession.variationApplied ? " · variação leve" : ""}</span></div>
       <div className={styles.progress} aria-label={`Bloco ${index + 1} de ${currentSession.blocks.length}`}>{currentSession.blocks.map((item, i) => <span key={`${item.id}-${i}`} data-active={i === index} data-done={i < index} />)}</div>
@@ -162,6 +165,7 @@ export function LiveLesson() {
     <section className={`${styles.stage} ${block.screenMode === "off" ? styles.screenOff : block.screenMode === "minimal" ? styles.screenMinimal : styles.screenVisual}`}>
       <div className={styles.stageMeta}><span>{kindLabels[block.kind]}</span><b>{block.minutes} min</b></div>
       {block.screenMode === "off" && currentSession.instrumentMode === "physical" && <div className={styles.lookAway}>↑<span>Agora olhe para a criança, não para o ecrã.</span></div>}
+      {!(block.screenMode === "off" && currentSession.instrumentMode === "physical") && <LessonGuide ageBand={currentSession.ageBand} kind={block.kind} reduced={student?.reducedStimulus} />}
       <h1>{block.title}</h1>
       <p className={styles.childCue}>{displayed.childCue}</p>
       <div className={styles.teacherCue}><span>PARA O PROFESSOR{currentSession.instrumentMode === "silent" ? " · ADAPTAÇÃO SILENCIOSA" : ""}</span><p>{displayed.teacherCue}</p><small>Objetivo: {block.objective}</small></div>
@@ -176,10 +180,10 @@ export function LiveLesson() {
       <button className={styles.next} onClick={next}>{index === currentSession.blocks.length - 1 ? "Fechar aula" : "Próximo →"}</button>
     </footer>
 
-    {swap && <div className={styles.overlay}><section className={styles.sheet}><button className={styles.close} onClick={() => setSwap(false)}>×</button><span>TROCAR SÓ ESTE BLOCO</span><h2>Mesmo objetivo, outra forma.</h2><p>O restante da aula não muda.</p><div className={styles.choices}>{fallbackBlocks[block.kind].map((item) => <button key={item.id} onClick={() => replaceBlock(item)}><strong>{item.title}</strong><small>{item.minutes} min · {item.objective}</small></button>)}</div></section></div>}
+    {swap && <div className={styles.overlay}><section className={styles.sheet}><button className={styles.close} onClick={() => setSwap(false)}>×</button><span>TROCAR SÓ ESTE BLOCO</span><h2>Mesmo objetivo, outra forma.</h2><p>O restante da aula não muda.</p><div className={styles.choices}>{swapOptions.map((item) => <button key={item.id} onClick={() => replaceBlock(item)}><strong>{item.title}</strong><small>{item.minutes} min · {item.objective}</small></button>)}</div></section></div>}
 
     {wildcard && <div className={styles.overlay}><section className={styles.sheet}><button className={styles.close} onClick={() => setWildcard(false)}>×</button><span>CORINGA · 60–90 SEGUNDOS</span><h2>Quebre o fluxo sem transformar isso numa recompensa.</h2><p>Use para tédio, perda de foco ou pequena falha técnica. Depois volte à aula.</p><div className={styles.choices}>{wildcardActivities[currentSession.ageBand].map((item) => <button key={item.id} onClick={() => chooseWildcard(item)}><strong>{item.title}</strong><small>{item.teacherCue}</small></button>)}</div></section></div>}
 
-    {pause && <div className={`${styles.overlay} ${styles.calmOverlay}`}><section className={styles.calm}><span>♡ PAUSA / ACOLHIMENTO</span><h2>Não precisamos continuar agora.</h2><p>Reduza estímulos. Baixe a voz. Dê espaço. A aula pode esperar.</p><div><span>Respirar juntos</span><span>Água / colo / silêncio</span><span>Sem contagem regressiva</span><span>Retomar só quando fizer sentido</span></div><button onClick={() => setPause(false)}>Voltar quando fizer sentido</button></section></div>}
+    {pause && <div className={`${styles.overlay} ${styles.calmOverlay}`}><section className={styles.calm}><LessonGuide ageBand={currentSession.ageBand} kind="closing" reduced /><span>♡ PAUSA / ACOLHIMENTO</span><h2>Não precisamos continuar agora.</h2><p>Reduza estímulos. Baixe a voz. Dê espaço. A aula pode esperar.</p><div><span>Respirar juntos</span><span>Água / colo / silêncio</span><span>Sem contagem regressiva</span><span>Retomar só quando fizer sentido</span></div><button onClick={() => setPause(false)}>Voltar quando fizer sentido</button></section></div>}
   </main>;
 }
