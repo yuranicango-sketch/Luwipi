@@ -6,6 +6,7 @@ import { competencyLabels, fallbackBlocks, lessonTemplates, wildcardActivities, 
 import { clearActiveLesson, getActiveLesson, getLocalStudent, getStudentHistory, saveActiveLesson, saveLessonHistory, updateStudentMastery, type ActiveLesson } from "@/lib/teacher-local-v2";
 import { VirtualPiano } from "@/components/virtual-piano";
 import { LessonGuide } from "@/components/lesson-guide";
+import { LessonActivityVisual } from "@/components/lesson-activity-visual";
 import styles from "./live-lesson.module.css";
 
 const masteryLevels: { id: MasteryLevel; label: string }[] = [
@@ -166,6 +167,7 @@ export function LiveLesson() {
       <div className={styles.stageMeta}><span>{kindLabels[block.kind]}</span><b>{block.minutes} min</b></div>
       {block.screenMode === "off" && currentSession.instrumentMode === "physical" && <div className={styles.lookAway}>↑<span>Agora olhe para a criança, não para o ecrã.</span></div>}
       {!(block.screenMode === "off" && currentSession.instrumentMode === "physical") && <LessonGuide ageBand={currentSession.ageBand} kind={block.kind} reduced={student?.reducedStimulus} />}
+      <LessonActivityVisual block={block} ageBand={currentSession.ageBand} reduced={student?.reducedStimulus} />
       <h1>{block.title}</h1>
       <p className={styles.childCue}>{displayed.childCue}</p>
       <div className={styles.teacherCue}><span>PARA O PROFESSOR{currentSession.instrumentMode === "silent" ? " · ADAPTAÇÃO SILENCIOSA" : ""}</span><p>{displayed.teacherCue}</p><small>Objetivo: {block.objective}</small></div>
