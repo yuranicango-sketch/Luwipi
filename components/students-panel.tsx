@@ -1,0 +1,73 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { competencyLabels, type AgeBand, type CompetencyId, type MasteryLevel } from "@/lib/suzuki-lessons";
+import { createLocalStudent, getLessonHistory, getLocalStudents, saveLocalStudent, updateLocalStudent, type LocalStudent } from "@/lib/teacher-local-v2";
+import { imageFileToLocalAvatar } from "@/lib/local-image";
+import { ProgressGarden } from "@/components/progress-garden";
+import styles from "./students-panel.module.css";
+
+const masteryLabels: Record<MasteryLevel, string> = { emergente: "Emergente", desenvolvimento: "Em desenvolvimento", consolidado: "Consolidado", independente: "Independente" };
+
+export function StudentsPanel() {
+  const [students, setStudents] = useState<LocalStudent[]>([]);
+  const [selectedId, setSelectedId] = useState("");
+  const [creating, setCreating] = useState(false);
+  const [name, setName] = useState("");
+  const [parentName, setParentName] = useState("");
+  const [ageBand, setAgeBand] = useState<AgeBand>("4-5");
+  const [level, setLevel] = useState<LocalStudent["level"]>("iniciante");
+  const [photoDataUrl, setPhotoDataUrl] = useState<string | undefined>();
+
+  function refresh(preferred?: string) {
+    const next = getLocalStudents();
+    setStudents(next);
+    setSelectedId((current) => preferred ?? (next.some((s) => s.id === current) ? current : next[0]?.id ?? ""));
+  }
+  useEffect(() => { refresh(); }, []);
+
+  const selected = students.find((student) => student.id === selectedId) ?? null;
+  const history = selected ? getLessonHistory().filter((item) => item.studentId === selected.id) : [];
+
+  function create() {
+    if (!name.trim()) return;
+    const student = createLocalStudent({ name, parentName, ageBand, level, photoDataUrl });
+    saveLocalStudent(student); setName(""); setParentName(""); setPhotoDataUrl(undefined); setCreating(false); refresh(student.id);
+  }
+
+  function patch(patchValue: Partial<LocalStudent>) {
+    if (!selected) return;
+    const next = updateLocalStudent(selected.id, patchValue);
+    if (next) refresh(next.id);
+  }
+
+  return <div className={styles.page}>
+    <header className={styles.hero}><div><span>ALUNOS</span><h1>Conheça a criança, não apenas a aula.</h1><p>Perfil, repetição, necessidades sensoriais, repertório e domínio ficam neste dispositivo.</p></div><button onClick={() => setCreating((v) => !v)}>+ Adicionar aluno</button></header>
+
+    {creating && <section className={styles.create}><label className={styles.photoPick}>{photoDataUrl ? <img src={photoDataUrl} alt="Pré-visualização local"/> : <span>+ Foto</span>}<input type="file" accept="image/*" onChange={async (e:any)=>{const file=e.target.files?.[0];if(file)setPhotoDataUrl(await imageFileToLocalAvatar(file));}}/></label><input value={name} onChange={(e: any) => setName(e.target.value)} placeholder="Nome ou identificação" autoFocus/><select value={ageBand} onChange={(e: any) => setAgeBand(e.target.value as AgeBand)}><option value="2-3">2–3 anos</option><option value="4-5">4–5 anos</option><option value="6-8">6–8 anos</option></select><select value={level} onChange={(e:any)=>setLevel(e.target.value as LocalStudent["level"])}><option value="iniciante">Iniciante</option><option value="em-progresso">Em progresso</option><option value="avancado">Avançado</option></select><input value={parentName} onChange={(e:any)=>setParentName(e.target.value)} placeholder="Encarregado (opcional)"/><button disabled={!name.trim()} onClick={create}>Guardar localmente</button></section>}
+
+    <div className={styles.layout}>
+      <aside className={styles.list}>{students.length ? students.map((student) => { const count=getLessonHistory().filter((item)=>item.studentId===student.id).length; return <button key={student.id} data-active={student.id === selectedId} onClick={() => setSelectedId(student.id)}><b>{student.name.slice(0,1).toUpperCase()}</b><span><strong>{student.name}</strong><small>{student.ageBand} anos · {count} {count===1?"aula registada":"aulas registadas"}</small></span></button> }) : <div className={styles.empty}>Ainda não há alunos neste dispositivo.</div>}</aside>
+
+      {selected && <section className={styles.profile}>
+        <div className={styles.profileHead}><div><span>{selected.ageBand} ANOS</span><h2>{selected.name}</h2>{selected.parentName&&<small>Encarregado: {selected.parentName}</small>}</div><select value={selected.level} onChange={(e: any) => patch({ level: e.target.value as LocalStudent["level"] })}><option value="iniciante">Iniciante</option><option value="em-progresso">Em progresso</option><option value="avancado">Avançado</option></select></div>
+
+        <ProgressGarden lessons={history.length} repertoire={selected.repertoire.length} />
+
+        <div className={styles.settings}>
+          <label><div><strong>Variações leves ao repetir</strong><small>Desligada por padrão para respeitar repetição consciente Suzuki.</small></div><input type="checkbox" checked={selected.repeatVariation} onChange={(e: any) => patch({ repeatVariation: e.target.checked })}/></label>
+          <label><div><strong>Reduzir estímulos</strong><small>Remove animações e simplifica a interface durante a aula.</small></div><input type="checkbox" checked={selected.reducedStimulus} onChange={(e: any) => patch({ reducedStimulus: e.target.checked })}/></label>
+        </div>
+
+        <div className={styles.sectionTitle}><div><span>DOMÍNIO REAL</span><h3>Competências observadas</h3></div><p>O Luwipi nunca sobe estes níveis sozinho.</p></div>
+        <div className={styles.competencies}>{(Object.keys(competencyLabels) as CompetencyId[]).map((id) => <div key={id}><strong>{competencyLabels[id]}</strong><span data-level={selected.competencies[id] ?? "none"}>{selected.competencies[id] ? masteryLabels[selected.competencies[id]!] : "Ainda sem avaliação"}</span></div>)}</div>
+
+        <div className={styles.sectionTitle}><div><span>REPERTÓRIO</span><h3>Músicas que já fazem parte da jornada</h3></div><p>{history.length} aulas guardadas localmente.</p></div>
+        <div className={styles.repertoire}>{selected.repertoire.length ? selected.repertoire.map((song) => <span key={song}>♪ {song}</span>) : <p>O repertório aparece aqui depois das aulas concluídas.</p>}</div>
+
+        <div className={styles.sectionTitle}><div><span>HISTÓRICO</span><h3>Últimas aulas e notas privadas</h3></div><p>Guardado apenas neste dispositivo.</p></div>
+        <div className={styles.history}>{history.length ? history.slice(0,6).map((item)=><article key={item.id}><div><strong>{item.lessonTitle}</strong><span>{new Date(item.completedAt).toLocaleDateString("pt-PT")}</span></div><small>{item.repertoire}</small>{item.note&&<p>{item.note}</p>}</article>) : <p>Ainda não há aulas concluídas.</p>}</div>
+      </section>}
+    </div>
+  </div>;
+}

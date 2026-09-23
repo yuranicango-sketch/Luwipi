@@ -1,199 +1,87 @@
 "use client";
 
-type SamplePoint = {
-  semitone: number;
-  url: string;
-};
-
-type PianoPlayOptions = {
-  gain?: number;
-  duration?: number;
-};
-
-type PercussionOptions = {
-  frequency?: number;
-  gain?: number;
-  duration?: number;
-};
-
-const BASE = "https://tonejs.github.io/audio/salamander/";
-const SAMPLE_POINTS: SamplePoint[] = [
-  { semitone: 0, url: `${BASE}C4.mp3` },
-  { semitone: 3, url: `${BASE}Ds4.mp3` },
-  { semitone: 6, url: `${BASE}Fs4.mp3` },
-  { semitone: 9, url: `${BASE}A4.mp3` },
-];
+type PianoPlayOptions = { gain?: number; duration?: number };
+type AudioWindow = Window & typeof globalThis & { webkitAudioContext?: typeof AudioContext };
 
 let audioContext: AudioContext | null = null;
-const bufferCache = new Map<string, Promise<AudioBuffer>>();
 
-type AudioWindow = Window &
-  typeof globalThis & {
-    webkitAudioContext?: typeof AudioContext;
-  };
-
-function getAudioContext() {
+function getContext() {
   if (audioContext) return audioContext;
-
-  const AudioContextCtor =
-    window.AudioContext ?? (window as AudioWindow).webkitAudioContext;
-
-  if (!AudioContextCtor) return null;
-  audioContext = new AudioContextCtor();
+  const Ctor = window.AudioContext ?? (window as AudioWindow).webkitAudioContext;
+  if (!Ctor) return null;
+  audioContext = new Ctor();
   return audioContext;
 }
 
 async function readyContext() {
-  const context = getAudioContext();
-  if (!context) return null;
-  if (context.state === "suspended") {
-    try {
-      await context.resume();
-    } catch {
-      return null;
-    }
+  const ctx = getContext();
+  if (!ctx) return null;
+  if (ctx.state === "suspended") {
+    try { await ctx.resume(); } catch { return null; }
   }
-  return context;
+  return ctx;
 }
 
-function loadBuffer(context: AudioContext, url: string) {
-  const cached = bufferCache.get(url);
-  if (cached) return cached;
+function pianoEnvelope(ctx: AudioContext, semitone: number, gainValue: number, duration: number) {
+  const now = ctx.currentTime;
+  const frequency = 261.625565 * Math.pow(2, semitone / 12);
+  const master = ctx.createGain();
+  const compressor = ctx.createDynamicsCompressor();
+  const lowpass = ctx.createBiquadFilter();
 
-  const promise = fetch(url, { cache: "force-cache", mode: "cors" })
-    .then((response) => {
-      if (!response.ok) {
-        throw new Error(`Unable to load piano sample: ${response.status}`);
-      }
-      return response.arrayBuffer();
-    })
-    .then((data) => context.decodeAudioData(data))
-    .catch((error) => {
-      bufferCache.delete(url);
-      throw error;
-    });
-
-  bufferCache.set(url, promise);
-  return promise;
-}
-
-function nearestSample(targetSemitone: number) {
-  return SAMPLE_POINTS.reduce((best, sample) =>
-    Math.abs(sample.semitone - targetSemitone) <
-    Math.abs(best.semitone - targetSemitone)
-      ? sample
-      : best,
-  );
-}
-
-function withTimeout<T>(promise: Promise<T>, milliseconds: number) {
-  return Promise.race<T>([
-    promise,
-    new Promise<T>((_, reject) =>
-      window.setTimeout(() => reject(new Error("audio_sample_timeout")), milliseconds),
-    ),
-  ]);
-}
-
-function playFallbackPiano(
-  context: AudioContext,
-  targetSemitone: number,
-  gainValue: number,
-  duration: number,
-) {
-  const now = context.currentTime;
-  const frequency = 261.625565 * Math.pow(2, targetSemitone / 12);
-  const master = context.createGain();
-  const compressor = context.createDynamicsCompressor();
+  lowpass.type = "lowpass";
+  lowpass.frequency.setValueAtTime(Math.min(5600, 2500 + frequency * 2), now);
+  lowpass.Q.setValueAtTime(0.7, now);
 
   master.gain.setValueAtTime(0.0001, now);
-  master.gain.exponentialRampToValueAtTime(Math.max(0.02, gainValue * 0.72), now + 0.008);
+  master.gain.exponentialRampToValueAtTime(Math.max(0.025, gainValue), now + 0.006);
+  master.gain.exponentialRampToValueAtTime(Math.max(0.012, gainValue * 0.36), now + Math.min(0.18, duration * 0.25));
   master.gain.exponentialRampToValueAtTime(0.0001, now + duration);
-  master.connect(compressor);
-  compressor.connect(context.destination);
+
+  master.connect(lowpass);
+  lowpass.connect(compressor);
+  compressor.connect(ctx.destination);
 
   const partials = [
-    { multiplier: 1, level: 1, type: "triangle" as OscillatorType },
-    { multiplier: 2, level: 0.24, type: "sine" as OscillatorType },
-    { multiplier: 3, level: 0.09, type: "sine" as OscillatorType },
+    { multiplier: 1, level: 1, type: "triangle" as OscillatorType, detune: 0 },
+    { multiplier: 2, level: 0.24, type: "sine" as OscillatorType, detune: -2 },
+    { multiplier: 3, level: 0.09, type: "sine" as OscillatorType, detune: 3 },
+    { multiplier: 4, level: 0.035, type: "sine" as OscillatorType, detune: -4 },
   ];
 
-  partials.forEach(({ multiplier, level, type }) => {
-    const oscillator = context.createOscillator();
-    const partialGain = context.createGain();
-    oscillator.type = type;
-    oscillator.frequency.setValueAtTime(frequency * multiplier, now);
-    partialGain.gain.setValueAtTime(level, now);
-    oscillator.connect(partialGain);
+  for (const partial of partials) {
+    const osc = ctx.createOscillator();
+    const partialGain = ctx.createGain();
+    osc.type = partial.type;
+    osc.frequency.setValueAtTime(frequency * partial.multiplier, now);
+    osc.detune.setValueAtTime(partial.detune, now);
+    partialGain.gain.setValueAtTime(partial.level, now);
+    partialGain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+    osc.connect(partialGain);
     partialGain.connect(master);
-    oscillator.start(now);
-    oscillator.stop(now + duration + 0.03);
-  });
-}
-
-export async function preloadPianoSamples() {
-  if (typeof window === "undefined") return;
-  const context = getAudioContext();
-  if (!context) return;
-
-  await Promise.allSettled(
-    SAMPLE_POINTS.map((sample) => loadBuffer(context, sample.url)),
-  );
-}
-
-export async function playPianoRate(
-  rate: number,
-  options: PianoPlayOptions = {},
-) {
-  if (typeof window === "undefined") return false;
-
-  const context = await readyContext();
-  if (!context) return false;
-
-  const targetSemitone = 12 * Math.log2(rate);
-  const sample = nearestSample(targetSemitone);
-  const gainValue = Math.max(0.04, Math.min(1, options.gain ?? 0.66));
-  const duration = Math.max(0.09, Math.min(2.4, options.duration ?? 1.35));
-
-  try {
-    const buffer = await withTimeout(loadBuffer(context, sample.url), 900);
-    const source = context.createBufferSource();
-    const gain = context.createGain();
-    const shift = targetSemitone - sample.semitone;
-    const now = context.currentTime;
-
-    source.buffer = buffer;
-    source.playbackRate.setValueAtTime(Math.pow(2, shift / 12), now);
-    gain.gain.setValueAtTime(gainValue, now);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
-    source.connect(gain);
-    gain.connect(context.destination);
-    source.start(now);
-    source.stop(now + duration + 0.06);
-    return true;
-  } catch {
-    playFallbackPiano(context, targetSemitone, gainValue, duration);
-    return true;
+    osc.start(now);
+    osc.stop(now + duration + 0.04);
   }
+
+  const noiseBuffer = ctx.createBuffer(1, Math.max(1, Math.floor(ctx.sampleRate * 0.025)), ctx.sampleRate);
+  const noise = noiseBuffer.getChannelData(0);
+  for (let i = 0; i < noise.length; i += 1) noise[i] = (Math.random() * 2 - 1) * (1 - i / noise.length);
+  const noiseSource = ctx.createBufferSource();
+  const noiseGain = ctx.createGain();
+  noiseSource.buffer = noiseBuffer;
+  noiseGain.gain.setValueAtTime(Math.max(0.002, gainValue * 0.055), now);
+  noiseGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.03);
+  noiseSource.connect(noiseGain);
+  noiseGain.connect(master);
+  noiseSource.start(now);
 }
 
-export async function playPercussionClick(options: PercussionOptions = {}) {
+export async function playPianoSemitone(semitone: number, options: PianoPlayOptions = {}) {
   if (typeof window === "undefined") return false;
-  const context = await readyContext();
-  if (!context) return false;
-
-  const now = context.currentTime;
-  const oscillator = context.createOscillator();
-  const gain = context.createGain();
-  const duration = Math.max(0.04, Math.min(0.3, options.duration ?? 0.09));
-
-  oscillator.type = "triangle";
-  oscillator.frequency.setValueAtTime(options.frequency ?? 145, now);
-  gain.gain.setValueAtTime(Math.max(0.02, Math.min(1, options.gain ?? 0.22)), now);
-  gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
-  oscillator.connect(gain);
-  gain.connect(context.destination);
-  oscillator.start(now);
-  oscillator.stop(now + duration + 0.02);
+  const ctx = await readyContext();
+  if (!ctx) return false;
+  const gainValue = Math.max(0.04, Math.min(0.8, options.gain ?? 0.44));
+  const duration = Math.max(0.22, Math.min(2.4, options.duration ?? 1.25));
+  pianoEnvelope(ctx, semitone, gainValue, duration);
   return true;
 }

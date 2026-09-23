@@ -1,3 +1,77 @@
-"use client";import Link from"next/link";import{useRouter,useSearchParams}from"next/navigation";import{Suspense,useState}from"react";import{Logo}from"@/components/logo";import styles from"./onboarding.module.css";const whatsapp="https://wa.me/244933400445?text=Ol%C3%A1%2C%20quero%20ativar%20o%20Luwipi.";type Age="2-4"|"5-8";
-function Picker(){const params=useSearchParams(),router=useRouter();const initial:Age|null=params.get("age")==="2-4"?"2-4":params.get("age")==="5-8"?"5-8":null;const[selected,setSelected]=useState<Age|null>(initial);function go(){if(!selected)return;localStorage.setItem("luwipi_age_group",selected);router.push(`/context?age=${selected}&next=${encodeURIComponent("/dashboard")}`)}return <><div className={styles.grid}><button className={`${styles.choice} ${selected==="2-4"?styles.selected:""}`} onClick={()=>setSelected("2-4")}><span className={styles.pick}>{selected==="2-4"?"✓ ESCOLHIDO":"ESCOLHER"}</span><b className={styles.age}>2–4</b><h2>Descoberta musical</h2><p>Para aprender através de som, movimento, histórias e primeiras experiências no teclado.</p><ul><li>Ouvido e ritmo</li><li>Coordenação e movimento</li><li>Primeiros padrões no piano</li></ul></button><button className={`${styles.choice} ${selected==="5-8"?styles.selected:""}`} onClick={()=>setSelected("5-8")}><span className={styles.pick}>{selected==="5-8"?"✓ ESCOLHIDO":"ESCOLHER"}</span><b className={styles.age}>5–9</b><h2>Piano estruturado</h2><p>Para construir leitura, técnica, coordenação e repertório com progressão clara.</p><ul><li>Aulas guiadas</li><li>Leitura e técnica</li><li>Repertório e performance</li></ul></button></div><div className={styles.continue}><div><small>3 DIAS GRÁTIS</small><strong>{selected?"Faixa escolhida. O currículo será ajustado automaticamente.":"Escolha uma faixa para continuar."}</strong></div><button className="btn btn-primary" disabled={!selected} onClick={go}>Começar experiência →</button></div></>}
-export default function OnboardingPage(){return <main className={styles.page}><header className="simple-header container"><Logo/><Link href="/">Início</Link></header><section className={"container "+styles.wrap}><div className={styles.intro}><span>PASSO 2 DE 2</span><h1>Em que fase está a criança?</h1><p>Esta escolha organiza o currículo, repertório e atividades mostrados ao professor.</p></div><Suspense fallback={<div className="loading-card">A preparar…</div>}><Picker/></Suspense><a className={styles.help} href={whatsapp} target="_blank" rel="noreferrer">Precisa de ajuda? Fale connosco · +244 933 400 445 →</a></section></main>}
+"use client";
+
+import { useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import { createLocalStudent, saveLocalStudent, type LocalStudent } from "@/lib/teacher-local-v2";
+import type { AgeBand } from "@/lib/suzuki-lessons";
+import { imageFileToLocalAvatar } from "@/lib/local-image";
+import styles from "./onboarding.module.css";
+
+const ages: { id: AgeBand; label: string; note: string }[] = [
+  { id: "2-3", label: "2–3", note: "Corpo, ouvido e descoberta" },
+  { id: "4-5", label: "4–5", note: "Imitação, padrões e primeiras músicas" },
+  { id: "6-8", label: "6–8", note: "Técnica, ouvido, leitura e repertório" },
+];
+
+const levels: { id: LocalStudent["level"]; label: string }[] = [
+  { id: "iniciante", label: "Está a começar" },
+  { id: "em-progresso", label: "Já teve algumas aulas" },
+  { id: "avancado", label: "Já toca repertório" },
+];
+
+export default function OnboardingPage() {
+  const router = useRouter();
+  const fileRef = useRef<HTMLInputElement | null>(null);
+  const [name, setName] = useState("");
+  const [ageBand, setAgeBand] = useState<AgeBand>("4-5");
+  const [level, setLevel] = useState<LocalStudent["level"]>("iniciante");
+  const [photoDataUrl, setPhotoDataUrl] = useState<string | undefined>();
+  const [photoBusy, setPhotoBusy] = useState(false);
+
+  async function choosePhoto(file?: File) {
+    if (!file) return;
+    setPhotoBusy(true);
+    try { setPhotoDataUrl(await imageFileToLocalAvatar(file)); }
+    finally { setPhotoBusy(false); }
+  }
+
+  function finish() {
+    if (!name.trim()) return;
+    const student = createLocalStudent({ name, ageBand, level, photoDataUrl });
+    saveLocalStudent(student);
+    router.push("/dashboard");
+  }
+
+  return <main className={styles.page}>
+    <section className={styles.card}>
+      <header>
+        <span>NOVO ALUNO · MENOS DE 30 SEGUNDOS</span>
+        <h1>Quem vai tocar hoje?</h1>
+        <p>O perfil fica neste dispositivo. Foto é opcional e nunca sai daqui por padrão.</p>
+      </header>
+
+      <div className={styles.identity}>
+        <button className={styles.photo} onClick={() => fileRef.current?.click()} aria-label="Adicionar foto opcional">
+          {photoDataUrl ? <img src={photoDataUrl} alt="Pré-visualização local do aluno" /> : <><b>+</b><small>{photoBusy ? "A preparar…" : "Foto opcional"}</small></>}
+        </button>
+        <input ref={fileRef} className={styles.hidden} type="file" accept="image/*" onChange={(event: any) => void choosePhoto(event.target.files?.[0])}/>
+        <label><span>Nome ou identificação</span><input autoFocus value={name} onChange={(event: any) => setName(event.target.value)} placeholder="Ex.: Sofia" /></label>
+      </div>
+
+      <div className={styles.section}>
+        <strong>Idade</strong>
+        <div className={styles.ageGrid}>{ages.map((age) => <button key={age.id} data-active={ageBand === age.id} onClick={() => setAgeBand(age.id)}><b>{age.label}</b><small>{age.note}</small></button>)}</div>
+      </div>
+
+      <div className={styles.section}>
+        <strong>Ponto de partida</strong>
+        <div className={styles.levelGrid}>{levels.map((item) => <button key={item.id} data-active={level === item.id} onClick={() => setLevel(item.id)}>{item.label}</button>)}</div>
+      </div>
+
+      <footer>
+        <div><b>🔒 Local por padrão</b><small>Ao trocar de tablet, exporte uma cópia em Privacidade e Dados.</small></div>
+        <button className={styles.primary} disabled={!name.trim() || photoBusy} onClick={finish}>Criar e preparar aula →</button>
+      </footer>
+    </section>
+  </main>;
+}

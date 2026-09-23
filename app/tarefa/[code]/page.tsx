@@ -1,1 +1,2 @@
-import Link from"next/link";import{Logo}from"@/components/logo";import{HomeworkExperience}from"@/components/homework-experience";export default async function HomeworkExperiencePage({params}:{params:Promise<{code:string}>}){const{code}=await params;return <main style={{minHeight:"100vh",background:"var(--canvas)",paddingBottom:60}}><header className="simple-header container"><Logo/><Link href="/tarefa">Outro código</Link></header><HomeworkExperience code={decodeURIComponent(code).toUpperCase()}/></main>}
+import { redirect } from "next/navigation";
+export default function LegacyHomeworkCodePage(){redirect("/casa")}
