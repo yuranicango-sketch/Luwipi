@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { OfflineRegister } from "@/components/offline-register";
+import { LocalLearningBootstrap } from "@/components/local-learning-bootstrap";
 import "./globals.css";
 
 const base = new URL(process.env.APP_URL || "https://luwipi.vercel.app");
@@ -21,5 +22,5 @@ export const viewport: Viewport = { themeColor: "#f5f8f6", width: "device-width"
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const url = process.env.SUPABASE_URL ?? "";
   const key = process.env.SUPABASE_PUBLISHABLE_KEY ?? "";
-  return <html lang="pt" data-supabase-url={url} data-supabase-key={key}><body><OfflineRegister />{children}</body></html>;
+  return <html lang="pt" data-supabase-url={url} data-supabase-key={key}><body><OfflineRegister /><LocalLearningBootstrap />{children}</body></html>;
 }

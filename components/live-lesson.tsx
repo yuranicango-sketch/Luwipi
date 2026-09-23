@@ -6,6 +6,7 @@ import { competencyLabels, fallbackBlocks, lessonTemplates, wildcardActivities, 
 import { clearActiveLesson, getActiveLesson, getLocalStudent, getStudentHistory, saveActiveLesson, saveLessonHistory, updateStudentMastery, type ActiveLesson } from "@/lib/teacher-local-v2";
 import { VirtualPiano } from "@/components/virtual-piano";
 import { LessonGuide } from "@/components/lesson-guide";
+import { LessonActivityVisual } from "@/components/lesson-activity-visual";
 import styles from "./live-lesson.module.css";
 
 const masteryLevels: { id: MasteryLevel; label: string }[] = [
@@ -48,10 +49,22 @@ export function LiveLesson() {
   const [mastery, setMastery] = useState<Partial<Record<CompetencyId, MasteryLevel>>>({});
   const [copied, setCopied] = useState(false);
   const [minutes, setMinutes] = useState(0);
+  const [online, setOnline] = useState(true);
 
   useEffect(() => {
+    setOnline(typeof navigator === "undefined" ? true : navigator.onLine);
+    const onOnline = () => setOnline(true);
+    const onOffline = () => setOnline(false);
+    window.addEventListener("online", onOnline);
+    window.addEventListener("offline", onOffline);
+
     const active = getActiveLesson();
-    if (!active) { router.replace("/dashboard"); return; }
+    if (!active) {
+      window.removeEventListener("online", onOnline);
+      window.removeEventListener("offline", onOffline);
+      router.replace("/dashboard");
+      return;
+    }
     const normalized: ActiveLesson = {
       ...active,
       instrumentMode: active.instrumentMode ?? "physical",
@@ -61,6 +74,10 @@ export function LiveLesson() {
     setSession(normalized);
     setIndex(Math.min(normalized.currentBlockIndex, normalized.blocks.length - 1));
     setMinutes(elapsedMinutes(normalized.startedAt));
+    return () => {
+      window.removeEventListener("online", onOnline);
+      window.removeEventListener("offline", onOffline);
+    };
   }, [router]);
 
   useEffect(() => {
@@ -159,13 +176,14 @@ export function LiveLesson() {
     <header className={styles.topbar}>
       <div><strong>{currentSession.studentName}</strong><span>{currentSession.lessonTitle}{currentSession.variationApplied ? " · variação leve" : ""}</span></div>
       <div className={styles.progress} aria-label={`Bloco ${index + 1} de ${currentSession.blocks.length}`}>{currentSession.blocks.map((item, i) => <span key={`${item.id}-${i}`} data-active={i === index} data-done={i < index} />)}</div>
-      <div className={styles.topActions}><span>{minutes} min</span><button onClick={() => { saveActiveLesson({ ...currentSession, currentBlockIndex: index }); router.push("/dashboard"); }}>Guardar e sair</button></div>
+      <div className={styles.topActions}>{!online && <b className={styles.offline}>offline · aula local</b>}<span>{minutes} min</span><button onClick={() => { saveActiveLesson({ ...currentSession, currentBlockIndex: index }); router.push("/dashboard"); }}>Guardar e sair</button></div>
     </header>
 
     <section className={`${styles.stage} ${block.screenMode === "off" ? styles.screenOff : block.screenMode === "minimal" ? styles.screenMinimal : styles.screenVisual}`}>
       <div className={styles.stageMeta}><span>{kindLabels[block.kind]}</span><b>{block.minutes} min</b></div>
       {block.screenMode === "off" && currentSession.instrumentMode === "physical" && <div className={styles.lookAway}>↑<span>Agora olhe para a criança, não para o ecrã.</span></div>}
       {!(block.screenMode === "off" && currentSession.instrumentMode === "physical") && <LessonGuide ageBand={currentSession.ageBand} kind={block.kind} reduced={student?.reducedStimulus} />}
+      <LessonActivityVisual block={block} ageBand={currentSession.ageBand} reduced={student?.reducedStimulus} />
       <h1>{block.title}</h1>
       <p className={styles.childCue}>{displayed.childCue}</p>
       <div className={styles.teacherCue}><span>PARA O PROFESSOR{currentSession.instrumentMode === "silent" ? " · ADAPTAÇÃO SILENCIOSA" : ""}</span><p>{displayed.teacherCue}</p><small>Objetivo: {block.objective}</small></div>
