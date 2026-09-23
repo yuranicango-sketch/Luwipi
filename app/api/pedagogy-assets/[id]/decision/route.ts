@@ -5,9 +5,13 @@ import { createHash } from "crypto";
 import sharp from "sharp";
 
 async function allowed(){
- const s=await createServerSupabaseClient(); const {data:{user}}=await s.auth.getUser();
- if(!user)return false; const a=createAdminSupabaseClient(); if(!a)return false;
- const {data}=await a.from("profiles").select("role").eq("id",user.id).maybeSingle(); return data?.role==="admin";
+ const s=await createServerSupabaseClient();
+ const {data:{user}}=await s.auth.getUser();
+ if(!user)return false;
+ const a=createAdminSupabaseClient();
+ const db=a??s;
+ const {data}=await db.from("profiles").select("role").eq("id",user.id).maybeSingle();
+ return data?.role==="admin";
 }
 async function resolveImageSource(url:string){
  const first=await fetch(url,{redirect:"follow",signal:AbortSignal.timeout(12000),headers:{"user-agent":"Mozilla/5.0 Luwipi/1.0"}});
@@ -33,8 +37,9 @@ async function optimize(raw:Buffer,contentType:string){
  return {buffer,type:"image/webp",ext:"webp",width:meta.width??null,height:meta.height??null};
 }
 export async function POST(req:NextRequest,{params}:{params:Promise<{id:string}>}){
- if(!await allowed())return NextResponse.json({error:"Não autorizado"},{status:401});
- const {id}=await params; const {decision}=await req.json(); const admin=createAdminSupabaseClient()!;
+ if(!await allowed())return NextResponse.json({error:"Não autorizado"},{status:403});
+ const {id}=await params; const {decision}=await req.json(); const admin=createAdminSupabaseClient();
+ if(!admin)return NextResponse.json({error:"Configuração administrativa indisponível"},{status:503});
  if(decision==="rejected"){
   const {error}=await admin.from("pedagogy_assets").update({status:"rejected",updated_at:new Date().toISOString()}).eq("id",id);
   return error?NextResponse.json({error:error.message},{status:400}):NextResponse.json({ok:true});
