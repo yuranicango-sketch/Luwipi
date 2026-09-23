@@ -3,9 +3,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { competencyLabels, fallbackBlocks, lessonTemplates, wildcardActivities, type CompetencyId, type LessonBlock, type MasteryLevel } from "@/lib/suzuki-lessons";
-import { clearActiveLesson, getActiveLesson, getLocalStudent, getStudentHistory, saveActiveLesson, saveLessonHistory, updateStudentMastery, type ActiveLesson } from "@/lib/teacher-local-v2";
+import { clearActiveLesson, getActiveLesson, getLocalStudent, getStudentHistory, saveActiveLesson, saveLessonHistory, updateStudentMastery, type ActiveLesson, type LocalStudent } from "@/lib/teacher-store";
 import { VirtualPiano } from "@/components/virtual-piano";
 import { LessonGuide } from "@/components/lesson-guide";
+import { LessonExperience } from "@/components/lesson-experience";
 import styles from "./live-lesson.module.css";
 
 const masteryLevels: { id: MasteryLevel; label: string }[] = [
@@ -36,9 +37,15 @@ function elapsedMinutes(startedAt: string) {
   return Math.max(0, Math.floor((Date.now() - new Date(startedAt).getTime()) / 60000));
 }
 
+function overlap(a: LessonBlock, b: LessonBlock) {
+  return a.competencies.filter((id) => b.competencies.includes(id)).length;
+}
+
 export function LiveLesson() {
   const router = useRouter();
   const [session, setSession] = useState<ActiveLesson | null>(null);
+  const [student, setStudent] = useState<LocalStudent | null>(null);
+  const [historyCount, setHistoryCount] = useState(0);
   const [index, setIndex] = useState(0);
   const [pause, setPause] = useState(false);
   const [wildcard, setWildcard] = useState(false);
@@ -48,8 +55,12 @@ export function LiveLesson() {
   const [mastery, setMastery] = useState<Partial<Record<CompetencyId, MasteryLevel>>>({});
   const [copied, setCopied] = useState(false);
   const [minutes, setMinutes] = useState(0);
+  const [online, setOnline] = useState(true);
+  const [savedOffline, setSavedOffline] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
+    router.prefetch("/dashboard");
     const active = getActiveLesson();
     if (!active) { router.replace("/dashboard"); return; }
     const normalized: ActiveLesson = {
@@ -61,7 +72,20 @@ export function LiveLesson() {
     setSession(normalized);
     setIndex(Math.min(normalized.currentBlockIndex, normalized.blocks.length - 1));
     setMinutes(elapsedMinutes(normalized.startedAt));
+    setOnline(navigator.onLine);
+    void Promise.all([getLocalStudent(normalized.studentId), getStudentHistory(normalized.studentId)]).then(([nextStudent, history]) => {
+      setStudent(nextStudent);
+      setHistoryCount(history.length);
+    });
   }, [router]);
+
+  useEffect(() => {
+    const on = () => setOnline(true);
+    const off = () => setOnline(false);
+    window.addEventListener("online", on);
+    window.addEventListener("offline", off);
+    return () => { window.removeEventListener("online", on); window.removeEventListener("offline", off); };
+  }, []);
 
   useEffect(() => {
     if (!session) return;
@@ -70,7 +94,6 @@ export function LiveLesson() {
   }, [session]);
 
   const block = session?.blocks[index] ?? null;
-  const student = session ? getLocalStudent(session.studentId) : null;
   const focusCompetencies = useMemo(() => session ? Array.from(new Set(session.blocks.flatMap((item) => item.competencies))).slice(0, 5) : [], [session]);
 
   if (!session || !block) return <main className={styles.loading}>A preparar a aula…</main>;
@@ -89,7 +112,7 @@ export function LiveLesson() {
   }
 
   function replaceBlock(replacement: LessonBlock) {
-    const next = { ...currentSession, blocks: currentSession.blocks.map((item, i) => i === index ? replacement : item) };
+    const next = { ...currentSession, blocks: currentSession.blocks.map((item, itemIndex) => itemIndex === index ? replacement : item) };
     persist(next);
     setSwap(false);
   }
@@ -110,7 +133,6 @@ export function LiveLesson() {
 
   const movement = currentSession.blocks.find((item) => item.kind === "movement");
   const piano = currentSession.blocks.find((item) => item.kind === "piano");
-  const historyCount = getStudentHistory(currentSession.studentId).length;
   const homePractice = [
     `🎧 Ouvir: ${currentSession.repertoire}`,
     movement ? `👐 Corpo: ${movement.title} por 1–2 minutos` : "👐 Corpo: repetir uma brincadeira curta da aula",
@@ -119,25 +141,35 @@ export function LiveLesson() {
   const parentSummary = `Hoje ${currentSession.studentName} trabalhou ${currentSession.lessonTitle} e saiu da aula com “${currentSession.repertoire}” como referência musical. 🌱`;
   const shareText = `${parentSummary}\n\nAté à próxima aula:\n${homePractice.join("\n")}\n\nPouco tempo, sem pressão. Pare enquanto ainda está agradável.`;
 
-  function finishLesson() {
-    saveLessonHistory({
-      id: currentSession.id,
-      studentId: currentSession.studentId,
-      lessonId: currentSession.lessonId,
-      lessonTitle: currentSession.lessonTitle,
-      repertoire: currentSession.repertoire,
-      state: currentSession.state,
-      instrumentMode: currentSession.instrumentMode,
-      startedAt: currentSession.startedAt,
-      completedAt: new Date().toISOString(),
-      competencies: mastery,
-      note: note.trim() || undefined,
-      parentSummary,
-      homePractice,
-    });
-    updateStudentMastery(currentSession.studentId, mastery, currentSession.repertoire);
-    clearActiveLesson();
-    router.push("/dashboard");
+  async function finishLesson() {
+    if (saving) return;
+    setSaving(true);
+    try {
+      await saveLessonHistory({
+        id: currentSession.id,
+        studentId: currentSession.studentId,
+        lessonId: currentSession.lessonId,
+        lessonTitle: currentSession.lessonTitle,
+        repertoire: currentSession.repertoire,
+        state: currentSession.state,
+        instrumentMode: currentSession.instrumentMode,
+        startedAt: currentSession.startedAt,
+        completedAt: new Date().toISOString(),
+        competencies: mastery,
+        note: note.trim() || undefined,
+        parentSummary,
+        homePractice,
+      });
+      await updateStudentMastery(currentSession.studentId, mastery, currentSession.repertoire);
+      clearActiveLesson();
+      if (navigator.onLine) router.push("/dashboard");
+      else {
+        setSavedOffline(true);
+        setHistoryCount((count) => count + 1);
+      }
+    } finally {
+      setSaving(false);
+    }
   }
 
   if (finished) return <main className={styles.finishPage}>
@@ -145,21 +177,31 @@ export function LiveLesson() {
       <span className={styles.kicker}>AULA CONCLUÍDA</span>
       <h1>Termine simples. Registe só o que observou.</h1>
       <p>Concluir uma atividade não altera domínio automaticamente. A observação do professor continua a ser a fonte da verdade.</p>
-      <div className={styles.garden}><span>🌱</span><div><strong>O jardim de {currentSession.studentName} cresce, nunca murcha.</strong><small>Esta será a aula {historyCount + 1} guardada neste dispositivo. Sem streaks e sem punição por faltas.</small></div></div>
+      {!online && <div className={styles.offlineBanner}><strong>Sem internet.</strong><span>A aula continua a guardar neste dispositivo.</span></div>}
+      {savedOffline && <div className={styles.savedOffline}><strong>Guardado no dispositivo ✓</strong><span>Pode continuar offline. “Hoje” foi pré-carregado enquanto havia rede.</span></div>}
+      <div className={styles.garden}><span>🌱</span><div><strong>O jardim de {currentSession.studentName} cresce, nunca murcha.</strong><small>Esta será a aula {historyCount + (savedOffline ? 0 : 1)} guardada neste dispositivo. Sem streaks e sem punição por faltas.</small></div></div>
       <div className={styles.masteryGrid}>{focusCompetencies.map((id) => <div key={id} className={styles.masteryRow}><strong>{competencyLabels[id]}</strong><div>{masteryLevels.map((level) => <button key={level.id} data-active={mastery[id] === level.id} onClick={() => setMastery((current) => ({ ...current, [id]: level.id }))}>{level.label}</button>)}</div></div>)}</div>
-      <label className={styles.notes}><span>Nota privada do professor</span><textarea value={note} onChange={(event: { target: { value: string } }) => setNote(event.target.value)} placeholder="Uma observação concreta para a próxima aula…" /></label>
+      <label className={styles.notes}><span>Nota privada do professor</span><textarea value={note} onChange={(event) => setNote(event.target.value)} placeholder="Uma observação concreta para a próxima aula…" /></label>
       <div className={styles.homeCard}><span>PARA QUEM ACOMPANHA</span><strong>{currentSession.repertoire}</strong><p>{parentSummary}</p><div className={styles.homeList}>{homePractice.map((item) => <div key={item}>{item}</div>)}</div><small>Pouco tempo, sem pressão. Pare enquanto ainda está agradável.</small><button onClick={async () => { await navigator.clipboard?.writeText(shareText); setCopied(true); }}>{copied ? "Copiado ✓" : "Copiar resumo + prática"}</button></div>
-      <div className={styles.finishActions}><button onClick={() => setFinished(false)}>Voltar à aula</button><button className={styles.primary} onClick={finishLesson}>Guardar e fechar</button></div>
+      <div className={styles.finishActions}>{!savedOffline && <button onClick={() => setFinished(false)}>Voltar à aula</button>}{savedOffline ? <button className={styles.primary} onClick={() => router.push("/dashboard")}>Ir para Hoje →</button> : <button className={styles.primary} disabled={saving} onClick={() => void finishLesson()}>{saving ? "A guardar…" : "Guardar e fechar"}</button>}</div>
     </section>
   </main>;
 
-  const swapOptions = [...lessonTemplates.filter((lesson) => lesson.ageBand === currentSession.ageBand).flatMap((lesson) => lesson.blocks).filter((item) => item.kind === block.kind && item.id !== block.id), ...(fallbackBlocks[block.kind] ?? [])].filter((item, itemIndex, all) => all.findIndex((candidate) => candidate.title === item.title) === itemIndex).slice(0, 5);
+  const swapOptions = [
+    ...lessonTemplates.filter((lesson) => lesson.ageBand === currentSession.ageBand).flatMap((lesson) => lesson.blocks).filter((item) => item.kind === block.kind && item.id !== block.id),
+    ...(fallbackBlocks[block.kind] ?? []),
+  ]
+    .filter((item, itemIndex, all) => all.findIndex((candidate) => candidate.title === item.title) === itemIndex)
+    .sort((a, b) => (overlap(block, b) * 3 + Number(b.screenMode === block.screenMode)) - (overlap(block, a) * 3 + Number(a.screenMode === block.screenMode)))
+    .slice(0, 5);
+
+  const showExperience = block.screenMode !== "off" && block.kind !== "piano";
 
   return <main className={`${styles.lesson} ${student?.reducedStimulus ? styles.reduced : ""}`} data-age={currentSession.ageBand}>
     <header className={styles.topbar}>
       <div><strong>{currentSession.studentName}</strong><span>{currentSession.lessonTitle}{currentSession.variationApplied ? " · variação leve" : ""}</span></div>
-      <div className={styles.progress} aria-label={`Bloco ${index + 1} de ${currentSession.blocks.length}`}>{currentSession.blocks.map((item, i) => <span key={`${item.id}-${i}`} data-active={i === index} data-done={i < index} />)}</div>
-      <div className={styles.topActions}><span>{minutes} min</span><button onClick={() => { saveActiveLesson({ ...currentSession, currentBlockIndex: index }); router.push("/dashboard"); }}>Guardar e sair</button></div>
+      <div className={styles.progress} aria-label={`Bloco ${index + 1} de ${currentSession.blocks.length}`}>{currentSession.blocks.map((item, itemIndex) => <span key={`${item.id}-${itemIndex}`} data-active={itemIndex === index} data-done={itemIndex < index} />)}</div>
+      <div className={styles.topActions}><span className={online ? styles.online : styles.offline}>{online ? "online" : "offline · aula local"}</span><span>{minutes} min</span><button onClick={() => { saveActiveLesson({ ...currentSession, currentBlockIndex: index }); router.push("/dashboard"); }}>Guardar e sair</button></div>
     </header>
 
     <section className={`${styles.stage} ${block.screenMode === "off" ? styles.screenOff : block.screenMode === "minimal" ? styles.screenMinimal : styles.screenVisual}`}>
@@ -167,6 +209,7 @@ export function LiveLesson() {
       {block.screenMode === "off" && currentSession.instrumentMode === "physical" && <div className={styles.lookAway}>↑<span>Agora olhe para a criança, não para o ecrã.</span></div>}
       {!(block.screenMode === "off" && currentSession.instrumentMode === "physical") && <LessonGuide ageBand={currentSession.ageBand} kind={block.kind} reduced={student?.reducedStimulus} />}
       <h1>{block.title}</h1>
+      {showExperience && <LessonExperience block={block} ageBand={currentSession.ageBand} silent={currentSession.instrumentMode === "silent"} />}
       <p className={styles.childCue}>{displayed.childCue}</p>
       <div className={styles.teacherCue}><span>PARA O PROFESSOR{currentSession.instrumentMode === "silent" ? " · ADAPTAÇÃO SILENCIOSA" : ""}</span><p>{displayed.teacherCue}</p><small>Objetivo: {block.objective}</small></div>
       {block.parentCue && <div className={styles.parentCue}><span>👨‍👩‍👧 PARA QUEM ACOMPANHA</span><p>{block.parentCue}</p></div>}
@@ -180,7 +223,7 @@ export function LiveLesson() {
       <button className={styles.next} onClick={next}>{index === currentSession.blocks.length - 1 ? "Fechar aula" : "Próximo →"}</button>
     </footer>
 
-    {swap && <div className={styles.overlay}><section className={styles.sheet}><button className={styles.close} onClick={() => setSwap(false)}>×</button><span>TROCAR SÓ ESTE BLOCO</span><h2>Mesmo objetivo, outra forma.</h2><p>O restante da aula não muda.</p><div className={styles.choices}>{swapOptions.map((item) => <button key={item.id} onClick={() => replaceBlock(item)}><strong>{item.title}</strong><small>{item.minutes} min · {item.objective}</small></button>)}</div></section></div>}
+    {swap && <div className={styles.overlay}><section className={styles.sheet}><button className={styles.close} onClick={() => setSwap(false)}>×</button><span>TROCAR SÓ ESTE BLOCO</span><h2>Mesmo objetivo, outra forma.</h2><p>As primeiras opções preservam mais competências e modalidade do bloco atual.</p><div className={styles.choices}>{swapOptions.map((item) => <button key={item.id} onClick={() => replaceBlock(item)}><strong>{item.title}</strong><small>{item.minutes} min · {item.objective}</small></button>)}</div></section></div>}
 
     {wildcard && <div className={styles.overlay}><section className={styles.sheet}><button className={styles.close} onClick={() => setWildcard(false)}>×</button><span>CORINGA · 60–90 SEGUNDOS</span><h2>Quebre o fluxo sem transformar isso numa recompensa.</h2><p>Use para tédio, perda de foco ou pequena falha técnica. Depois volte à aula.</p><div className={styles.choices}>{wildcardActivities[currentSession.ageBand].map((item) => <button key={item.id} onClick={() => chooseWildcard(item)}><strong>{item.title}</strong><small>{item.teacherCue}</small></button>)}</div></section></div>}
 

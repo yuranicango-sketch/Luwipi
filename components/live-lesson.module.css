@@ -13,3 +13,5 @@
 .lesson[data-age="6-8"] .stage{max-width:980px}
 .lesson[data-age="6-8"] .stage h1{font-size:clamp(40px,6vw,68px)}
 .lesson[data-age="6-8"] .childCue{font-size:clamp(18px,2.5vw,26px)}
+
+.online,.offline{font-size:9px!important;font-weight:950!important;letter-spacing:.06em;text-transform:uppercase}.online{color:#4f7567!important}.offline{color:#9a6a28!important}.offlineBanner,.savedOffline{display:flex;align-items:center;gap:8px;border-radius:14px;padding:11px 13px;margin:14px 0;font-size:11px}.offlineBanner{background:#fff7e7;color:#765d2f}.savedOffline{background:#edf7f1;color:#315e4e}.offlineBanner span,.savedOffline span{font-size:10px}
