@@ -1,0 +1,20 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "CommonJS",
+    "moduleResolution": "Node",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "types": ["node"],
+    "outDir": ".test-build",
+    "rootDir": "."
+  },
+  "include": [
+    "lib/suzuki-lessons.ts",
+    "lib/repertoire.ts",
+    "lib/lesson-path.ts",
+    "lib/lesson-recommender.ts",
+    "tests/**/*.test.ts"
+  ]
+}
