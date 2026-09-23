@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { applySafeRepeatVariation, competencyLabels, lessonTemplates, stateLabel, totalMinutes, type AgeBand, type StudentState } from "@/lib/suzuki-lessons";
-import { clearActiveLesson, createLocalStudent, getActiveLesson, getLessonHistory, getLocalStudents, saveActiveLesson, saveLocalStudent, updateLocalStudent, type ActiveLesson, type LocalStudent } from "@/lib/teacher-local-v2";
+import { clearActiveLesson, createLocalStudent, getActiveLesson, getLessonHistory, getLocalStudents, saveActiveLesson, saveLocalStudent, updateLocalStudent, type ActiveLesson, type LessonHistory, type LocalStudent } from "@/lib/teacher-local-v2";
 import { recommendLessons } from "@/lib/lesson-recommender";
 import { lessonPathMeta } from "@/lib/lesson-path";
 import styles from "./lesson-prep.module.css";
@@ -25,50 +25,53 @@ export function LessonPrep() {
   const [showCreate, setShowCreate] = useState(false);
   const [showPreferences, setShowPreferences] = useState(false);
   const [active, setActive] = useState<ActiveLesson | null>(null);
+  const [history, setHistory] = useState<LessonHistory[]>([]);
   const [name, setName] = useState("");
   const [parentName, setParentName] = useState("");
   const [ageBand, setAgeBand] = useState<AgeBand>("4-5");
   const [level, setLevel] = useState<LocalStudent["level"]>("iniciante");
 
   useEffect(() => {
-    const local = getLocalStudents();
-    setStudents(local);
-    if (local[0]) setStudentId(local[0].id);
-    else router.replace("/onboarding");
-    setActive(getActiveLesson());
-  }, []);
+    void Promise.all([getLocalStudents(), getLessonHistory()]).then(([local, nextHistory]) => {
+      setStudents(local);
+      setHistory(nextHistory);
+      if (local[0]) setStudentId(local[0].id);
+      else router.replace("/onboarding");
+      setActive(getActiveLesson());
+    });
+  }, [router]);
 
   const student = students.find((item) => item.id === studentId) ?? null;
-  const recommendations = useMemo(() => student ? recommendLessons(student, state, getLessonHistory()) : [], [student, state]);
+  const recommendations = useMemo(() => student ? recommendLessons(student, state, history) : [], [student, state, history]);
   const selectedRecommendation = recommendations.find((item) => item.lesson.id === selectedLessonId) ?? recommendations[0] ?? null;
   const suggested = selectedRecommendation?.lesson ?? null;
   const candidates = recommendations.map((item) => item.lesson);
-  const lessonUses = student && suggested ? getLessonHistory().filter((item) => item.studentId === student.id && item.lessonId === suggested.id).length : 0;
+  const lessonUses = student && suggested ? history.filter((item) => item.studentId === student.id && item.lessonId === suggested.id).length : 0;
   const pathMeta = suggested ? lessonPathMeta(suggested.id) : null;
   const nextLessonTitles = pathMeta?.next.map((id) => lessonTemplates.find((lesson) => lesson.id === id)?.title).filter(Boolean) as string[] | undefined;
 
   useEffect(() => { setSelectedLessonId(""); }, [studentId, state]);
 
-  function createStudent() {
+  async function createStudent() {
     if (!name.trim()) return;
     const created = createLocalStudent({ name, parentName, ageBand, level });
-    saveLocalStudent(created);
+    await saveLocalStudent(created);
     const next = [created, ...students];
     setStudents(next);
     setStudentId(created.id);
     setName(""); setParentName(""); setShowCreate(false);
   }
 
-  function setPreference(patch: Partial<LocalStudent>) {
+  async function setPreference(patch: Partial<LocalStudent>) {
     if (!student) return;
-    const updated = updateLocalStudent(student.id, patch);
+    const updated = await updateLocalStudent(student.id, patch);
     if (!updated) return;
     setStudents((current) => current.map((item) => item.id === updated.id ? updated : item));
   }
 
   function startLesson() {
     if (!student || !suggested) return;
-    const repeated = getLessonHistory().filter((item) => item.studentId === student.id && item.lessonId === suggested.id).length;
+    const repeated = history.filter((item) => item.studentId === student.id && item.lessonId === suggested.id).length;
     const variation = student.repeatVariation ? applySafeRepeatVariation(suggested.blocks, repeated) : { blocks: suggested.blocks, applied: false };
     saveActiveLesson({
       id: typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : `lesson-${Date.now()}`,
@@ -105,7 +108,7 @@ export function LessonPrep() {
       <select value={ageBand} onChange={(event: any) => setAgeBand(event.target.value as AgeBand)}><option value="2-3">2–3 anos</option><option value="4-5">4–5 anos</option><option value="6-8">6–8 anos</option></select>
       <select value={level} onChange={(event: any) => setLevel(event.target.value as LocalStudent["level"])}><option value="iniciante">Iniciante</option><option value="em-progresso">Em progresso</option><option value="avancado">Avançado</option></select>
       <input value={parentName} onChange={(event: any) => setParentName(event.target.value)} placeholder="Encarregado (opcional)" />
-      <button onClick={createStudent} disabled={!name.trim()}>Adicionar</button>
+      <button onClick={() => void createStudent()} disabled={!name.trim()}>Adicionar</button>
     </section>}
 
     {students.length > 0 && <>
@@ -114,8 +117,8 @@ export function LessonPrep() {
         <div className={styles.students}>{students.map((item) => <button key={item.id} onClick={() => { setStudentId(item.id); setShowPreferences(false); }} data-active={item.id === studentId}><span className={styles.avatar}>{item.photoDataUrl ? <img src={item.photoDataUrl} alt="" /> : item.name.slice(0, 1).toUpperCase()}</span><span><strong>{item.name}</strong><small>{item.ageBand} anos · {item.level.replace("-", " ")}</small></span></button>)}</div>
         {student && <div className={styles.studentMeta}><span>{student.repeatVariation ? "Variação leve ligada" : "Repetição consciente"}</span><span>{student.reducedStimulus ? "Estímulos reduzidos" : "Estímulos normais"}</span>{student.currentRepertoire?.pieceTitle && <span>♪ {student.currentRepertoire.pieceTitle}</span>}<button onClick={() => setShowPreferences((value) => !value)}>Preferências</button></div>}
         {student && showPreferences && <div className={styles.preferences}>
-          <label><div><strong>Variações leves ao repetir</strong><small>Desligado = repetir a mesma estrutura. Ligado = o sistema muda apenas uma ação segura, sem trocar o objetivo.</small></div><input type="checkbox" checked={student.repeatVariation} onChange={(event: any) => setPreference({ repeatVariation: event.target.checked })} /></label>
-          <label><div><strong>Reduzir estímulos e animações</strong><small>Para crianças que beneficiam de uma interface mais calma.</small></div><input type="checkbox" checked={student.reducedStimulus} onChange={(event: any) => setPreference({ reducedStimulus: event.target.checked })} /></label>
+          <label><div><strong>Variações leves ao repetir</strong><small>Desligado = repetir a mesma estrutura. Ligado = o sistema muda apenas uma ação segura, sem trocar o objetivo.</small></div><input type="checkbox" checked={student.repeatVariation} onChange={(event: any) => void setPreference({ repeatVariation: event.target.checked })} /></label>
+          <label><div><strong>Reduzir estímulos e animações</strong><small>Para crianças que beneficiam de uma interface mais calma.</small></div><input type="checkbox" checked={student.reducedStimulus} onChange={(event: any) => void setPreference({ reducedStimulus: event.target.checked })} /></label>
         </div>}
         </div>
       </section>
