@@ -1,3 +1,4 @@
+import { idbClear, idbDelete, idbGet, idbSet } from "@/lib/local-db";
 import type { AgeBand, CompetencyId, LessonBlock, MasteryLevel, StudentState } from "@/lib/suzuki-lessons";
 
 export type RepertoireStatus = "listening" | "learning" | "review";
@@ -80,7 +81,12 @@ function read<T>(key: string, fallback: T): T {
 
 function write<T>(key: string, value: T) {
   if (typeof window === "undefined") return;
-  window.localStorage.setItem(key, JSON.stringify(value));
+  try {
+    window.localStorage.setItem(key, JSON.stringify(value));
+  } catch {
+    // IndexedDB below remains the durable local fallback when localStorage is full.
+  }
+  void idbSet(key, value);
 }
 
 function normalizeStudent(student: LocalStudent): LocalStudent {
@@ -143,7 +149,10 @@ export function createLocalStudent(input: Pick<LocalStudent, "name" | "ageBand" 
 
 export function saveActiveLesson(session: ActiveLesson) { write(ACTIVE, session); }
 export function getActiveLesson() { return read<ActiveLesson | null>(ACTIVE, null); }
-export function clearActiveLesson() { if (typeof window !== "undefined") window.localStorage.removeItem(ACTIVE); }
+export function clearActiveLesson() {
+  if (typeof window !== "undefined") window.localStorage.removeItem(ACTIVE);
+  void idbDelete(ACTIVE);
+}
 
 export function getLessonHistory() { return read<LessonHistory[]>(HISTORY, []); }
 export function getStudentHistory(studentId: string) { return getLessonHistory().filter((entry) => entry.studentId === studentId); }
@@ -195,11 +204,38 @@ export function importLocalBackup(input: unknown) {
   return { students: backup.students.length, history: backup.history.length };
 }
 
+export async function hydrateLocalLearningMirror() {
+  if (typeof window === "undefined") return { restored: 0 };
+  let restored = 0;
+  for (const key of [STUDENTS, ACTIVE, HISTORY] as const) {
+    const current = window.localStorage.getItem(key);
+    if (current) {
+      try { await idbSet(key, JSON.parse(current)); } catch { /* keep localStorage as source */ }
+      continue;
+    }
+    const durable = await idbGet<unknown>(key);
+    if (durable === null) continue;
+    try {
+      window.localStorage.setItem(key, JSON.stringify(durable));
+      restored += 1;
+    } catch {
+      // If storage is unavailable, IndexedDB still retains the durable copy.
+    }
+  }
+  if (restored) {
+    window.dispatchEvent(new Event("luwipi:v2:students"));
+    window.dispatchEvent(new Event("luwipi:v2:history"));
+    window.dispatchEvent(new Event("luwipi:v2:hydrated"));
+  }
+  return { restored };
+}
+
 export function clearAllLocalLearningData() {
   if (typeof window === "undefined") return;
   window.localStorage.removeItem(STUDENTS);
   window.localStorage.removeItem(ACTIVE);
   window.localStorage.removeItem(HISTORY);
+  void idbClear();
   window.dispatchEvent(new Event("luwipi:v2:students"));
   window.dispatchEvent(new Event("luwipi:v2:history"));
 }
