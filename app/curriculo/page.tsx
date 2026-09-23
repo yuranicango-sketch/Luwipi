@@ -1,9 +1,10 @@
 import { redirect } from "next/navigation";
-import { getEnhancedCurriculum, getVariant } from "@/lib/curriculum-v3";
+import { contextRedirectHref } from "@/lib/learning-context";
 
-export default async function CurriculumPage({searchParams}:{searchParams:Promise<{age?:string;variant?:string;student?:string;current?:string}>}){
- const params=await searchParams;const program=getEnhancedCurriculum(params.age);const variant=getVariant(program,params.variant);const student=params.student?.trim()||"default";
- const query=new URLSearchParams({age:program.age,variant:variant.id,student,map:"1"});
- const n=Number(params.current);if(Number.isInteger(n)&&n>=1&&n<=48)query.set("lesson",String(n));
- redirect(`/aprender?${query.toString()}`);
+export default async function CurriculumPage({searchParams}:{searchParams:Promise<{age?:string;student?:string;current?:string}>}){
+ const params=await searchParams,n=Number(params.current),query=new URLSearchParams({map:"1"});
+ if(Number.isInteger(n)&&n>=1&&n<=48)query.set("lesson",String(n));
+ const next=`/aprender?${query.toString()}`;
+ if(params.student||params.age)redirect(contextRedirectHref({studentId:params.student,ageGroup:params.age,next}));
+ redirect(next);
 }

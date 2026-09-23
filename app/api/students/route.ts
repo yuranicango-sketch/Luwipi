@@ -18,7 +18,9 @@ export async function POST(r:Request){
  if(!input.length)return NextResponse.json({error:"invalid_students"},{status:400});
  const {count}=await s.from("students").select("*",{count:"exact",head:true}).eq("teacher_id",u.id);
  const start=(count??0)+1;
- const rows=input.map((x,i)=>({teacher_id:u.id,name:`Aluno ${String(start+i).padStart(3,"0")}`,display_code:`Aluno ${String(start+i).padStart(3,"0")}`,age_group:["2-4","5-8","adult"].includes(String(x.ageGroup))?String(x.ageGroup):"5-8",guardian_name:null,notes:null}));
+ const validAges=new Set(["2-4","5-8","adult"]);
+ if(input.some(x=>!validAges.has(String(x.ageGroup))))return NextResponse.json({error:"invalid_age_group"},{status:400});
+ const rows=input.map((x,i)=>({teacher_id:u.id,name:`Aluno ${String(start+i).padStart(3,"0")}`,display_code:`Aluno ${String(start+i).padStart(3,"0")}`,age_group:String(x.ageGroup),guardian_name:null,notes:null}));
  const {data,error}=await s.from("students").insert(rows).select("id,display_code,age_group,created_at");
  if(error)return NextResponse.json({error:"database_error",detail:error.code},{status:500});
  return NextResponse.json({students:(data??[]).map(x=>({id:x.id,name:x.display_code,age_group:x.age_group,guardian_name:null}))});

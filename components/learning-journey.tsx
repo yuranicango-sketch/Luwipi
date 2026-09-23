@@ -31,10 +31,10 @@ export function LearningJourney({program,variant,studentId,initialLesson,initial
    return{module:program.modules[0],lesson:program.modules[0].lessons[0]};
  },[program,current]);
 
- function syncUrl(lesson:number,map=false){if(typeof window==="undefined")return;const query=new URLSearchParams({age:program.age,variant:variant.id,student:studentId,lesson:String(lesson)});if(map)query.set("map","1");window.history.replaceState(null,"",`/aprender?${query.toString()}`)}
+ function syncUrl(lesson:number,map=false){if(typeof window==="undefined")return;const query=new URLSearchParams({lesson:String(lesson)});if(map)query.set("map","1");window.history.replaceState(null,"",`/aprender?${query.toString()}`)}
  function selectLesson(lesson:number){if(lesson>maxLesson){router.push("/assinar?reason=trial_limit");return}setCurrent(lesson);syncUrl(lesson,false)}
  function completed(){setRevision(v=>v+1)}
- function exit(){router.push(`/dashboard?age=${program.age}&variant=${variant.id}&student=${encodeURIComponent(studentId)}`)}
+ function exit(){router.push("/dashboard")}
 
  if(!ready)return <div style={{height:"100svh",display:"grid",placeItems:"center",fontWeight:900,color:"#52657b"}}>A sincronizar o percurso…</div>;
  return <><LessonRunner key={`${program.age}-${variant.id}-${found.lesson.number}`} age={program.age} program={program} module={found.module} lesson={found.lesson} variant={variant} studentId={studentId} maxLesson={maxLesson} onLocked={()=>router.push("/assinar?reason=trial_limit")} onOpenMap={()=>setMapOpen(true)} onNavigateLesson={selectLesson} onCompleted={completed} onExit={exit}/><CurriculumMapDrawer open={mapOpen} onClose={()=>{setMapOpen(false);syncUrl(current,false)}} onSelect={selectLesson} program={program} variant={variant} studentId={studentId} currentLesson={current} revision={revision} maxLesson={maxLesson}/></>;
