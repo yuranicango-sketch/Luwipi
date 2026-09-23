@@ -1,2 +1,30 @@
 import Link from "next/link";
-export default function TermosPage(){return <main className="container" style={{maxWidth:860,padding:"48px 20px 80px"}}><h1>Termos de Serviço — Luwipi</h1><p><strong>Última atualização:</strong> 21 de setembro de 2026</p><p>Estes Termos regulam o uso do Luwipi, uma plataforma de apoio ao ensino e à prática de piano para professores, alunos e responsáveis. Ao utilizar o serviço, o utilizador concorda com estes Termos.</p><h2>1. Uso do serviço</h2><p>O Luwipi disponibiliza currículos, atividades musicais, tarefas, acompanhamento de progresso e ferramentas de gestão de alunos. Professores são responsáveis pelas informações que inserem e pelas tarefas que atribuem.</p><h2>2. Contas</h2><p>O acesso a áreas reservadas pode exigir autenticação, incluindo login com Google. O utilizador deve utilizar informações verdadeiras e proteger o acesso à sua conta. O acesso de professores pode depender de um período gratuito ou de uma subscrição ativa.</p><h2>3. Crianças e responsáveis</h2><p>As tarefas destinadas a crianças são criadas pelo professor e podem ser abertas pelo responsável através de link ou código. Não exigimos que a criança crie uma conta para realizar uma tarefa. O professor e o responsável devem utilizar o serviço de forma apropriada à idade do aluno.</p><h2>4. Conteúdo e propriedade intelectual</h2><p>A interface, materiais originais, atividades e conteúdos próprios do Luwipi são protegidos pelos direitos aplicáveis. Obras de domínio público podem ser utilizadas em arranjos e experiências pedagógicas próprias. O utilizador não deve copiar, redistribuir ou explorar conteúdo protegido fora das permissões legais ou concedidas.</p><h2>5. Disponibilidade</h2><p>Procuramos manter o serviço disponível e confiável, mas não garantimos funcionamento ininterrupto. Funcionalidades podem ser corrigidas, melhoradas ou alteradas.</p><h2>6. Conduta</h2><p>É proibido tentar obter acesso não autorizado, interferir no funcionamento do serviço, utilizar códigos de tarefas de terceiros sem autorização ou usar a plataforma para fins ilegais.</p><h2>7. Pagamentos e acesso</h2><p>Quando aplicável, planos podem ser mensais, trimestrais, semestrais ou anuais. A duração e condições apresentadas no momento da ativação determinam o período de acesso.</p><h2>8. Limitação</h2><p>O Luwipi é uma ferramenta educacional de apoio e não substitui o julgamento profissional do professor. Na medida permitida pela legislação aplicável, não somos responsáveis por perdas indiretas resultantes do uso ou indisponibilidade do serviço.</p><h2>9. Alterações</h2><p>Estes Termos podem ser atualizados para refletir alterações no produto ou requisitos legais. A data de atualização será indicada nesta página.</p><h2>10. Contacto</h2><p>Questões sobre estes Termos podem ser enviadas através dos canais de contacto disponibilizados no Luwipi.</p><p><Link href="/privacidade">Política de Privacidade</Link> · <Link href="/">Voltar ao Luwipi</Link></p></main>}
+
+export default function TermosPage() {
+  return <main className="container" style={{maxWidth:860,padding:"48px 20px 80px"}}>
+    <h1>Termos de Serviço — Luwipi</h1>
+    <p><strong>Última atualização:</strong> 23 de setembro de 2026</p>
+    <p>Estes Termos regulam o uso do Luwipi, uma plataforma de apoio a aulas de piano infantil conduzidas por um professor. O Luwipi apoia a preparação, a condução da aula e o registo pedagógico; não substitui o julgamento profissional do professor.</p>
+    <h2>1. Uso do serviço</h2>
+    <p>O Luwipi disponibiliza Aulas Prontas, currículo em espiral, blocos pedagógicos, piano virtual, registo manual de competências e materiais de prática para a família.</p>
+    <h2>2. Contas do professor</h2>
+    <p>Áreas reservadas exigem autenticação. O login com Google é usado para autenticar o professor e não concede ao Luwipi acesso ao Google Drive no fluxo normal de login.</p>
+    <h2>3. Dados de crianças</h2>
+    <p>Perfis locais de alunos, fotografias opcionais, competências, notas e histórico de aula ficam guardados no dispositivo por padrão. O professor é responsável por inserir apenas informação necessária à finalidade pedagógica e por proteger o dispositivo e eventuais cópias exportadas.</p>
+    <h2>4. Pais e encarregados de educação</h2>
+    <p>O professor pode copiar e partilhar um resumo curto da aula e uma prática para casa. A criança não precisa criar uma conta para participar numa aula conduzida pelo professor.</p>
+    <h2>5. Conteúdo e propriedade intelectual</h2>
+    <p>A interface, materiais originais e conteúdos próprios do Luwipi são protegidos pelos direitos aplicáveis. Obras de domínio público podem ser utilizadas em experiências pedagógicas próprias. Referências a métodos publicados não significam licença para copiar partituras, gravações ou materiais protegidos.</p>
+    <h2>6. Disponibilidade e offline</h2>
+    <p>O Luwipi procura manter o núcleo da aula utilizável depois do carregamento inicial, incluindo dados locais e áudio sintetizado no dispositivo. Algumas funções de conta, pagamento e atualização do produto continuam a depender de internet.</p>
+    <h2>7. Pagamentos e acesso</h2>
+    <p>O acesso pode incluir um período gratuito e, depois, uma subscrição ativa. Quando aplicável, as condições apresentadas no momento da ativação determinam o período de acesso.</p>
+    <h2>8. Conduta</h2>
+    <p>É proibido tentar obter acesso não autorizado, interferir no serviço ou utilizar a plataforma para fins ilegais.</p>
+    <h2>9. Limitação</h2>
+    <p>O Luwipi é uma ferramenta educacional de apoio. Postura, técnica, dedilhação, regulação emocional e decisões de progressão dependem da observação do professor.</p>
+    <h2>10. Alterações e contacto</h2>
+    <p>Estes Termos podem ser atualizados quando o produto ou requisitos legais mudarem. Questões podem ser enviadas através dos canais disponibilizados no Luwipi.</p>
+    <p><Link href="/privacidade">Política de Privacidade</Link> · <Link href="/">Voltar ao Luwipi</Link></p>
+  </main>;
+}
