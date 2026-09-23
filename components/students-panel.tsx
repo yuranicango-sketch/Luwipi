@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { competencyLabels, type AgeBand, type CompetencyId, type MasteryLevel } from "@/lib/suzuki-lessons";
 import { createLocalStudent, getLessonHistory, getLocalStudents, saveLocalStudent, updateLocalStudent, type LocalStudent, type RepertoireStatus } from "@/lib/teacher-local-v2";
 import { nextCompetencyFocus } from "@/lib/lesson-recommender";
+import { repertoireFocusLabels, type RepertoireFocus } from "@/lib/repertoire";
 import { imageFileToLocalAvatar } from "@/lib/local-image";
 import { ProgressGarden } from "@/components/progress-garden";
 import styles from "./students-panel.module.css";
@@ -22,6 +23,7 @@ export function StudentsPanel() {
   const [methodTitle, setMethodTitle] = useState("");
   const [pieceTitle, setPieceTitle] = useState("");
   const [repertoireStatus, setRepertoireStatus] = useState<RepertoireStatus>("learning");
+  const [repertoireFocus, setRepertoireFocus] = useState<RepertoireFocus>("ear-memory");
 
   function refresh(preferred?: string) {
     const next = getLocalStudents();
@@ -38,6 +40,7 @@ export function StudentsPanel() {
     setMethodTitle(selected?.currentRepertoire?.methodTitle ?? "");
     setPieceTitle(selected?.currentRepertoire?.pieceTitle ?? "");
     setRepertoireStatus(selected?.currentRepertoire?.status ?? "learning");
+    setRepertoireFocus(selected?.currentRepertoire?.focus ?? "ear-memory");
   }, [selectedId]);
 
   function create() {
@@ -59,6 +62,7 @@ export function StudentsPanel() {
         methodTitle: methodTitle.trim() || undefined,
         pieceTitle: pieceTitle.trim(),
         status: repertoireStatus,
+        focus: repertoireFocus,
       },
     });
   }
@@ -68,6 +72,7 @@ export function StudentsPanel() {
     setMethodTitle("");
     setPieceTitle("");
     setRepertoireStatus("learning");
+    setRepertoireFocus("ear-memory");
     patch({ currentRepertoire: undefined });
   }
 
@@ -99,7 +104,7 @@ export function StudentsPanel() {
         <div className={styles.repertoireEditor}>
           <label><span>Método / fonte</span><input value={methodTitle} onChange={(e:any)=>setMethodTitle(e.target.value)} placeholder="Ex.: Suzuki Piano School Vol. 1" /></label>
           <label><span>Peça atual</span><input value={pieceTitle} onChange={(e:any)=>setPieceTitle(e.target.value)} placeholder="Nome da peça" /></label>
-          <label><span>Estado</span><select value={repertoireStatus} onChange={(e:any)=>setRepertoireStatus(e.target.value as RepertoireStatus)}><option value="listening">A ouvir</option><option value="learning">A aprender</option><option value="review">Em revisão</option></select></label>
+          <label><span>Estado</span><select value={repertoireStatus} onChange={(e:any)=>setRepertoireStatus(e.target.value as RepertoireStatus)}><option value="listening">A ouvir</option><option value="learning">A aprender</option><option value="review">Em revisão</option></select></label><label><span>Foco pedagógico</span><select value={repertoireFocus} onChange={(e:any)=>setRepertoireFocus(e.target.value as RepertoireFocus)}>{Object.entries(repertoireFocusLabels).map(([id,label])=><option key={id} value={id}>{label}</option>)}</select></label>
           <div className={styles.repertoireActions}><button disabled={!pieceTitle.trim()} onClick={saveCurrentRepertoire}>Guardar referência</button>{selected.currentRepertoire?.pieceTitle && <button className={styles.clearRepertoire} onClick={clearCurrentRepertoire}>Limpar</button>}</div>
         </div>
 
