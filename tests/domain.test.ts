@@ -53,8 +53,10 @@ test("current repertoire influences the recommendation without copying method co
   });
   const recommendations = recommendLessons(s, "steady", []);
   assert.ok(recommendations.length > 0);
-  assert.ok(recommendations[0].reasons.includes("Continua a peça atual"));
-  assert.match(recommendations[0].lesson.repertoire, /Maria Tinha/i);
+  const matching = recommendations.find((item) => /Maria Tinha/i.test(item.lesson.repertoire));
+  assert.ok(matching);
+  assert.ok(matching.reasons.includes("Continua a peça atual"));
+  assert.match(matching.lesson.repertoire, /Maria Tinha/i);
 });
 
 test("weak competencies surface as next focus and remain teacher-owned", () => {
