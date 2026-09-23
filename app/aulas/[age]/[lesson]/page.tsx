@@ -1,42 +1,9 @@
-import { notFound } from "next/navigation";
-import { LessonRunner } from "@/components/lesson-runner";
-import {
-  findLesson,
-  getEnhancedCurriculum,
-  getVariant,
-} from "@/lib/curriculum-v3";
+import { redirect, notFound } from "next/navigation";
+import { getEnhancedCurriculum, getVariant, findLesson } from "@/lib/curriculum-v3";
 
-export default async function LessonPage({
-  params,
-  searchParams,
-}: {
-  params: Promise<{ age: string; lesson: string }>;
-  searchParams: Promise<{ variant?: string; student?: string }>;
-}) {
-  const path = await params;
-  const query = await searchParams;
-  const program = getEnhancedCurriculum(path.age);
-  const lessonNumber = Number(path.lesson);
-
-  if (!Number.isInteger(lessonNumber) || lessonNumber < 1 || lessonNumber > 48) {
-    notFound();
-  }
-
-  const found = findLesson(program, lessonNumber);
-  if (!found) notFound();
-
-  const variant = getVariant(program, query.variant);
-  const studentId = query.student?.trim() || "default";
-
-  return (
-    <main className="dashboard-page">
-      <LessonRunner
-        age={program.age}
-        module={found.module}
-        lesson={found.lesson}
-        variant={variant}
-        studentId={studentId}
-      />
-    </main>
-  );
+export default async function LessonPage({params,searchParams}:{params:Promise<{age:string;lesson:string}>;searchParams:Promise<{variant?:string;student?:string}>}){
+ const path=await params,query=await searchParams,program=getEnhancedCurriculum(path.age),lesson=Number(path.lesson);
+ if(!Number.isInteger(lesson)||lesson<1||lesson>48||!findLesson(program,lesson))notFound();
+ const variant=getVariant(program,query.variant),student=query.student?.trim()||"default";
+ redirect(`/aprender?age=${program.age}&variant=${variant.id}&student=${encodeURIComponent(student)}&lesson=${lesson}`);
 }

@@ -22,7 +22,8 @@ export type LearningPianoDeck = {
 };
 
 type Props = {
-  backHref: string;
+  backHref?: string;
+  onBack?: () => void;
   eyebrow: string;
   title: string;
   progress?: number;
@@ -34,11 +35,11 @@ type Props = {
   tone?: "lesson" | "song" | "game";
 };
 
-export function LearningPlayer({ backHref, eyebrow, title, progress = 0, status, action, toolbar, children, piano, tone = "lesson" }: Props) {
+export function LearningPlayer({ backHref, onBack, eyebrow, title, progress = 0, status, action, toolbar, children, piano, tone = "lesson" }: Props) {
   const inputActive = piano.input === "screen";
   return <section className={styles.shell} data-tone={tone}>
     <header className={styles.topbar}>
-      <Link className={styles.back} href={backHref} aria-label="Voltar">←</Link>
+      {onBack ? <button className={styles.back} type="button" onClick={onBack} aria-label="Abrir mapa do percurso">←</button> : <Link className={styles.back} href={backHref ?? "/dashboard"} aria-label="Voltar">←</Link>}
       <div className={styles.identity}><small>{eyebrow}</small><strong>{title}</strong></div>
       <div className={styles.progress} aria-label={`${Math.round(progress)}% concluído`}><i style={{ width: `${Math.max(0, Math.min(100, progress))}%` }}/></div>
       {status && <span className={styles.status}>{status}</span>}

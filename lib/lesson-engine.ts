@@ -7,7 +7,7 @@ import { getCompletePreschoolLessonSteps } from "@/lib/preschool-lesson-map";
 export type LessonStep = {
   id:string; icon:string; title:string; duration:string; goal:string;
   actions:string[]; say?:string; childDoes:string; success:string; tip?:string;
-  actionLabel?:string; actionHref?:string; example?:string; songId?:string; songEmoji?:string; songStory?:string;
+  actionLabel?:string; actionHref?:string; example?:string; songId?:string; gameId?:string; songEmoji?:string; songStory?:string;
 };
 
 function firstLesson(age:AgeGroup):LessonStep[]{
@@ -49,18 +49,18 @@ function discovery(age:AgeGroup,lesson:EnhancedLesson):LessonStep{
   return {id:"discover",icon:"🎯",title:"Vamos descobrir",duration:age==="2-4"?"4–6 min":"7–10 min",goal:age==="2-4"?`Hoje a criança vai brincar com ${lesson.title.toLowerCase()}.`:lesson.objective,actions:guide.teach,say:guide.say,childDoes:guide.childDoes,success:lesson.mastery};
 }
 
-function activity(age:AgeGroup,lesson:EnhancedLesson,game?:{title:string;goal:string;session:string},href?:string):LessonStep{
+function activity(age:AgeGroup,lesson:EnhancedLesson,game?:{id:string;title:string;goal:string;session:string}):LessonStep{
   const guide=getManualLessonGuide(age,lesson.number);
   if(!guide) throw new Error(`Falta guia manual para ${age}:${lesson.number}`);
-  if(game&&href) return age==="2-4"
-    ? {id:"activity",icon:"🎮",title:game.title,duration:"3–5 min",goal:"Brincar com a descoberta de hoje sem transformar o jogo numa prova.",actions:["Abra o jogo e faça a primeira brincadeira junto com a criança.","Na próxima, espere um pouco e deixe a criança escolher primeiro.","Se ela errar, mostre de novo brincando; não peça para repetir até acertar.","Depois de poucas rodadas, feche o jogo e volte ao piano."],say:"Agora és tu! Escuta ou olha... e escolhe.",childDoes:"Joga, escolhe e experimenta sem precisar acertar tudo.",success:"Pode seguir quando a criança já percebe a brincadeira e começa a escolher com menos ajuda.",actionLabel:"ABRIR JOGO",actionHref:href}
-    : {id:"activity",icon:"🎮",title:game.title,duration:"5–7 min",goal:game.goal,actions:["Abra o jogo e faça uma rodada de demonstração.","Na rodada seguinte, deixe a criança responder primeiro.","Faça apenas a sessão indicada; não repita até acertar tudo.","Volte para o piano físico ao terminar."],say:"Agora és tu. Primeiro escuta ou olha; depois escolhe.",childDoes:`Completa uma sessão curta de ${game.session}.`,success:"Entende a regra e responde à maior parte sem ajuda constante.",actionLabel:"ABRIR JOGO",actionHref:href};
+  if(game) return age==="2-4"
+    ? {id:"activity",icon:"🎮",title:game.title,duration:"3–5 min",goal:"Brincar com a descoberta de hoje sem transformar o jogo numa prova.",actions:["Faça a primeira rodada junto com a criança.","Na próxima, espere e deixe a criança responder primeiro.","Se ela errar, demonstre novamente sem interromper a brincadeira.","Faça poucas rodadas e continue a aula enquanto ainda há vontade."],say:"Agora és tu. Primeiro escuta ou olha; depois escolhe.",childDoes:"Joga, escolhe e experimenta dentro do próprio Player.",success:"Percebe a regra e começa a responder com menos ajuda.",gameId:game.id}
+    : {id:"activity",icon:"🎮",title:game.title,duration:"5–7 min",goal:game.goal,actions:["Faça uma rodada de demonstração dentro do Player.","Na rodada seguinte, deixe a criança responder primeiro.","Faça apenas uma sessão curta; não transforme em prova.","Quando a missão terminar, continue diretamente para a próxima cena."],say:"Agora és tu. Primeiro observa ou escuta; depois responde.",childDoes:`Completa uma sessão curta de ${game.session} sem sair da aula.`,success:"Entende a regra e responde à maior parte sem ajuda constante.",gameId:game.id};
   return {id:"activity",icon:"🧩",title:age==="2-4"?`Vamos brincar: ${lesson.title}`:"Praticar a habilidade",duration:age==="2-4"?"3–5 min":"5–7 min",goal:age==="2-4"?"Brincar mais uma vez com o que acabou de descobrir.":`Usar ${lesson.focus.toLowerCase()} numa tarefa concreta, sem acrescentar teoria nova.`,actions:guide.practice,say:guide.say,childDoes:guide.childDoes,success:age==="2-4"?"Pode seguir quando a criança tenta a brincadeira e já precisa de menos ajuda para saber o que fazer.":"Consegue repetir a proposta com menos ajuda do que na primeira demonstração."};
 }
 
-function repertoire(age:AgeGroup,lesson:EnhancedLesson,songHref?:string):LessonStep{
-  if(age==="2-4") return {id:"repertoire",icon:"🎹",title:`Hora da música: ${lesson.repertoire}`,duration:"5–8 min",goal:"Usar a descoberta de hoje dentro de uma música de verdade.",actions:["Ouça ou toque um pedacinho curto primeiro.","Convide a criança a cantar, mexer o corpo ou fazer o gesto da música.","Mostre no piano apenas a parte que ela consegue experimentar hoje.","Toquem juntos sem parar a cada erro.","Termine enquanto a criança ainda quer brincar com a música."],say:`Agora ${lesson.repertoire} vai brincar com a gente. Primeiro ouvimos; depois tocamos juntos.`,childDoes:"Ouve, participa da história da música e toca um pequeno pedaço no piano.",success:"Pode seguir quando a criança participa da música e consegue experimentar pelo menos um pedacinho, com ajuda se precisar.",tip:"Nesta idade, a música não é uma prova. Ouvir, cantar, mover e tocar também contam como aprender.",actionLabel:songHref?"OUVIR / TOCAR MÚSICA":"VER MÚSICAS",actionHref:songHref??"/musicas"};
-  return {id:"repertoire",icon:"🎹",title:"Música no piano",duration:"10–15 min",goal:`Aplicar a aula em ${lesson.repertoire}.`,actions:["Escolha se a prática será no Luwipi ou no piano físico.","Trabalhe apenas UMA frase de cada vez.","Faça uma demonstração curta e depois deixe a criança tocar.","Junte duas frases somente quando a primeira estiver confortável.","No final, faça uma tentativa contínua sem parar para corrigir cada erro."],say:`Vamos tocar ${lesson.repertoire} por partes. Primeiro uma frase; depois juntamos.`,childDoes:"Toca uma frase, repete e junta as partes gradualmente.",success:"Consegue completar pelo menos uma frase com começo e fim claros.",tip:"Se escolher piano físico, use o modo “Piano físico” da música: ele mostra onde começar e a sequência da frase.",actionLabel:songHref?"ABRIR MÚSICA":"ABRIR REPERTÓRIO",actionHref:songHref??"/musicas"};
+function repertoire(age:AgeGroup,lesson:EnhancedLesson,song?:{id:string}):LessonStep{
+  if(age==="2-4") return {id:"repertoire",icon:"🎹",title:`Hora da música: ${lesson.repertoire}`,duration:"5–8 min",goal:"Usar a descoberta de hoje dentro de uma música de verdade.",actions:["Ouça ou toque um pedacinho curto primeiro.","Convide a criança a cantar, mover ou marcar a pulsação.","Mostre no piano apenas a parte que ela consegue experimentar hoje.","Toquem juntos sem parar a cada erro.","Termine enquanto a criança ainda quer fazer música."],say:`Agora ${lesson.repertoire} vai brincar com a gente. Primeiro ouvimos; depois tocamos juntos.`,childDoes:"Ouve, participa e toca um pequeno pedaço no mesmo Player.",success:"Participa da música e experimenta pelo menos um pedacinho, com ajuda se precisar.",tip:"Nesta idade, ouvir, cantar, mover e tocar também contam como aprender.",songId:song?.id};
+  return {id:"repertoire",icon:"🎹",title:"Música no piano",duration:"10–15 min",goal:`Aplicar a aula em ${lesson.repertoire}.`,actions:["Trabalhe uma frase de cada vez no Player.","Faça uma demonstração curta e deixe a criança responder.","Junte duas frases somente quando a primeira estiver confortável.","Use mão direita, esquerda ou duas mãos quando a peça permitir.","No final, faça uma tentativa contínua sem parar para corrigir cada erro."],say:`Vamos tocar ${lesson.repertoire} por partes. Primeiro uma frase; depois juntamos.`,childDoes:"Toca uma frase e junta as partes progressivamente sem sair da aula.",success:"Completa pelo menos uma frase com começo e fim claros.",tip:"A música é uma cena da aula; o piano e a entrada MIDI/microfone permanecem os mesmos.",songId:song?.id};
 }
 
 function creation(age:AgeGroup,lesson:EnhancedLesson):LessonStep{
@@ -90,9 +90,8 @@ export function buildLessonSteps(args:{age:AgeGroup;module:EnhancedModule;lesson
   if(age==="2-4"){
     const preschool=getCompletePreschoolLessonSteps(lesson.number);
     if(!preschool) throw new Error(`Falta experiência infantil individual para a aula ${lesson.number}`);
-    return preschool;
+    return preschool.map(step=>step.id==="mission"&&resources.game?{...step,gameId:resources.game.id}:step);
   }
   if(lesson.number===1) return firstLesson(age);
-  const href=resources.gameHref??lesson.activityRoute;
-  return [warmup(age,lesson),discovery(age,lesson),activity(age,lesson,resources.game,href),repertoire(age,lesson,resources.songHref),creation(age,lesson),close(age,lesson,resources.homeworkHref)];
+  return [warmup(age,lesson),discovery(age,lesson),activity(age,lesson,resources.game),repertoire(age,lesson,resources.song),creation(age,lesson),close(age,lesson,resources.homeworkHref)];
 }
