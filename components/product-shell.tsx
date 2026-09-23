@@ -9,7 +9,9 @@ export function ProductShell({ children, backHref, backLabel = "Voltar" }: { chi
       <nav className={styles.nav} aria-label="Área do professor">
         <Link href="/dashboard">Hoje</Link><Link href="/alunos">Alunos</Link><Link href="/curriculo">Currículo</Link><Link href="/biblioteca">Biblioteca</Link><Link href="/casa">Casa</Link>
       </nav>
-      {backHref ? <Link className={styles.back} href={backHref}>← {backLabel}</Link> : <Link className={styles.back} href="/">Sair</Link>}
+      {backHref
+        ? <Link className={styles.back} href={backHref}>← {backLabel}</Link>
+        : <form className={styles.signout} action="/auth/signout" method="post"><button type="submit">Terminar sessão</button></form>}
     </div></header>{children}
   </main>;
 }

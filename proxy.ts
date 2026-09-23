@@ -1,6 +1,90 @@
-import {createServerClient} from "@supabase/ssr";import {NextResponse,type NextRequest} from "next/server";
-const URL=process.env.SUPABASE_URL??process.env.NEXT_PUBLIC_SUPABASE_URL??"";const KEY=process.env.SUPABASE_PUBLISHABLE_KEY??process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY??"";
-function protectedPath(p:string,m:string){if(["/dashboard","/aprender","/curriculo","/aulas","/treino","/jogos","/musicas","/recursos","/professor","/admin"].some(x=>p===x||p.startsWith(x+"/")))return true;if(p==="/api/students"||p==="/api/groups")return true;return p==="/api/homework"&&m!=="GET"}
-function trialAllowed(r:NextRequest){const p=r.nextUrl.pathname;if(p==="/dashboard"||p==="/treino"||p==="/musicas"||p==="/jogos")return true;if(p==="/aprender"){const lesson=Number(r.nextUrl.searchParams.get("lesson")??"1");return Number.isFinite(lesson)&&lesson<=8}const l=p.match(/^\/aulas\/(2-4|5-8)\/(\d+)$/);if(l)return Number(l[2])<=8;if(p.startsWith("/recursos/2-4/modulo-1"))return true;if(/^\/musicas\/[^/]+$/.test(p)||/^\/jogos\/[^/]+$/.test(p))return true;return false}
-export async function proxy(r:NextRequest){const p=r.nextUrl.pathname;if(!protectedPath(p,r.method))return NextResponse.next();if(!URL||!KEY)return NextResponse.json({error:"server_not_configured"},{status:503});let res=NextResponse.next({request:r});const s=createServerClient(URL,KEY,{cookies:{getAll:()=>r.cookies.getAll(),setAll:(items)=>{items.forEach(({name,value})=>r.cookies.set(name,value));res=NextResponse.next({request:r});items.forEach(({name,value,options})=>res.cookies.set(name,value,options))}}});const user=(await s.auth.getUser()).data.user;if(!user){if(p.startsWith("/api/"))return NextResponse.json({error:"unauthorized"},{status:401});const u=r.nextUrl.clone();u.pathname="/login";u.searchParams.set("next",p);return NextResponse.redirect(u)}const {data}=await s.from("profiles").select("role,access_status,trial_ends_at,access_until").eq("id",user.id).maybeSingle();if(data?.role==="admin")return res;if(p==="/admin"||p.startsWith("/admin/")){const u=r.nextUrl.clone();u.pathname="/dashboard";u.search="";return NextResponse.redirect(u)}const now=Date.now(),active=data?.access_status==="active"&&(!data.access_until||new Date(data.access_until).getTime()>now);if(active)return res;const trial=data?.access_status==="trial"&&data.trial_ends_at&&new Date(data.trial_ends_at).getTime()>now;if(trial&&trialAllowed(r))return res;if(p.startsWith("/api/"))return NextResponse.json({error:trial?"subscription_required":"trial_expired"},{status:403});const u=r.nextUrl.clone();u.pathname="/assinar";u.searchParams.set("reason",trial?"trial_limit":"trial_expired");return NextResponse.redirect(u)}
-export const config={matcher:["/dashboard/:path*","/aprender/:path*","/curriculo/:path*","/aulas/:path*","/treino/:path*","/jogos/:path*","/musicas/:path*","/recursos/:path*","/professor/:path*","/admin/:path*","/api/students/:path*","/api/groups/:path*","/api/homework"]};
+import { createServerClient } from "@supabase/ssr";
+import { NextResponse, type NextRequest } from "next/server";
+
+const URL = process.env.SUPABASE_URL ?? "";
+const KEY = process.env.SUPABASE_PUBLISHABLE_KEY ?? "";
+
+const teacherRoutes = ["/dashboard", "/aula", "/alunos", "/curriculo", "/biblioteca", "/casa", "/onboarding"];
+
+function protectedPath(pathname: string) {
+  return teacherRoutes.some((prefix) => pathname === prefix || pathname.startsWith(prefix + "/"))
+    || pathname === "/admin"
+    || pathname.startsWith("/admin/");
+}
+
+function trialAllowed(pathname: string) {
+  return teacherRoutes.some((prefix) => pathname === prefix || pathname.startsWith(prefix + "/"));
+}
+
+export async function proxy(request: NextRequest) {
+  const pathname = request.nextUrl.pathname;
+  if (!protectedPath(pathname)) return NextResponse.next();
+
+  if (!URL || !KEY) return NextResponse.json({ error: "server_not_configured" }, { status: 503 });
+
+  let response = NextResponse.next({ request });
+  response.headers.set("Cache-Control", "private, no-store");
+
+  const supabase = createServerClient(URL, KEY, {
+    cookies: {
+      getAll: () => request.cookies.getAll(),
+      setAll: (items) => {
+        items.forEach(({ name, value }) => request.cookies.set(name, value));
+        response = NextResponse.next({ request });
+        response.headers.set("Cache-Control", "private, no-store");
+        items.forEach(({ name, value, options }) => response.cookies.set(name, value, options));
+      },
+    },
+  });
+
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/login";
+    url.searchParams.set("next", pathname);
+    return NextResponse.redirect(url);
+  }
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role,access_status,trial_ends_at,access_until")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  if (profile?.role === "admin") return response;
+
+  if (pathname === "/admin" || pathname.startsWith("/admin/")) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/dashboard";
+    url.search = "";
+    return NextResponse.redirect(url);
+  }
+
+  const now = Date.now();
+  const active = profile?.access_status === "active"
+    && (!profile.access_until || new Date(profile.access_until).getTime() > now);
+  if (active) return response;
+
+  const trial = profile?.access_status === "trial"
+    && !!profile.trial_ends_at
+    && new Date(profile.trial_ends_at).getTime() > now;
+  if (trial && trialAllowed(pathname)) return response;
+
+  const url = request.nextUrl.clone();
+  url.pathname = "/assinar";
+  url.searchParams.set("reason", trial ? "trial_limit" : "trial_expired");
+  return NextResponse.redirect(url);
+}
+
+export const config = {
+  matcher: [
+    "/dashboard/:path*",
+    "/aula/:path*",
+    "/alunos/:path*",
+    "/curriculo/:path*",
+    "/biblioteca/:path*",
+    "/casa/:path*",
+    "/onboarding/:path*",
+    "/admin/:path*",
+  ],
+};
