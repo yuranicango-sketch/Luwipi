@@ -56,6 +56,8 @@ const aliases: Array<[string, string]> = [
   ["pequena sonatina", "pequena-sonatina"],
   ["aventura em do maior", "aventura-em-do-maior"],
   ["noite de estrelas", "noite-de-estrelas"],
+  ["ponte das duas maos", "ponte-das-duas-maos"],
+  ["minueto em sol", "minueto-sol-petzold"],
 ];
 
 export function gameForLesson(age: AgeGroup, lessonNumber: number) {

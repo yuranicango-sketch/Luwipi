@@ -192,7 +192,7 @@ export function PianoInputDock({ source, onSourceChange, onNote, compact = false
   const status = source === "midi"
     ? midiState === "connected" ? `Ligado · ${midiName ?? "MIDI"}` : midiState === "unsupported" ? "MIDI não suportado neste navegador" : midiState === "error" ? "Não foi possível ligar o MIDI" : "A ligar MIDI…"
     : source === "microphone"
-      ? micState === "listening" ? "A ouvir o piano pelo microfone" : micState === "unsupported" ? "Microfone indisponível" : micState === "error" ? "Permissão de microfone necessária" : "A preparar microfone…"
+      ? micState === "listening" ? "A ouvir uma nota de cada vez pelo microfone" : micState === "unsupported" ? "Microfone indisponível" : micState === "error" ? "Permissão de microfone necessária" : "A preparar microfone…"
       : "Toque no piano da tela";
 
   return <div className={styles.dock} data-compact={compact ? "true" : "false"}>

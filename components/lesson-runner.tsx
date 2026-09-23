@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { CSSProperties } from "react";
 import { GrandStaffScore } from "@/components/grand-staff-score";
 import { LearningPlayer } from "@/components/learning-player";
@@ -16,6 +16,7 @@ import { completeLesson, readCurriculumProgress, saveLessonStep, type MasterySta
 import { buildLessonSteps } from "@/lib/lesson-engine";
 import { experienceForStep, getLessonExperience, getVariantExperiencePolicy, lessonPitchChallenge } from "@/lib/lesson-experience";
 import { getSong, noteName, noteOctave } from "@/lib/music-library";
+import { recordLearningSession } from "@/lib/learning-client";
 import { playPercussionClick, playPianoRate, preloadPianoSamples } from "@/lib/piano-sampler";
 import styles from "./lesson-runner.module.css";
 
@@ -44,6 +45,8 @@ export function LessonRunner({age,program,module,lesson,variant,studentId,maxLes
  const[stepIndex,setStepIndex]=useState(0),[actionIndex,setActionIndex]=useState(0),[mastery,setMastery]=useState<MasteryState>(null),[showGuide,setShowGuide]=useState(false),[showCompletion,setShowCompletion]=useState(false);
  const[input,setInput]=useState<PianoInputSource>("screen"),[message,setMessage]=useState("Comece a missão."),[wrong,setWrong]=useState<string|null>(null),[done,setDone]=useState(false);
  const[taps,setTaps]=useState(0),[listenSeen,setListenSeen]=useState<string[]>([]),[freeNotes,setFreeNotes]=useState(0),[songIndex,setSongIndex]=useState(0),[songHits,setSongHits]=useState<string[]>([]),[gameExpected,setGameExpected]=useState<string|string[]|undefined>(undefined),[noteEvent,setNoteEvent]=useState<LessonNoteEvent|null>(null);
+ const[sessionCorrect,setSessionCorrect]=useState(0),[sessionMistakes,setSessionMistakes]=useState(0);
+ const sessionStartedAt=useRef(Date.now()),sessionRecorded=useRef(false);
 
  const step=steps[stepIndex];
  const sceneExperience=useMemo(()=>experienceForStep(baseExperience,step.id,Boolean(step.gameId),Boolean(step.songId)),[baseExperience,step.id,step.gameId,step.songId]);
@@ -128,8 +131,21 @@ export function LessonRunner({age,program,module,lesson,variant,studentId,maxLes
  }
  function previous(){if(actionIndex>0)return go(stepIndex,actionIndex-1);if(stepIndex>0)return go(stepIndex-1,0)}
  function markDone(text="Conseguimos. Pode continuar."){setDone(true);setWrong(null);setMessage(text)}
+ function registerCorrect(count=1){setSessionCorrect(value=>value+count)}
+ function registerMistake(count=1){setSessionMistakes(value=>value+count)}
+ function persistLessonSession(finalMastery:Exclude<MasteryState,null>){
+   if(sessionRecorded.current)return;sessionRecorded.current=true;
+   const attempts=sessionCorrect+sessionMistakes,accuracy=attempts?Math.round(sessionCorrect/attempts*100):(finalMastery==="mastered"?100:68);
+   void recordLearningSession({
+     studentId,ageGroup:age,sessionType:"lesson",lessonNumber:lesson.number,contentId:`lesson-${lesson.number}`,
+     source:input,attempts,correct:sessionCorrect,mistakes:sessionMistakes,accuracy,
+     stars:finalMastery==="mastered"?3:2,durationSeconds:Math.max(1,Math.round((Date.now()-sessionStartedAt.current)/1000)),
+     startedAt:new Date(sessionStartedAt.current).toISOString(),metadata:{mastery:finalMastery,variant:variant.id,chapter:baseExperience.chapter},
+   });
+ }
  function finishLesson(next?:number){
    if(!mastery)return;
+   persistLessonSession(mastery);
    completeLesson(studentId,age,lesson.number,mastery);
    setShowCompletion(false);
    onCompleted(next);
@@ -142,9 +158,9 @@ export function LessonRunner({age,program,module,lesson,variant,studentId,maxLes
    if(step.songId){
      if(grandSongEvents.length){
        if(!grandSongEvent)return;
-       if(!grandSongExpected.includes(pitch)){setWrong(pitch);setMessage("Veja as notas que estão dentro do cursor.");window.setTimeout(()=>setWrong(null),380);return}
+       if(!grandSongExpected.includes(pitch)){registerMistake();setWrong(pitch);setMessage("Veja as notas que estão dentro do cursor.");window.setTimeout(()=>setWrong(null),380);return}
        if(songHits.includes(pitch))return;
-       const nextHits=[...songHits,pitch];setSongHits(nextHits);setWrong(null);
+       registerCorrect();const nextHits=[...songHits,pitch];setSongHits(nextHits);setWrong(null);
        if(grandSongExpected.every(item=>nextHits.includes(item))){
          setSongHits([]);
          if(songIndex+1>=grandSongEvents.length){setSongIndex(v=>v+1);markDone("As duas mãos chegaram juntas ao fim da frase.")}
@@ -153,19 +169,19 @@ export function LessonRunner({age,program,module,lesson,variant,studentId,maxLes
        return;
      }
      if(!repertoireExpected)return;
-     if(!pitchMatches(pitch,repertoireExpected)){setWrong(pitch);setMessage(`Quase. Procure ${noteName(repertoireExpected)}.`);window.setTimeout(()=>setWrong(null),380);return}
-     setWrong(null);
+     if(!pitchMatches(pitch,repertoireExpected)){registerMistake();setWrong(pitch);setMessage(`Quase. Procure ${noteName(repertoireExpected)}.`);window.setTimeout(()=>setWrong(null),380);return}
+     registerCorrect();setWrong(null);
      if(songIndex+1>=repertoireNotes.length){setSongIndex(v=>v+1);markDone("A frase ficou completa.")}
      else{setSongIndex(v=>v+1);setMessage("Certo. Continue a frase.")}
      return;
    }
    if(sceneExperience.gate==="piano"||sceneExperience.gate==="score"){
-     if(challengeExpected&&!pitchMatches(pitch,challengeExpected)){setWrong(pitch);setMessage(`Procure ${noteName(challengeExpected)}.`);window.setTimeout(()=>setWrong(null),380);return}
-     markDone(challengeExpected?"Encontrou.":"Boa resposta no piano.");
+     if(challengeExpected&&!pitchMatches(pitch,challengeExpected)){registerMistake();setWrong(pitch);setMessage(`Procure ${noteName(challengeExpected)}.`);window.setTimeout(()=>setWrong(null),380);return}
+     registerCorrect();markDone(challengeExpected?"Encontrou.":"Boa resposta no piano.");
      return;
    }
    if(sceneExperience.gate==="free"){
-     const count=freeNotes+1;setFreeNotes(count);
+     registerCorrect();const count=freeNotes+1;setFreeNotes(count);
      if(count>=policy.repetitions)markDone("A tua resposta musical ficou pronta.");else setMessage(`${count}/${policy.repetitions} · escolha outro som.`);
    }
  }
@@ -174,12 +190,12 @@ export function LessonRunner({age,program,module,lesson,variant,studentId,maxLes
  function externalPress(note:DetectedPianoNote){if(input!=="screen"&&note.source===input)emitPitch(note.pitch)}
  const handleGameExpected=useCallback((value:string|string[]|undefined)=>setGameExpected(value),[]);
  const handleGameMessage=useCallback((value:string)=>setMessage(value),[]);
- const handleGameComplete=useCallback(()=>markDone("Missão concluída. Continue a aula."),[]);
+ const handleGameComplete=useCallback(()=>{registerCorrect();markDone("Missão concluída. Continue a aula.")},[]);
 
  async function rhythmTap(){
    await playPercussionClick({frequency:taps===0?176:136,gain:.2});
    const target=sceneExperience.visualKey==="three-four"?3:4,n=taps+1;
-   if(n>=target){setTaps(target);markDone("Pulso completo.")}
+   if(n>=target){registerCorrect();setTaps(target);markDone("Pulso completo.")}
    else{setTaps(n);setMessage(`${n}/${target} · mantenha o mesmo espaço entre as batidas.`)}
  }
  async function compare(which:"a"|"b"){
@@ -191,7 +207,7 @@ export function LessonRunner({age,program,module,lesson,variant,studentId,maxLes
    else await playPianoRate(which==="a"?.5:2,{gain:.52,duration:.78});
    const next=[...new Set([...listenSeen,which])];setListenSeen(next);
    setMessage(next.length>=2?"Já ouviu os dois exemplos. Compare e continue.":"Agora ouça o outro exemplo.");
-   if(next.length>=2)setDone(true);
+   if(next.length>=2){if(!done)registerCorrect();setDone(true);}
  }
 
  const childPrompt=studentPrompt();
@@ -225,7 +241,7 @@ export function LessonRunner({age,program,module,lesson,variant,studentId,maxLes
    {showGuide&&<div className={styles.overlay} onClick={()=>setShowGuide(false)}><aside className={styles.guide} onClick={e=>e.stopPropagation()}><button className={styles.close} onClick={()=>setShowGuide(false)}>×</button><small>GUIA DO PROFESSOR · {variant.label}</small><h2>{step.title}</h2><p className={styles.goal}>{step.goal}</p><div><b>DIGA ASSIM</b><p>{step.say?`“${step.say}”`:step.title}</p></div><div><b>PASSOS DO PROFESSOR</b>{step.actions.map((item,index)=><p key={index}><strong>{index+1}.</strong> {item}</p>)}</div>{step.example&&<div><b>EXEMPLO</b><p>{step.example}</p></div>}{step.tip&&<div><b>DICA PEDAGÓGICA</b><p>{step.tip}</p></div>}<div><b>OBSERVE</b><p>{step.childDoes}</p><p>Avance quando: {step.success}</p></div>{step.actionHref&&step.actionLabel&&<Link href={step.actionHref}>{step.actionLabel}</Link>}<button className={styles.guideValidate} onClick={()=>{markDone("Professor validou esta cena.");setShowGuide(false)}}>{done?"CENA JÁ VALIDADA":"VALIDAR ESTA CENA"}</button></aside></div>}
 
    {showCompletion&&<div className={styles.completionOverlay}><section className={styles.completion}>
-     <div className={styles.completionMark}><i/><i/><i/></div><small>AULA {lesson.number} CONCLUÍDA</small><h1>{lesson.title}</h1><p>{lesson.objective}</p><div className={styles.lessonProgress}><span style={{width:`${lesson.number/48*100}%`}}/></div><div className={styles.mastery}><b>Professor · como terminou?</b><button data-selected={mastery==="mastered"} onClick={()=>setMastery("mastered")}>★★★ Seguro</button><button data-selected={mastery==="reinforce"} onClick={()=>setMastery("reinforce")}>★★☆ Reforçar depois</button></div>{nextLesson?<div className={styles.nextLesson}><small>PRÓXIMA AVENTURA</small><strong>{nextLesson.number}. {nextLesson.title}</strong><p>{nextLesson.focus}</p><button disabled={!mastery} onClick={()=>finishLesson(nextLesson.number)}>{nextLesson.number>maxLesson?"DESBLOQUEAR PRÓXIMAS AULAS":"CONTINUAR PARA A PRÓXIMA AULA →"}</button></div>:<div className={styles.nextLesson}><small>CICLO COMPLETO</small><strong>48 aulas concluídas</strong><button disabled={!mastery} onClick={()=>finishLesson()}>TERMINAR CICLO</button></div>}<div className={styles.completionActions}><button onClick={onOpenMap}>VER MAPA</button><button disabled={!mastery} onClick={()=>{completeLesson(studentId,age,lesson.number,mastery!);onCompleted();onExit()}}>TERMINAR SESSÃO</button></div>
+     <div className={styles.completionMark}><i/><i/><i/></div><small>AULA {lesson.number} CONCLUÍDA</small><h1>{lesson.title}</h1><p>{lesson.objective}</p><div className={styles.lessonProgress}><span style={{width:`${lesson.number/48*100}%`}}/></div><div className={styles.mastery}><b>Professor · como terminou?</b><button data-selected={mastery==="mastered"} onClick={()=>setMastery("mastered")}>★★★ Seguro</button><button data-selected={mastery==="reinforce"} onClick={()=>setMastery("reinforce")}>★★☆ Reforçar depois</button></div>{nextLesson?<div className={styles.nextLesson}><small>PRÓXIMA AVENTURA</small><strong>{nextLesson.number}. {nextLesson.title}</strong><p>{nextLesson.focus}</p><button disabled={!mastery} onClick={()=>finishLesson(nextLesson.number)}>{nextLesson.number>maxLesson?"DESBLOQUEAR PRÓXIMAS AULAS":"CONTINUAR PARA A PRÓXIMA AULA →"}</button></div>:<div className={styles.nextLesson}><small>CICLO COMPLETO</small><strong>48 aulas concluídas</strong><button disabled={!mastery} onClick={()=>finishLesson()}>TERMINAR CICLO</button></div>}<div className={styles.completionActions}><button onClick={onOpenMap}>VER MAPA</button><button disabled={!mastery} onClick={()=>finishLesson()}>TERMINAR SESSÃO</button></div>
    </section></div>}
  </>;
 }

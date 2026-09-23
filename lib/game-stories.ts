@@ -1,38 +1,19 @@
-export const gameStories: Record<string, string> = {
-  "elefante-passarinho":
-    "O Elefante e o Passarinho perderam os seus sons. Ouça com atenção e ajude cada som a voltar para o personagem certo.",
-  "leao-coelhinho":
-    "O Leão fala com voz forte e o Coelhinho responde bem baixinho. Descubra quem está a tocar.",
-  "siga-tambor":
-    "A pequena banda só consegue caminhar quando todos seguem o mesmo pulso. Ajude o tambor a manter a marcha.",
-  "eco-musical":
-    "A montanha musical repete tudo o que ouve. Escute o padrão e faça o eco voltar igual.",
-  "caca-teclas":
-    "Pequenos tesouros esconderam-se pelo teclado. Encontre as teclas certas para abrir cada baú.",
-  "caminho-cores":
-    "As cores criaram uma trilha sobre o piano. Toque na ordem certa para chegar ao fim do caminho.",
-  "trem-ritmo":
-    "O trem musical precisa do ritmo certo para chegar à próxima estação. Ajude-o a não parar no caminho.",
-  "ajude-cordeirinho":
-    "Nino, o cordeirinho, ficou para trás. Cada sequência correta aproxima Nino de Maria e da escola.",
-  "encontre-do":
-    "Vários Dós estão escondidos no piano. Use os grupos de duas teclas pretas para encontrá-los.",
-  "pauta-tecla":
-    "As notas saltaram da pauta e querem voltar ao piano. Ligue cada nota à tecla certa.",
-  "construa-compasso":
-    "O compasso ficou incompleto. Junte as figuras certas até preencher exatamente quatro tempos.",
-  "ouca-encontre":
-    "Uma nota misteriosa tocou no escuro. Ouça e descubra onde ela mora no teclado.",
-  "mestre-dedos":
-    "Os cinco dedos receberam missões diferentes. Escolha a mão e o dedo certos para completar cada desafio.",
-  "legato-staccato":
-    "Duas personagens tocam de formas diferentes: uma desliza e a outra salta. Descubra quem é legato e quem é staccato.",
-  "construa-acorde":
-    "Três notas precisam juntar-se para formar uma equipa. Escolha as notas certas e construa o acorde.",
-  "complete-melodia":
-    "A melodia parou antes de chegar ao fim. Escolha uma nota para ajudá-la a terminar a história.",
+export const gameStories:Record<string,string>={
+ "elefante-passarinho":"No Vale do Gigante, um som profundo acorda o Gigante e um som brilhante acende a Estrelinha. Ouça sem pressa e descubra quem chamou.",
+ "leao-coelhinho":"O desfiladeiro responde de duas formas: às vezes como um trovão, às vezes como uma brisa. Descubra a intensidade antes do eco desaparecer.",
+ "siga-tambor":"As luzes da Estação do Ritmo só ficam verdes quando o pulso está estável. Mantenha a mesma distância entre as batidas para abrir caminho.",
+ "eco-musical":"A Caverna do Eco guarda padrões curtos. Ouça primeiro e devolva o ritmo para fazer as ondas atravessarem o vale.",
+ "caca-teclas":"O Reino das Teclas esconde portais pelo teclado. Cada tecla certa acende um novo ponto do caminho até ao castelo.",
+ "caminho-cores":"Pedras musicais atravessam o Rio das Cores. Memorize a ordem e toque-a no piano para iluminar a próxima pedra.",
+ "trem-ritmo":"O Expresso do Ritmo só chega à estação se o pulso continuar firme quando a viagem fica mais rápida.",
+ "ajude-cordeirinho":"Uma pequena melodia atravessa o rio por etapas. Cada frase correta constrói a próxima parte da trilha.",
+ "encontre-do":"Os portais de Dó aparecem em regiões diferentes do teclado. Use o mapa das teclas pretas e encontre-os sem depender de etiquetas.",
+ "pauta-tecla":"Na Cidade da Pauta, cada símbolo precisa encontrar a tecla que lhe dá voz. Leia primeiro; só depois toque.",
+ "construa-compasso":"A Oficina do Compasso precisa de exatamente quatro tempos. Construa cada compasso sem ultrapassar a medida.",
+ "ouca-encontre":"O Radar Sonoro envia uma nota sem mostrar onde ela está. Ouça, procure no teclado e confirme com o ouvido.",
+ "mestre-dedos":"A Oficina dos Dedos liga número, mão e tecla. Complete o caminho com movimento controlado, sem tensão.",
+ "legato-staccato":"Na Ponte da Articulação, alguns sons atravessam ligados e outros saltam de pedra em pedra. Descubra como cada frase se move.",
+ "construa-acorde":"A Torre dos Acordes só acende quando as três notas certas se juntam. Construa Dó, Fá e Sol maior por níveis.",
+ "complete-melodia":"No Atelier da Melodia, as frases ficam incompletas de propósito. Primeiro reconheça finais; depois comece a criar os seus.",
 };
-
-export function getGameStory(id: string) {
-  return gameStories[id] ?? "Uma pequena missão musical espera por você.";
-}
+export function getGameStory(id:string){return gameStories[id]??"Uma missão musical em três níveis espera por você."}

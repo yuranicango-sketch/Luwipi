@@ -109,10 +109,10 @@ const repertoire58 = [
   "Três Passos","Marcha dos Dedos","O Castelo das Notas","Jardim em Dó Maior","Pequeno Explorador","Peça do módulo",
   "Marcha dos Dedos","Valsa da Lua","Chuva na Janela","Trem da Montanha","Valsa da Lua + Marcha dos Dedos","Peça rítmica curta",
   "A Ponte Musical","Jardim em Dó Maior","Dança das Estrelas","Rio de Melodias","Pequeno Explorador","Amanhecer no Piano",
-  "Passos no Bosque","Canção do Vento","Aventura em Dó Maior","Noite de Estrelas","Festa em Sol","Pequena Sonatina Luwipi",
+  "Passos no Bosque","Canção do Vento","Aventura em Dó Maior","Noite de Estrelas","Festa em Sol","Ponte das Duas Mãos",
   "Jardim em Dó Maior","Aventura em Dó Maior","Rio de Melodias","O Castelo das Notas","Festa em Sol","Canção do Vento",
   "Peixe Vivo","Dança das Estrelas","Improviso nas teclas pretas","A Ponte Musical","Composição do aluno","Peça escolhida de memória",
-  "Valsa da Lua","Amanhecer no Piano","Trem da Montanha","Brilha, Brilha, Estrelinha","Maria Tinha um Cordeirinho","Pequena Sonatina Luwipi",
+  "Valsa da Lua","Amanhecer no Piano","Trem da Montanha","Brilha, Brilha, Estrelinha","Maria Tinha um Cordeirinho","Noite de Estrelas",
   "2–3 peças escolhidas","Repertório final","Repertório final","Peça principal","Programa do recital","2–3 peças completas",
 ];
 
