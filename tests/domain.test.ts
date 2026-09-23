@@ -77,3 +77,35 @@ test("daily state changes reasons, not mastery", () => {
   assert.ok(tired.some((item) => item.reasons.includes("Menos carga, mais escuta")));
   assert.equal(JSON.stringify(s.competencies), before);
 });
+
+
+test("advanced lessons stay behind explicit prerequisites", () => {
+  const recommendations = recommendLessons(
+    student({ level: "avancado", competencies: {} }),
+    "steady",
+    [],
+  );
+  const performance = recommendations.find((item) => item.lesson.id === "45-first-piece");
+  assert.ok(performance);
+  assert.equal(performance.ready, false);
+  assert.ok(performance.unmet.includes("memory"));
+  assert.equal(recommendations[0].ready, true);
+});
+
+test("repertoire focus supports a published piece even when the title is different", () => {
+  const s = student({
+    ageBand: "6-8",
+    level: "em-progresso",
+    competencies: { memory: "desenvolvimento", pitch: "emergente" },
+    currentRepertoire: {
+      methodTitle: "Suzuki Piano School Vol. 1",
+      pieceTitle: "Peça externa em estudo",
+      status: "learning",
+      focus: "reading",
+    },
+  });
+  const reading = recommendLessons(s, "steady", []).find((item) => item.lesson.id === "68-reading");
+  assert.ok(reading);
+  assert.equal(reading.ready, true);
+  assert.ok(reading.reasons.includes("Apoia a peça atual"));
+});

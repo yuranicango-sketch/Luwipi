@@ -11,7 +11,7 @@ Plataforma de apoio a aulas individuais de piano para crianças dos 2 aos 8 anos
 - Piano virtual com Wait Mode e áudio local via Web Audio
 - Domínio validado manualmente pelo professor
 - Prática curta para a família
-- Dados de crianças locais por padrão
+- Dados de crianças locais por padrão, com perfis/fotos/histórico em IndexedDB
 - Funcionamento offline após carregamento/caching inicial
 - Login do professor com Google via Supabase
 - Teste gratuito de 3 dias conforme configuração atual de acesso
