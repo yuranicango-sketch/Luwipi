@@ -1,6 +1,7 @@
 "use client";
 
 type PianoPlayOptions = { gain?: number; duration?: number };
+type PercussionOptions = { frequency?: number; gain?: number; duration?: number };
 type AudioWindow = Window & typeof globalThis & { webkitAudioContext?: typeof AudioContext };
 
 let audioContext: AudioContext | null = null;
@@ -83,5 +84,41 @@ export async function playPianoSemitone(semitone: number, options: PianoPlayOpti
   const gainValue = Math.max(0.04, Math.min(0.8, options.gain ?? 0.44));
   const duration = Math.max(0.22, Math.min(2.4, options.duration ?? 1.25));
   pianoEnvelope(ctx, semitone, gainValue, duration);
+  return true;
+}
+
+// Compatibility API for older activity components.
+// A rate of 1 = C4, matching the previous sampler implementation.
+export async function playPianoRate(rate: number, options: PianoPlayOptions = {}) {
+  const safeRate = Number.isFinite(rate) && rate > 0 ? rate : 1;
+  return playPianoSemitone(12 * Math.log2(safeRate), options);
+}
+
+// Kept for compatibility. The new audio engine is fully synthesized with Web Audio,
+// so there are no remote piano samples to preload.
+export async function preloadPianoSamples() {
+  if (typeof window === "undefined") return;
+  getContext();
+}
+
+export async function playPercussionClick(options: PercussionOptions = {}) {
+  if (typeof window === "undefined") return false;
+  const ctx = await readyContext();
+  if (!ctx) return false;
+
+  const now = ctx.currentTime;
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  const duration = Math.max(0.04, Math.min(0.3, options.duration ?? 0.09));
+  const gainValue = Math.max(0.02, Math.min(1, options.gain ?? 0.22));
+
+  osc.type = "triangle";
+  osc.frequency.setValueAtTime(options.frequency ?? 145, now);
+  gain.gain.setValueAtTime(gainValue, now);
+  gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+  osc.connect(gain);
+  gain.connect(ctx.destination);
+  osc.start(now);
+  osc.stop(now + duration + 0.02);
   return true;
 }
