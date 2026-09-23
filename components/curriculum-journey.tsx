@@ -65,7 +65,7 @@ export function CurriculumJourney({program,variant,studentId,initialCurrent}:Pro
               const current=lesson.number===currentLesson;
               return <article className={`${styles.lesson} ${done?styles.done:""} ${current?styles.current:""}`} key={lesson.number}>
                 <span className={styles.marker}>{done?"✓":String(lesson.number).padStart(2,"0")}</span>
-                <div className={styles.lessonText}><h3>{lesson.title}</h3><p>{lesson.focus}</p>{state?.mastery==="reinforce"&&<small>↻ Reforçar depois</small>}</div>
+                <div className={styles.lessonText}><h3>{lesson.title}</h3><p>{lesson.focus}</p>{done&&<span className={styles.stars} aria-label={state?.mastery==="mastered"?"3 estrelas":"2 estrelas"}>{state?.mastery==="mastered"?"★★★":"★★☆"}</span>}{state?.mastery==="reinforce"&&<small>↻ Reforçar depois</small>}</div>
                 <Link className={current?styles.continue:styles.start} href={`/aulas/${program.age}/${lesson.number}?variant=${variant.id}&student=${encodeURIComponent(studentId)}`}>{done?"REVER":current?"CONTINUAR":"ABRIR"}</Link>
               </article>;
             })}
