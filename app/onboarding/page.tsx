@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { createLocalStudent, saveLocalStudent, type LocalStudent } from "@/lib/teacher-local-v2";
+import { createLocalStudent, saveLocalStudent, type LocalStudent } from "@/lib/teacher-store";
 import type { AgeBand } from "@/lib/suzuki-lessons";
 import { imageFileToLocalAvatar } from "@/lib/local-image";
 import styles from "./onboarding.module.css";
@@ -27,6 +27,7 @@ export default function OnboardingPage() {
   const [level, setLevel] = useState<LocalStudent["level"]>("iniciante");
   const [photoDataUrl, setPhotoDataUrl] = useState<string | undefined>();
   const [photoBusy, setPhotoBusy] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   async function choosePhoto(file?: File) {
     if (!file) return;
@@ -35,11 +36,16 @@ export default function OnboardingPage() {
     finally { setPhotoBusy(false); }
   }
 
-  function finish() {
-    if (!name.trim()) return;
-    const student = createLocalStudent({ name, ageBand, level, photoDataUrl });
-    saveLocalStudent(student);
-    router.push("/dashboard");
+  async function finish() {
+    if (!name.trim() || saving) return;
+    setSaving(true);
+    try {
+      const student = createLocalStudent({ name, ageBand, level, photoDataUrl });
+      await saveLocalStudent(student);
+      router.push("/dashboard");
+    } finally {
+      setSaving(false);
+    }
   }
 
   return <main className={styles.page}>
@@ -51,26 +57,26 @@ export default function OnboardingPage() {
       </header>
 
       <div className={styles.identity}>
-        <button className={styles.photo} onClick={() => fileRef.current?.click()} aria-label="Adicionar foto opcional">
+        <button type="button" className={styles.photo} onClick={() => fileRef.current?.click()} aria-label="Adicionar foto opcional">
           {photoDataUrl ? <img src={photoDataUrl} alt="Pré-visualização local do aluno" /> : <><b>+</b><small>{photoBusy ? "A preparar…" : "Foto opcional"}</small></>}
         </button>
-        <input ref={fileRef} className={styles.hidden} type="file" accept="image/*" onChange={(event: any) => void choosePhoto(event.target.files?.[0])}/>
-        <label><span>Nome ou identificação</span><input autoFocus value={name} onChange={(event: any) => setName(event.target.value)} placeholder="Ex.: Sofia" /></label>
+        <input ref={fileRef} className={styles.hidden} type="file" accept="image/*" onChange={(event) => void choosePhoto(event.target.files?.[0])}/>
+        <label><span>Nome ou identificação</span><input autoFocus value={name} onChange={(event) => setName(event.target.value)} placeholder="Ex.: Sofia" /></label>
       </div>
 
       <div className={styles.section}>
         <strong>Idade</strong>
-        <div className={styles.ageGrid}>{ages.map((age) => <button key={age.id} data-active={ageBand === age.id} onClick={() => setAgeBand(age.id)}><b>{age.label}</b><small>{age.note}</small></button>)}</div>
+        <div className={styles.ageGrid}>{ages.map((age) => <button type="button" key={age.id} data-active={ageBand === age.id} onClick={() => setAgeBand(age.id)}><b>{age.label}</b><small>{age.note}</small></button>)}</div>
       </div>
 
       <div className={styles.section}>
         <strong>Ponto de partida</strong>
-        <div className={styles.levelGrid}>{levels.map((item) => <button key={item.id} data-active={level === item.id} onClick={() => setLevel(item.id)}>{item.label}</button>)}</div>
+        <div className={styles.levelGrid}>{levels.map((item) => <button type="button" key={item.id} data-active={level === item.id} onClick={() => setLevel(item.id)}>{item.label}</button>)}</div>
       </div>
 
       <footer>
-        <div><b>🔒 Local por padrão</b><small>Ao trocar de tablet, exporte uma cópia em Privacidade e Dados.</small></div>
-        <button className={styles.primary} disabled={!name.trim() || photoBusy} onClick={finish}>Criar e preparar aula →</button>
+        <div><b>🔒 Local por padrão</b><small>Perfis, fotos e histórico ficam no IndexedDB deste dispositivo.</small></div>
+        <button className={styles.primary} disabled={!name.trim() || photoBusy || saving} onClick={() => void finish()}>{saving ? "A guardar…" : "Criar e preparar aula →"}</button>
       </footer>
     </section>
   </main>;
