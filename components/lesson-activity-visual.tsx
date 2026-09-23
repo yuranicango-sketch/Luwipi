@@ -37,6 +37,30 @@ function DynamicsScene() {
   </svg>;
 }
 
+
+function TechniqueScene() {
+  return <div className={styles.techniqueScene} role="img" aria-label="Postura e forma confortável da mão ao piano">
+    <svg viewBox="0 0 640 220" aria-hidden="true">
+      <rect x="92" y="154" width="456" height="38" rx="9" className={styles.pianoRail}/>
+      <path d="M54 70c78 4 111 28 152 76M586 70c-78 4-111 28-152 76" className={styles.armLine}/>
+      <path d="M190 143c28-43 65-64 108-59 28 3 46 18 64 42 20-22 44-31 72-23 20 6 34 19 42 41-48-11-88-5-120 19-49-17-105-24-166-20Z" className={styles.handShape}/>
+      <circle cx="105" cy="64" r="9" className={styles.jointDot}/><circle cx="535" cy="64" r="9" className={styles.jointDot}/>
+    </svg>
+    <div><span>ombros soltos</span><span>pulso livre</span><span>mão confortável</span></div>
+  </div>;
+}
+
+function ReadingScene() {
+  return <div className={styles.readingScene} role="img" aria-label="Pauta com notas mostrando uma direção melódica ascendente">
+    <svg viewBox="0 0 640 220" aria-hidden="true">
+      {[58,82,106,130,154].map((y)=><line key={y} x1="60" x2="580" y1={y} y2={y} className={styles.staffLine}/>)}
+      <path d="M120 151 210 130 300 106 390 106 480 82" className={styles.readingGuide}/>
+      {[[120,151],[210,130],[300,106],[390,106],[480,82]].map(([x,y],index)=><g key={index}><ellipse cx={x} cy={y} rx="13" ry="9" className={styles.noteHead}/><line x1={x+11} x2={x+11} y1={y} y2={y-48} className={styles.noteStem}/></g>)}
+    </svg>
+    <p>primeiro vê a direção · depois lê os detalhes</p>
+  </div>;
+}
+
 function ListenScene() {
   return <div className={styles.listen} role="img" aria-label="Símbolo visual para escuta atenta">
     <span className={styles.listenCore}/>
@@ -57,7 +81,9 @@ export function LessonActivityVisual({ block, ageBand, reduced = false }: { bloc
   const competencies = new Set(block.competencies);
   let content: React.ReactNode = null;
 
-  if (competencies.has("keyboard") || block.kind === "piano") content = <KeyboardMap/>;
+  if (competencies.has("reading")) content = <ReadingScene/>;
+  else if (competencies.has("posture") || competencies.has("hand") || competencies.has("fingers")) content = <TechniqueScene/>;
+  else if (competencies.has("keyboard") || block.kind === "piano") content = <KeyboardMap/>;
   else if (competencies.has("pitch")) content = <PitchScene/>;
   else if (competencies.has("dynamics")) content = <DynamicsScene/>;
   else if (competencies.has("pulse") || competencies.has("rhythm") || block.kind === "movement") content = <PulseScene/>;
