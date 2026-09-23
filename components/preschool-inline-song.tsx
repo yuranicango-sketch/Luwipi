@@ -6,7 +6,7 @@ import styles from "./preschool-inline-song.module.css";
 import {playPianoRate,preloadPianoSamples} from "@/lib/piano-sampler";
 import {LuwipiPiano,type LuwipiPianoKey} from "@/components/luwipi-piano";
 
-function sound(note:string){void playPianoRate(noteRate(note));}
+function sound(note:string){void playPianoRate(noteRate(note),{gain:.62,duration:.7});}
 export function PreschoolInlineSong({song,lessonNumber}:{song:KidsSong;lessonNumber:number}){
  const phase=(lessonNumber-1)%8;
  const sequence=song.sequence??song.sections?.flatMap(section=>section.notes)??[];

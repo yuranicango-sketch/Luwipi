@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import { playPianoRate } from "@/lib/piano-sampler";
 
 type GameId = "elefante-passarinho" | "leao-coelhinho";
 type Choice = "left" | "right";
@@ -32,11 +33,15 @@ function buildSession() {
   let li=0, hi=0;
   return answers.map(choice => choice === "left" ? lows[li++] : highs[hi++]);
 }
-function playInstrument(sound: InstrumentSound) {
-  const a = new Audio(sound.url); a.preload = "auto"; a.volume = sound.volume; void a.play().catch(() => undefined);
+function playInstrument(sound: InstrumentSound, fallbackRate:number) {
+  const a = new Audio(sound.url);
+  a.preload = "auto";
+  a.volume = sound.volume;
+  void a.play().catch(() => {
+    void playPianoRate(fallbackRate,{gain:sound.volume,duration:.7});
+  });
 }
-const pianoSample = "https://tonejs.github.io/audio/salamander/C4.mp3";
-function playPiano(volume:number){ const a=new Audio(pianoSample); a.preload="auto"; a.volume=volume; void a.play(); }
+function playPiano(volume:number){ void playPianoRate(1,{gain:volume,duration:.7}); }
 
 const configs = {
   "elefante-passarinho": { title:"Elefante ou Passarinho?", question:"O som é grave ou agudo?", left:{emoji:"🐘",label:"Elefante"}, right:{emoji:"🐦",label:"Passarinho"} },
@@ -50,7 +55,7 @@ export function ListenChoiceGame({gameId,story}:{gameId:GameId;story:string}) {
   const [started,setStarted]=useState(false); const [round,setRound]=useState(0); const [heard,setHeard]=useState(false); const [result,setResult]=useState<"right"|"wrong"|null>(null);
   const complete=round>=answers.length; const expected=answers[round]; const instrument=session[round];
   useEffect(()=>{ if(gameId!=="elefante-passarinho") return; session.forEach(s=>{const a=new Audio(s.url);a.preload="auto";a.load();}); },[gameId,session]);
-  function hear(){ if(!expected)return; if(gameId==="elefante-passarinho"&&instrument) playInstrument(instrument); else playPiano(expected==="left"?.78:.22); setHeard(true); }
+  function hear(){ if(!expected)return; if(gameId==="elefante-passarinho"&&instrument) playInstrument(instrument,expected==="left"?.5:2); else playPiano(expected==="left"?.78:.22); setHeard(true); }
   function choose(c:Choice){ if(!heard||!expected)return; if(c===expected)setResult("right"); else {setResult("wrong"); hear();} }
   function next(){setRound(v=>v+1);setHeard(false);setResult(null)}
   function restart(){setVersion(v=>v+1);setRound(0);setHeard(false);setResult(null);setStarted(true)}

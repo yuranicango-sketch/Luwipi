@@ -39,7 +39,7 @@ const POSITION:Record<string,string>={
   "Si":"Procure um grupo de 3 teclas pretas. Si é a tecla branca imediatamente à direita.",
 };
 
-function sound(key:Key){void playPianoRate(key.rate);}
+function sound(key:Key){void playPianoRate(key.rate,{gain:.62,duration:.72});}
 function samePitch(key:Key,note:string){return key.note===noteName(note)&&(key.octave??4)===noteOctave(note);}
 const wait=(ms:number)=>new Promise<void>(resolve=>window.setTimeout(resolve,ms));
 

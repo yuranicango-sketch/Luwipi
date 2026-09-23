@@ -27,19 +27,21 @@ export function ListenFindGame({story}:{story:string}){
   const [round,setRound]=useState(0);
   const [heard,setHeard]=useState(false);
   const [message,setMessage]=useState<string|null>(null);
+  const [locked,setLocked]=useState(false);
   const target=rounds[round];
   const complete=round>=rounds.length;
 
-  function hear(){if(!target)return;play(target);setHeard(true);setMessage(null)}
+  function hear(){if(!target||locked)return;play(target);setHeard(true);setMessage(null)}
   function chooseKey(key:LuwipiPianoKey){
     const note=key.note as Note;
-    if(!heard||!target)return;
+    if(!heard||!target||locked)return;
     if(note===target){
+      setLocked(true);
       setMessage("✓ Muito bem!");
-      window.setTimeout(()=>{setRound((value)=>value+1);setHeard(false);setMessage(null)},600);
+      window.setTimeout(()=>{setRound((value)=>value+1);setHeard(false);setMessage(null);setLocked(false)},600);
     }else setMessage("Quase. Ouça novamente.");
   }
-  function restart(){setRound(0);setHeard(false);setMessage(null);setStarted(true)}
+  function restart(){setRound(0);setHeard(false);setMessage(null);setLocked(false);setStarted(true)}
 
   if(!started)return <section className="shell center"><div className="big">👂🎹</div><small>Historinha</small><h1>Ouça e Encontre</h1><p>{story}</p><button className="duo" type="button" onClick={()=>setStarted(true)}>COMEÇAR</button><style jsx>{css}</style></section>
   if(complete)return <section className="shell center"><div className="big">🌟</div><h1>Muito bem!</h1><p>Você encontrou todos os sons.</p><button className="duo" type="button" onClick={restart}>JOGAR DE NOVO</button><Link className="back" href="/jogos">Outro jogo</Link><style jsx>{css}</style></section>
@@ -47,7 +49,7 @@ export function ListenFindGame({story}:{story:string}){
   return <section className="shell center">
     <small>Rodada {round+1} de {rounds.length}</small><h1>Qual tecla tocou?</h1>
     <button className="hear" type="button" onClick={hear}>🔊 {heard?"OUVIR DE NOVO":"OUVIR"}</button>
-    <LuwipiPiano compact disabled={!heard} onPress={chooseKey}/>
+    <LuwipiPiano compact disabled={!heard||locked} onPress={chooseKey}/>
     {!heard&&<p>Ouça primeiro.</p>}
     {message&&<div className={`message ${message.startsWith("✓")?"ok":""}`}>{message}</div>}
     <style jsx>{css}</style>

@@ -11,6 +11,7 @@ export function KeyboardHuntGame({ gameId, story }: { gameId: GameId; story: str
   const [started, setStarted] = useState(false);
   const [round, setRound] = useState(0);
   const [message, setMessage] = useState<string | null>(null);
+  const [locked, setLocked] = useState(false);
 
   const missions = gameId === "encontre-do"
     ? [
@@ -30,12 +31,14 @@ export function KeyboardHuntGame({ gameId, story }: { gameId: GameId; story: str
   const mission = missions[round];
 
   function press(key: Key) {
-    if (!mission) return;
+    if (!mission || locked) return;
     if (mission.test(key)) {
+      setLocked(true);
       setMessage("✓ Muito bem!");
       window.setTimeout(() => {
         setRound((value) => value + 1);
         setMessage(null);
+        setLocked(false);
       }, 550);
     } else {
       setMessage("Quase. Tente outra tecla.");
@@ -60,7 +63,7 @@ export function KeyboardHuntGame({ gameId, story }: { gameId: GameId; story: str
       <section className="shell intro">
         <div className="big">🌟</div>
         <h1>Missão concluída!</h1>
-        <button className="duo" type="button" onClick={() => {setRound(0);setMessage(null)}}>JOGAR DE NOVO</button>
+        <button className="duo" type="button" onClick={() => {setRound(0);setMessage(null);setLocked(false)}}>JOGAR DE NOVO</button>
         <Link className="back" href="/jogos">Outro jogo</Link>
         <style jsx>{css}</style>
       </section>
@@ -72,7 +75,7 @@ export function KeyboardHuntGame({ gameId, story }: { gameId: GameId; story: str
       <small>Missão {round + 1} de {missions.length}</small>
       <h1>{mission.text}</h1>
 
-      <LuwipiPiano compact blackKeysInteractive onPress={(key:LuwipiPianoKey)=>press({label:key.note,kind:"white"})} onBlackPress={()=>press({label:"",kind:"black"})}/>
+      <LuwipiPiano compact disabled={locked} blackKeysInteractive onPress={(key:LuwipiPianoKey)=>press({label:key.note,kind:"white"})} onBlackPress={()=>press({label:"",kind:"black"})}/>
 
       {message && <div className={`message ${message.startsWith("✓") ? "ok" : ""}`}>{message}</div>}
 

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useRef, useState } from "react";
+import { playPercussionClick } from "@/lib/piano-sampler";
 
 type Phase = "story" | "listen" | "tap" | "success";
 
@@ -9,22 +10,7 @@ const intervalMs = 700;
 const roundsTotal = 4;
 
 function clickSound() {
-  const AudioContextClass = window.AudioContext ?? (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
-  if (!AudioContextClass) return;
-
-  const ctx = new AudioContextClass();
-  const osc = ctx.createOscillator();
-  const gain = ctx.createGain();
-
-  osc.frequency.setValueAtTime(145, ctx.currentTime);
-  gain.gain.setValueAtTime(0.22, ctx.currentTime);
-  gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.08);
-
-  osc.connect(gain);
-  gain.connect(ctx.destination);
-  osc.start();
-  osc.stop(ctx.currentTime + 0.09);
-  window.setTimeout(() => void ctx.close(), 180);
+  void playPercussionClick({ frequency:145, gain:.22, duration:.09 });
 }
 
 function wait(ms: number) {
