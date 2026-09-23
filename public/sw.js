@@ -1,38 +1,61 @@
-const CACHE = "luwipi-classroom-v2";
-const CORE = ["/dashboard", "/aula", "/alunos", "/curriculo", "/biblioteca", "/casa", "/privacidade", "/icon.svg"];
+const CACHE = "luwipi-static-v3";
+const CORE = ["/icon.svg"];
 
 self.addEventListener("install", (event) => {
-  event.waitUntil(caches.open(CACHE).then(async (cache) => {
-    await Promise.allSettled(CORE.map((url) => cache.add(new Request(url, { cache: "reload" }))));
-  }));
+  event.waitUntil(
+    caches.open(CACHE).then(async (cache) => {
+      await Promise.allSettled(
+        CORE.map((url) => cache.add(new Request(url, { cache: "reload" }))),
+      );
+    }),
+  );
   self.skipWaiting();
 });
 
 self.addEventListener("activate", (event) => {
-  event.waitUntil(caches.keys().then((keys) => Promise.all(keys.filter((key) => key !== CACHE).map((key) => caches.delete(key)))));
+  event.waitUntil(
+    caches.keys().then((keys) =>
+      Promise.all(keys.filter((key) => key !== CACHE).map((key) => caches.delete(key))),
+    ),
+  );
   self.clients.claim();
 });
 
 self.addEventListener("fetch", (event) => {
   const request = event.request;
   if (request.method !== "GET") return;
+
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
-  if (url.pathname.startsWith("/api/") || url.pathname.startsWith("/auth/")) return;
 
-  if (request.mode === "navigate") {
-    event.respondWith(fetch(request).then((response) => {
-      const copy = response.clone();
-      caches.open(CACHE).then((cache) => cache.put(request, copy));
-      return response;
-    }).catch(async () => (await caches.match(request)) || (await caches.match("/dashboard"))));
+  // Never cache authenticated HTML or API/auth responses.
+  // The live lesson is intentionally network-free once loaded; static assets below
+  // are cached so the current session can continue if connectivity drops.
+  if (
+    request.mode === "navigate" ||
+    url.pathname.startsWith("/api/") ||
+    url.pathname.startsWith("/auth/")
+  ) {
     return;
   }
 
-  if (url.pathname.startsWith("/_next/static/") || url.pathname.startsWith("/assets/") || /\.(?:js|css|svg|png|jpg|jpeg|webp|woff2?)$/i.test(url.pathname)) {
-    event.respondWith(caches.match(request).then((cached) => cached || fetch(request).then((response) => {
-      if (response.ok) caches.open(CACHE).then((cache) => cache.put(request, response.clone()));
-      return response;
-    })));
-  }
+  const isStatic =
+    url.pathname.startsWith("/_next/static/") ||
+    url.pathname.startsWith("/assets/") ||
+    /\.(?:js|css|svg|png|jpg|jpeg|webp|woff2?)$/i.test(url.pathname);
+
+  if (!isStatic) return;
+
+  event.respondWith(
+    caches.match(request).then((cached) => {
+      const network = fetch(request).then((response) => {
+        if (response.ok && response.type === "basic") {
+          caches.open(CACHE).then((cache) => cache.put(request, response.clone()));
+        }
+        return response;
+      });
+
+      return cached || network;
+    }),
+  );
 });
