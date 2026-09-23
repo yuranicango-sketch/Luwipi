@@ -5,7 +5,7 @@ import styles from "./home-practice-panel.module.css";
 
 export function HomePracticePanel(){
  const [history,setHistory]=useState<LessonHistory[]>([]),[students,setStudents]=useState<LocalStudent[]>([]),[copied,setCopied]=useState("");
- useEffect(()=>{setHistory(getLessonHistory());setStudents(getLocalStudents())},[]);
+ useEffect(()=>{void Promise.all([getLessonHistory(),getLocalStudents()]).then(([nextHistory,nextStudents])=>{setHistory(nextHistory);setStudents(nextStudents)})},[]);
  function nameFor(id:string){return students.find((s)=>s.id===id)?.name??"Aluno"}
  return <div className={styles.page}><header><span>CASA</span><h1>O pai precisa de saber o que repetir — e quando parar.</h1><p>Sem streaks. Sem culpa. Uma tarefa curta, clara e ligada ao que aconteceu na aula.</p></header><section className={styles.grid}>{history.length?history.slice(0,20).map((item)=>{
    const fallbackPractice=[`🎧 Ouvir: ${item.repertoire}`,"👐 Repetir uma brincadeira curta da aula","🎹 Tocar ou imitar apenas o pequeno trecho que ficou confortável"];
