@@ -13,7 +13,7 @@ import { getGameStory } from "@/lib/game-stories";
 
 export default async function GameDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params; const game = getGame(id); if (!game) notFound(); const story = getGameStory(id);
-  return <main className="dashboard-page"><header className="simple-header container"><Logo/><Link href="/jogos">← Jogos</Link></header>
+  return <main className="dashboard-page game-detail"><header className="simple-header container"><Logo/><Link href="/jogos">← Jogos</Link></header>{game.image&&<div className="game-real-art"><img src={game.image} alt="" /></div>}
     {id === "elefante-passarinho" || id === "leao-coelhinho" ? <ListenChoiceGame gameId={id} story={story} />
     : id === "caca-teclas" || id === "encontre-do" ? <KeyboardHuntGame gameId={id} story={story} />
     : id === "siga-tambor" ? <RhythmTapGame story={story} />
@@ -29,5 +29,5 @@ export default async function GameDetailPage({ params }: { params: Promise<{ id:
     : id === "construa-acorde" ? <ChordBuildGame story={story} />
     : id === "complete-melodia" ? <CompleteMelodyGame story={story} />
     : <section className="container demo-dashboard" style={{maxWidth:720}}><div className="eyebrow">{game.age} anos</div><h1>{game.emoji} {game.title}</h1><p>{story}</p></section>}
-  </main>;
+  <style>{`.game-real-art{width:min(700px,calc(100% - 24px));height:210px;margin:18px auto -8px;border-radius:28px;overflow:hidden;background:#eef3f8}.game-real-art img{width:100%;height:100%;object-fit:cover}.game-detail .big,.game-detail .characters{display:none!important}`}</style></main>;
 }

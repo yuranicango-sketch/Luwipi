@@ -62,26 +62,6 @@ function nearestSample(targetSemitone: number) {
   );
 }
 
-function fallbackTone(targetSemitone: number) {
-  const context = getAudioContext();
-  if (!context) return;
-
-  const now = context.currentTime;
-  const oscillator = context.createOscillator();
-  const gain = context.createGain();
-  const frequency = 261.625565 * Math.pow(2, targetSemitone / 12);
-
-  oscillator.type = "triangle";
-  oscillator.frequency.setValueAtTime(frequency, now);
-  gain.gain.setValueAtTime(0.18, now);
-  gain.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
-
-  oscillator.connect(gain);
-  gain.connect(context.destination);
-  oscillator.start(now);
-  oscillator.stop(now + 0.5);
-}
-
 export async function preloadPianoSamples() {
   if (typeof window === "undefined") return;
 
@@ -127,6 +107,7 @@ export async function playPianoRate(rate: number) {
     source.start(now);
     source.stop(now + 1.9);
   } catch {
-    fallbackTone(targetSemitone);
+    // Never teach with a synthetic fallback timbre.
+    return;
   }
 }

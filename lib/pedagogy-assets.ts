@@ -1,13 +1,14 @@
 export type PedagogyVisualKind="posture"|"hands"|"highlow"|"dynamics"|"rhythm"|"tempo"|"direction"|"listen"|"story"|"create"|"celebrate";
 export type PedagogyAsset={src:string;alt:string;source:string;license:string;focus:string};
 const local=(name:string,alt:string,focus:string):PedagogyAsset=>({src:"/assets/lessons/"+name+".svg",alt,focus,source:"Luwipi",license:"Original"});
+const real=(src:string,alt:string,focus:string,source:string):PedagogyAsset=>({src,alt,focus,source,license:"Source material / review required"});
 export const actionFallbacks:Record<string,PedagogyAsset[]>={
-"posture-center":[local("posture-center","Aluno alinhado com o centro do teclado.","ALINHAR AO CENTRO")],
+"posture-center":[real("https://commons.wikimedia.org/wiki/Special:Redirect/file/Piano%20practice%20hands.jpg","Aluno sentado diante do piano.","ALINHAR AO CENTRO","Pexels")],
 "posture-distance":[local("posture-distance","Vista lateral mostrando banco, tronco, cotovelo e teclado.","DISTÂNCIA E COTOVELO")],
 "posture-feet":[local("posture-feet","Pés apoiados enquanto o aluno está sentado ao piano.","APOIO DOS PÉS")],
 "posture-relax":[local("posture-relax","Comparação entre ombros tensos e relaxados.","SOLTAR OMBROS E BRAÇOS")],
-"hand-shape":[local("hand-shape","Sequência da mão relaxada até pousar no teclado.","FORMA NATURAL DA MÃO")],
-"finger-numbering":[local("finger-numbering","Duas mãos com os dedos numerados de 1 a 5.","DEDOS 1–5")],
+"hand-shape":[real("https://commons.wikimedia.org/wiki/Special:Redirect/file/Hand-%20und%20Fingerstellung.jpg","Mão e dedos sobre o teclado.","FORMA NATURAL DA MÃO","Wikimedia Commons")],
+"finger-numbering":[real("https://commons.wikimedia.org/wiki/Special:Redirect/file/Clementi1801Fingering.png","Referência histórica de dedilhado ao piano.","DEDOS 1–5","Wikimedia Commons")],
 "keyboard-groups":[local("keyboard-groups","Teclado destacando grupos de duas e três teclas pretas.","GRUPOS DE 2 E 3")],
 "middle-c":[local("middle-c","Teclado com o Dó central destacado.","DÓ CENTRAL")],
 "note-values":[local("note-values","Semínima, mínima, semibreve, colcheias e pausas com duração visual.","VALORES RÍTMICOS")],
