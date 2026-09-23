@@ -1,5 +1,14 @@
 import type { AgeBand, CompetencyId, LessonBlock, MasteryLevel, StudentState } from "@/lib/suzuki-lessons";
 
+export type RepertoireStatus = "listening" | "learning" | "review";
+
+export type RepertoireReference = {
+  methodTitle?: string;
+  pieceTitle: string;
+  status: RepertoireStatus;
+  note?: string;
+};
+
 export type LocalStudent = {
   id: string;
   name: string;
@@ -11,6 +20,7 @@ export type LocalStudent = {
   reducedStimulus: boolean;
   competencies: Partial<Record<CompetencyId, MasteryLevel>>;
   repertoire: string[];
+  currentRepertoire?: RepertoireReference;
   createdAt: string;
 };
 
@@ -73,19 +83,44 @@ function write<T>(key: string, value: T) {
   window.localStorage.setItem(key, JSON.stringify(value));
 }
 
-export function getLocalStudents() { return read<LocalStudent[]>(STUDENTS, []); }
+function normalizeStudent(student: LocalStudent): LocalStudent {
+  return {
+    ...student,
+    repeatVariation: student.repeatVariation ?? false,
+    reducedStimulus: student.reducedStimulus ?? false,
+    competencies: student.competencies ?? {},
+    repertoire: Array.isArray(student.repertoire) ? student.repertoire : [],
+    currentRepertoire: student.currentRepertoire?.pieceTitle
+      ? {
+          methodTitle: student.currentRepertoire.methodTitle?.trim() || undefined,
+          pieceTitle: student.currentRepertoire.pieceTitle.trim(),
+          status: student.currentRepertoire.status ?? "learning",
+          note: student.currentRepertoire.note?.trim() || undefined,
+        }
+      : undefined,
+  };
+}
+
+export function getLocalStudents() {
+  return read<LocalStudent[]>(STUDENTS, []).map(normalizeStudent);
+}
+
 export function saveLocalStudents(students: LocalStudent[]) {
-  write(STUDENTS, students);
+  write(STUDENTS, students.map(normalizeStudent));
   if (typeof window !== "undefined") window.dispatchEvent(new Event("luwipi:v2:students"));
 }
+
 export function saveLocalStudent(student: LocalStudent) {
   const current = getLocalStudents();
-  saveLocalStudents([student, ...current.filter((item) => item.id !== student.id)]);
+  saveLocalStudents([normalizeStudent(student), ...current.filter((item) => item.id !== student.id)]);
 }
-export function getLocalStudent(id: string) { return getLocalStudents().find((student) => student.id === id) ?? null; }
+
+export function getLocalStudent(id: string) {
+  return getLocalStudents().find((student) => student.id === id) ?? null;
+}
 
 export function updateLocalStudent(id: string, patch: Partial<Omit<LocalStudent, "id" | "createdAt">>) {
-  const next = getLocalStudents().map((student) => student.id === id ? { ...student, ...patch } : student);
+  const next = getLocalStudents().map((student) => student.id === id ? normalizeStudent({ ...student, ...patch }) : student);
   saveLocalStudents(next);
   return next.find((student) => student.id === id) ?? null;
 }
@@ -112,6 +147,7 @@ export function clearActiveLesson() { if (typeof window !== "undefined") window.
 
 export function getLessonHistory() { return read<LessonHistory[]>(HISTORY, []); }
 export function getStudentHistory(studentId: string) { return getLessonHistory().filter((entry) => entry.studentId === studentId); }
+
 export function saveLessonHistory(entry: LessonHistory) {
   const current = getLessonHistory();
   write(HISTORY, [entry, ...current].slice(0, 300));
@@ -121,11 +157,11 @@ export function updateStudentMastery(studentId: string, updates: Partial<Record<
   const students = getLocalStudents();
   const next = students.map((student) => {
     if (student.id !== studentId) return student;
-    return {
+    return normalizeStudent({
       ...student,
       competencies: { ...student.competencies, ...updates },
       repertoire: repertoire && !student.repertoire.includes(repertoire) ? [repertoire, ...student.repertoire] : student.repertoire,
-    };
+    });
   });
   saveLocalStudents(next);
 }
@@ -152,7 +188,7 @@ export function importLocalBackup(input: unknown) {
   if (backup.format !== "luwipi-local-backup" || backup.version !== 2) throw new Error("backup_incompativel");
   if (!Array.isArray(backup.students) || !backup.students.every(validStudent)) throw new Error("alunos_invalidos");
   if (!Array.isArray(backup.history) || !backup.history.every(validHistory)) throw new Error("historico_invalido");
-  saveLocalStudents(backup.students);
+  saveLocalStudents(backup.students.map(normalizeStudent));
   write(HISTORY, backup.history.slice(0, 300));
   clearActiveLesson();
   if (typeof window !== "undefined") window.dispatchEvent(new Event("luwipi:v2:history"));
