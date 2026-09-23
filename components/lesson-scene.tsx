@@ -1,5 +1,6 @@
 "use client";
 
+import { LivingLessonWorld } from "@/components/living-lesson-world";
 import type { LessonExperience } from "@/lib/lesson-experience";
 import { mediaForLesson } from "@/lib/lesson-media";
 import styles from "./lesson-scene.module.css";
@@ -11,6 +12,7 @@ type Props={
  title:string;
  instruction:string;
  expected?:string;
+ reaction?:"idle"|"success"|"wrong";
 };
 
 function KeyboardMap({visualKey,expected}:{visualKey:string;expected?:string}){
@@ -61,7 +63,7 @@ function PhotoScene({items}:{items:ReturnType<typeof mediaForLesson>}){
  return <div className={styles.photoGrid} data-count={items.length}>{items.map((item,index)=><figure key={item.src} style={{animationDelay:`${index*.12}s`}}><img src={item.src} alt={item.alt} style={{objectFit:item.fit??"cover"}}/><figcaption>{item.credit}</figcaption></figure>)}</div>;
 }
 
-export function LessonScene({age,lessonNumber,experience,title,instruction,expected}:Props){
+export function LessonScene({age,lessonNumber,experience,title,instruction,expected,reaction="idle"}:Props){
  const media=mediaForLesson(age,lessonNumber,experience.visualKey);
  let visual;
  if(media.length)visual=<PhotoScene items={media}/>;
@@ -74,8 +76,9 @@ export function LessonScene({age,lessonNumber,experience,title,instruction,expec
  else if(experience.kind==="creation"||experience.kind==="practice")visual=<CreationScene visualKey={experience.visualKey}/>;
  else visual=<div className={styles.stageWord}><span>{String(lessonNumber).padStart(2,"0")}</span><strong>{title}</strong><i/></div>;
 
- return <section className={styles.scene} data-kind={experience.kind}>
-   <div className={styles.visual}>{visual}</div>
+ return <section className={styles.scene} data-kind={experience.kind} data-reaction={reaction}>
+   <LivingLessonWorld age={age} lessonNumber={lessonNumber} experience={experience} reaction={reaction}/>
+   <div className={styles.activityLayer}><div className={styles.visual}>{visual}</div></div>
    <div className={styles.caption}><small>{experience.chapter}</small><h2>{title}</h2><p>{instruction}</p></div>
  </section>;
 }
