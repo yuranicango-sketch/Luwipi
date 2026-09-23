@@ -47,7 +47,7 @@ Only the teacher can change mastery. Completing blocks, pressing virtual keys, W
 
 ## Recommendation contract
 
-The lesson recommender may use:
+The lesson recommender may use explicit lesson prerequisites and spiral review. It may also use:
 
 - age band;
 - teacher-selected level;
@@ -109,8 +109,8 @@ A teacher may record a published method and current piece as an external referen
 Child profile, optional photo, mastery, teacher notes and lesson history remain on the device by default.
 
 - No child-learning API is required for normal lessons.
-- `localStorage` is the fast synchronous mirror.
-- IndexedDB is the durable local fallback.
+- IndexedDB is the primary store for child profiles, optional photos and lesson history.
+- `localStorage` is reserved for the small active-lesson resume record and a compatibility fallback only when IndexedDB is unavailable.
 - Export/import is explicit and teacher-controlled.
 - Account, billing and admin data may use Supabase because they concern the teacher/service relationship.
 

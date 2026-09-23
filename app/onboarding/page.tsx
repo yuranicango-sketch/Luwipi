@@ -35,10 +35,10 @@ export default function OnboardingPage() {
     finally { setPhotoBusy(false); }
   }
 
-  function finish() {
+  async function finish() {
     if (!name.trim()) return;
     const student = createLocalStudent({ name, ageBand, level, photoDataUrl });
-    saveLocalStudent(student);
+    await saveLocalStudent(student);
     router.push("/dashboard");
   }
 
@@ -70,7 +70,7 @@ export default function OnboardingPage() {
 
       <footer>
         <div><b>🔒 Local por padrão</b><small>Ao trocar de tablet, exporte uma cópia em Privacidade e Dados.</small></div>
-        <button className={styles.primary} disabled={!name.trim() || photoBusy} onClick={finish}>Criar e preparar aula →</button>
+        <button className={styles.primary} disabled={!name.trim() || photoBusy} onClick={() => void finish()}>Criar e preparar aula →</button>
       </footer>
     </section>
   </main>;
