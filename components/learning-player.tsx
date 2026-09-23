@@ -18,6 +18,7 @@ export type LearningPianoDeck = {
   startOctave?: number;
   showLabels?: boolean;
   blackKeysInteractive?: boolean;
+  attentionCue?: boolean;
   hint?: string;
 };
 
@@ -66,6 +67,7 @@ export function LearningPlayer({ backHref, onBack, eyebrow, title, progress = 0,
         onBlackPress={piano.onBlackPress}
         showLabels={piano.showLabels ?? true}
         blackKeysInteractive={piano.blackKeysInteractive ?? true}
+        attentionCue={piano.attentionCue ?? false}
         disabled={!inputActive}
       />
     </section>

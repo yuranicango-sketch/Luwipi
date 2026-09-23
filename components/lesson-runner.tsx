@@ -218,7 +218,7 @@ export function LessonRunner({age,program,module,lesson,variant,studentId,maxLes
  const actions=<><button type="button" onClick={onOpenMap}>MAPA</button><button type="button" onClick={()=>setShowGuide(true)}>PROFESSOR</button></>;
 
  return <>
-   <LearningPlayer onBack={onOpenMap} eyebrow={`AULA ${lesson.number} · ${sceneExperience.chapter}`} title={lesson.title} progress={percent} status={variant.label} action={actions} tone="lesson" piano={{input,onInputChange:setInput,onExternalNote:externalPress,onPress:screenPress,onBlackPress:blackPress,expected:done?undefined:expected,wrong,octaves:age==="2-4"?2:3,startOctave:age==="2-4"?4:3,showLabels:policy.showPianoLabels,blackKeysInteractive:true,hint:message}}>
+   <LearningPlayer onBack={onOpenMap} eyebrow={`AULA ${lesson.number} · ${sceneExperience.chapter}`} title={lesson.title} progress={percent} status={variant.label} action={actions} tone="lesson" piano={{input,onInputChange:setInput,onExternalNote:externalPress,onPress:screenPress,onBlackPress:blackPress,expected:done?undefined:expected,wrong,octaves:age==="2-4"?2:3,startOctave:age==="2-4"?4:3,showLabels:policy.showPianoLabels,blackKeysInteractive:true,attentionCue:age==="2-4"&&Boolean(expected)&&!done,hint:message}}>
      <div className={styles.stage} style={{"--accent":module.accent,"--soft":module.surface} as CSSProperties}><div className={styles.student}>{content}</div><aside className={styles.footer}><div><small>{sceneExperience.chapter}</small><strong>{step.title}</strong></div>{controls}</aside></div>
    </LearningPlayer>
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { type CSSProperties, useEffect, useMemo } from "react";
+import { type CSSProperties, useEffect, useMemo, useRef } from "react";
 import { playPianoRate, preloadPianoSamples } from "@/lib/piano-sampler";
 import styles from "./luwipi-piano.module.css";
 
@@ -10,17 +10,29 @@ const NATURALS=[
 ] as const;
 const BLACKS=[["Dó♯",1,0],["Ré♯",3,1],["Fá♯",6,3],["Sol♯",8,4],["Lá♯",10,5]] as const;
 
-type Props={octaves?:1|2|3;startOctave?:number;expected?:string|string[];wrong?:string|string[]|null;colors?:Map<string,string>;onPress?:(key:LuwipiPianoKey)=>void;onBlackPress?:(pitch:string)=>void;showLabels?:boolean;compact?:boolean;deck?:boolean;disabled?:boolean;blackKeysInteractive?:boolean};
+type Props={octaves?:1|2|3;startOctave?:number;expected?:string|string[];wrong?:string|string[]|null;colors?:Map<string,string>;onPress?:(key:LuwipiPianoKey)=>void;onBlackPress?:(pitch:string)=>void;showLabels?:boolean;compact?:boolean;deck?:boolean;disabled?:boolean;blackKeysInteractive?:boolean;attentionCue?:boolean};
 function list(value?:string|string[]|null){return !value?[]:Array.isArray(value)?value:[value]}
 function matches(values:string[],pitch:string,note:string){return values.some(value=>value===pitch||value===note)}
 
-export function LuwipiPiano({octaves=1,startOctave=4,expected,wrong,onPress,onBlackPress,colors,showLabels=true,compact=false,deck=false,disabled=false,blackKeysInteractive=false}:Props){
+export function LuwipiPiano({octaves=1,startOctave=4,expected,wrong,onPress,onBlackPress,colors,showLabels=true,compact=false,deck=false,disabled=false,blackKeysInteractive=false,attentionCue=false}:Props){
+ const scrollRef=useRef<HTMLDivElement|null>(null);
  useEffect(()=>{void preloadPianoSamples()},[]);
  const expectedList=list(expected),wrongList=list(wrong);
+ useEffect(()=>{
+   if(!attentionCue||!expectedList.length||!scrollRef.current)return;
+   const target=Array.from(scrollRef.current.querySelectorAll<HTMLButtonElement>("button[data-pitch]")).find(button=>{
+     const pitch=button.dataset.pitch??"";
+     return expectedList.some(value=>value===pitch||value===pitch.replace(/[3-6]$/,""));
+   });
+   if(!target)return;
+   const host=scrollRef.current;
+   const left=target.offsetLeft-(host.clientWidth-target.offsetWidth)/2;
+   host.scrollTo({left:Math.max(0,left),behavior:"smooth"});
+ },[attentionCue,expectedList.join("|"),octaves,startOctave]);
  const keys=useMemo(()=>Array.from({length:octaves},(_,o)=>NATURALS.map(([note,semitone,color])=>{const octave=startOctave+o;return{note,octave,rate:Math.pow(2,(semitone+(octave-4)*12)/12),color:colors?.get(note)??color,pitch:`${note}${octave}`}})).flat(),[octaves,startOctave,colors]);
  function press(key:LuwipiPianoKey){void playPianoRate(key.rate);onPress?.(key)}
- return <div className={styles.shell} data-compact={compact?"true":"false"} data-deck={deck?"true":"false"}><div className={styles.brand}>LUWIPI PIANO</div><div className={styles.scroll}><div className={styles.piano} data-octaves={octaves} style={{"--white-count":7*octaves} as CSSProperties}>
-   {keys.map(key=>{const active=matches(expectedList,key.pitch,key.note),isWrong=matches(wrongList,key.pitch,key.note);return <button aria-label={key.pitch} key={key.pitch} type="button" disabled={disabled} onClick={()=>press(key)} className={`${styles.white} ${active?styles.expected:""} ${isWrong?styles.wrong:""}`} style={{"--key":key.color} as CSSProperties}>{showLabels&&<span>{key.note}<small>{key.octave}</small></span>}</button>})}
-   {Array.from({length:octaves},(_,o)=>BLACKS.map(([note,semitone,after])=>{const octave=startOctave+o,pitch=`${note}${octave}`,left=((o*7+after+1)/(7*octaves))*100,active=matches(expectedList,pitch,note),isWrong=matches(wrongList,pitch,note);return <button aria-label={pitch} key={pitch} type="button" disabled={disabled||!blackKeysInteractive} className={`${styles.black} ${active?styles.blackExpected:""} ${isWrong?styles.blackWrong:""}`} style={{left:`calc(${left}% - ${4.2/octaves}% )`,width:`${60/(7*octaves)}%`}} onClick={()=>{void playPianoRate(Math.pow(2,(semitone+(octave-4)*12)/12));onBlackPress?.(pitch)}}/>})).flat()}
+ return <div className={styles.shell} data-compact={compact?"true":"false"} data-deck={deck?"true":"false"} data-attention={attentionCue?"true":"false"}><div className={styles.brand}>LUWIPI PIANO</div><div className={styles.scroll} ref={scrollRef}><div className={styles.piano} data-octaves={octaves} style={{"--white-count":7*octaves} as CSSProperties}>
+   {keys.map(key=>{const active=matches(expectedList,key.pitch,key.note),isWrong=matches(wrongList,key.pitch,key.note);return <button aria-label={active&&attentionCue?`Toque ${key.pitch}`:key.pitch} aria-current={active&&attentionCue?"true":undefined} data-pitch={key.pitch} key={key.pitch} type="button" disabled={disabled} onClick={()=>press(key)} className={`${styles.white} ${active?styles.expected:""} ${isWrong?styles.wrong:""}`} style={{"--key":key.color} as CSSProperties}>{showLabels&&<span>{key.note}<small>{key.octave}</small></span>}</button>})}
+   {Array.from({length:octaves},(_,o)=>BLACKS.map(([note,semitone,after])=>{const octave=startOctave+o,pitch=`${note}${octave}`,left=((o*7+after+1)/(7*octaves))*100,active=matches(expectedList,pitch,note),isWrong=matches(wrongList,pitch,note);return <button aria-label={active&&attentionCue?`Toque ${pitch}`:pitch} aria-current={active&&attentionCue?"true":undefined} data-pitch={pitch} key={pitch} type="button" disabled={disabled||!blackKeysInteractive} className={`${styles.black} ${active?styles.blackExpected:""} ${isWrong?styles.blackWrong:""}`} style={{left:`calc(${left}% - ${4.2/octaves}% )`,width:`${60/(7*octaves)}%`}} onClick={()=>{void playPianoRate(Math.pow(2,(semitone+(octave-4)*12)/12));onBlackPress?.(pitch)}}/>})).flat()}
  </div></div></div>
 }
