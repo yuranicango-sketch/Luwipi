@@ -5,7 +5,7 @@ type SamplePoint = {
   url: string;
 };
 
-const BASE = "https://tonejs.github.io/audio/salamander/";
+const BASE = "/audio/piano/";
 
 // Real Salamander Grand Piano samples spread across the octave.
 // Missing notes are pitch-shifted by Web Audio from the nearest real sample.
