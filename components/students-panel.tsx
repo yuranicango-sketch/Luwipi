@@ -7,6 +7,7 @@ import { nextCompetencyFocus } from "@/lib/lesson-recommender";
 import { repertoireFocusLabels, type RepertoireFocus } from "@/lib/repertoire";
 import { imageFileToLocalAvatar } from "@/lib/local-image";
 import { ProgressGarden } from "@/components/progress-garden";
+import { MasteryTimeline } from "@/components/mastery-timeline";
 import styles from "./students-panel.module.css";
 
 const masteryLabels: Record<MasteryLevel, string> = { emergente: "Emergente", desenvolvimento: "Em desenvolvimento", consolidado: "Consolidado", independente: "Independente" };
@@ -37,6 +38,7 @@ export function StudentsPanel() {
   const selected = students.find((student) => student.id === selectedId) ?? null;
   const history = selected ? allHistory.filter((item) => item.studentId === selected.id) : [];
   const nextFocus = selected ? nextCompetencyFocus(selected) : [];
+  const masteryCount = selected ? Object.values(selected.competencies).filter((level) => level === "consolidado" || level === "independente").length : 0;
 
   useEffect(() => {
     setMethodTitle(selected?.currentRepertoire?.methodTitle ?? "");
@@ -89,7 +91,7 @@ export function StudentsPanel() {
       {selected && <section className={styles.profile}>
         <div className={styles.profileHead}><div><span>{selected.ageBand} ANOS</span><h2>{selected.name}</h2>{selected.parentName&&<small>Encarregado: {selected.parentName}</small>}</div><select value={selected.level} onChange={(e: any) => void patch({ level: e.target.value as LocalStudent["level"] })}><option value="iniciante">Iniciante</option><option value="em-progresso">Em progresso</option><option value="avancado">Avançado</option></select></div>
 
-        <ProgressGarden lessons={history.length} repertoire={selected.repertoire.length} />
+        <ProgressGarden lessons={history.length} repertoire={selected.repertoire.length} mastery={masteryCount} />
 
         <div className={styles.settings}>
           <label><div><strong>Variações leves ao repetir</strong><small>Desligada por padrão para respeitar repetição consciente Suzuki.</small></div><input type="checkbox" checked={selected.repeatVariation} onChange={(e: any) => void patch({ repeatVariation: e.target.checked })}/></label>
@@ -101,6 +103,7 @@ export function StudentsPanel() {
 
         <div className={styles.sectionTitle}><div><span>DOMÍNIO REAL</span><h3>Competências observadas</h3></div><p>O Luwipi nunca sobe estes níveis sozinho.</p></div>
         <div className={styles.competencies}>{(Object.keys(competencyLabels) as CompetencyId[]).map((id) => <div key={id}><strong>{competencyLabels[id]}</strong><span data-level={selected.competencies[id] ?? "none"}>{selected.competencies[id] ? masteryLabels[selected.competencies[id]!] : "Ainda sem avaliação"}</span></div>)}</div>
+        <MasteryTimeline history={history} />
 
         <div className={styles.sectionTitle}><div><span>REPERTÓRIO ATUAL</span><h3>A peça que está a orientar as próximas aulas</h3></div><p>Referência externa; o Luwipi não copia o método.</p></div>
         <div className={styles.repertoireEditor}>
