@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Logo } from "@/components/logo";
 
 const plans = [
@@ -12,6 +12,8 @@ const plans = [
 export default function SubscribePage() {
   const [loading, setLoading] = useState<string | null>(null);
   const [error, setError] = useState("");
+  const [reason, setReason] = useState("");
+  useEffect(() => { setReason(new URLSearchParams(window.location.search).get("reason") ?? ""); }, []);
 
   async function checkout(plan: string) {
     setLoading(plan);
@@ -34,10 +36,10 @@ export default function SubscribePage() {
   return <main className="auth-page">
     <header className="simple-header container"><Logo/><Link href="/">Início</Link></header>
     <section className="container" style={{ maxWidth: 980, padding: "64px 20px 90px", textAlign: "center" }}>
-      <div className="eyebrow">Luwipi completo</div>
+      <div className="eyebrow">{reason === "trial_expired" ? "TESTE GRATUITO CONCLUÍDO" : "LUWIPI COMPLETO"}</div>
       <h1 style={{ fontSize: "clamp(2.7rem,6vw,4.8rem)", margin: "12px 0" }}>Continue a ensinar sem interromper o fluxo.</h1>
       <p style={{ maxWidth: 700, margin: "0 auto 38px", fontSize: 18, lineHeight: 1.6 }}>
-        Continue com Aulas Prontas, currículo em espiral, perfis locais dos alunos, Modo Aula e cartões de prática para a família.
+        {reason === "trial_expired" ? "O período gratuito terminou normalmente. Os dados locais dos alunos continuam neste dispositivo; uma subscrição ativa reabre o acesso às aulas." : "Este acesso precisa de uma subscrição ativa para continuar com Aulas Prontas, currículo em espiral, Modo Aula e cartões para a família."}
       </p>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(210px,1fr))", gap: 16 }}>
         {plans.map(([id, title, period]) => <article key={id} style={{ background: "#fff", border: "1px solid #e7e1d8", borderRadius: 20, padding: 28, textAlign: "left" }}>

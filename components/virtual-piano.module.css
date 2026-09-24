@@ -2,3 +2,5 @@
 .help{margin:11px 0 0;font-size:10px;line-height:1.4;color:#78879a}.reduced *{animation:none!important;transition:none!important}.reduced .path span[data-current=true]{box-shadow:0 0 0 1px #718bb0 inset}
 
 .keyboard button:focus-visible,.head button:focus-visible,.nextPattern:focus-visible{outline:3px solid #2f6b58;outline-offset:3px}@media(prefers-reduced-motion:reduce){.wrap *{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+
+.staffPreview{border:1px solid #dde5ee;background:#fff;border-radius:14px;padding:8px 10px;margin:10px 0}.staffPreview svg{width:100%;height:120px}.staffPreview line{stroke:#99a7b5;stroke-width:1}.staffPreview text{font-family:"Times New Roman",serif;font-size:58px;fill:#344a61}.staffPreview ellipse,.staffPreview g line{fill:#4c6384;stroke:#4c6384;stroke-width:2.3}.staffPreview g[data-current=true] ellipse,.staffPreview g[data-current=true] line{fill:#2f6b58;stroke:#2f6b58;stroke-width:3}.staffPreview>small{display:block;text-align:center;font-size:9px;color:#7c8998;margin-top:-4px}

@@ -43,7 +43,7 @@ export function LocalDataPanel() {
     setStatus("Dados de aprendizagem eliminados deste dispositivo.");
   }
 
-  return <section className={styles.panel}>
+  return <section className={styles.panel} id="dados">
     <div className={styles.head}><div><span>DADOS DE APRENDIZAGEM</span><h2>Este tablet é a casa dos dados da criança.</h2></div><b>🔒 Local por padrão</b></div>
     <div className={styles.grid}>
       <article><strong>Vai trocar de tablet?</strong><p>Crie uma cópia local. O ficheiro contém perfis, domínio, repertório e histórico. Guarde-o num lugar sob o seu controlo.</p><button onClick={() => void downloadBackup()}>Exportar cópia</button></article>

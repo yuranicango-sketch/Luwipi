@@ -7,6 +7,8 @@ import { clearActiveLesson, getActiveLesson, getLocalStudent, getStudentHistory,
 import { VirtualPiano } from "@/components/virtual-piano";
 import { LessonGuide } from "@/components/lesson-guide";
 import { LessonActivityVisual } from "@/components/lesson-activity-visual";
+import { SheetMusicPlayer } from "@/components/sheet-music-player";
+import { scoreForRepertoire } from "@/lib/repertoire-scores";
 import styles from "./live-lesson.module.css";
 
 const masteryLevels: { id: MasteryLevel; label: string }[] = [
@@ -42,7 +44,7 @@ function elapsedMinutes(startedAt: string) {
   return Math.max(0, Math.floor((Date.now() - new Date(startedAt).getTime()) / 60000));
 }
 
-export function LiveLesson() {
+export function LiveLesson({ offlineShell = false }: { offlineShell?: boolean } = {}) {
   const router = useRouter();
   const [session, setSession] = useState<ActiveLesson | null>(null);
   const [student, setStudent] = useState<LocalStudent | null>(null);
@@ -57,6 +59,7 @@ export function LiveLesson() {
   const [copied, setCopied] = useState(false);
   const [minutes, setMinutes] = useState(0);
   const [online, setOnline] = useState(true);
+  const [savedOffline, setSavedOffline] = useState(false);
 
   useEffect(() => {
     setOnline(typeof navigator === "undefined" ? true : navigator.onLine);
@@ -69,7 +72,7 @@ export function LiveLesson() {
     if (!active) {
       window.removeEventListener("online", onOnline);
       window.removeEventListener("offline", onOffline);
-      router.replace("/dashboard");
+      if (!offlineShell) router.replace("/dashboard");
       return;
     }
     const normalized: ActiveLesson = {
@@ -103,6 +106,7 @@ export function LiveLesson() {
   if (!session || !block) return <main className={styles.loading}>A preparar a aula…</main>;
   const currentSession = session;
   const displayed = currentSession.instrumentMode === "silent" ? silentVersion(block) : { childCue: block.childCue, teacherCue: block.teacherCue };
+  const repertoireScore = block.kind === "repertoire" ? scoreForRepertoire(currentSession.repertoire) : null;
 
   function persist(next: ActiveLesson) {
     setSession(next);
@@ -156,13 +160,18 @@ export function LiveLesson() {
       instrumentMode: currentSession.instrumentMode,
       startedAt: currentSession.startedAt,
       completedAt: new Date().toISOString(),
-      competencies: mastery,
+      competencies: { ...(student?.competencies ?? {}), ...mastery },
       note: note.trim() || undefined,
       parentSummary,
       homePractice,
     });
     await updateStudentMastery(currentSession.studentId, mastery, currentSession.repertoire);
     clearActiveLesson();
+    if (offlineShell || !online) {
+      setSavedOffline(true);
+      setHistoryCount((count) => count + 1);
+      return;
+    }
     router.push("/dashboard");
   }
 
@@ -175,7 +184,7 @@ export function LiveLesson() {
       <div className={styles.masteryGrid}>{focusCompetencies.map((id) => <div key={id} className={styles.masteryRow}><strong>{competencyLabels[id]}</strong><div>{masteryLevels.map((level) => <button key={level.id} data-active={mastery[id] === level.id} onClick={() => setMastery((current) => ({ ...current, [id]: level.id }))}>{level.label}</button>)}</div></div>)}</div>
       <label className={styles.notes}><span>Nota privada do professor</span><textarea value={note} onChange={(event: { target: { value: string } }) => setNote(event.target.value)} placeholder="Uma observação concreta para a próxima aula…" /></label>
       <div className={styles.homeCard}><span>PARA QUEM ACOMPANHA</span><strong>{currentSession.repertoire}</strong><p>{parentSummary}</p><div className={styles.homeList}>{homePractice.map((item) => <div key={item}>{item}</div>)}</div><small>Pouco tempo, sem pressão. Pare enquanto ainda está agradável.</small><button onClick={async () => { await navigator.clipboard?.writeText(shareText); setCopied(true); }}>{copied ? "Copiado ✓" : "Copiar resumo + prática"}</button></div>
-      <div className={styles.finishActions}><button onClick={() => setFinished(false)}>Voltar à aula</button><button className={styles.primary} onClick={() => void finishLesson()}>Guardar e fechar</button></div>
+      <div className={styles.finishActions}>{!savedOffline && <button onClick={() => setFinished(false)}>Voltar à aula</button>}{savedOffline ? <button className={styles.primary} onClick={() => { if (navigator.onLine) router.push("/dashboard"); }}>Guardado neste dispositivo ✓</button> : <button className={styles.primary} onClick={() => void finishLesson()}>Guardar e fechar</button>}</div>
     </section>
   </main>;
 
@@ -189,10 +198,10 @@ export function LiveLesson() {
     </header>
 
     <section className={`${styles.stage} ${block.screenMode === "off" ? styles.screenOff : block.screenMode === "minimal" ? styles.screenMinimal : styles.screenVisual}`}>
-      <div className={styles.stageMeta}><span>{kindLabels[block.kind]}</span><b>{block.minutes} min</b></div>
+      <div className={styles.stageMeta}><span>{kindLabels[block.kind]}</span><b>{block.durationLabel ?? `${block.minutes} min`}</b></div>
       {block.screenMode === "off" && currentSession.instrumentMode === "physical" && <div className={styles.lookAway}>↑<span>Agora olhe para a criança, não para o ecrã.</span></div>}
       {!(block.screenMode === "off" && currentSession.instrumentMode === "physical") && <LessonGuide ageBand={currentSession.ageBand} kind={block.kind} reduced={student?.reducedStimulus} />}
-      <LessonActivityVisual block={block} ageBand={currentSession.ageBand} reduced={student?.reducedStimulus} />
+      {repertoireScore && currentSession.ageBand === "6-8" ? <SheetMusicPlayer score={repertoireScore} compact /> : <LessonActivityVisual block={block} ageBand={currentSession.ageBand} reduced={student?.reducedStimulus} />}
       <h1>{block.title}</h1>
       <p className={styles.childCue}>{displayed.childCue}</p>
       <div className={styles.teacherCue}><span>PARA O PROFESSOR{currentSession.instrumentMode === "silent" ? " · ADAPTAÇÃO SILENCIOSA" : ""}</span><p>{displayed.teacherCue}</p><small>Objetivo: {block.objective}</small></div>
@@ -207,7 +216,7 @@ export function LiveLesson() {
       <button className={styles.next} onClick={next}>{index === currentSession.blocks.length - 1 ? "Fechar aula" : "Próximo →"}</button>
     </footer>
 
-    {swap && <div className={styles.overlay}><section className={styles.sheet}><button className={styles.close} onClick={() => setSwap(false)}>×</button><span>TROCAR SÓ ESTE BLOCO</span><h2>Mesmo objetivo, outra forma.</h2><p>As primeiras opções preservam mais competências e a mesma modalidade. O restante da aula não muda.</p><div className={styles.choices}>{swapOptions.map((item) => <button key={item.id} onClick={() => replaceBlock(item)}><strong>{item.title}</strong><small>{item.minutes} min · {item.objective}</small></button>)}</div></section></div>}
+    {swap && <div className={styles.overlay}><section className={styles.sheet}><button className={styles.close} onClick={() => setSwap(false)}>×</button><span>TROCAR SÓ ESTE BLOCO</span><h2>Mesmo objetivo, outra forma.</h2><p>As primeiras opções preservam mais competências e a mesma modalidade. O restante da aula não muda.</p><div className={styles.choices}>{swapOptions.map((item) => <button key={item.id} onClick={() => replaceBlock(item)}><strong>{item.title}</strong><small>{item.durationLabel ?? `${item.minutes} min`} · {item.objective}</small></button>)}</div></section></div>}
 
     {wildcard && <div className={styles.overlay}><section className={styles.sheet}><button className={styles.close} onClick={() => setWildcard(false)}>×</button><span>CORINGA · 60–90 SEGUNDOS</span><h2>Quebre o fluxo sem transformar isso numa recompensa.</h2><p>Use para tédio, perda de foco ou pequena falha técnica. Depois volte à aula.</p><div className={styles.choices}>{wildcardActivities[currentSession.ageBand].map((item) => <button key={item.id} onClick={() => chooseWildcard(item)}><strong>{item.title}</strong><small>{item.teacherCue}</small></button>)}</div></section></div>}
 

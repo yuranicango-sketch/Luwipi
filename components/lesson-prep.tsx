@@ -88,7 +88,8 @@ export function LessonPrep() {
       variationApplied: variation.applied,
       startedAt: new Date().toISOString(),
     });
-    router.push("/aula");
+    if (typeof navigator !== "undefined" && !navigator.onLine) window.location.assign("/offline-aula");
+    else router.push("/aula");
   }
 
   return <div className={styles.workspace}>

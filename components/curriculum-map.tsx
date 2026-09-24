@@ -23,6 +23,8 @@ export function CurriculumMap(){
       })}</div>
     </section>
 
+    <section className={styles.intent}><span>COBERTURA ASSIMÉTRICA É INTENCIONAL</span><div><article><b>2–3</b><strong>Som antes de símbolo</strong><p>Direção, memória, pulso e exploração preparam a leitura; pauta formal não é meta nesta fase.</p></article><article><b>4–5</b><strong>Ponte visual</strong><p>Padrões, direção e símbolos simples aparecem depois de a criança já ouvir, cantar e tocar.</p></article><article><b>6–8</b><strong>Leitura progressiva</strong><p>A pauta entra como representação de música já conhecida, junto com técnica, frase e repertório.</p></article></div></section>
+
     <section className={styles.map}>{visible.map((milestone)=><article key={`${milestone.competency}-${milestone.ageBand}`}><span>{competencyLabels[milestone.competency]}</span><h2>{milestone.title}</h2><p>{milestone.readyWhen}</p></article>)}</section>
     <section className={styles.all}><span>12 COMPETÊNCIAS RASTREÁVEIS</span><div>{(Object.keys(competencyLabels) as CompetencyId[]).map((id)=><b key={id}>{competencyLabels[id]}</b>)}</div></section>
   </div>;
