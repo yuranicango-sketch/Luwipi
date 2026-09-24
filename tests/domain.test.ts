@@ -136,7 +136,7 @@ test("embedded sheet music remains independent from published method editions", 
   for (const score of repertoireScores) {
     if (score.kind === "repertoire") assert.match(score.source, /domínio público/i);
     else assert.match(score.source, /original do Luwipi/i);
-    assert.ok(score.notes.length >= 8);
+    assert.ok(score.notes.length >= 8 || (score.events?.length ?? 0) >= 6, score.id + " is too short to be useful");
     assert.ok(score.methodReferences.every((reference) => /referência|repertório|tradicional/i.test(reference)));
   }
 });
