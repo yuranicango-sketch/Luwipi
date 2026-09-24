@@ -163,17 +163,21 @@ export type LessonSceneKind =
 export function sceneForBlock(block: LessonBlock): LessonSceneKind {
   const id=block.id.toLowerCase();
   const title=normalize(block.title);
+  const signature=id+" "+title;
   const competencies=new Set(block.competencies);
+
   if(block.kind==="arrival") return "welcome";
-  if(/urso|passarinho|gigante|mora o som|grave|agudo/.test(id+" "+title)||competencies.has("pitch")) return "pitch-animals";
-  if(/marcha|passo|pulso|ritmo/.test(id+" "+title)||competencies.has("pulse")||competencies.has("rhythm")) return "march";
-  if(/forte|suave|leao|ratinho/.test(id+" "+title)||competencies.has("dynamics")) return "dynamics";
-  if(/eco|igual|diferente/.test(id+" "+title)) return "echo";
-  if(/teclas|grupo|duplas|trios|caça/.test(id+" "+title)||competencies.has("keyboard")) return "keyboard-village";
-  if(/subindo|descendo|direcao|acima|abaixo/.test(id+" "+title)) return "direction";
+  if(/performance/.test(signature)) return "performance";
+  if(competencies.has("reading")||/pauta|leitura|ler/.test(signature)) return "reading";
+  if(/eco|igual|diferente/.test(signature)) return "echo";
+  if(/teclas|grupo|duplas|trios|caca/.test(signature)) return "keyboard-village";
+  if(/subindo|descendo|direcao|acima|abaixo|escada/.test(signature)) return "direction";
+  if(/forte|suave|leao|ratinho/.test(signature)||competencies.has("dynamics")) return "dynamics";
+  if(/marcha|passo|pulso|ritmo/.test(signature)||competencies.has("pulse")||competencies.has("rhythm")) return "march";
+  if(/elefante|urso|passarinho|gigante|mora o som|grave|agudo/.test(signature)||(block.kind==="ear"&&competencies.has("pitch"))) return "pitch-animals";
   if(competencies.has("posture")||competencies.has("hand")||competencies.has("fingers")||competencies.has("coordination")) return "technique";
-  if(competencies.has("reading")) return "reading";
-  if(/performance/.test(id+" "+title)) return "performance";
   if(block.kind==="repertoire") return "melody";
+  if(competencies.has("keyboard")) return "keyboard-village";
+  if(competencies.has("pitch")) return "direction";
   return "listening";
 }
