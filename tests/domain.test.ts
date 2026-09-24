@@ -111,3 +111,13 @@ test("repertoire focus supports a published piece even when the title is differe
   assert.equal(reading.ready, true);
   assert.ok(reading.reasons.includes("Apoia a peça atual"));
 });
+
+
+test("every model lesson gives the accompanying adult guidance across the live spine", () => {
+  for (const lesson of lessonTemplates) {
+    for (const kind of ["arrival","movement","ear","piano","repertoire","closing"] as const) {
+      const block = lesson.blocks.find((item) => item.kind === kind);
+      assert.ok(block?.parentCue, lesson.id + "/" + kind + " should include parentCue");
+    }
+  }
+});

@@ -38,6 +38,10 @@ function compatibilityScore(current: LessonBlock, candidate: LessonBlock) {
   return shared * 3 + Number(current.screenMode === candidate.screenMode);
 }
 
+function durationLabel(block: LessonBlock) {
+  return block.id.startsWith("wild-") ? "60–90 s" : `${block.minutes} min`;
+}
+
 function elapsedMinutes(startedAt: string) {
   return Math.max(0, Math.floor((Date.now() - new Date(startedAt).getTime()) / 60000));
 }
@@ -189,7 +193,7 @@ export function LiveLesson() {
     </header>
 
     <section className={`${styles.stage} ${block.screenMode === "off" ? styles.screenOff : block.screenMode === "minimal" ? styles.screenMinimal : styles.screenVisual}`}>
-      <div className={styles.stageMeta}><span>{kindLabels[block.kind]}</span><b>{block.minutes} min</b></div>
+      <div className={styles.stageMeta}><span>{kindLabels[block.kind]}</span><b>{durationLabel(block)}</b></div>
       {block.screenMode === "off" && currentSession.instrumentMode === "physical" && <div className={styles.lookAway}>↑<span>Agora olhe para a criança, não para o ecrã.</span></div>}
       {!(block.screenMode === "off" && currentSession.instrumentMode === "physical") && <LessonGuide ageBand={currentSession.ageBand} kind={block.kind} reduced={student?.reducedStimulus} />}
       <LessonActivityVisual block={block} ageBand={currentSession.ageBand} reduced={student?.reducedStimulus} />
@@ -207,7 +211,7 @@ export function LiveLesson() {
       <button className={styles.next} onClick={next}>{index === currentSession.blocks.length - 1 ? "Fechar aula" : "Próximo →"}</button>
     </footer>
 
-    {swap && <div className={styles.overlay}><section className={styles.sheet}><button className={styles.close} onClick={() => setSwap(false)}>×</button><span>TROCAR SÓ ESTE BLOCO</span><h2>Mesmo objetivo, outra forma.</h2><p>As primeiras opções preservam mais competências e a mesma modalidade. O restante da aula não muda.</p><div className={styles.choices}>{swapOptions.map((item) => <button key={item.id} onClick={() => replaceBlock(item)}><strong>{item.title}</strong><small>{item.minutes} min · {item.objective}</small></button>)}</div></section></div>}
+    {swap && <div className={styles.overlay}><section className={styles.sheet}><button className={styles.close} onClick={() => setSwap(false)}>×</button><span>TROCAR SÓ ESTE BLOCO</span><h2>Mesmo objetivo, outra forma.</h2><p>As primeiras opções preservam mais competências e a mesma modalidade. O restante da aula não muda.</p><div className={styles.choices}>{swapOptions.map((item) => <button key={item.id} onClick={() => replaceBlock(item)}><strong>{item.title}</strong><small>{durationLabel(item)} · {item.objective}</small></button>)}</div></section></div>}
 
     {wildcard && <div className={styles.overlay}><section className={styles.sheet}><button className={styles.close} onClick={() => setWildcard(false)}>×</button><span>CORINGA · 60–90 SEGUNDOS</span><h2>Quebre o fluxo sem transformar isso numa recompensa.</h2><p>Use para tédio, perda de foco ou pequena falha técnica. Depois volte à aula.</p><div className={styles.choices}>{wildcardActivities[currentSession.ageBand].map((item) => <button key={item.id} onClick={() => chooseWildcard(item)}><strong>{item.title}</strong><small>{item.teacherCue}</small></button>)}</div></section></div>}
 
