@@ -131,11 +131,12 @@ test("wildcards communicate 60-90 seconds without turning it into a rigid timer"
   }
 });
 
-test("embedded sheet music is independent public-domain repertoire", () => {
-  assert.ok(repertoireScores.length >= 3);
+test("embedded sheet music remains independent from published method editions", () => {
+  assert.ok(repertoireScores.length >= 7);
   for (const score of repertoireScores) {
-    assert.match(score.source, /domínio público/i);
+    if (score.kind === "repertoire") assert.match(score.source, /domínio público/i);
+    else assert.match(score.source, /original do Luwipi/i);
     assert.ok(score.notes.length >= 8);
-    assert.ok(score.methodReferences.every((reference) => /referência|repertório/i.test(reference)));
+    assert.ok(score.methodReferences.every((reference) => /referência|repertório|tradicional/i.test(reference)));
   }
 });
