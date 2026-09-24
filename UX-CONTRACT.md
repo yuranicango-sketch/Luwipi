@@ -8,15 +8,17 @@ Luwipi is a live teaching instrument for an individual piano teacher working wit
 
 ## Canonical navigation
 
-Authenticated teacher navigation has five primary destinations:
+Authenticated teacher navigation has seven maintained destinations:
 
 1. **Hoje** — prepare and begin the next lesson.
 2. **Alunos** — profiles, repertoire references, competencies and history.
 3. **Currículo** — spiral milestones and pedagogical progression.
 4. **Biblioteca** — modular lesson blocks for substitution or preparation.
-5. **Casa** — parent-facing practice cards generated from completed lessons.
+5. **Repertório** — guided scores and the five-volume training path.
+6. **Atividades** — short teacher-led ear/rhythm/pitch activities outside a full lesson.
+7. **Casa** — parent-facing practice cards generated from completed lessons.
 
-Games, songs, virtual piano and training are tools inside lessons or library blocks, not primary products.
+The same destinations remain reachable on every supported viewport. Desktop uses the header navigation; narrow/tablet layouts use the canonical bottom dock rather than hiding navigation. The active destination is exposed with `aria-current="page"` and is not communicated by color alone.
 
 ## Flow ledger
 
@@ -144,3 +146,15 @@ Age variation must not fork business logic into three unrelated products.
 ## Future instrument input
 
 Microphone/MIDI note detection is a future adapter behind the maintained instrument-input interface. It must not be required for the current lesson flow and must not infer mastery automatically.
+
+
+## Responsive interaction contract
+
+- Product pages preserve the same actions and information across desktop, tablet and phone; responsive design may change arrangement, not capability.
+- On narrow viewports, primary teacher navigation uses the maintained bottom dock with safe-area spacing. It may scroll horizontally when necessary, but no destination is removed.
+- Primary touch actions target at least roughly 44 CSS px in the maintained product surfaces.
+- Horizontal pedagogical sequences (students, curriculum stages, repertoire stages, syllable contours) may become explicit horizontally scrollable rails on phones rather than compressing unreadably.
+- The Modo Aula owns the classroom viewport: visual stage and teacher rail may scroll independently on desktop; on smaller screens they become one natural document flow with the lesson controls remaining reachable.
+- Sticky controls must not obscure focused fields or lesson content; bottom spacing accounts for mobile navigation and device safe areas.
+- A compact landscape layout is allowed during live teaching so the visual stage and teacher guidance remain visible on short tablet screens.
+- Scrollbars remain operable and globally visible; child-facing horizontal rails may use compact geometry but must still have touch/keyboard access.
