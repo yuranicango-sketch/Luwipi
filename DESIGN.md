@@ -60,3 +60,18 @@ Toda ilustração deve ensinar ou orientar: direção, escuta, pulso, mão, tecl
 - Streaks, XP e badges de culpa.
 - Gamificação autónoma longa.
 - Ecrã competindo com professor e piano.
+
+
+## Linguagem visual de aula
+- Aulas infantis usam mundos funcionais, não cartões decorativos: personagem, cenário, gesto, som e piano devem apontar para o mesmo conceito.
+- Grave/agudo: contraste espacial baixo/alto e personagens com silhuetas claramente diferentes.
+- Teclado: teclas pretas sempre visíveis. O grupo de 2 e o grupo de 3 têm identidade visual distinta e também número/texto; nunca apenas cor.
+- Notas naturais: cor fixa + letra + nome/forma. Personagens são apoio progressivo, sobretudo em 2–5 anos.
+- 2–3: personagem + gesto + causa/efeito.
+- 4–5: personagem + letra + padrões do teclado.
+- 6–8: letra + posição + pauta; personagens recuam.
+- Repertório: antes da pauta pode existir contorno melódico por sílaba; é uma representação do mesmo dado musical, não uma segunda fonte de conteúdo.
+- Técnica: rimas de dedos são originais do Luwipi e aparecem como apoio curto dentro do bloco piano.
+
+## Arte original do Luwipi
+Arte criada especificamente para o Luwipi (SVG, PNG ou WebP) não é tratada como asset CC0 de terceiros. Ainda assim, passa pela mesma revisão visual do professor antes de se tornar canónica: legibilidade, adequação etária, função pedagógica, contraste, consistência entre notas e ausência de elementos visualmente confusos. A revisão aqui é de qualidade pedagógica/visual, não de licenciamento de terceiros.

@@ -8,3 +8,8 @@ Only assets whose source page explicitly identifies them as public domain/CC0 ar
 - **Rabbit** — OpenClipart / publicdomainvectors.org — Public Domain — https://openclipart.org/detail/300870/rabbit
 
 Do not add arbitrary web images to the product. Verify license first and record it here.
+
+
+## Original Luwipi art
+
+The note-character SVGs and visual lesson worlds shipped in the application are original Luwipi interface artwork created for the product. They do not derive from the third-party assets listed above and therefore do not require third-party attribution. Future raster replacements under `/public/personagens/` should be recorded here as **Luwipi original/generated art** and still pass the teacher visual-quality review before becoming canonical.

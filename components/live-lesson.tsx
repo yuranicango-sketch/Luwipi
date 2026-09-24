@@ -6,7 +6,7 @@ import { competencyLabels, fallbackBlocks, lessonTemplates, wildcardActivities, 
 import { clearActiveLesson, getActiveLesson, getLocalStudent, getStudentHistory, saveActiveLesson, saveLessonHistory, updateStudentMastery, type ActiveLesson, type LocalStudent } from "@/lib/teacher-local-v2";
 import { VirtualPiano } from "@/components/virtual-piano";
 import { LessonGuide } from "@/components/lesson-guide";
-import { LessonActivityVisual } from "@/components/lesson-activity-visual";
+import { LessonWorld } from "@/components/lesson-world";
 import { SheetMusicPlayer } from "@/components/sheet-music-player";
 import { scoreForRepertoire } from "@/lib/repertoire-scores";
 import styles from "./live-lesson.module.css";
@@ -197,17 +197,57 @@ export function LiveLesson({ offlineShell = false }: { offlineShell?: boolean } 
       <div className={styles.topActions}>{!online && <b className={styles.offline}>offline · aula local</b>}<span>{minutes} min</span><button onClick={() => { saveActiveLesson({ ...currentSession, currentBlockIndex: index }); router.push("/dashboard"); }}>Guardar e sair</button></div>
     </header>
 
-    <section className={`${styles.stage} ${block.screenMode === "off" ? styles.screenOff : block.screenMode === "minimal" ? styles.screenMinimal : styles.screenVisual}`}>
-      <div className={styles.stageMeta}><span>{kindLabels[block.kind]}</span><b>{block.durationLabel ?? `${block.minutes} min`}</b></div>
-      {block.screenMode === "off" && currentSession.instrumentMode === "physical" && <div className={styles.lookAway}>↑<span>Agora olhe para a criança, não para o ecrã.</span></div>}
-      {!(block.screenMode === "off" && currentSession.instrumentMode === "physical") && <LessonGuide ageBand={currentSession.ageBand} kind={block.kind} reduced={student?.reducedStimulus} />}
-      {repertoireScore && currentSession.ageBand === "6-8" ? <SheetMusicPlayer score={repertoireScore} compact /> : <LessonActivityVisual block={block} ageBand={currentSession.ageBand} reduced={student?.reducedStimulus} />}
-      <h1>{block.title}</h1>
-      <p className={styles.childCue}>{displayed.childCue}</p>
-      <div className={styles.teacherCue}><span>PARA O PROFESSOR{currentSession.instrumentMode === "silent" ? " · ADAPTAÇÃO SILENCIOSA" : ""}</span><p>{displayed.teacherCue}</p><small>Objetivo: {block.objective}</small></div>
-      {block.parentCue && <div className={styles.parentCue}><span>👨‍👩‍👧 PARA QUEM ACOMPANHA</span><p>{block.parentCue}</p></div>}
-      {block.kind === "piano" && (currentSession.instrumentMode === "virtual" || currentSession.instrumentMode === "silent") && <VirtualPiano ageBand={currentSession.ageBand} reducedStimulus={student?.reducedStimulus} silent={currentSession.instrumentMode === "silent"} />}
-    </section>
+    <div className={styles.workspace}>
+      <section className={styles.visualStage}>
+        <div className={styles.stageMeta}>
+          <span>{kindLabels[block.kind]}</span>
+          <div><b>{block.durationLabel ?? `${block.minutes} min`}</b><em>{currentSession.instrumentMode === "physical" ? "piano físico" : currentSession.instrumentMode === "silent" ? "silencioso" : "piano virtual"}</em></div>
+        </div>
+
+        <LessonWorld
+          block={{ ...block, childCue: displayed.childCue }}
+          ageBand={currentSession.ageBand}
+          repertoire={currentSession.repertoire}
+          reduced={student?.reducedStimulus}
+          silent={currentSession.instrumentMode === "silent"}
+        />
+
+        {block.kind === "piano" && <VirtualPiano
+          ageBand={currentSession.ageBand}
+          reducedStimulus={student?.reducedStimulus}
+          silent={currentSession.instrumentMode === "silent"}
+        />}
+
+        {block.kind === "repertoire" && repertoireScore && currentSession.ageBand === "6-8" && <SheetMusicPlayer score={repertoireScore} compact />}
+
+        {block.screenMode === "off" && currentSession.instrumentMode === "physical" && <div className={styles.screenRest}><span>Agora leve a ideia para o piano físico.</span><small>O cenário já deu a pista. A criança e o instrumento voltam a ser o centro.</small></div>}
+      </section>
+
+      <aside className={styles.teacherRail}>
+        <div className={styles.railTop}>
+          <span>BLOCO {index + 1} DE {currentSession.blocks.length}</span>
+          <h1>{block.title}</h1>
+          <p>{displayed.childCue}</p>
+        </div>
+
+        <div className={styles.teacherCue}>
+          <span>PARA O PROFESSOR{currentSession.instrumentMode === "silent" ? " · ADAPTAÇÃO SILENCIOSA" : ""}</span>
+          <p>{displayed.teacherCue}</p>
+          <small>Objetivo: {block.objective}</small>
+        </div>
+
+        <div className={styles.competencyStrip}>
+          {block.competencies.map((id)=><span key={id}>{competencyLabels[id]}</span>)}
+        </div>
+
+        {block.parentCue && <div className={styles.parentCue}><span>PARA QUEM ACOMPANHA</span><p>{block.parentCue}</p></div>}
+
+        <div className={styles.railTip}>
+          <b>{currentSession.ageBand === "2-3" ? "Pouco texto. Muito gesto." : currentSession.ageBand === "4-5" ? "Mostre, faça junto, depois retire a ajuda." : "Som primeiro. Símbolo depois."}</b>
+          <small>O visual serve a aula; não precisa ficar no ecrã durante todo o bloco.</small>
+        </div>
+      </aside>
+    </div>
 
     <footer className={styles.controls}>
       <button onClick={() => setSwap(true)}>Trocar</button>
