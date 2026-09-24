@@ -2,6 +2,7 @@
 import { useMemo, useRef, useState } from "react";
 import { playPianoSemitone } from "@/lib/piano-sampler";
 import type { RepertoireScore, ScoreEvent, ScoreTone } from "@/lib/repertoire-scores";
+import { ledgerLineSteps, staffStepForPitch, staffY, type StaffClef } from "@/lib/staff-position";
 import styles from "./sheet-music-player.module.css";
 
 const rightKeyboard=[
@@ -62,8 +63,6 @@ export function SheetMusicPlayer({score,compact=false}:{score:RepertoireScore;co
  const width=Math.max(760,events.length*70+130);
  const height=grand?350:230;
  const xFor=(index:number)=>112+index*70;
- const trebleY=(step:number)=>140-step*10;
- const bassY=(step:number)=>270-step*10;
  const handLabel=score.hand==="left"?"Mão esquerda":score.hand==="right"?"Mão direita":score.hand==="both"?"Duas mãos":"Qualquer mão";
  const bounds=useMemo(()=>phraseBounds(events,active),[events,active]);
  const target=events[Math.min(active,events.length-1)];
@@ -109,13 +108,18 @@ export function SheetMusicPlayer({score,compact=false}:{score:RepertoireScore;co
  }
 
  function toneNode(tone:ScoreTone,index:number,eventIndex:number,hand:"right"|"left"){
-   const x=xFor(eventIndex)+(index-(hand==="right"?(events[eventIndex].right?.length??1)-1: (events[eventIndex].left?.length??1)-1)/2)*14;
-   const y=hand==="right"?trebleY(tone.staffStep):(grand?bassY(tone.staffStep):trebleY(tone.staffStep));
+   const x=xFor(eventIndex)+(index-(hand==="right"?(events[eventIndex].right?.length??1)-1:(events[eventIndex].left?.length??1)-1)/2)*14;
+   const clef:StaffClef=hand==="left"?"bass":"treble";
+   const bottomLineY=grand?(hand==="left"?290:140):140;
+   const step=staffStepForPitch(tone.name,tone.midi,clef);
+   const y=staffY(tone.name,tone.midi,clef,bottomLineY);
    const current=eventIndex===active;
+   const stemDown=hand==="left"&&grand;
    return <g key={hand+"-"+eventIndex+"-"+index+"-"+tone.midi}>
-     {tone.finger&&<text x={x} y={hand==="left"&&grand?Math.min(324,y+52):Math.max(38,y-48)} textAnchor="middle" className={current?styles.activeFinger:styles.finger}>{tone.finger}</text>}
+     {ledgerLineSteps(step).map((ledgerStep)=><line key={ledgerStep} x1={x-17} x2={x+17} y1={bottomLineY-ledgerStep*10} y2={bottomLineY-ledgerStep*10} className={styles.ledger}/>)}
+     {tone.finger&&<text x={x} y={stemDown?Math.min(324,y+52):Math.max(38,y-48)} textAnchor="middle" className={current?styles.activeFinger:styles.finger}>{tone.finger}</text>}
      <ellipse cx={x} cy={y} rx="11" ry="7.5" className={current?styles.activeNote:styles.note}/>
-     <line x1={x+9} x2={x+9} y1={y} y2={hand==="left"&&grand?y+38:y-39} className={current?styles.activeStem:styles.stem}/>
+     <line x1={x+(stemDown?-9:9)} x2={x+(stemDown?-9:9)} y1={y} y2={stemDown?y+38:y-39} className={current?styles.activeStem:styles.stem}/>
    </g>;
  }
 
