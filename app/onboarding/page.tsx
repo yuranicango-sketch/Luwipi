@@ -60,12 +60,12 @@ export default function OnboardingPage() {
 
       <div className={styles.section}>
         <strong>Idade</strong>
-        <div className={styles.ageGrid}>{ages.map((age) => <button key={age.id} data-active={ageBand === age.id} onClick={() => setAgeBand(age.id)}><b>{age.label}</b><small>{age.note}</small></button>)}</div>
+        <div className={styles.ageGrid}>{ages.map((age) => <button key={age.id} aria-pressed={ageBand === age.id} data-active={ageBand === age.id} onClick={() => setAgeBand(age.id)}><b>{age.label}</b><small>{age.note}</small></button>)}</div>
       </div>
 
       <div className={styles.section}>
         <strong>Ponto de partida</strong>
-        <div className={styles.levelGrid}>{levels.map((item) => <button key={item.id} data-active={level === item.id} onClick={() => setLevel(item.id)}>{item.label}</button>)}</div>
+        <div className={styles.levelGrid}>{levels.map((item) => <button key={item.id} aria-pressed={level === item.id} data-active={level === item.id} onClick={() => setLevel(item.id)}>{item.label}</button>)}</div>
       </div>
 
       <footer>

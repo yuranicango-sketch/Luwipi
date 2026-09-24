@@ -75,3 +75,14 @@ Toda ilustração deve ensinar ou orientar: direção, escuta, pulso, mão, tecl
 
 ## Arte original do Luwipi
 Arte criada especificamente para o Luwipi (SVG, PNG ou WebP) não é tratada como asset CC0 de terceiros. Ainda assim, passa pela mesma revisão visual do professor antes de se tornar canónica: legibilidade, adequação etária, função pedagógica, contraste, consistência entre notas e ausência de elementos visualmente confusos. A revisão aqui é de qualidade pedagógica/visual, não de licenciamento de terceiros.
+
+
+## Responsive product composition
+- Desktop teacher surfaces use a calm centered canvas with clear reading width; the live lesson may use a split stage + teacher rail.
+- Tablet is a first-class classroom viewport, not a scaled desktop. High-density grids reduce columns before text or touch targets become cramped.
+- Phone product navigation becomes a persistent bottom dock with safe-area padding. It uses icon/mark + text and a distinct active surface.
+- Horizontal teaching sequences become intentional snap rails when a vertical stack would destroy sequence/context.
+- Page headings scale down without losing hierarchy; body copy remains readable and action labels stay intact.
+- Primary touch controls target approximately 44px or more. Compact metadata chips may be smaller only when they are not actions.
+- Sticky filters/actions use stable backgrounds and must not create competing scroll owners.
+- The signature remains the child-facing illustrated music world. Teacher chrome stays restrained so it never competes with the lesson.
