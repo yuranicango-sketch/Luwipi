@@ -1,9 +1,9 @@
 const KEY = "luwipi:v3:offline-lesson-until";
-const EIGHT_HOURS = 8 * 60 * 60 * 1000;
 
-export function markOfflineLessonWindow() {
+export function markOfflineLessonWindow(expiresAt: number) {
   if (typeof window === "undefined") return;
-  window.localStorage.setItem(KEY, String(Date.now() + EIGHT_HOURS));
+  if (!Number.isFinite(expiresAt) || expiresAt <= Date.now()) return;
+  window.localStorage.setItem(KEY, String(expiresAt));
 }
 
 export function canUseOfflineLessonWindow() {

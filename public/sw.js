@@ -22,6 +22,15 @@ self.addEventListener("fetch", (event) => {
   if (request.mode === "navigate") {
     if (url.pathname === "/offline-aula") {
       event.respondWith(caches.match("/offline-aula").then((cached) => cached || fetch(request)));
+      return;
+    }
+    if (url.pathname === "/aula") {
+      event.respondWith(fetch(request).catch(async () => {
+        const cached = await caches.match("/offline-aula");
+        if (cached) return Response.redirect(new URL("/offline-aula", self.location.origin), 302);
+        throw new Error("offline_lesson_shell_unavailable");
+      }));
+      return;
     }
     return;
   }

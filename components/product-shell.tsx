@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { Logo } from "@/components/logo";
 import { OfflineAccessBootstrap } from "@/components/offline-access-bootstrap";
 import { BackupReminder } from "@/components/backup-reminder";
+import { SignOutControl } from "@/components/sign-out-control";
 import styles from "./product-shell.module.css";
 
 export function ProductShell({ children, backHref, backLabel = "Voltar" }: { children: ReactNode; backHref?: string; backLabel?: string }) {
@@ -13,7 +14,7 @@ export function ProductShell({ children, backHref, backLabel = "Voltar" }: { chi
       </nav>
       {backHref
         ? <Link className={styles.back} href={backHref}>← {backLabel}</Link>
-        : <form className={styles.signout} action="/auth/signout" method="post"><button type="submit">Terminar sessão</button></form>}
+        : <div className={styles.signout}><SignOutControl/></div>}
     </div></header><BackupReminder/>{children}
   </main>;
 }
