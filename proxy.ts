@@ -4,7 +4,7 @@ import { NextResponse, type NextRequest } from "next/server";
 const URL = process.env.SUPABASE_URL ?? "";
 const KEY = process.env.SUPABASE_PUBLISHABLE_KEY ?? "";
 
-const teacherRoutes = ["/dashboard", "/aula", "/alunos", "/curriculo", "/biblioteca", "/casa", "/onboarding"];
+const teacherRoutes = ["/dashboard", "/aula", "/alunos", "/curriculo", "/biblioteca", "/casa", "/onboarding", "/jogos", "/partituras"];
 
 function protectedPath(pathname: string) {
   return teacherRoutes.some((prefix) => pathname === prefix || pathname.startsWith(prefix + "/"))
@@ -14,6 +14,18 @@ function protectedPath(pathname: string) {
 
 function trialAllowed(pathname: string) {
   return teacherRoutes.some((prefix) => pathname === prefix || pathname.startsWith(prefix + "/"));
+}
+
+function hasAuthCookie(request: NextRequest) {
+  return request.cookies.getAll().some(({ name }) => name.startsWith("sb-") && name.includes("auth-token"));
+}
+
+function technicalRedirect(request: NextRequest, pathname: string) {
+  const url = request.nextUrl.clone();
+  url.pathname = "/acesso-indisponivel";
+  url.search = "";
+  url.searchParams.set("next", pathname);
+  return NextResponse.redirect(url);
 }
 
 export async function proxy(request: NextRequest) {
@@ -37,21 +49,24 @@ export async function proxy(request: NextRequest) {
     },
   });
 
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data: { user }, error: userError } = await supabase.auth.getUser();
   if (!user) {
+    if (userError && hasAuthCookie(request)) return technicalRedirect(request, pathname);
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     url.searchParams.set("next", pathname);
     return NextResponse.redirect(url);
   }
 
-  const { data: profile } = await supabase
+  const { data: profile, error: profileError } = await supabase
     .from("profiles")
     .select("role,access_status,trial_ends_at,access_until")
     .eq("id", user.id)
     .maybeSingle();
 
-  if (profile?.role === "admin") return response;
+  if (profileError || !profile) return technicalRedirect(request, pathname);
+
+  if (profile.role === "admin") return response;
 
   if (pathname === "/admin" || pathname.startsWith("/admin/")) {
     const url = request.nextUrl.clone();
@@ -61,18 +76,22 @@ export async function proxy(request: NextRequest) {
   }
 
   const now = Date.now();
-  const active = profile?.access_status === "active"
+  const active = profile.access_status === "active"
     && (!profile.access_until || new Date(profile.access_until).getTime() > now);
   if (active) return response;
 
-  const trial = profile?.access_status === "trial"
+  const trial = profile.access_status === "trial"
     && !!profile.trial_ends_at
     && new Date(profile.trial_ends_at).getTime() > now;
   if (trial && trialAllowed(pathname)) return response;
 
   const url = request.nextUrl.clone();
   url.pathname = "/assinar";
-  url.searchParams.set("reason", trial ? "trial_limit" : "trial_expired");
+  url.search = "";
+  url.searchParams.set(
+    "reason",
+    profile.access_status === "trial" ? "trial_expired" : "subscription_required",
+  );
   return NextResponse.redirect(url);
 }
 
@@ -85,6 +104,8 @@ export const config = {
     "/biblioteca/:path*",
     "/casa/:path*",
     "/onboarding/:path*",
+    "/jogos/:path*",
+    "/partituras/:path*",
     "/admin/:path*",
   ],
 };
