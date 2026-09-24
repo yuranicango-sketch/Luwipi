@@ -33,7 +33,7 @@ export const repertoireScores: RepertoireScore[] = [
     subtitle: "Primeira frase · mão direita",
     level: "Primeiros sons",
     source: "Canção infantil histórica em domínio público · arranjo pedagógico próprio do Luwipi",
-    methodReferences: ["Suzuki Piano School, Vol. 1 — referência de repertório; não reproduz a edição"],
+    methodReferences: ["Canção infantil tradicional — sem referência específica a uma edição de método"],
     notes: [n("Mi",64,0),n("Ré",62,-1),n("Dó",60,-2),n("Ré",62,-1),n("Mi",64,0),n("Mi",64,0),n("Mi",64,0,2),n("Ré",62,-1),n("Ré",62,-1),n("Ré",62,-1,2),n("Mi",64,0),n("Sol",67,2),n("Sol",67,2,2)],
   },
   {

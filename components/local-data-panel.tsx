@@ -20,6 +20,8 @@ export function LocalDataPanel() {
     anchor.click();
     anchor.remove();
     URL.revokeObjectURL(url);
+    window.localStorage.setItem("luwipi:v3:last-backup", String(Date.now()));
+    window.dispatchEvent(new Event("luwipi:v3:backup"));
     setStatus(`Cópia criada com ${backup.students.length} aluno(s) e ${backup.history.length} aula(s).`);
   }
 
