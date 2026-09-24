@@ -72,11 +72,11 @@ const lesson = (
 ): LessonTemplate => ({
   id, ageBand, level, title, shortTitle: title, repertoire, focus,
   blocks: [
-    b(id + "-arrival", "arrival", "Chegada musical", 2, "Criar previsibilidade e escuta.", "Faça uma saudação curta e espere uma resposta livre.", "Olá 👋🎵", "visual", ["listening"]),
-    b(id + "-move", "movement", movementTitle, ageBand === "6-8" ? 3 : 4, "Levar o conceito para o corpo antes do instrumento.", movementCue, "Move o corpo com a música", "off", ["pulse","rhythm"]),
-    b(id + "-ear", "ear", earTitle, ageBand === "2-3" ? 4 : 5, "Ouvir, guardar e responder sem pressão.", earCue, "Escuta primeiro 👂", "minimal", ["listening", focus.includes("pitch") ? "pitch" : "memory"]),
+    b(id + "-arrival", "arrival", "Chegada musical", 2, "Criar previsibilidade e escuta.", "Faça uma saudação curta e espere uma resposta livre.", "Olá 👋🎵", "visual", ["listening"], "Entre no ritual com a criança: repita a saudação e deixe o professor liderar o tempo."),
+    b(id + "-move", "movement", movementTitle, ageBand === "6-8" ? 3 : 4, "Levar o conceito para o corpo antes do instrumento.", movementCue, "Move o corpo com a música", "off", ["pulse","rhythm"], "Faça o movimento junto apenas quando o professor convidar; o objetivo é apoiar, não corrigir."),
+    b(id + "-ear", "ear", earTitle, ageBand === "2-3" ? 4 : 5, "Ouvir, guardar e responder sem pressão.", earCue, "Escuta primeiro 👂", "minimal", ["listening", focus.includes("pitch") ? "pitch" : "memory"], "Durante a escuta, evite dar a resposta. Espere alguns segundos e deixe a criança tentar primeiro."),
     b(id + "-piano", "piano", pianoTitle, ageBand === "2-3" ? 8 : 10, "Transferir a experiência para o teclado com conforto.", pianoCue, "Agora no piano 🎹", "off", focus.filter((item) => ["keyboard","posture","hand","fingers","coordination","dynamics","reading","memory"].includes(item)).slice(0,3) as CompetencyId[], "Observe o gesto do professor e repita em casa sem forçar."),
-    b(id + "-rep", "repertoire", repertoire, ageBand === "2-3" ? 6 : 7, "Dar nome e significado musical à competência.", repCue, "Esta é a tua música 🎵", "minimal", ["memory", focus.includes("pulse") ? "pulse" : "listening"]),
+    b(id + "-rep", "repertoire", repertoire, ageBand === "2-3" ? 6 : 7, "Dar nome e significado musical à competência.", repCue, "Esta é a tua música 🎵", "minimal", ["memory", focus.includes("pulse") ? "pulse" : "listening"], "Em casa, priorize ouvir e repetir um pedaço curto com prazer; pare antes de virar obrigação."),
     close(id, ageBand),
   ],
 });
