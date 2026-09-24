@@ -26,6 +26,7 @@ export type LessonBlock = {
   kind: BlockKind;
   title: string;
   minutes: number;
+  durationLabel?: string;
   objective: string;
   teacherCue: string;
   childCue: string;
@@ -72,11 +73,11 @@ const lesson = (
 ): LessonTemplate => ({
   id, ageBand, level, title, shortTitle: title, repertoire, focus,
   blocks: [
-    b(id + "-arrival", "arrival", "Chegada musical", 2, "Criar previsibilidade e escuta.", "Faça uma saudação curta e espere uma resposta livre.", "Olá 👋🎵", "visual", ["listening"]),
-    b(id + "-move", "movement", movementTitle, ageBand === "6-8" ? 3 : 4, "Levar o conceito para o corpo antes do instrumento.", movementCue, "Move o corpo com a música", "off", ["pulse","rhythm"]),
-    b(id + "-ear", "ear", earTitle, ageBand === "2-3" ? 4 : 5, "Ouvir, guardar e responder sem pressão.", earCue, "Escuta primeiro 👂", "minimal", ["listening", focus.includes("pitch") ? "pitch" : "memory"]),
+    b(id + "-arrival", "arrival", "Chegada musical", 2, "Criar previsibilidade e escuta.", "Faça uma saudação curta e espere uma resposta livre.", "Olá 👋🎵", "visual", ["listening"], "Repita o mesmo ritual de chegada em casa apenas se a criança pedir. A previsibilidade vale mais do que a quantidade."),
+    b(id + "-move", "movement", movementTitle, ageBand === "6-8" ? 3 : 4, "Levar o conceito para o corpo antes do instrumento.", movementCue, "Move o corpo com a música", "off", ["pulse","rhythm"], "Faça junto em vez de corrigir de fora. Pare enquanto ainda está divertido."),
+    b(id + "-ear", "ear", earTitle, ageBand === "2-3" ? 4 : 5, "Ouvir, guardar e responder sem pressão.", earCue, "Escuta primeiro 👂", "minimal", ["listening", focus.includes("pitch") ? "pitch" : "memory"], "Dê tempo para a criança responder. Não revele a resposta depressa nem transforme a escuta em teste."),
     b(id + "-piano", "piano", pianoTitle, ageBand === "2-3" ? 8 : 10, "Transferir a experiência para o teclado com conforto.", pianoCue, "Agora no piano 🎹", "off", focus.filter((item) => ["keyboard","posture","hand","fingers","coordination","dynamics","reading","memory"].includes(item)).slice(0,3) as CompetencyId[], "Observe o gesto do professor e repita em casa sem forçar."),
-    b(id + "-rep", "repertoire", repertoire, ageBand === "2-3" ? 6 : 7, "Dar nome e significado musical à competência.", repCue, "Esta é a tua música 🎵", "minimal", ["memory", focus.includes("pulse") ? "pulse" : "listening"]),
+    b(id + "-rep", "repertoire", repertoire, ageBand === "2-3" ? 6 : 7, "Dar nome e significado musical à competência.", repCue, "Esta é a tua música 🎵", "minimal", ["memory", focus.includes("pulse") ? "pulse" : "listening"], "Ouçam ou cantem a peça familiarmente. Em casa, repetir pouco e com som bonito é melhor do que repetir até cansar."),
     close(id, ageBand),
   ],
 });
@@ -116,18 +117,20 @@ export const fallbackBlocks: Record<BlockKind, LessonBlock[]> = {
   closing: [close("alt","4-5")],
 };
 
+const wildcard = (block: LessonBlock): LessonBlock => ({ ...block, minutes: 1.25, durationLabel: "60–90 s · sem cronómetro" });
+
 export const wildcardActivities: Record<AgeBand, LessonBlock[]> = {
   "2-3": [
-    b("wild-23-a","movement","Estátua Musical",1,"Mudar o estado de atenção.","Cante/toque; a criança move-se. Pare: todos congelam.","Move… para! 🧊","off",["pulse"]),
-    b("wild-23-b","ear","Quem fez o som?",1,"Redirecionar atenção para escuta.","Faça um som escondido e convide a descobrir.","Onde está o som? 👂","minimal",["listening"]),
+    wildcard(b("wild-23-a","movement","Estátua Musical",1,"Mudar o estado de atenção.","Cante/toque; a criança move-se. Pare: todos congelam.","Move… para! 🧊","off",["pulse"])),
+    wildcard(b("wild-23-b","ear","Quem fez o som?",1,"Redirecionar atenção para escuta.","Faça um som escondido e convide a descobrir.","Onde está o som? 👂","minimal",["listening"])),
   ],
   "4-5": [
-    b("wild-45-a","movement","Maestro por 60 segundos",1,"Trocar controlo e recuperar envolvimento.","A criança decide quando todos mexem e param.","Tu és o maestro 🎼","off",["pulse","listening"]),
-    b("wild-45-b","ear","Eco Surpresa",1,"Recuperar foco por imitação curta.","Faça três ecos muito simples.","Copia o eco 👂","minimal",["rhythm","listening"]),
+    wildcard(b("wild-45-a","movement","Maestro por 60 segundos",1,"Trocar controlo e recuperar envolvimento.","A criança decide quando todos mexem e param.","Tu és o maestro 🎼","off",["pulse","listening"])),
+    wildcard(b("wild-45-b","ear","Eco Surpresa",1,"Recuperar foco por imitação curta.","Faça três ecos muito simples.","Copia o eco 👂","minimal",["rhythm","listening"])),
   ],
   "6-8": [
-    b("wild-68-a","piano","Desafio de 3 sons",1,"Reiniciar foco com meta pequena.","Toque três sons; a criança procura/repite.","3 sons. Só isso. 🎹","minimal",["listening","memory"]),
-    b("wild-68-b","movement","Troca de papéis",1,"Quebrar fadiga cognitiva.","A criança inventa um padrão corporal; o professor copia.","Agora tu ensinas","off",["rhythm"]),
+    wildcard(b("wild-68-a","piano","Desafio de 3 sons",1,"Reiniciar foco com meta pequena.","Toque três sons; a criança procura/repite.","3 sons. Só isso. 🎹","minimal",["listening","memory"])),
+    wildcard(b("wild-68-b","movement","Troca de papéis",1,"Quebrar fadiga cognitiva.","A criança inventa um padrão corporal; o professor copia.","Agora tu ensinas","off",["rhythm"])),
   ],
 };
 
