@@ -8,7 +8,7 @@
     },
     {
       "source": "/admin",
-      "destination": "/private/control.html"
+      "destination": "/admin.html"
     }
   ],
   "headers": [
