@@ -1,24 +1,11 @@
 # Luwipi
 
-Base atual em HTML com planeador pedagógico e ferramentas de aula.
+Aplicação web para professores prepararem e conduzirem aulas de piano para crianças.
 
-## Produção
+- `index.html` — landing pública.
+- `app.html` — aplicação do professor.
+- `api/billing` — Paddle server-side.
+- `api/admin/users.js` — administração protegida por função admin.
+- `assets/samples` — samples de piano e sons.
 
-- Supabase Auth + Google no navegador.
-- Perfil e estado de acesso no Supabase.
-- Paddle através das funções server-side em /api/billing.
-- Chaves privadas ficam apenas nas variáveis de ambiente da produção.
-
-Rotas mantidas:
-- /auth/callback
-- /api/billing/checkout
-- /api/billing/webhook
-
-## Assets
-
-- assets/samples/piano/
-- assets/samples/animals/
-- assets/audio/
-- assets/images/
-- assets/printables/
-- assets/data/
+As chaves privadas nunca devem entrar em HTML. O código entregue ao navegador é necessariamente visível ao navegador; a segurança fica nas permissões, RLS e funções server-side.
