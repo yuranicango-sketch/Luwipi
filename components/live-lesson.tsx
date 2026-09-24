@@ -7,6 +7,8 @@ import { clearActiveLesson, getActiveLesson, getLocalStudent, getStudentHistory,
 import { VirtualPiano } from "@/components/virtual-piano";
 import { LessonGuide } from "@/components/lesson-guide";
 import { LessonActivityVisual } from "@/components/lesson-activity-visual";
+import { SheetMusicPlayer } from "@/components/sheet-music-player";
+import { scoreForRepertoire } from "@/lib/repertoire-scores";
 import styles from "./live-lesson.module.css";
 
 const masteryLevels: { id: MasteryLevel; label: string }[] = [
@@ -104,6 +106,7 @@ export function LiveLesson({ offlineShell = false }: { offlineShell?: boolean } 
   if (!session || !block) return <main className={styles.loading}>A preparar a aula…</main>;
   const currentSession = session;
   const displayed = currentSession.instrumentMode === "silent" ? silentVersion(block) : { childCue: block.childCue, teacherCue: block.teacherCue };
+  const repertoireScore = block.kind === "repertoire" ? scoreForRepertoire(currentSession.repertoire) : null;
 
   function persist(next: ActiveLesson) {
     setSession(next);
@@ -198,7 +201,7 @@ export function LiveLesson({ offlineShell = false }: { offlineShell?: boolean } 
       <div className={styles.stageMeta}><span>{kindLabels[block.kind]}</span><b>{block.durationLabel ?? `${block.minutes} min`}</b></div>
       {block.screenMode === "off" && currentSession.instrumentMode === "physical" && <div className={styles.lookAway}>↑<span>Agora olhe para a criança, não para o ecrã.</span></div>}
       {!(block.screenMode === "off" && currentSession.instrumentMode === "physical") && <LessonGuide ageBand={currentSession.ageBand} kind={block.kind} reduced={student?.reducedStimulus} />}
-      <LessonActivityVisual block={block} ageBand={currentSession.ageBand} reduced={student?.reducedStimulus} />
+      {repertoireScore && currentSession.ageBand === "6-8" ? <SheetMusicPlayer score={repertoireScore} compact /> : <LessonActivityVisual block={block} ageBand={currentSession.ageBand} reduced={student?.reducedStimulus} />}
       <h1>{block.title}</h1>
       <p className={styles.childCue}>{displayed.childCue}</p>
       <div className={styles.teacherCue}><span>PARA O PROFESSOR{currentSession.instrumentMode === "silent" ? " · ADAPTAÇÃO SILENCIOSA" : ""}</span><p>{displayed.teacherCue}</p><small>Objetivo: {block.objective}</small></div>

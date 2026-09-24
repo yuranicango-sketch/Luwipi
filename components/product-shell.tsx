@@ -9,7 +9,7 @@ export function ProductShell({ children, backHref, backLabel = "Voltar" }: { chi
   return <main className={styles.shell}>
     <OfflineAccessBootstrap/><header className={styles.header}><div className={styles.headerInner}><Logo compact />
       <nav className={styles.nav} aria-label="Área do professor">
-        <Link href="/dashboard">Hoje</Link><Link href="/alunos">Alunos</Link><Link href="/curriculo">Currículo</Link><Link href="/biblioteca">Biblioteca</Link><Link href="/jogos">Atividades</Link><Link href="/casa">Casa</Link>
+        <Link href="/dashboard">Hoje</Link><Link href="/alunos">Alunos</Link><Link href="/curriculo">Currículo</Link><Link href="/biblioteca">Biblioteca</Link><Link href="/repertorio">Repertório</Link><Link href="/jogos">Atividades</Link><Link href="/casa">Casa</Link>
       </nav>
       {backHref
         ? <Link className={styles.back} href={backHref}>← {backLabel}</Link>
