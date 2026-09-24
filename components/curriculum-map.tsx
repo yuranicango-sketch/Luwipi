@@ -3,6 +3,7 @@ import { useState } from "react";
 import { competencyLabels, lessonTemplates, type AgeBand, type CompetencyId } from "@/lib/suzuki-lessons";
 import { lessonPathMeta } from "@/lib/lesson-path";
 import { spiralMilestones } from "@/lib/spiral-curriculum";
+import { volumeOnePath } from "@/lib/volume-one-path";
 import styles from "./curriculum-map.module.css";
 
 export function CurriculumMap(){
@@ -22,6 +23,8 @@ export function CurriculumMap(){
         return <article key={lesson.id}><b>{index+1}</b><div><strong>{lesson.title}</strong><small>{lesson.repertoire}</small><p>{prerequisites.length?<>Antes: {prerequisites.map((id)=>competencyLabels[id]).join(" · ")}</>:<>Entrada do caminho</>}</p></div></article>
       })}</div>
     </section>
+
+    <section className={styles.methodPath}><div className={styles.methodHead}><span>CAMADA DE TREINO · REFERÊNCIA VOLUME 1</span><p>Não substitui as aulas prontas. Organiza estudos de mão direita, tonalização, mão esquerda e repertório para a criança praticar com uma progressão coerente.</p></div><div>{volumeOnePath.map((stage)=><article key={stage.id}><b>{stage.order}</b><div><strong>{stage.title}</strong><small>{stage.subtitle}</small><p>{stage.competencies.map((id)=>competencyLabels[id]).join(" · ")}</p></div></article>)}</div></section>
 
     <section className={styles.intent}><span>COBERTURA ASSIMÉTRICA É INTENCIONAL</span><div><article><b>2–3</b><strong>Som antes de símbolo</strong><p>Direção, memória, pulso e exploração preparam a leitura; pauta formal não é meta nesta fase.</p></article><article><b>4–5</b><strong>Ponte visual</strong><p>Padrões, direção e símbolos simples aparecem depois de a criança já ouvir, cantar e tocar.</p></article><article><b>6–8</b><strong>Leitura progressiva</strong><p>A pauta entra como representação de música já conhecida, junto com técnica, frase e repertório.</p></article></div></section>
 
