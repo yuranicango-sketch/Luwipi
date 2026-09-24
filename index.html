@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Luwipi — Leitura e Partituras</title>
+<title>Luwipi — Preparar aulas</title>
 <style>
 :root{
   --bg:#f7f8fb;--paper:#fff;--ink:#17191f;--muted:#777b85;--line:#e6e8ee;
@@ -1393,14 +1393,41 @@ body.piano-open{padding-bottom:150px}
   .planner-path-body-v21 .planner-method-strip{grid-column:auto}
 }
 
+
+body.auth-pending{overflow:hidden}
+.account-header-btn{display:flex;align-items:center;gap:7px}
+.account-status-dot{width:7px;height:7px;border-radius:50%;background:#b8bbc3}
+.account-header-btn.ready .account-status-dot{background:#6670f5}
+.access-overlay{position:fixed;inset:0;z-index:5000;background:rgba(247,248,251,.96);backdrop-filter:blur(14px);display:grid;place-items:center;padding:18px}
+.access-overlay.hidden{display:none}
+.access-card{width:min(100%,430px);background:#fff;border:1px solid var(--line);border-radius:26px;box-shadow:0 24px 70px rgba(24,26,34,.13);padding:22px;position:relative}
+.access-close{position:absolute;right:12px;top:12px;width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:#fff;color:#747983;font-size:18px}
+.access-brand{display:flex;align-items:center;gap:9px;margin-bottom:24px;font-weight:900}
+.access-brand-mark{width:35px;height:35px;border-radius:11px;background:var(--primary);color:#fff;display:grid;place-items:center}
+.access-panel{text-align:center}
+.access-panel h2{font-size:28px;line-height:1.05;letter-spacing:-.045em;margin:7px 0 8px}
+.access-panel>p{font-size:12px;line-height:1.5;color:var(--muted);margin:0 auto 18px;max-width:340px}
+.access-eyebrow{font-size:9px;font-weight:900;color:var(--primary);letter-spacing:.08em;text-transform:uppercase}
+.access-primary{width:100%;border:0;border-radius:13px;background:var(--primary);color:#fff;padding:12px 14px;font-size:13px;font-weight:900}
+.access-secondary{width:100%;border:1px solid var(--line);border-radius:12px;background:#fff;color:var(--ink);padding:10px 12px;font-size:11px;font-weight:850;margin-top:7px}
+.google-button{display:flex;justify-content:center;align-items:center;gap:9px}
+.google-g{width:20px;height:20px;border-radius:50%;background:#fff;color:#4b5563;display:grid;place-items:center;font-weight:950}
+.access-note{display:block;margin-top:12px;color:#9a9ea7;font-size:9px;line-height:1.4}
+.billing-plans{display:grid;grid-template-columns:1fr;gap:7px;margin:15px 0}
+.billing-plan{border:1px solid var(--line);background:#fff;border-radius:13px;padding:11px 12px;display:flex;align-items:center;text-align:left;gap:10px}
+.billing-plan div{flex:1}.billing-plan small{display:block;color:var(--muted);font-size:9px;font-weight:800}.billing-plan strong{font-size:13px}.billing-plan span{color:var(--primary);font-size:11px;font-weight:900}
+.account-box{background:#f7f8fb;border-radius:15px;padding:12px;text-align:left;margin:14px 0}
+.account-box small{display:block;color:var(--muted);font-size:9px;font-weight:800;margin-bottom:2px}.account-box strong{display:block;font-size:13px;overflow-wrap:anywhere}
+.account-access{margin-top:10px;padding-top:10px;border-top:1px solid #e7e9ef}
 </style>
 </head>
-<body>
+<body class="auth-pending">
 
 <header>
   <div class="logo">L</div>
   <div class="brand">Luwipi</div>
   <div class="grow"></div>
+  <button id="accountButton" class="header-btn account-header-btn" type="button"><span class="account-status-dot"></span><span id="accountButtonText">Acesso</span></button>
   <button class="header-btn" data-nav="home">Início</button>
 </header>
 
@@ -2205,6 +2232,20 @@ body.piano-open{padding-bottom:150px}
   <div class="piano-head"><strong>Piano de prática</strong><small>som de piano · volume alto</small><div class="grow"></div><button id="closePiano">Fechar</button></div>
   <div class="piano-scroll"><div id="pianoBoard" class="piano-board"></div></div>
 </section>
+
+
+<div id="accessOverlay" class="access-overlay">
+  <div class="access-card">
+    <button id="accessClose" class="access-close hidden" type="button">×</button>
+    <div class="access-brand"><span class="access-brand-mark">L</span><span>Luwipi</span></div>
+    <section id="accessLoading" class="access-panel"><h2>A preparar o Luwipi…</h2><p>Estamos a verificar a tua sessão e o acesso.</p></section>
+    <section id="accessLogin" class="access-panel hidden"><span class="access-eyebrow">Área do professor</span><h2>Entre para preparar a próxima aula.</h2><p>Use a conta Google ligada ao Luwipi.</p><button id="googleLoginButton" class="access-primary google-button" type="button"><span class="google-g">G</span>Continuar com Google</button></section>
+    <section id="accessBilling" class="access-panel hidden"><span class="access-eyebrow">Acesso ao Luwipi</span><h2>Continue a preparar aulas.</h2><p id="billingReason">Escolhe a duração da subscrição.</p><div class="billing-plans"><button class="billing-plan" data-billing-plan="monthly" type="button"><div><small>1 mês</small><strong>Mensal</strong></div><span>Assinar →</span></button><button class="billing-plan" data-billing-plan="quarterly" type="button"><div><small>3 meses</small><strong>Trimestral</strong></div><span>Assinar →</span></button><button class="billing-plan" data-billing-plan="semiannual" type="button"><div><small>6 meses</small><strong>Semestral</strong></div><span>Assinar →</span></button></div><button id="refreshAccessButton" class="access-secondary" type="button">Já paguei · verificar acesso</button><button id="billingLogoutButton" class="access-secondary" type="button">Sair desta conta</button><small id="billingMessage" class="access-note"></small></section>
+    <section id="accessAccount" class="access-panel hidden"><span class="access-eyebrow">Conta</span><h2>O teu acesso.</h2><div class="account-box"><small>Professor</small><strong id="accountName">—</strong><small style="margin-top:8px">Conta Google</small><strong id="accountEmail">—</strong><div class="account-access"><small>Estado</small><strong id="accountAccessState">—</strong></div></div><button id="openBillingButton" class="access-secondary" type="button">Ver opções de subscrição</button><button id="logoutButton" class="access-secondary" type="button">Sair</button></section>
+    <section id="accessError" class="access-panel hidden"><span class="access-eyebrow">Acesso</span><h2>Não foi possível verificar agora.</h2><p id="accessErrorText">Tenta novamente.</p><button id="retryAccessButton" class="access-primary" type="button">Tentar novamente</button></section>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <script>
 const colors={C:'#ef7f87',D:'#f0a85c',E:'#e2c44e',F:'#64b994',G:'#5aa7d9',A:'#8778d8',B:'#cb79b7'};
@@ -3925,6 +3966,41 @@ function applyParentMode(){
 
 syncHelperMode();
 renderExList();renderExercise();renderSong();applyParentMode();
+
+const LuwipiProductionAccess=(()=>{
+  const overlay=document.getElementById('accessOverlay');
+  const closeButton=document.getElementById('accessClose');
+  const accountButton=document.getElementById('accountButton');
+  const accountButtonText=document.getElementById('accountButtonText');
+  const panels={loading:accessLoading,login:accessLogin,billing:accessBilling,account:accessAccount,error:accessError};
+  let client=null,session=null,profile=null,forced=true,initialized=false;
+
+  function parentLink(){return new URLSearchParams(location.search).get('parent')==='1'}
+  function show(name,lock=true){forced=lock;Object.entries(panels).forEach(([key,node])=>node.classList.toggle('hidden',key!==name));closeButton.classList.toggle('hidden',lock);overlay.classList.remove('hidden');document.body.classList.toggle('auth-pending',lock)}
+  function unlock(){forced=false;overlay.classList.add('hidden');closeButton.classList.add('hidden');document.body.classList.remove('auth-pending')}
+  function hasAccess(p){if(!p)return false;if(p.role==='admin')return true;const now=Date.now();if(p.access_status==='active'&&(!p.access_until||new Date(p.access_until).getTime()>now))return true;return p.access_status==='trial'&&p.trial_ends_at&&new Date(p.trial_ends_at).getTime()>now}
+  function label(p){if(!p)return 'Acesso por verificar';if(p.role==='admin')return 'Administrador';if(p.access_status==='active')return 'Subscrição ativa';if(p.access_status==='trial'&&p.trial_ends_at&&new Date(p.trial_ends_at).getTime()>Date.now()){const h=Math.max(1,Math.ceil((new Date(p.trial_ends_at).getTime()-Date.now())/3600000));return 'Teste ativo · '+h+'h'}return 'Subscrição necessária'}
+  function renderAccount(){const u=session&&session.user;const fallback=(u&&u.user_metadata&&(u.user_metadata.full_name||u.user_metadata.name))||(u&&u.email)||'Professor';accountName.textContent=(profile&&profile.full_name)||fallback;accountEmail.textContent=(u&&u.email)||'—';accountAccessState.textContent=label(profile);accountButtonText.textContent='Conta';accountButton.classList.add('ready')}
+  async function readProfile(id,retry=true){const r=await client.from('profiles').select('full_name,role,access_status,trial_ends_at,access_until,subscription_status').eq('id',id).maybeSingle();if(r.error)throw r.error;if(!r.data&&retry){await new Promise(ok=>setTimeout(ok,650));return readProfile(id,false)}return r.data}
+  async function refresh(showLoading=true){if(showLoading)show('loading',true);const r=await client.auth.getSession();session=r.data.session;if(!session){profile=null;accountButtonText.textContent='Entrar';accountButton.classList.remove('ready');show('login',true);return}try{profile=await readProfile(session.user.id);if(!profile)throw new Error('profile');renderAccount();if(hasAccess(profile)){unlock();return}billingReason.textContent=profile.access_status==='trial'?'O período de teste terminou. Escolhe a duração da subscrição para continuar.':'Esta conta precisa de uma subscrição ativa para continuar.';show('billing',true)}catch(e){console.error(e);accessErrorText.textContent='A autenticação funcionou, mas o estado de acesso não pôde ser confirmado.';show('error',true)}}
+  async function start(){if(parentLink()){unlock();accountButton.classList.add('hidden');return}if(location.protocol==='file:'){unlock();accountButtonText.textContent='Local';return}show('loading',true);try{const r=await fetch('/api/public-config',{cache:'no-store'});if(!r.ok)throw new Error('config');const cfg=await r.json();if(!cfg.supabaseUrl||!cfg.supabasePublishableKey||!window.supabase||!window.supabase.createClient)throw new Error('config');client=window.supabase.createClient(cfg.supabaseUrl,cfg.supabasePublishableKey,{auth:{flowType:'pkce',persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});client.auth.onAuthStateChange((event)=>{if(event==='SIGNED_OUT'){session=null;profile=null;show('login',true)}});initialized=true;await refresh(false)}catch(e){console.error(e);accessErrorText.textContent='Não foi possível carregar a configuração de produção.';show('error',true)}}
+  async function googleLogin(){if(!client)return;googleLoginButton.disabled=true;googleLoginButton.textContent='A abrir Google…';const r=await client.auth.signInWithOAuth({provider:'google',options:{redirectTo:location.origin+'/auth/callback',queryParams:{prompt:'select_account'}}});if(r.error){googleLoginButton.disabled=false;googleLoginButton.textContent='Continuar com Google';show('error',true)}}
+  async function checkout(plan,button){const old=button.innerHTML;button.disabled=true;try{const current=(await client.auth.getSession()).data.session;if(!current)throw new Error('session');const r=await fetch('/api/billing/checkout',{method:'POST',headers:{'content-type':'application/json','authorization':'Bearer '+current.access_token},body:JSON.stringify({plan:plan})});const body=await r.json().catch(()=>({}));if(!r.ok||!body.url)throw new Error('checkout');location.href=body.url}catch(e){console.error(e);button.disabled=false;button.innerHTML=old;billingMessage.textContent='Não foi possível abrir o pagamento agora. Tenta novamente.'}}
+  async function logout(){if(client)await client.auth.signOut()}
+  googleLoginButton.addEventListener('click',googleLogin);
+  retryAccessButton.addEventListener('click',()=>initialized?refresh(true):start());
+  refreshAccessButton.addEventListener('click',()=>refresh(true));
+  logoutButton.addEventListener('click',logout);
+  billingLogoutButton.addEventListener('click',logout);
+  document.querySelectorAll('[data-billing-plan]').forEach(button=>button.addEventListener('click',()=>checkout(button.dataset.billingPlan,button)));
+  accountButton.addEventListener('click',()=>{if(location.protocol==='file:')return;if(session&&profile){renderAccount();show('account',false)}else show('login',true)});
+  closeButton.addEventListener('click',()=>{if(!forced)unlock()});
+  openBillingButton.addEventListener('click',()=>show('billing',false));
+  overlay.addEventListener('click',event=>{if(event.target===overlay&&!forced)unlock()});
+  return {start,refresh};
+})();
+LuwipiProductionAccess.start();
+
 </script>
 </body>
 </html>

@@ -1,16 +1,24 @@
 # Luwipi
 
-Esta é a nova base do Luwipi.
+Base atual em HTML com planeador pedagógico e ferramentas de aula.
 
-O produto principal está em `index.html` e funciona como uma aplicação HTML autónoma.
+## Produção
 
-## Estrutura de assets
+- Supabase Auth + Google no navegador.
+- Perfil e estado de acesso no Supabase.
+- Paddle através das funções server-side em /api/billing.
+- Chaves privadas ficam apenas nas variáveis de ambiente da produção.
 
-- `assets/samples/piano/` — samples de piano.
-- `assets/samples/animals/` — sons reais de animais.
-- `assets/audio/` — outros áudios, músicas e efeitos.
-- `assets/images/` — imagens e ilustrações.
-- `assets/printables/` — materiais imprimíveis.
-- `assets/data/` — ficheiros de dados/JSON que venham a ser necessários.
+Rotas mantidas:
+- /auth/callback
+- /api/billing/checkout
+- /api/billing/webhook
 
-A base antiga com Next.js, Supabase, autenticação e Paddle foi removida deste branch.
+## Assets
+
+- assets/samples/piano/
+- assets/samples/animals/
+- assets/audio/
+- assets/images/
+- assets/printables/
+- assets/data/
