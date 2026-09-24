@@ -18,12 +18,16 @@ test("method references do not falsely label Maria Tinha um Cordeirinho as Suzuk
 });
 
 
-test("left-hand studies use bass clef and every preparatory study carries fingering", () => {
+test("technical studies carry fingering either in the line or in grand-staff events", () => {
   const studies = repertoireScores.filter((score) => score.kind === "study");
-  assert.ok(studies.length >= 4);
+  assert.ok(studies.length >= 15);
   for (const score of studies) {
     if (score.hand === "left") assert.equal(score.clef, "bass");
-    assert.ok(score.notes.some((note) => note.finger));
-    assert.match(score.source, /não reproduz|não reproduz os exercícios/i);
+    if (score.hand === "both") assert.equal(score.clef, "grand");
+    const eventFingering = score.events?.some((event) =>
+      [...(event.right ?? []), ...(event.left ?? [])].some((tone) => tone.finger)
+    ) ?? false;
+    assert.ok(score.notes.some((note) => note.finger) || eventFingering, score.id + " is missing fingering");
+    assert.match(score.source, /original do Luwipi|adaptação pedagógica própria do Luwipi|arranjo pedagógico próprio do Luwipi/i);
   }
 });
