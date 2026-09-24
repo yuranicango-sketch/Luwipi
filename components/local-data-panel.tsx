@@ -20,6 +20,9 @@ export function LocalDataPanel() {
     anchor.click();
     anchor.remove();
     URL.revokeObjectURL(url);
+    window.localStorage.setItem("luwipi:v3:last-backup-at", String(Date.now()));
+    window.localStorage.removeItem("luwipi:v3:backup-snooze-until");
+    window.dispatchEvent(new Event("luwipi:backup-created"));
     setStatus(`Cópia criada com ${backup.students.length} aluno(s) e ${backup.history.length} aula(s).`);
   }
 
@@ -43,7 +46,7 @@ export function LocalDataPanel() {
     setStatus("Dados de aprendizagem eliminados deste dispositivo.");
   }
 
-  return <section className={styles.panel}>
+  return <section className={styles.panel} id="backup">
     <div className={styles.head}><div><span>DADOS DE APRENDIZAGEM</span><h2>Este tablet é a casa dos dados da criança.</h2></div><b>🔒 Local por padrão</b></div>
     <div className={styles.grid}>
       <article><strong>Vai trocar de tablet?</strong><p>Crie uma cópia local. O ficheiro contém perfis, domínio, repertório e histórico. Guarde-o num lugar sob o seu controlo.</p><button onClick={() => void downloadBackup()}>Exportar cópia</button></article>
