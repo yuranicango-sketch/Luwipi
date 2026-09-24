@@ -25,9 +25,13 @@ export function AccessibleModal({
   children: ReactNode;
 }) {
   const panelRef=useRef<HTMLElement|null>(null);
+  const onCloseRef=useRef(onClose);
+  onCloseRef.current=onClose;
 
   useEffect(()=>{
     const previous=document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const previousOverflow=document.body.style.overflow;
+    document.body.style.overflow="hidden";
     const panel=panelRef.current;
     const first=panel?.querySelector<HTMLElement>(FOCUSABLE);
     (first??panel)?.focus();
@@ -35,7 +39,7 @@ export function AccessibleModal({
     function keydown(event:KeyboardEvent){
       if(event.key==="Escape"){
         event.preventDefault();
-        onClose();
+        onCloseRef.current();
         return;
       }
       if(event.key!=="Tab"||!panel) return;
@@ -49,9 +53,10 @@ export function AccessibleModal({
     document.addEventListener("keydown",keydown);
     return ()=>{
       document.removeEventListener("keydown",keydown);
+      document.body.style.overflow=previousOverflow;
       previous?.focus();
     };
-  },[onClose]);
+  },[]);
 
   return <div className={backdropClassName}>
     <section ref={panelRef} className={panelClassName} role="dialog" aria-modal="true" aria-label={label} tabIndex={-1}>
