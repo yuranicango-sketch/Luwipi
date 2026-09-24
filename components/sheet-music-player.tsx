@@ -61,7 +61,7 @@ export function SheetMusicPlayer({score,compact=false}:{score:RepertoireScore;co
 
  const grand=score.clef==="grand"||score.hand==="both";
  const width=Math.max(760,events.length*70+130);
- const height=grand?350:230;
+ const height=grand?330:230;
  const xFor=(index:number)=>112+index*70;
  const handLabel=score.hand==="left"?"Mão esquerda":score.hand==="right"?"Mão direita":score.hand==="both"?"Duas mãos":"Qualquer mão";
  const bounds=useMemo(()=>phraseBounds(events,active),[events,active]);
@@ -110,14 +110,14 @@ export function SheetMusicPlayer({score,compact=false}:{score:RepertoireScore;co
  function toneNode(tone:ScoreTone,index:number,eventIndex:number,hand:"right"|"left"){
    const x=xFor(eventIndex)+(index-(hand==="right"?(events[eventIndex].right?.length??1)-1:(events[eventIndex].left?.length??1)-1)/2)*14;
    const clef:StaffClef=hand==="left"?"bass":"treble";
-   const bottomLineY=grand?(hand==="left"?290:140):140;
+   const bottomLineY=grand?(hand==="left"?260:140):140;
    const step=staffStepForPitch(tone.name,tone.midi,clef);
    const y=staffY(tone.name,tone.midi,clef,bottomLineY);
    const current=eventIndex===active;
    const stemDown=hand==="left"&&grand;
    return <g key={hand+"-"+eventIndex+"-"+index+"-"+tone.midi}>
      {ledgerLineSteps(step).map((ledgerStep)=><line key={ledgerStep} x1={x-17} x2={x+17} y1={bottomLineY-ledgerStep*10} y2={bottomLineY-ledgerStep*10} className={styles.ledger}/>)}
-     {tone.finger&&<text x={x} y={stemDown?Math.min(324,y+52):Math.max(38,y-48)} textAnchor="middle" className={current?styles.activeFinger:styles.finger}>{tone.finger}</text>}
+     {tone.finger&&<text x={x} y={stemDown?Math.min(304,y+46):Math.max(38,y-48)} textAnchor="middle" className={current?styles.activeFinger:styles.finger}>{tone.finger}</text>}
      <ellipse cx={x} cy={y} rx="11" ry="7.5" className={current?styles.activeNote:styles.note}/>
      <line x1={x+(stemDown?-9:9)} x2={x+(stemDown?-9:9)} y1={y} y2={stemDown?y+38:y-39} className={current?styles.activeStem:styles.stem}/>
    </g>;
@@ -134,9 +134,9 @@ export function SheetMusicPlayer({score,compact=false}:{score:RepertoireScore;co
      {grand
        ? <>
           <text x="20" y="132" className={styles.clef}>𝄞</text>
-          <text x="24" y="272" className={styles.bassClef}>𝄢</text>
+          <text x="24" y="242" className={styles.bassClef}>𝄢</text>
           {[60,80,100,120,140].map((y)=><line key={"t"+y} x1="78" x2={width-24} y1={y} y2={y} className={styles.staffLine}/>)}
-          {[210,230,250,270,290].map((y)=><line key={"b"+y} x1="78" x2={width-24} y1={y} y2={y} className={styles.staffLine}/>)}
+          {[180,200,220,240,260].map((y)=><line key={"b"+y} x1="78" x2={width-24} y1={y} y2={y} className={styles.staffLine}/>)}
         </>
        : <>
           <text x="20" y="132" className={styles.clef}>{score.clef==="bass"?"𝄢":"𝄞"}</text>
@@ -146,19 +146,19 @@ export function SheetMusicPlayer({score,compact=false}:{score:RepertoireScore;co
 
      {events.map((event,eventIndex)=>{
        const x=xFor(eventIndex),current=eventIndex===active;
-       const top=grand?52:48,bottom=grand?295:169;
+       const top=grand?52:48,bottom=grand?265:169;
        return <g key={eventIndex} data-current={current||undefined}>
          {event.measureStart&&eventIndex>0&&<line x1={x-34} x2={x-34} y1={top} y2={bottom} className={styles.barLine}/>}
          {(event.right??[]).map((tone,index)=>toneNode(tone,index,eventIndex,"right"))}
          {(event.left??[]).map((tone,index)=>toneNode(tone,index,eventIndex,"left"))}
-         {event.dynamic&&<text x={x} y={grand?182:178} textAnchor="middle" className={styles.dynamic}>{event.dynamic}</text>}
-         {event.articulation&&<text x={x} y={grand?196:191} textAnchor="middle" className={styles.articulation}>{event.articulation==="staccato"?"•":event.articulation==="accent"?">":"⌒"}</text>}
-         {event.pedal&&<text x={x} y={grand?326:211} textAnchor="middle" className={styles.pedal}>{event.pedal==="down"?"Ped.":"✱"}</text>}
+         {event.dynamic&&<text x={x} y={grand?168:178} textAnchor="middle" className={styles.dynamic}>{event.dynamic}</text>}
+         {event.articulation&&<text x={x} y={grand?176:191} textAnchor="middle" className={styles.articulation}>{event.articulation==="staccato"?"•":event.articulation==="accent"?">":"⌒"}</text>}
+         {event.pedal&&<text x={x} y={grand?296:211} textAnchor="middle" className={styles.pedal}>{event.pedal==="down"?"Ped.":"✱"}</text>}
          {event.phraseEnd&&<line x1={x+28} x2={x+28} y1={top-5} y2={bottom+2} className={styles.phraseMark}/>}
        </g>;
      })}
-     <line x1={xFor(active)-30} x2={xFor(active)-30} y1="42" y2={grand?304:169} className={styles.cursor}/>
-     <text x="82" y={grand?344:218} className={styles.legend}>{grand?"Pauta dupla · ME + MD":score.clef==="bass"?"Clave de fá":"Clave de sol"} · números = dedilhação sugerida pelo Luwipi</text>
+     <line x1={xFor(active)-30} x2={xFor(active)-30} y1="42" y2={grand?274:169} className={styles.cursor}/>
+     <text x="82" y={grand?320:218} className={styles.legend}>{grand?"Pauta dupla · ME + MD":score.clef==="bass"?"Clave de fá":"Clave de sol"} · números = dedilhação sugerida pelo Luwipi</text>
    </svg></div>
 
    <div className={styles.eventInfo}>
