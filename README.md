@@ -1,23 +1,16 @@
 # Luwipi
 
-Plataforma de apoio a aulas individuais de piano para crianças dos 2 aos 8 anos.
+Esta é a nova base do Luwipi.
 
-## Produto
-- Aulas Prontas organizadas por 2–3, 4–5 e 6–8 anos
-- Fluxo de preparação em menos de 60 segundos
-- Check-in do estado da criança antes da aula
-- Corpo e movimento, escuta, piano, repertório e fecho
-- Modo Aula com Coringa e Pausa/Acolhimento separados
-- Piano virtual com Wait Mode e áudio local via Web Audio
-- Domínio validado manualmente pelo professor
-- Prática curta para a família
-- Dados de crianças locais por padrão, com perfis/fotos/histórico em IndexedDB
-- Funcionamento offline após carregamento/caching inicial
-- Login do professor com Google via Supabase
-- Teste gratuito de 3 dias conforme configuração atual de acesso
+O produto principal está em `index.html` e funciona como uma aplicação HTML autónoma.
 
-## Princípio
+## Estrutura de assets
 
-O Luwipi apoia o professor; não substitui a observação, a correção tátil, a escuta nem o piano físico.
+- `assets/samples/piano/` — samples de piano.
+- `assets/samples/animals/` — sons reais de animais.
+- `assets/audio/` — outros áudios, músicas e efeitos.
+- `assets/images/` — imagens e ilustrações.
+- `assets/printables/` — materiais imprimíveis.
+- `assets/data/` — ficheiros de dados/JSON que venham a ser necessários.
 
-Construído com Next.js + TypeScript.
+A base antiga com Next.js, Supabase, autenticação e Paddle foi removida deste branch.
