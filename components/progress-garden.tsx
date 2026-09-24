@@ -1,10 +1,10 @@
-import type { MasteryLevel } from "@/lib/suzuki-lessons";
+import type { CompetencyId, MasteryLevel } from "@/lib/suzuki-lessons";
 import styles from "./progress-garden.module.css";
 
 const stages = ["🌱","🌿","🌼","🌳","🎵","⭐"];
 const cycleNames = ["Jardim", "Bosque", "Parque", "Paisagem"];
 
-export function ProgressGarden({ lessons, repertoire, competencies = {} }: { lessons: number; repertoire: number; competencies?: Record<string, MasteryLevel | undefined> }) {
+export function ProgressGarden({ lessons, repertoire, competencies = {} }: { lessons: number; repertoire: number; competencies?: Partial<Record<CompetencyId, MasteryLevel>> }) {
   const masteryMilestones = Object.values(competencies).filter((level) => level === "consolidado" || level === "independente").length;
   const growth = lessons + repertoire * 2 + masteryMilestones * 2;
   const completedCycles = Math.floor(growth / stages.length);
