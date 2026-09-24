@@ -513,7 +513,7 @@ export const repertoireScores: RepertoireScore[] = [
     methodReferences: ["Suzuki Piano School, Vol. 4 — referência de nível técnico; não reproduz Burgmüller"],
     notes: [
       n("Dó",60,-2,1,1,true),n("Ré",62,-1,1,2),n("Mi",64,0,1,3),n("Fá",65,1,1,4),
-      n("Sol",67,2,1,5,true),n("Fá",65,1,4),n("Mi",64,0,1,3),n("Ré",62,-1,1,2,false,true),
+      n("Sol",67,2,1,5,true),n("Fá",65,1,1,4),n("Mi",64,0,1,3),n("Ré",62,-1,1,2,false,true),
       n("Mi",64,0,1,1,true),n("Fá",65,1,1,2),n("Sol",67,2,1,3),n("Lá",69,3,1,4),
       n("Si",71,4,1,5,true),n("Lá",69,3,1,4),n("Sol",67,2,1,3),n("Fá",65,1,2,2,false,true),
     ],
