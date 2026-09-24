@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { lessonTemplates, type CompetencyId } from "../lib/suzuki-lessons";
+import { lessonTemplates, wildcardActivities, type CompetencyId } from "../lib/suzuki-lessons";
+import { repertoireScores } from "../lib/repertoire-scores";
 import { nextCompetencyFocus, recommendLessons } from "../lib/lesson-recommender";
 import type { LocalStudent } from "../lib/teacher-local-v2";
 
@@ -110,4 +111,31 @@ test("repertoire focus supports a published piece even when the title is differe
   assert.ok(reading);
   assert.equal(reading.ready, true);
   assert.ok(reading.reasons.includes("Apoia a peça atual"));
+});
+
+test("every live-teaching block gives the accompanying adult a useful cue", () => {
+  for (const lesson of lessonTemplates) {
+    for (const block of lesson.blocks) {
+      assert.ok(block.parentCue?.trim(), `${lesson.id}/${block.kind} is missing parentCue`);
+    }
+  }
+});
+
+test("wildcards communicate 60-90 seconds without turning it into a rigid timer", () => {
+  for (const blocks of Object.values(wildcardActivities)) {
+    for (const block of blocks) {
+      assert.match(block.durationLabel ?? "", /60–90 s/);
+      assert.match(block.durationLabel ?? "", /sem cronómetro/);
+      assert.ok(block.minutes >= 1 && block.minutes <= 1.5);
+    }
+  }
+});
+
+test("embedded sheet music is independent public-domain repertoire", () => {
+  assert.ok(repertoireScores.length >= 3);
+  for (const score of repertoireScores) {
+    assert.match(score.source, /domínio público/i);
+    assert.ok(score.notes.length >= 8);
+    assert.ok(score.methodReferences.every((reference) => /referência|repertório/i.test(reference)));
+  }
 });
