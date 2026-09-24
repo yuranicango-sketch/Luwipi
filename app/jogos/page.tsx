@@ -1,2 +1,3 @@
-import { redirect } from "next/navigation";
-export default function JogosPage(){redirect("/biblioteca")}
+import { MiniGamesPanel } from "@/components/mini-games-panel";
+import { ProductShell } from "@/components/product-shell";
+export default function JogosPage(){return <ProductShell><MiniGamesPanel/></ProductShell>}
