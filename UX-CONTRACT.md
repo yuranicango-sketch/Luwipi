@@ -129,3 +129,16 @@
 - Vocabulário básico atual: semínimas, mínimas e pausas simples; sem colcheias neste nível.
 - O objetivo principal é manter o pulso e continuar a leitura, não parar para corrigir cada compasso.
 - O exercício mostra feedback de timing e pontuação de ataques, mas não bloqueia a progressão do fluxo.
+
+
+## Ritmo contínuo · representações
+- O mesmo exercício básico pode ser mostrado como Figuras, Palmas & Shhh ou Misto.
+- Palmas & Shhh é uma camada de leitura visual: PALMA marca o ataque; SHHH marca silêncio; PALMA — marca a nota de dois tempos.
+- Trocar a representação não muda o padrão rítmico nem a progressão e reinicia a tentativa em curso.
+
+## Leitura contínua de notas
+- Básico atual: clave de Sol, mão direita, Dó4–Sol4, uma nota a cada dois tempos.
+- O exercício não para em erros; feedback serve para corrigir sem quebrar o pulso.
+- Respostas podem ser feitas pelos botões de nomes ou pelo piano virtual em desktop.
+- Visual Normal é o padrão e serve adolescentes/adultos.
+- Trenzinho é uma apresentação opcional para crianças; nunca é ativado automaticamente para adultos e a preferência fica guardada localmente.
