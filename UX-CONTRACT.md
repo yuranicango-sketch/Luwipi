@@ -2,7 +2,7 @@
 
 ## Product context
 
-- Audience: professores de piano, crianças e adolescentes.
+- Audience: utilizadores do Luwipi Ensine e Luwipi Aprenda.
 - Primary jobs: preparar aula; abrir ferramentas durante a aula; aprender por vídeo; praticar leitura, ritmo e jogos.
 - Target market(s): global, interface portuguesa nesta fase.
 - Active locales: pt.
@@ -50,8 +50,8 @@
 ## Dataset navigation
 
 - Admin tables: render up to 200 accounts/videos; revisit pagination before exceeding that scale.
-- Exploratory lists: video catalogue renders published lessons; age filter is local.
-- URL state: product mode lives in `?mode=ensine|aprenda`; age video filter is transient.
+- Exploratory lists: video catalogue renders published lessons; audience metadata remains internal unless it becomes necessary for navigation.
+- URL state: product mode lives in `?mode=ensine|aprenda`.
 - Page size: current admin cap 200.
 - Empty/no-results/error/loading treatment: stable inline state inside the owning panel.
 - Back/scroll restoration: view navigation resets to top.
@@ -117,5 +117,5 @@
 - Required static commands: premium audit, HTML/JS syntax extraction, secret scan.
 - Browser/device/locale/theme matrix: desktop + narrow mobile; light theme; pt.
 - Accessibility checks: semantic controls, focus-visible, labels, reduced motion.
-- Canonical sibling flow used for comparison: current Luwipi generated-lesson flow.
+- Canonical sibling flow used for comparison: preparar aula remains the dominant Ensine flow; Aulas remains the dominant Aprenda flow.
 - Project audit command/result: recorded after implementation.

@@ -1,32 +1,27 @@
 ---
 version: alpha
 name: "Luwipi"
-description: "Plataforma musical com duas faces — Ensine e Aprenda — para professores, crianças e adolescentes."
+description: "Uma marca musical com duas experiências: Ensine e Aprenda."
 colors:
-  primary: "#2563EB"
-  navy: "#0F172A"
-  yellow: "#FBBF24"
-  pink: "#F472B6"
-  green: "#22C55E"
-  purple: "#8B5CF6"
-  background: "#F8FAFC"
+  ink: "#0B1020"
+  paper: "#F7F7F4"
   surface: "#FFFFFF"
-  border: "#E2E8F0"
-  muted: "#64748B"
-  ink: "#0F172A"
-  focus: "#2563EB"
+  border: "#DEDFD9"
+  blue: "#2F6BFF"
+  yellow: "#F2C94C"
+  muted: "#737780"
+  focus: "#2F6BFF"
 typography:
   display:
-    fontFamily: ""Nunito", "Avenir Next Rounded", "Arial Rounded MT Bold", system-ui, sans-serif"
+    fontFamily: "Avenir Next, Segoe UI, system-ui, sans-serif"
   body:
-    fontFamily: ""Nunito", "Avenir Next", system-ui, sans-serif"
+    fontFamily: "Avenir Next, Segoe UI, system-ui, sans-serif"
   utility:
-    fontFamily: "system-ui, sans-serif"
+    fontFamily: "Segoe UI, system-ui, sans-serif"
 rounded:
-  sm: "0.625rem"
-  md: "0.875rem"
-  lg: "1.25rem"
-  xl: "1.75rem"
+  sm: "0.5rem"
+  md: "0.75rem"
+  lg: "1.125rem"
   pill: "999px"
 spacing:
   xs: "0.375rem"
@@ -35,12 +30,12 @@ spacing:
   lg: "1.5rem"
   xl: "2.5rem"
   section: "4.5rem"
-  page-max: "68rem"
+  page-max: "67.5rem"
 components:
   brand-mark: {}
   mode-switch: {}
-  button: {}
-  card: {}
+  primary-action: {}
+  tool-navigation: {}
   field: {}
   video-card: {}
   dialog: {}
@@ -52,73 +47,72 @@ components:
 
 ### Creative North Star
 
-Um caderno de música contemporâneo que cresceu para uma aplicação: papel branco, cores musicais vivas, formas arredondadas e duas notas-personagem que funcionam como assinatura da marca. A identidade deve funcionar para uma criança pequena sem parecer infantil demais para um adolescente.
+Um estúdio de música contemporâneo, não uma aplicação infantil. A interface deve ter a disciplina de um instrumento: poucas peças, hierarquia forte, muito espaço e detalhes precisos. A referência visual vem do piano — preto, branco, ritmo, repetição e um pequeno contraste cromático — sem desenhar um piano literal em cada superfície.
 
 ### Product context and register
 
-- **Audience and primary job:** professores de piano preparam e conduzem aulas; crianças e adolescentes aprendem e praticam.
-- **Target market(s) and evidence:** produto digital global em português nesta fase; os preços e mercados podem variar sem alterar a identidade.
-- **Locale(s) and language policy:** português como interface principal; texto curto, natural e sem diminutivos excessivos.
-- **Usage scene:** computador ou tablet na aula; telemóvel e computador para estudo individual.
-- **Register:** híbrido. A landing page é de marca; `/app` e `/admin` são produto.
-- **Memorable signature:** o par de notas amarelo + azul com pequenos acentos rosa, associado às duas faces Ensine / Aprenda.
-- **Restraint:** ferramentas musicais, formulários, partituras e player de vídeo permanecem claros e funcionais; as cores não competem com a tarefa.
-- **Anti-references:** dashboard empresarial cinzento, estética de pré-escola, excesso de gradientes, gamificação com badges/streaks e interface escura como padrão.
-- **Token ownership/runtime mapping:** este ficheiro documenta os tokens aceites; os CSS custom properties em `index.html`, `app.html` e `admin.html` são a implementação runtime e devem espelhar estes valores.
+- **Primary jobs:** Ensine prioriza preparar a aula e abrir ferramentas; Aprenda prioriza abrir aulas e praticar.
+- **Locale:** português.
+- **Usage scene:** computador/tablet para ensinar; computador/telemóvel para aprender.
+- **Register:** híbrido — landing expressiva e mínima; produto funcional e silencioso.
+- **Memorable signature:** grandes áreas tipográficas e uma pequena barra de cor, amarela em Ensine e azul em Aprenda.
+- **Restraint:** não explicar no ecrã o que o próprio nome Ensine/Aprenda já comunica.
+- **Anti-references:** dashboards com dezenas de cartões, mascotes gigantes, gradientes decorativos, pills em excesso, slogans longos, labels demográficos na landing e estética de app pré-escolar.
+- **Token ownership/runtime mapping:** este ficheiro documenta as decisões; CSS em `index.html`, `app.html` e `admin.html` implementa os mesmos papéis semânticos.
 
 ## Colors
 
-`primary` é a ação e aprendizagem. `yellow` adiciona descoberta e energia; `pink` marca ritmo/movimento; `green` serve crescimento/sucesso; `purple` diferencia exploração e expressão. `navy` é texto e ações de alta ênfase. Fundos continuam claros para manter a música e a pauta legíveis.
+A marca é quase monocromática. `ink`, `paper` e `surface` dominam. `yellow` é o sinal de Ensine; `blue` é o sinal de Aprenda e também o foco acessível. Não usar uma paleta arco-íris para decorar componentes.
 
 ## Typography
 
-A marca usa uma voz arredondada inspirada em Nunito. Quando Nunito não estiver disponível, a pilha cai para famílias arredondadas/sistema. Títulos têm peso 800–900 e espaçamento apertado; corpo usa 600–700 em tamanhos pequenos porque a interface é usada à distância durante aulas.
+A personalidade vem do peso, escala e espaçamento, não de uma fonte infantil. Display e corpo usam Avenir Next quando disponível, com Segoe UI/system como fallback. Títulos grandes podem ter tracking apertado; labels e utilidades são pequenos e discretos.
 
 ## Layout
 
-A landing usa uma composição curta: marca → promessa → escolha Ensine/Aprenda → rodapé. A aplicação mantém largura máxima próxima de 1088px, com cartões largos e poucos níveis de navegação. Em ecrãs estreitos, grelhas passam a uma coluna sem esconder ações.
+Landing: wordmark → título monumental → escolha Ensine/Aprenda. Nada mais é necessário para a primeira decisão. Produto: uma ação principal grande e uma linha compacta de ferramentas secundárias. Grelhas transformam-se em duas/uma coluna no mobile sem esconder ações.
 
 ## Elevation & Depth
 
-Hierarquia vem principalmente de cor de superfície, borda e espaçamento. Sombras são suaves e reservadas para cartões principais, player e overlays. Partituras e ferramentas não recebem sombras decorativas.
+Evitar sombras como regra. Hierarquia usa bordas, contraste, espaço e mudança de superfície. Overlays são a exceção.
 
 ## Shapes
 
-Cartões usam `rounded.lg` ou `rounded.xl`; controlos usam `rounded.md`; pills e escolhas segmentadas usam `rounded.pill`. Ícones musicais vivem em recipientes arredondados, nunca em círculos aleatórios sem função.
+Menos arredondamento que a versão anterior. Cards principais podem ser quadrados/levemente arredondados; controlos mantêm radius médio por ergonomia. Pills só onde o formato comunica seleção compacta.
 
 ## Components
 
 ### Foundational visual states
 
-Hover aumenta contraste ou borda sem alterar geometria. Focus-visible usa anel azul de 3px com offset. Disabled reduz contraste e remove affordance de clique. Estados de loading reservam espaço; erros explicam como recuperar.
+Hover altera superfície/contraste sem mexer na geometria. Focus-visible usa anel azul claro. Disabled perde contraste e cursor de ação. Loading mantém a área final estável.
 
 ### Buttons and actions
 
-Ação principal usa azul ou navy com texto branco. Ensine pode usar navy + amarelo como assinatura; Aprenda usa azul com rosa/roxo em detalhes. Danger permanece separado e textual.
+A principal ação de Ensine é “Preparar aula”. A principal ação de Aprenda é “Aulas”. Ações secundárias aparecem como navegação compacta, sem parágrafos explicativos.
 
 ### Navigation and data display
 
-O seletor Ensine/Aprenda é persistente no topo da aplicação. O modo Aprenda nunca mostra preparar aula. O catálogo de vídeos usa cartões simples e um player 16:9 estável.
+Ensine/Aprenda fica no cabeçalho como alternância discreta. Aprenda nunca expõe o planeador. O catálogo de vídeos mostra conteúdo, não metadados demográficos.
 
 ### Forms and overlays
 
-Campos usam fundo branco, borda `border` e radius `md`. Select nativo é aceitável enquanto o sistema não exigir popup customizado. Textareas não redimensionam manualmente.
+Formulários mantêm fundo branco, borda clara e alta legibilidade. Textareas não redimensionam manualmente. Overlays usam foco e recuperação explícitos.
 
 ### Iconography
 
-Notas musicais, pauta, play e piano são os símbolos principais. O logo usa o par de notas da marca. Ícones nunca substituem labels em ações importantes.
+O símbolo Luwipi é um monograma abstrato e contido. Ícones musicais são funcionais; evitar personagens e ilustrações na navegação principal.
 
 ### Motion
 
-Transições de 140–220ms servem mudança de estado. `prefers-reduced-motion` desativa movimento não essencial.
+Transições 140–180ms apenas para hover, seleção e abertura. Respeitar `prefers-reduced-motion`.
 
 ### Content and data visualization
 
-Copy curta, concreta e orientada à ação: “Preparar aula”, “Abrir”, “Continuar”, “Ver aulas”. Evitar linguagem corporativa e promessas pedagógicas absolutas.
+Copy mínima. Se uma palavra resolve, não usar uma frase. Evitar explicar o público-alvo na interface pública.
 
 ## Do's and Don'ts
 
-- **Do:** usar azul, amarelo e rosa como sinais consistentes da marca.
-- **Do:** manter Ensine e Aprenda visualmente irmãos, não produtos desconectados.
-- **Don't:** infantilizar o modo Aprenda com personagens gigantes ou copy de bebé.
-- **Don't:** transformar a dashboard numa coleção de métricas e cartões sem prioridade.
+- **Do:** deixar a hierarquia e o espaço comunicarem.
+- **Do:** manter Ensine e Aprenda como duas faces da mesma marca.
+- **Don't:** colocar “crianças”, “adolescentes” ou “professores” como badges de marketing sem necessidade.
+- **Don't:** adicionar cartões, descrições ou cores apenas para preencher espaço.
