@@ -123,3 +123,9 @@
 - Accessibility checks: semantic controls, focus-visible, labels, reduced motion.
 - Canonical sibling flow used for comparison: preparar aula remains the dominant Ensine flow; Aulas remains the dominant Aprenda flow.
 - Project audit command/result: recorded after implementation.
+
+## Ritmo · leitura contínua
+- Leitura rítmica contínua básica em 4/4: sequência sem interrupção, contagem inicial de quatro tempos, metrónomo opcional e tap de prática.
+- Vocabulário básico atual: semínimas, mínimas e pausas simples; sem colcheias neste nível.
+- O objetivo principal é manter o pulso e continuar a leitura, não parar para corrigir cada compasso.
+- O exercício mostra feedback de timing e pontuação de ataques, mas não bloqueia a progressão do fluxo.
