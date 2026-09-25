@@ -137,5 +137,6 @@
     }
   ],
   "framework": null,
-  "installCommand": ""
+  "installCommand": "",
+  "buildCommand": "echo \"Luwipi static + Vercel Functions: no frontend build\""
 }
