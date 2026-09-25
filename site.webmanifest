@@ -1,10 +1,11 @@
 {
   "name": "Luwipi",
   "short_name": "Luwipi",
+  "description": "Ensine e aprenda música com o Luwipi.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#f7f8fb",
-  "theme_color": "#6670f5",
+  "background_color": "#F8FAFC",
+  "theme_color": "#2563EB",
   "icons": [
     {
       "src": "/assets/images/favicon.svg",
