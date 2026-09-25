@@ -139,5 +139,10 @@
   "framework": null,
   "installCommand": "",
   "buildCommand": "sh scripts/build-static.sh",
-  "outputDirectory": "public"
+  "outputDirectory": "public",
+  "functions": {
+    "api/prepare-lesson.js": {
+      "maxDuration": 120
+    }
+  }
 }

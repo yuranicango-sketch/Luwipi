@@ -3,11 +3,13 @@ function json(body,status=200){
 }
 
 function cfg(){
+  const requestedModel=String(process.env.OPENAI_MODEL||"").trim();
+  const model=!requestedModel||requestedModel==="gpt-6-sol"?"gpt-5.6-sol":requestedModel;
   return {
     url:process.env.SUPABASE_URL||"",
     pub:process.env.SUPABASE_PUBLISHABLE_KEY||"",
     openai:process.env.OPENAI_API_KEY||"",
-    model:process.env.OPENAI_MODEL||"gpt-6-sol"
+    model
   };
 }
 
@@ -170,6 +172,7 @@ Regras obrigatórias:
 10. O nome do aluno nunca é enviado para ti. Não peças nem inventes nomes.
 11. O foco mensal deve ser observável. A regra de não avanço deve explicar qual evidência ainda falta.
 12. Evita texto decorativo. Produz um plano aplicável, específico e musicalmente coerente.
+13. Mantém cada descrição objetiva, normalmente em uma ou duas frases curtas, para o plano ficar rápido de gerar e fácil de usar em aula.
 
 Dados da aula:
 - Idade: ${input.age} anos
@@ -255,7 +258,7 @@ export async function POST(request){
   if(!input)return json({error:"invalid_request"},400);
 
   const controller=new AbortController();
-  const timer=setTimeout(()=>controller.abort(),50000);
+  const timer=setTimeout(()=>controller.abort(),95000);
   try{
     const response=await fetch("https://api.openai.com/v1/responses",{
       method:"POST",
@@ -267,13 +270,13 @@ export async function POST(request){
         model:c.model,
         store:false,
         reasoning:{effort:"low"},
-        max_output_tokens:18000,
+        max_output_tokens:12000,
         input:[
           {role:"developer",content:developerPrompt(input)},
           {role:"user",content:"Gera agora o plano mensal seguindo exatamente o esquema pedido."}
         ],
         text:{
-          verbosity:"medium",
+          verbosity:"low",
           format:{
             type:"json_schema",
             name:"luwipi_lesson_plan",
@@ -286,7 +289,7 @@ export async function POST(request){
     });
     const body=await response.json().catch(()=>null);
     if(!response.ok){
-      console.error("OpenAI planner failed",response.status,body&&body.error&&body.error.type);
+      console.error("OpenAI planner failed",response.status,body&&body.error&&body.error.type,body&&body.error&&body.error.code,c.model);
       if(response.status===429)return json({error:"planner_busy"},503);
       throw new Error("openai_"+response.status);
     }
