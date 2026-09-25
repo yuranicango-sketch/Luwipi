@@ -44,7 +44,7 @@ button{border:0;border-radius:12px;background:#6670f5;color:#fff;padding:11px 14
     const code=params.get('code');
     if(code){
       const result=await client.auth.exchangeCodeForSession(code);
-      if(result.error)throw result.error;
+      if(result.error)throw result.error;if(result.data&&result.data.session&&result.data.session.provider_token)sessionStorage.setItem('luwipi_google_provider_token',result.data.session.provider_token);
     }else{
       await new Promise(resolve=>setTimeout(resolve,100));
       const result=await client.auth.getSession();
