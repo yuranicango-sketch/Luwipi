@@ -3,7 +3,7 @@
 ## Product context
 
 - Audience: utilizadores do Luwipi Ensine e Luwipi Aprenda.
-- Primary jobs: preparar aula; abrir ferramentas durante a aula; aprender por vídeo; praticar leitura, ritmo e jogos.
+- Primary jobs: preparar aula; abrir ferramentas durante a aula; seguir aulas audiovisuais em percurso; praticar leitura, ritmo e jogos.
 - Target market(s): global, interface portuguesa nesta fase.
 - Active locales: pt.
 - Language/content register and native-review policy: português simples; labels de ação consistentes.
@@ -51,9 +51,9 @@
 
 - Admin tables: render up to 200 accounts/videos; revisit pagination before exceeding that scale.
 - Exploratory lists: video catalogue renders published lessons; audience metadata remains internal unless it becomes necessary for navigation.
-- URL state: product mode lives in `?mode=ensine|aprenda`.
+- URL state: product mode lives in `?mode=ensine|aprenda`; audiovisual lesson completion/current lesson stays local to the browser for now.
 - Page size: current admin cap 200.
-- Empty/no-results/error/loading treatment: stable inline state inside the owning panel.
+- Empty/no-results/error/loading treatment: stable inline state inside the owning panel. Aprenda Aulas uses a large audiovisual player plus ordered lesson rail; when no lessons are published it shows an empty state instead of mock lessons.
 - Back/scroll restoration: view navigation resets to top.
 - Selection scope: not applicable.
 
@@ -66,6 +66,7 @@
 | Toggle video | publish button | row action disabled | same list | row refresh | inline status | action/list | `api/admin/videos.js` |
 | Block account | block action | confirmation | same list | list refresh | cancel/retry | initiating row | `api/admin/users.js` |
 | Switch mode | Ensine/Aprenda control | immediate | home/current valid route | selected state | n/a | chosen mode | app shell |
+| Follow audiovisual lesson | open Aulas / choose lesson | stable player/loading state | same audiovisual course view | active lesson + local completion state | retry catalogue; keep previous completion data | current lesson/player | app audiovisual lesson shell |
 
 ## Navigation and responsive behavior
 
@@ -98,6 +99,7 @@
 - Retry/backoff/timeout behavior: planner requests have a finite timeout and user-triggered retry; catalogue/auth also use user-triggered retry; no infinite retry loop.
 - Session expiry/re-authentication: Supabase session gate owns access.
 - Stale-request cancellation/invalidation and pending-state ownership: video catalogue uses one active request per refresh; planner owns one generation request per submit.
+- Aprenda audiovisual progress: completed lesson IDs and the current lesson are stored in localStorage; no child/student identity is attached to this progress record.
 
 ## Validation
 
