@@ -4,13 +4,13 @@
   "description": "Ensine e aprenda música com o Luwipi.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#F8FAFC",
-  "theme_color": "#2563EB",
+  "background_color": "#F5F5F1",
+  "theme_color": "#4568FF",
   "icons": [
     {
-      "src": "/assets/images/favicon.svg",
-      "sizes": "any",
-      "type": "image/svg+xml"
+      "src": "/assets/images/brand/luwipi-icon.webp",
+      "sizes": "160x170",
+      "type": "image/webp"
     }
   ]
 }
