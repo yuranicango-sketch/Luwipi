@@ -1,27 +1,28 @@
 ---
-version: alpha
+version: beta
 name: "Luwipi"
-description: "Uma marca musical com duas experiências: Ensine e Aprenda."
+description: "Uma marca musical premium com duas experiências: Ensine e Aprenda."
 colors:
-  ink: "#0B1020"
-  paper: "#F7F7F4"
+  ink: "#111214"
+  paper: "#F5F5F1"
   surface: "#FFFFFF"
-  border: "#DEDFD9"
-  blue: "#2F6BFF"
-  yellow: "#F2C94C"
-  muted: "#737780"
-  focus: "#2F6BFF"
+  border: "rgba(17,18,20,.11)"
+  blue: "#4568FF"
+  yellow: "#F3C85B"
+  muted: "#747780"
+  focus: "#4568FF"
 typography:
   display:
-    fontFamily: "Avenir Next, Segoe UI, system-ui, sans-serif"
+    fontFamily: "Bricolage Grotesque, sans-serif"
   body:
-    fontFamily: "Avenir Next, Segoe UI, system-ui, sans-serif"
+    fontFamily: "Manrope, system-ui, sans-serif"
   utility:
-    fontFamily: "Segoe UI, system-ui, sans-serif"
+    fontFamily: "Manrope, system-ui, sans-serif"
 rounded:
-  sm: "0.5rem"
-  md: "0.75rem"
-  lg: "1.125rem"
+  sm: "0.625rem"
+  md: "0.875rem"
+  lg: "1.25rem"
+  xl: "1.625rem"
   pill: "999px"
 spacing:
   xs: "0.375rem"
@@ -32,87 +33,88 @@ spacing:
   section: "4.5rem"
   page-max: "67.5rem"
 components:
-  brand-mark: {}
+  wordmark: {}
   mode-switch: {}
-  primary-action: {}
-  tool-navigation: {}
-  field: {}
-  video-card: {}
+  feature-action: {}
+  tool-row: {}
+  form-surface: {}
+  content-card: {}
   dialog: {}
 ---
 
 # Luwipi Design System
 
-## Overview
+## Creative North Star
 
-### Creative North Star
+Um estúdio musical contemporâneo transformado em software. O produto não deve parecer “site educativo” nem template de SaaS. A sensação vem de tipografia editorial, espaço negativo, contraste preciso, uma ação principal muito clara e ferramentas organizadas como uma superfície de trabalho.
 
-Um estúdio de música contemporâneo, não uma aplicação infantil. A interface deve ter a disciplina de um instrumento: poucas peças, hierarquia forte, muito espaço e detalhes precisos. A referência visual vem do piano — preto, branco, ritmo, repetição e um pequeno contraste cromático — sem desenhar um piano literal em cada superfície.
-
-### Product context and register
-
-- **Primary jobs:** Ensine prioriza preparar a aula e abrir ferramentas; Aprenda prioriza abrir aulas e praticar.
-- **Locale:** português.
-- **Usage scene:** computador/tablet para ensinar; computador/telemóvel para aprender.
-- **Register:** híbrido — landing expressiva e mínima; produto funcional e silencioso.
-- **Memorable signature:** grandes áreas tipográficas e uma pequena barra de cor, amarela em Ensine e azul em Aprenda.
-- **Restraint:** não explicar no ecrã o que o próprio nome Ensine/Aprenda já comunica.
-- **Anti-references:** dashboards com dezenas de cartões, mascotes gigantes, gradientes decorativos, pills em excesso, slogans longos, labels demográficos na landing e estética de app pré-escolar.
-- **Token ownership/runtime mapping:** este ficheiro documenta as decisões; CSS em `index.html`, `app.html` e `admin.html` implementa os mesmos papéis semânticos.
-
-## Colors
-
-A marca é quase monocromática. `ink`, `paper` e `surface` dominam. `yellow` é o sinal de Ensine; `blue` é o sinal de Aprenda e também o foco acessível. Não usar uma paleta arco-íris para decorar componentes.
+A identidade é adulta o suficiente para ter credibilidade e leve o suficiente para continuar acessível. Não se comunica idade através de mascotes, badges ou copy demográfica.
 
 ## Typography
 
-A personalidade vem do peso, escala e espaçamento, não de uma fonte infantil. Display e corpo usam Avenir Next quando disponível, com Segoe UI/system como fallback. Títulos grandes podem ter tracking apertado; labels e utilidades são pequenos e discretos.
+- **Bricolage Grotesque**: marca, títulos e ações principais.
+- **Manrope**: navegação, campos, listas, labels e conteúdo funcional.
+- Títulos grandes usam tracking apertado e pesos 600–700; o produto evita black/900 como solução automática.
+- O tamanho da tipografia deve criar hierarquia antes de bordas, cores ou sombras.
+
+## Color
+
+A maior parte do produto vive entre paper, surface e ink. Azul é ação e a assinatura de Aprenda. Amarelo aparece com contenção no universo Ensine. Cores não são distribuídas por cartões só para criar variedade.
 
 ## Layout
 
-Landing: wordmark → título monumental → escolha Ensine/Aprenda. Nada mais é necessário para a primeira decisão. Produto: uma ação principal grande e uma linha compacta de ferramentas secundárias. Grelhas transformam-se em duas/uma coluna no mobile sem esconder ações.
+### Landing
+Uma única composição dividida em duas experiências. A página não explica o público; Ensine e Aprenda são a navegação e a mensagem.
 
-## Elevation & Depth
+### Produto
+Uma ação principal grande por modo:
+- Ensine → Preparar aula
+- Aprenda → Aulas
 
-Evitar sombras como regra. Hierarquia usa bordas, contraste, espaço e mudança de superfície. Overlays são a exceção.
+Ferramentas secundárias aparecem como linhas funcionais com ícones de traço, não como mosaico de cartões.
 
-## Shapes
+### Forms
+O planeador usa poucas superfícies brancas grandes, com grupos internos definidos por espaço e hierarquia tipográfica. Não empilhar “cards dentro de cards”.
 
-Menos arredondamento que a versão anterior. Cards principais podem ser quadrados/levemente arredondados; controlos mantêm radius médio por ergonomia. Pills só onde o formato comunica seleção compacta.
+## Cards and surfaces
 
-## Components
+Cards só existem quando agrupam uma unidade real de conteúdo. Usar:
+- fundo branco;
+- 1px de border de baixo contraste;
+- radius 16–20px;
+- sombra apenas em elementos focais ou overlays.
 
-### Foundational visual states
+Evitar:
+- cartões para simples navegação;
+- caixas arredondadas em todas as secções;
+- ícones em quadrados coloridos sem significado;
+- múltiplos tons pastel numa mesma vista.
 
-Hover altera superfície/contraste sem mexer na geometria. Focus-visible usa anel azul claro. Disabled perde contraste e cursor de ação. Loading mantém a área final estável.
+## Navigation
 
-### Buttons and actions
+O cabeçalho é silencioso: wordmark, alternância Ensine/Aprenda, conta. A navegação do dashboard deve parecer uma ferramenta de trabalho, não uma homepage promocional.
 
-A principal ação de Ensine é “Preparar aula”. A principal ação de Aprenda é “Aulas”. Ações secundárias aparecem como navegação compacta, sem parágrafos explicativos.
+## Motion
 
-### Navigation and data display
+Transições de 150–180ms em hover/focus. Movimento nunca substitui hierarquia. Respeitar prefers-reduced-motion.
 
-Ensine/Aprenda fica no cabeçalho como alternância discreta. Aprenda nunca expõe o planeador. O catálogo de vídeos mostra conteúdo, não metadados demográficos.
+## Copy
 
-### Forms and overlays
+A interface deve cortar texto sempre que o layout ou o nome da ação já comuniquem a intenção.
 
-Formulários mantêm fundo branco, borda clara e alta legibilidade. Textareas não redimensionam manualmente. Overlays usam foco e recuperação explícitos.
+- Bom: “Preparar aula”
+- Evitar: “Comece agora a preparar a próxima aula do seu aluno”
+- Bom: “Leitura”
+- Evitar: “Notas, pautas, exercícios e músicas para leitura”
 
-### Iconography
+## Anti-patterns
 
-O símbolo Luwipi é um monograma abstrato e contido. Ícones musicais são funcionais; evitar personagens e ilustrações na navegação principal.
-
-### Motion
-
-Transições 140–180ms apenas para hover, seleção e abertura. Respeitar `prefers-reduced-motion`.
-
-### Content and data visualization
-
-Copy mínima. Se uma palavra resolve, não usar uma frase. Evitar explicar o público-alvo na interface pública.
-
-## Do's and Don'ts
-
-- **Do:** deixar a hierarquia e o espaço comunicarem.
-- **Do:** manter Ensine e Aprenda como duas faces da mesma marca.
-- **Don't:** colocar “crianças”, “adolescentes” ou “professores” como badges de marketing sem necessidade.
-- **Don't:** adicionar cartões, descrições ou cores apenas para preencher espaço.
+- estética infantil;
+- excesso de cards;
+- sombras em todas as caixas;
+- gradientes decorativos;
+- tipografia genérica/system em títulos de marca;
+- emojis ou símbolos Unicode como substitutos de iconografia;
+- copy explicativa onde uma label resolve;
+- badges demográficos na landing;
+- dashboards que parecem kits de UI.
