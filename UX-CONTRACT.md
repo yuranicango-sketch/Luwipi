@@ -61,7 +61,7 @@
 
 | Operation | Trigger | Pending | Success destination | Success feedback | Failure recovery | Focus outcome | Source ref |
 |---|---|---|---|---|---|---|---|
-| Prepare lesson | submit planner | button/result remains stable | generated plan | plan shown | inline message | result heading | app planner |
+| Prepare lesson | submit planner | dedicated Luwipi preparation surface; submit disabled | generated AI plan | plan shown | form restored with inline recovery | result heading | `api/prepare-lesson.js` + app planner |
 | Create video | admin save | save disabled | video list | inline status | preserve fields + retry | form/status | `api/admin/videos.js` |
 | Toggle video | publish button | row action disabled | same list | row refresh | inline status | action/list | `api/admin/videos.js` |
 | Block account | block action | confirmation | same list | list refresh | cancel/retry | initiating row | `api/admin/users.js` |
@@ -89,13 +89,15 @@
 
 ## Async and resilience
 
-- Mutation default: pessimistic for billing/admin; local-first for lesson planner.
-- Idempotency and duplicate-submit policy: submit buttons disabled while mutations run; Paddle webhook remains idempotent.
-- Auto-save/draft recovery: student planner data saves to teacher Google Drive after plan generation.
-- Offline/read-stale/write behavior: no server writes while offline; planner can still generate locally but Drive save can fail visibly.
-- Retry/backoff/timeout behavior: user-triggered retry for catalogue/auth; no infinite retry loop.
+- Mutation default: pessimistic for billing/admin; the lesson planner is server-generated through an authenticated OpenAI request.
+- Idempotency and duplicate-submit policy: submit buttons are disabled while mutations/generation run; Paddle webhook remains idempotent.
+- Planner pending state: the form is replaced by a dedicated Luwipi loading surface with changing preparation stages; no fake percentage is shown.
+- Auto-save/draft recovery: student planner data saves to teacher Google Drive only after a successful plan generation.
+- Planner privacy boundary: the student's name/apelido stays in the browser/Drive and is not included in the AI payload; only lesson settings and pedagogical context needed to generate the plan are sent.
+- Offline/read-stale/write behavior: AI plan generation requires network access; a failed request restores the filled form for retry. Drive failure does not discard a successfully generated plan.
+- Retry/backoff/timeout behavior: planner requests have a finite timeout and user-triggered retry; catalogue/auth also use user-triggered retry; no infinite retry loop.
 - Session expiry/re-authentication: Supabase session gate owns access.
-- Stale-request cancellation/invalidation and pending-state ownership: video catalogue uses one active request per refresh.
+- Stale-request cancellation/invalidation and pending-state ownership: video catalogue uses one active request per refresh; planner owns one generation request per submit.
 
 ## Validation
 
