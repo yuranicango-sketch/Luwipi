@@ -198,12 +198,16 @@
 - Ao sair do Modo ao Vivo, microfone/MIDI são desligados e playback/treino são interrompidos.
 
 ## Modo ao Vivo → Leitura
-- Uma partitura estruturada importada no **Modo ao Vivo** só entra no módulo **Leitura** por decisão explícita através de **Adicionar à Leitura**.
-- Importar, tocar ou treinar uma peça no Modo ao Vivo não modifica automaticamente a biblioteca de Leitura.
-- As músicas adicionadas aparecem em **Leitura → Músicas adicionadas** e são renderizadas pelo mesmo `Score Engine`.
-- A biblioteca usa IndexedDB no browser, com fallback local. Nesta fase, a decisão persiste no mesmo browser/dispositivo; não é apresentada como sincronização cloud.
-- Abrir uma música adicionada oferece partitura, playback com os samples existentes, Guia opcional e acesso ao piano de prática.
-- Adicionar novamente a mesma partitura é idempotente e não cria duplicados.
+- Uma partitura estruturada importada no **Modo ao Vivo** nunca entra automaticamente no módulo **Leitura**.
+- O fluxo obrigatório é **Importar → gerar → Preview → verificação de fidelidade → escolher destino → confirmar**.
+- O preview mostra a partitura que será guardada e o relatório de confiabilidade antes de qualquer publicação.
+- Erros estruturais críticos (nota perdida, pitch divergente, evento inválido) bloqueiam a confirmação. Ambiguidades rítmicas geram avisos para revisão visual.
+- Existem decisões independentes **Música na Leitura** e **Exercício na Leitura**.
+- O destino padrão é **Só para mim**. Uma conta com `profiles.role = admin` também pode escolher **Todos na plataforma**; professores não podem elevar uma partitura para global.
+- Partituras globais são visíveis para utilizadores autenticados com acesso ao produto; partituras pessoais são visíveis apenas ao proprietário.
+- Supabase + RLS é a fonte persistente da biblioteca. Para publicação pessoal, falha temporária de rede pode cair para armazenamento local no dispositivo; publicação global nunca tem fallback silencioso.
+- Abrir uma música/exercício adicionado usa o mesmo `Score Engine`, playback com samples existentes, Guia opcional e piano de prática.
+- Repetir a mesma publicação do mesmo proprietário/categoria é idempotente através de fingerprint; não cria duplicados.
 
 ## Tarefas · piano de prática
 - Links de tarefa de leitura (exercício ou música) abrem com o piano de prática visível automaticamente.
@@ -222,3 +226,19 @@
 - MIDI não contém todas as decisões editoriais de uma partitura impressa. Para beaming, vozes, dedilhado, slurs, layout e grafia editorial exata, MusicXML é a fonte preferida. O Luwipi não deve apresentar essas decisões ausentes como se viessem do MIDI.
 - No Modo ao Vivo há decisões separadas **Música na Leitura** e **Exercício na Leitura**. Nenhuma delas acontece automaticamente.
 - A mesma partitura pode ser guardada como música e como exercício; duplicação dentro da mesma categoria é evitada.
+
+
+## Confiabilidade · score, aulas, Drive e billing
+- O build de produção executa `node scripts/reliability-check.mjs`. Uma regressão crítica impede o deploy.
+- Score/MIDI: o gate cobre MIDI inválido, preservação de eventos, timing humano + quantização, sustain, tonalidade, ligaduras entre compassos, tempo variável e deteção de nota perdida.
+- O relatório `auditScore()` mantém separados **performance original** e **notação derivada** e devolve score, rating, issues/warnings e permissão de publicação global.
+- PDF continua visual; não é usado como fonte estrutural para inventar notas. Preview de PDF usa iframe/blob permitido explicitamente pela CSP sem reativar `object-src`.
+- Microfone do Modo ao Vivo exige `Permissions-Policy: microphone=(self)`; geolocalização/câmara continuam bloqueadas.
+- Google Drive: o gate simula appDataFolder, criação/leitura/escrita e token expirado. Falha do Drive não pode descartar um plano de aula já gerado.
+- Planeador: o gate valida autenticação/paywall, input inválido, número de aulas e soma exata dos minutos.
+- Aulas audiovisuais: o gate valida entitlement + filtragem por audiência/faixa.
+- Paddle: o gate valida origem, autenticação, `custom_data`, retorno de checkout, assinatura HMAC de webhook e provisionamento por `transaction.completed`.
+- O retorno `?billing=return` faz atualização limitada do entitlement e remove o marcador da URL; não existe polling infinito.
+- `private.has_product_access()` usa `product_entitlements` (e admin), alinhado com o estado escrito pelos webhooks Paddle.
+- A biblioteca global vive em `public.reading_library_scores` com RLS: utilizadores leem próprio+global; só admin pode inserir/atualizar `visibility='global'`.
+- O limite Vercel Hobby é verificado no gate; o build deve manter no máximo 12 Serverless Functions.

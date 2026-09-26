@@ -14,7 +14,7 @@ const clearButton=document.getElementById("liveClearFiles");
 const svg=document.getElementById("liveScoreSvg");
 const svgWrap=document.getElementById("liveSvgWrap");
 const pdfWrap=document.getElementById("livePdfWrap");
-const pdfObject=document.getElementById("livePdfObject");
+const pdfFrame=document.getElementById("livePdfFrame");
 const pdfFallback=document.getElementById("livePdfFallback");
 const empty=document.getElementById("liveScoreEmpty");
 const tabs=document.getElementById("liveViewTabs");
@@ -42,11 +42,29 @@ const accuracyMetric=document.getElementById("liveAccuracy");
 const progressMetric=document.getElementById("liveProgressMetric");
 const timingMetric=document.getElementById("liveTimingMetric");
 const pdfWarning=document.getElementById("livePdfWarning");
+const fidelityState=document.getElementById("liveFidelityState");
+const fidelityBadge=document.getElementById("liveFidelityBadge");
+const fidelityTitle=document.getElementById("liveFidelityTitle");
+const fidelityText=document.getElementById("liveFidelityText");
+const publishModal=document.getElementById("livePublishModal");
+const publishClose=document.getElementById("livePublishClose");
+const publishCancel=document.getElementById("livePublishCancel");
+const publishConfirm=document.getElementById("livePublishConfirm");
+const publishTitle=document.getElementById("livePublishTitle");
+const publishSvg=document.getElementById("livePublishSvg");
+const publishFidelityBadge=document.getElementById("livePublishFidelityBadge");
+const publishFidelityTitle=document.getElementById("livePublishFidelityTitle");
+const publishFidelityText=document.getElementById("livePublishFidelityText");
+const publishIssues=document.getElementById("livePublishIssues");
+const scopePersonal=document.getElementById("liveScopePersonal");
+const scopeGlobal=document.getElementById("liveScopeGlobal");
+const scopeHelp=document.getElementById("livePublishScopeHelp");
 
 let score=null,groups=[],pdfUrl="",pdfFileName="",structuredFileName="",activeView="interactive";
 let tempo=120,guideOn=true,rhythmOn=true,practice=false,practiceIndex=0,practiceAnchor=0,practiceFirstBeat=0;
 let correctCount=0,attempts=0,timingSamples=[],chordSeen=new Set(),noteOnTimes=new Map(),playTimers=[],playing=false;
 let inputMode="none",unsubscribe=null,lastDetected="-";
+let fidelityReport=null,publishKind="music",publishScope="personal",publishOpener=null;
 
 const PT={C:"Dó","C#":"Dó♯",D:"Ré","D#":"Ré♯",E:"Mi",F:"Fá","F#":"Fá♯",G:"Sol","G#":"Sol♯",A:"Lá","A#":"Lá♯",B:"Si"};
 
@@ -76,11 +94,13 @@ function stopPlayback(){
 function audio(){
   return window.LuwipiAudioBridge||null;
 }
-function playNoteEvent(event,delayMs,baseBeatMs,level){
+function playNoteEvent(event,delayMs,durationMs,level){
   const bridge=audio();
   if(!bridge||typeof bridge.play!=="function")return;
+  const baseBeatMs=60000/Math.max(20,tempo);
+  const effectiveBeats=Math.max(.03,Number(durationMs||baseBeatMs)/baseBeatMs);
   const timer=setTimeout(()=>{
-    bridge.play(event.note,event.durationBeat,baseBeatMs,level||Math.max(.42,Math.min(1.05,event.velocity/92)));
+    bridge.play(event.note,effectiveBeats,baseBeatMs,level||Math.max(.42,Math.min(1.05,event.velocity/92)));
   },Math.max(0,delayMs));
   playTimers.push(timer);
 }
@@ -113,6 +133,28 @@ function chooseView(which){
   if(which==="interactive"&&!score)return;
   activeView=which;updateTabs();
 }
+function fidelityLabel(report){
+  if(!report)return{label:"—",title:"Sem verificação",tone:""};
+  if(report.rating==="blocked")return{label:"Bloqueado",title:"Inconsistência encontrada",tone:"bad"};
+  if(report.rating==="high")return{label:"Alta · "+report.score+"%",title:"Alta confiabilidade",tone:"good"};
+  if(report.rating==="review")return{label:"Rever · "+report.score+"%",title:"Boa, com revisão recomendada",tone:"near"};
+  return{label:"Baixa · "+report.score+"%",title:"Revisão necessária",tone:"bad"};
+}
+function updateFidelityState(){
+  fidelityReport=score&&Engine.auditScore?Engine.auditScore(score):null;
+  if(!fidelityState)return;
+  fidelityState.classList.toggle("hidden",!fidelityReport);
+  if(!fidelityReport)return;
+  const label=fidelityLabel(fidelityReport);
+  fidelityState.dataset.tone=label.tone;
+  fidelityBadge.textContent=label.label;
+  fidelityTitle.textContent=label.title;
+  fidelityText.textContent=fidelityReport.issues.length
+    ? fidelityReport.issues[0]
+    : fidelityReport.warnings.length
+      ? fidelityReport.warnings[0]
+      : "Notas e alturas preservadas; a notação foi comparada com a origem.";
+}
 function updateFileState(){
   const bits=[];
   if(structuredFileName)bits.push(structuredFileName);
@@ -141,6 +183,7 @@ function updateFileState(){
   if(addReadingButton){addReadingButton.disabled=!score;addReadingButton.textContent="＋ Música na Leitura";}
   if(addExerciseButton){addExerciseButton.disabled=!score;addExerciseButton.textContent="＋ Exercício na Leitura";}
   clearButton.classList.toggle("hidden",bits.length===0);
+  updateFidelityState();
   updateTabs();
 }
 function resetPractice(){
@@ -168,7 +211,7 @@ function clearAll(){
   stopPlayback();resetPractice();
   score=null;groups=[];structuredFileName="";pdfFileName="";
   if(pdfUrl)URL.revokeObjectURL(pdfUrl);pdfUrl="";
-  pdfObject.removeAttribute("data");pdfFallback.replaceChildren();
+  if(pdfFrame)pdfFrame.removeAttribute("src");pdfFallback.replaceChildren();
   activeView="interactive";updateFileState();renderScore();
 }
 function readableError(code){
@@ -200,7 +243,7 @@ async function importFile(file){
       if(file.size>30*1024*1024)throw new Error("file_too_large");
       if(pdfUrl)URL.revokeObjectURL(pdfUrl);
       pdfUrl=URL.createObjectURL(file);pdfFileName=name;
-      pdfObject.data=pdfUrl;
+      if(pdfFrame)pdfFrame.src=pdfUrl;
       pdfFallback.replaceChildren();
       const link=document.createElement("a");link.href=pdfUrl;link.target="_blank";link.rel="noopener";link.textContent="Abrir PDF";
       pdfFallback.append("O browser não conseguiu mostrar o PDF. ",link);
@@ -221,29 +264,43 @@ function playScore(){
   stopPlayback();
   playing=true;playButton.textContent="■ Parar";
   const perfEvents=Engine.performanceEvents?Engine.performanceEvents(score):score.events;
-  const beatMs=60000/tempo,first=perfEvents.length?perfEvents[0].startBeat:0;
-  perfEvents.forEach(event=>playNoteEvent(event,(event.startBeat-first)*beatMs,beatMs));
+  const firstBeat=perfEvents.length?perfEvents[0].startBeat:0;
+  const firstMs=Engine.beatToMs?Engine.beatToMs(score,firstBeat,tempo):firstBeat*(60000/tempo);
+  perfEvents.forEach(event=>{
+    const at=(Engine.beatToMs?Engine.beatToMs(score,event.startBeat,tempo):event.startBeat*(60000/tempo))-firstMs;
+    const duration=Engine.durationToMs?Engine.durationToMs(score,event.startBeat,event.durationBeat,tempo):event.durationBeat*(60000/tempo);
+    playNoteEvent(event,at,duration);
+  });
   groups.forEach(group=>{
+    const at=(Engine.beatToMs?Engine.beatToMs(score,group.startBeat,tempo):group.startBeat*(60000/tempo))-firstMs;
     const timer=setTimeout(()=>{
       if(!playing)return;
-      const idx=group.index;
-      Engine.render(svg,score,{currentGroupIndex:guideOn?idx:-1});
-    },Math.max(0,(group.startBeat-first)*beatMs));
+      Engine.render(svg,score,{currentGroupIndex:guideOn?group.index:-1});
+    },Math.max(0,at));
     playTimers.push(timer);
   });
-  const end=Math.max.apply(null,perfEvents.map(e=>(e.startBeat-first+e.durationBeat)*beatMs));
-  playTimers.push(setTimeout(()=>{playing=false;playButton.textContent="▶ Tocar";renderScore()},end+120));
+  const end=Math.max.apply(null,perfEvents.map(e=>{
+    const finish=e.startBeat+e.durationBeat;
+    return (Engine.beatToMs?Engine.beatToMs(score,finish,tempo):finish*(60000/tempo))-firstMs;
+  }));
+  playTimers.push(setTimeout(()=>{playing=false;playButton.textContent="▶ Tocar";renderScore()},Math.max(0,end)+120));
 }
 function hearPhrase(){
   if(!score||!groups.length)return;
   const bridge=audio();
   if(!bridge){setFeedback("O piano do Luwipi ainda não está disponível nesta sessão.","bad");return}
   clearTimers();
-  const beatMs=60000/tempo,start=Math.min(practiceIndex,groups.length-1),slice=groups.slice(Math.max(0,start-1),Math.min(groups.length,start+3));
+  const start=Math.min(practiceIndex,groups.length-1),slice=groups.slice(Math.max(0,start-1),Math.min(groups.length,start+3));
   const first=slice[0].startBeat;
-  slice.forEach(group=>group.events.forEach(event=>playNoteEvent(event,(event.startBeat-first)*beatMs,beatMs,.9)));
-  const total=(slice[slice.length-1].startBeat-first+slice[slice.length-1].durationBeat)*beatMs;
-  playTimers.push(setTimeout(()=>{playTimers=[];renderScore()},total+80));
+  const firstMs=Engine.beatToMs?Engine.beatToMs(score,first,tempo):first*(60000/tempo);
+  slice.forEach(group=>group.events.forEach(event=>{
+    const at=(Engine.beatToMs?Engine.beatToMs(score,event.startBeat,tempo):event.startBeat*(60000/tempo))-firstMs;
+    const duration=Engine.durationToMs?Engine.durationToMs(score,event.startBeat,event.durationBeat,tempo):event.durationBeat*(60000/tempo);
+    playNoteEvent(event,at,duration,.9);
+  }));
+  const last=slice[slice.length-1];
+  const total=(Engine.beatToMs?Engine.beatToMs(score,last.startBeat+last.durationBeat,tempo):(last.startBeat+last.durationBeat)*(60000/tempo))-firstMs;
+  playTimers.push(setTimeout(()=>{playTimers=[];renderScore()},Math.max(0,total)+80));
   setFeedback("Ouve o ataque e o espaço até à nota seguinte. Depois repete.","near");
 }
 async function selectSource(kind){
@@ -315,23 +372,26 @@ function handleNoteOn(detail){
     updateMetrics();return;
   }
   chordSeen.add(detail.midi);
-  noteOnTimes.set(detail.midi,{at:detail.at,groupIndex:practiceIndex,durationBeat:group.events.find(e=>e.midi===detail.midi)?.durationBeat||group.durationBeat});
+  noteOnTimes.set(detail.midi,{at:detail.at,groupIndex:practiceIndex,startBeat:group.startBeat,durationBeat:group.events.find(e=>e.midi===detail.midi)?.durationBeat||group.durationBeat});
   if(group.pitches.some(p=>!chordSeen.has(p))){
     setFeedback("Continua o acorde: "+group.pitches.filter(p=>!chordSeen.has(p)).map(ptNote).join(" + ")+".","");
     return;
   }
   attempts++;
-  const beatMs=60000/tempo;
+  const firstMs=Engine.beatToMs?Engine.beatToMs(score,practiceFirstBeat,tempo):practiceFirstBeat*(60000/tempo);
+  const groupMs=Engine.beatToMs?Engine.beatToMs(score,group.startBeat,tempo):group.startBeat*(60000/tempo);
+  const relativeMs=groupMs-firstMs;
+  const localBeatMs=Engine.durationToMs?Engine.durationToMs(score,group.startBeat,1,tempo):(60000/tempo);
   if(!practiceAnchor){
-    practiceAnchor=detail.at-(group.startBeat-practiceFirstBeat)*beatMs;
+    practiceAnchor=detail.at-relativeMs;
     advancePractice("good","Certo. O relógio rítmico começou agora.");
     return;
   }
-  const expected=practiceAnchor+(group.startBeat-practiceFirstBeat)*beatMs;
+  const expected=practiceAnchor+relativeMs;
   const diff=detail.at-expected;
   if(rhythmOn){
     timingSamples.push(diff);
-    const beats=Math.abs(diff)/beatMs;
+    const beats=Math.abs(diff)/Math.max(1,localBeatMs);
     if(beats>.46){
       chordSeen.clear();
       setFeedback("Quase — "+directionText(diff)+". Ouve o trecho e repete antes de avançar.","near");
@@ -349,7 +409,7 @@ function handleNoteOff(detail){
   const started=noteOnTimes.get(detail.midi);
   if(!started)return;
   noteOnTimes.delete(detail.midi);
-  const held=detail.at-started.at,expected=started.durationBeat*(60000/tempo);
+  const held=detail.at-started.at,expected=Engine.durationToMs?Engine.durationToMs(score,started.startBeat,started.durationBeat,tempo):started.durationBeat*(60000/tempo);
   const ratio=held/Math.max(1,expected);
   if(ratio<.48)setFeedback("A duração ficou curta. Sustenta esta nota um pouco mais.","near");
   else if(ratio>1.65)setFeedback("A duração ficou longa. Liberta a tecla mais cedo.","near");
@@ -376,24 +436,93 @@ interactiveTab.addEventListener("click",()=>chooseView("interactive"));
 playButton.addEventListener("click",()=>playing?stopPlayback():playScore());
 stopButton.addEventListener("click",()=>{stopPlayback();if(practice)stopPractice()});
 hearButton.addEventListener("click",hearPhrase);
-async function saveToReading(kind,button){
-  if(!score||!button)return;
+function renderPublishIssues(report){
+  publishIssues.replaceChildren();
+  const rows=[...(report.issues||[]).map(text=>({text,tone:"bad"})),...(report.warnings||[]).map(text=>({text,tone:"near"}))];
+  if(!rows.length)rows.push({text:"Nenhuma divergência estrutural detetada entre os eventos de origem e a notação gerada.",tone:"good"});
+  rows.slice(0,8).forEach(row=>{
+    const p=document.createElement("p");p.className=row.tone;p.textContent=row.text;publishIssues.appendChild(p);
+  });
+}
+async function openPublishPreview(kind,opener){
+  if(!score)return;
+  publishKind=kind;publishScope="personal";publishOpener=opener||null;
+  fidelityReport=Engine.auditScore?Engine.auditScore(score):{rating:"review",score:0,blocked:false,canPublishGlobal:false,warnings:["Relatório de fidelidade indisponível."],issues:[]};
+  const label=fidelityLabel(fidelityReport);
+  publishTitle.textContent=kind==="exercise"?"Preview do exercício":"Preview da música";
+  publishFidelityBadge.textContent=label.label;
+  publishFidelityBadge.dataset.tone=label.tone;
+  publishFidelityTitle.textContent=label.title;
+  publishFidelityText.textContent="Eventos notados: "+fidelityReport.notationEvents+" · origem: "+fidelityReport.performanceEvents+" · preservação: "+Math.round((fidelityReport.notePreservation||0)*100)+"%.";
+  renderPublishIssues(fidelityReport);
+  Engine.render(publishSvg,score,{currentGroupIndex:-1});
+  scopePersonal.classList.add("active");scopeGlobal.classList.remove("active");scopeGlobal.classList.add("hidden");
+  scopeGlobal.disabled=true;
+  scopeHelp.textContent="Esta partitura ficará apenas na tua biblioteca.";
+  publishConfirm.disabled=Boolean(fidelityReport.blocked);
+  publishConfirm.textContent=fidelityReport.blocked?"Corrige antes de adicionar":"Confirmar e adicionar";
   const library=window.LuwipiReadingLibrary;
-  if(!library||typeof library.add!=="function"){setFeedback("A biblioteca de Leitura não está disponível nesta sessão.","bad");return}
-  const original=kind==="exercise"?"＋ Exercício na Leitura":"＋ Música na Leitura";
-  button.disabled=true;button.textContent="A guardar…";
+  if(library&&typeof library.permissions==="function"){
+    try{
+      const permission=await library.permissions();
+      if(permission?.canPublishGlobal){
+        scopeGlobal.classList.remove("hidden");
+        scopeGlobal.disabled=!fidelityReport.canPublishGlobal;
+        if(!fidelityReport.canPublishGlobal)scopeGlobal.title="A publicação global exige uma verificação de fidelidade sem erros críticos.";
+      }
+    }catch{}
+  }
+  publishModal.classList.remove("hidden");
+  document.body.classList.add("live-publish-open");
+  publishConfirm.focus();
+}
+function closePublishPreview(){
+  publishModal.classList.add("hidden");
+  document.body.classList.remove("live-publish-open");
+  publishConfirm.disabled=false;
+  if(publishOpener&&publishOpener.focus)publishOpener.focus();
+  publishOpener=null;
+}
+function selectPublishScope(scope){
+  if(scope==="global"&&(scopeGlobal.hidden||scopeGlobal.disabled))return;
+  publishScope=scope==="global"?"global":"personal";
+  scopePersonal.classList.toggle("active",publishScope==="personal");
+  scopeGlobal.classList.toggle("active",publishScope==="global");
+  scopeHelp.textContent=publishScope==="global"
+    ?"Como administrador, esta partitura ficará disponível para todos os utilizadores com acesso à plataforma."
+    :"Esta partitura ficará apenas na tua biblioteca.";
+}
+async function confirmPublish(){
+  if(!score||publishConfirm.disabled)return;
+  const library=window.LuwipiReadingLibrary;
+  if(!library||typeof library.publish!=="function"){setFeedback("A biblioteca de Leitura não está disponível nesta sessão.","bad");return}
+  publishConfirm.disabled=true;publishConfirm.textContent="A guardar…";
   try{
-    const result=await library.add(score,structuredFileName||score.title,kind);
-    button.textContent=result&&result.existed?"✓ Já existe":kind==="exercise"?"✓ Exercício adicionado":"✓ Música adicionada";
-    setFeedback(result&&result.existed?"Esta partitura já estava guardada nesta categoria.":kind==="exercise"?"Exercício adicionado à Leitura por tua decisão.":"Música adicionada à Leitura por tua decisão.","good");
+    const result=await library.publish(score,structuredFileName||score.title,publishKind,publishScope,fidelityReport);
+    closePublishPreview();
+    const button=publishKind==="exercise"?addExerciseButton:addReadingButton;
+    if(button)button.textContent=publishKind==="exercise"?"✓ Exercício adicionado":"✓ Música adicionada";
+    setFeedback(result?.scope==="global"?"Partitura publicada para toda a plataforma.":"Partitura adicionada à tua Leitura depois do preview.","good");
   }catch(error){
-    console.error("Reading library save failed",error);
-    button.disabled=false;button.textContent=original;
-    setFeedback("Não foi possível guardar esta partitura na Leitura neste browser.","bad");
+    console.error("Reading publish failed",error);
+    publishConfirm.disabled=false;publishConfirm.textContent="Tentar novamente";
+    const message=error?.message==="admin_required"
+      ?"Só uma conta administradora pode publicar para toda a plataforma."
+      :error?.message==="fidelity_blocked"
+        ?"A verificação encontrou um erro crítico. Revê a partitura antes de adicionar."
+        :"Não foi possível guardar a partitura agora.";
+    const p=document.createElement("p");p.className="bad";p.textContent=message;publishIssues.prepend(p);
   }
 }
-if(addReadingButton)addReadingButton.addEventListener("click",()=>saveToReading("music",addReadingButton));
-if(addExerciseButton)addExerciseButton.addEventListener("click",()=>saveToReading("exercise",addExerciseButton));
+if(addReadingButton)addReadingButton.addEventListener("click",()=>openPublishPreview("music",addReadingButton));
+if(addExerciseButton)addExerciseButton.addEventListener("click",()=>openPublishPreview("exercise",addExerciseButton));
+scopePersonal?.addEventListener("click",()=>selectPublishScope("personal"));
+scopeGlobal?.addEventListener("click",()=>selectPublishScope("global"));
+publishClose?.addEventListener("click",closePublishPreview);
+publishCancel?.addEventListener("click",closePublishPreview);
+publishConfirm?.addEventListener("click",confirmPublish);
+publishModal?.addEventListener("click",event=>{if(event.target===publishModal)closePublishPreview()});
+document.addEventListener("keydown",event=>{if(event.key==="Escape"&&!publishModal?.classList.contains("hidden"))closePublishPreview()});
 practiceButton.addEventListener("click",()=>practice?stopPractice():startPractice());
 tempoDown.addEventListener("click",()=>{tempo=Math.max(30,tempo-4);tempoLabel.textContent=tempo+" BPM";if(practice)resetPractice()});
 tempoUp.addEventListener("click",()=>{tempo=Math.min(240,tempo+4);tempoLabel.textContent=tempo+" BPM";if(practice)resetPractice()});

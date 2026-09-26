@@ -1,6 +1,8 @@
 #!/bin/sh
 set -eu
 
+node scripts/reliability-check.mjs
+
 rm -rf public
 mkdir -p public/auth public/assets public/ensine public/aprenda
 

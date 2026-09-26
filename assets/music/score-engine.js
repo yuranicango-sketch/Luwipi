@@ -474,6 +474,109 @@ function parseMusicXML(xmlText){
   });
 }
 
+
+function tempoMapFor(rawScore){
+  const score=rawScore&&rawScore.events?normalizeScore(rawScore):normalizeScore(rawScore);
+  const map=(Array.isArray(score.tempoMap)?score.tempoMap:[])
+    .filter(x=>Number.isFinite(Number(x.beat))&&Number.isFinite(Number(x.bpm))&&Number(x.bpm)>0)
+    .map(x=>({beat:Math.max(0,Number(x.beat)),bpm:clamp(Number(x.bpm),20,300)}))
+    .sort((a,b)=>a.beat-b.beat);
+  if(!map.length||map[0].beat>0)map.unshift({beat:0,bpm:score.tempoBpm});
+  else if(map[0].beat===0)map[0].bpm=map[0].bpm||score.tempoBpm;
+  return{score,map};
+}
+function beatToMs(rawScore,beat,tempoOverride){
+  const {score,map}=tempoMapFor(rawScore);
+  const target=Math.max(0,Number(beat)||0);
+  const ratio=Number.isFinite(Number(tempoOverride))&&Number(tempoOverride)>0
+    ? Number(tempoOverride)/Math.max(1,score.tempoBpm)
+    : 1;
+  let cursor=0,ms=0,activeBpm=(map[0]?.bpm||score.tempoBpm)*ratio;
+  for(let i=0;i<map.length;i++){
+    const change=map[i];
+    if(change.beat<=cursor){activeBpm=change.bpm*ratio;continue}
+    if(change.beat>=target)break;
+    ms+=(change.beat-cursor)*(60000/activeBpm);
+    cursor=change.beat;
+    activeBpm=change.bpm*ratio;
+  }
+  if(target>cursor)ms+=(target-cursor)*(60000/activeBpm);
+  return ms;
+}
+function durationToMs(score,startBeat,durationBeat,tempoOverride){
+  const start=Math.max(0,Number(startBeat)||0);
+  const end=start+Math.max(0,Number(durationBeat)||0);
+  return Math.max(0,beatToMs(score,end,tempoOverride)-beatToMs(score,start,tempoOverride));
+}
+function auditScore(rawScore){
+  const score=normalizeScore(rawScore);
+  const notation=score.events||[];
+  const perf=performanceEvents(score)||[];
+  const warnings=[],issues=[];
+  let points=100;
+  if(!notation.length){issues.push("A partitura não contém eventos notados.");points=0}
+  if(!perf.length){issues.push("A camada de performance está vazia.");points=0}
+  const invalidNotation=notation.filter(e=>!Number.isFinite(e.midi)||e.midi<0||e.midi>127||!Number.isFinite(e.startBeat)||e.startBeat<0||!Number.isFinite(e.durationBeat)||e.durationBeat<=0);
+  if(invalidNotation.length){issues.push(invalidNotation.length+" evento(s) notado(s) inválido(s).");points-=40}
+  const perfIds=new Set(perf.map(e=>String(e.sourceEventId||e.id||"")));
+  const represented=new Map();
+  notation.forEach(e=>{
+    const id=String(e.sourceEventId||e.id||"");
+    if(!represented.has(id))represented.set(id,new Set());
+    represented.get(id).add(Number(e.midi));
+  });
+  let lost=0,pitchMismatch=0;
+  perf.forEach(e=>{
+    const id=String(e.sourceEventId||e.id||"");
+    if(!represented.has(id)){lost++;return}
+    if(!represented.get(id).has(Number(e.midi)))pitchMismatch++;
+  });
+  const notePreservation=perf.length?Math.max(0,1-lost/perf.length):0;
+  if(lost){issues.push(lost+" evento(s) MIDI não chegaram à camada de notação.");points-=Math.min(50,lost/perf.length*100)}
+  if(pitchMismatch){issues.push(pitchMismatch+" evento(s) mudaram de altura entre performance e notação.");points-=Math.min(40,pitchMismatch/perf.length*100)}
+  const transcription=score.transcription||{};
+  const quantConfidence=Number.isFinite(Number(transcription.confidence))?clamp(Number(transcription.confidence),0,1):score.source==="midi"?0:1;
+  if(score.source==="midi"&&!score.transcription){warnings.push("Este MIDI não contém relatório de transcrição automática.");points-=12}
+  if(score.source==="midi"&&quantConfidence<.72){warnings.push("A execução tem timing muito livre; revê visualmente os valores rítmicos.");points-=18}
+  else if(score.source==="midi"&&quantConfidence<.88){warnings.push("Há pequenas ambiguidades rítmicas; o preview deve ser revisto.");points-=8}
+  if(Number(transcription.gridBeat)>0&&Number(transcription.gridBeat)<.125){warnings.push("Foi necessária uma subdivisão rítmica muito fina.");points-=5}
+  const tempoChanges=(score.tempoMap||[]).filter((x,i,a)=>i===0||Math.abs(Number(x.bpm)-Number(a[i-1]?.bpm))>.01).length;
+  if(tempoChanges>1)warnings.push("O MIDI contém mudanças de andamento; o playback preserva-as, mas confirma as marcações visuais.");
+  const meterChanges=(score.meterMap||[]).length>1;
+  if(meterChanges){warnings.push("Há mudanças de compasso. O motor preserva os dados, mas a paginação atual deve ser confirmada no preview.");points-=10}
+  const keyChanges=(score.keyMap||[]).length>1;
+  if(keyChanges){warnings.push("Há mudanças de tonalidade. Confirma acidentes e assinaturas no preview.");points-=8}
+  const groups=groupEvents(score);
+  const maxChord=groups.reduce((m,g)=>Math.max(m,g.pitches.length),0);
+  if(maxChord>8)warnings.push("Foram encontrados acordes muito densos ("+maxChord+" notas simultâneas).");
+  const outOfPiano=perf.filter(e=>e.midi<21||e.midi>108).length;
+  if(outOfPiano){warnings.push(outOfPiano+" nota(s) estão fora da extensão de um piano de 88 teclas.");points-=Math.min(8,outOfPiano)}
+  const maxBeat=notation.reduce((m,e)=>Math.max(m,e.startBeat+e.durationBeat),0);
+  if(maxBeat>4000){warnings.push("Partitura muito longa; a renderização pode ficar pesada em dispositivos modestos.");points-=4}
+  points=Math.max(0,Math.min(100,Math.round(points)));
+  const blocked=issues.length>0||notePreservation<.999||pitchMismatch>0;
+  const rating=blocked?"blocked":points>=90?"high":points>=75?"review":"low";
+  return{
+    rating,
+    score:points,
+    blocked,
+    canPublishGlobal:!blocked&&points>=80,
+    notePreservation:Number(notePreservation.toFixed(4)),
+    quantizationConfidence:Number(quantConfidence.toFixed(4)),
+    meanQuantizationError:Number(Number(transcription.meanQuantizationError||0).toFixed(4)),
+    notationEvents:notation.length,
+    performanceEvents:perf.length,
+    groups:groups.length,
+    maxChord,
+    tempoChanges,
+    meterChanges,
+    keyChanges,
+    warnings,
+    issues,
+    checkedAt:new Date().toISOString()
+  };
+}
+
 function svgEl(name,attrs){
   const el=document.createElementNS("http://www.w3.org/2000/svg",name);
   Object.entries(attrs||{}).forEach(([key,value])=>{
@@ -620,6 +723,9 @@ window.LuwipiScoreEngine=Object.freeze({
   midiToSpelledName,
   inferNotationGrid,
   transcribePerformance,
-  performanceEvents
+  performanceEvents,
+  beatToMs,
+  durationToMs,
+  auditScore
 });
 })();

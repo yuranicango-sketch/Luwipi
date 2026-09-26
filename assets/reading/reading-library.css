@@ -21,3 +21,9 @@ body.reading-imported-open.piano-open{padding-bottom:150px}
 .reading-imported-exercises .exercise-row{align-items:center}
 .reading-imported-exercises .exercise-row .song-icon{width:40px;height:40px;border-radius:11px;background:#f3f1ff;display:grid;place-items:center;color:#655ab1;font-size:19px}
 .reading-imported-exercises .exercise-row span{display:block;margin-top:3px;color:var(--muted);font-size:10px}
+
+.reading-library-badge{display:inline-flex;margin-left:6px;border-radius:999px;padding:3px 6px;font-size:7px;font-weight:900;letter-spacing:.04em;text-transform:uppercase;vertical-align:middle}
+.reading-library-badge.global{background:#e9f8ef;color:#247553}
+.reading-library-badge.personal{background:#edf1ff;color:#405cb8}
+.reading-library-badge.local{background:#f1f1ed;color:#74776f}
+.reading-imported-card .reading-library-badge{margin-top:4px}

@@ -91,12 +91,13 @@ function safeInput(raw){
   const experienceAllowed=new Set(["first","exploring","songs","reading"]);
   const durationAllowed=new Set([30,35,40,45]);
   const frequencyAllowed=new Set([1,2,3]);
-  const age=int(raw.age,2,80,NaN);
+  const rawAge=Number(raw.age);
+  const age=Number.isFinite(rawAge)?Math.round(rawAge):NaN;
   const duration=Number(raw.duration);
   const frequency=Number(raw.frequency);
   const experience=text(raw.experience,24);
   const approach=text(raw.approach,24);
-  if(!Number.isFinite(age)||!durationAllowed.has(duration)||!frequencyAllowed.has(frequency))return null;
+  if(!Number.isFinite(age)||age<2||age>80||!durationAllowed.has(duration)||!frequencyAllowed.has(frequency))return null;
   if(!experienceAllowed.has(experience)||!approachAllowed.has(approach))return null;
   return {
     age,
