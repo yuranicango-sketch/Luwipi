@@ -103,7 +103,7 @@ function safeInput(raw){
   const experienceAllowed=new Set(["first","exploring","songs","reading"]);
   const durationAllowed=new Set([30,35,40,45]);
   const frequencyAllowed=new Set([1,2,3]);
-  const age=int(raw.age,2,9,NaN);
+  const age=int(raw.age,2,80,NaN);
   const duration=Number(raw.duration);
   const frequency=Number(raw.frequency);
   const experience=text(raw.experience,24);
@@ -169,6 +169,8 @@ Regras obrigatórias:
    - 2–4 anos: frases muito simples, ouvido, movimento, imitação, histórias curtas, animais/objetos reais e exploração do piano. Quase nenhuma explicação abstrata e sem antecipar leitura formal.
    - 5–6 anos: mantém jogo e ouvido, mas já podes usar nomes de notas, números dos dedos, padrões simples e símbolos quando a experiência musical estiver preparada.
    - 7–9 anos: aumenta independência, leitura, ritmo, coordenação, técnica e autocorreção, sem abandonar ouvido, pulso e demonstração.
+   - 10–16 anos: linguagem direta e respeitosa, desafios musicais, repertório, ouvido, leitura, técnica e aplicação; nunca infantilizes nem uses animais/personagens como padrão.
+   - 17+ anos: linguagem adulta, objetiva e prática; explica apenas o necessário, liga técnica, leitura, ouvido, acordes e repertório a resultados musicais claros.
 5. Se a abordagem for um método específico, constrói o plano principalmente a partir desse método sem caricaturá-lo. Se for Luwipi, combina os métodos pelos seus pontos fortes.
 6. Usa a prioridade do professor quando existir. Caso contrário, decide o foco a partir da idade, experiência e perfil.
 7. Não inventes diagnósticos nem linguagem clínica.
@@ -189,6 +191,12 @@ Se houver dificuldade, repita com maior contraste.
 16. O foco mensal deve ser observável. A regra de não avanço deve explicar qual evidência ainda falta.
 17. Evita texto decorativo. Produz orientações específicas, executáveis e musicalmente coerentes.
 18. easyHint e hardHint devem ser adaptações operacionais curtas: uma mudança concreta que o professor pode fazer imediatamente.
+19. Não transformes o flow numa lista de conceitos. Cada bloco deve conter pelo menos uma ação observável do professor ou do aluno.
+20. Evita frases genéricas como "explique o conceito", "trabalhe a coordenação", "pratique a técnica" ou "faça uma atividade". Diz exatamente o que fazer.
+21. Nunca inventes recursos, botões ou jogos que não estejam na lista de recursos internos.
+22. Não avances para símbolos/leitura antes de existir experiência auditiva ou motora suficiente, salvo quando a experiência indicada mostra que o aluno já lê.
+23. Para adolescentes e adultos, evita linguagem infantil. Para crianças, evita linguagem académica.
+24. O plano deve poder ser executado sem o professor precisar interpretar o que a IA quis dizer.
 
 Dados da aula:
 - Idade: ${input.age} anos
@@ -211,6 +219,50 @@ function outputText(response){
     }
   }
   return out.join("");
+}
+
+function flowIssues(plan,input){
+  const issues=[];
+  const banned=/\b(objetivo|materiais|metodologia|competências?|habilidades? a desenvolver)\s*:/i;
+  const vague=/\b(explique o conceito|trabalhe a coordenação|pratique a técnica|faça uma atividade|desenvolva a percepção)\b/i;
+  const action=/\[(TOQUE|ESPERE|MOSTRE|BATA PALMAS|CANTE|REPITA|DEIXE|PERGUNTE|OUÇA|PARE|CAMINHE|MARQUE|APONTE)[^\]]*\]|\b(toque|mostre|pergunte|peça|bata|cante|repita|espere|deixe|escute|ouça|caminhe|marque|aponte|imite|tente|encontre|compare)\b/i;
+  plan.lessons.forEach((lesson,li)=>{
+    lesson.blocks.forEach((block,bi)=>{
+      const d=String(block.description||"");
+      if(d.length<45)issues.push(`aula ${li+1}, bloco ${bi+1}: roteiro curto demais`);
+      if(banned.test(d))issues.push(`aula ${li+1}, bloco ${bi+1}: cabeçalho burocrático`);
+      if(vague.test(d))issues.push(`aula ${li+1}, bloco ${bi+1}: instrução genérica`);
+      if(!action.test(d))issues.push(`aula ${li+1}, bloco ${bi+1}: falta ação concreta`);
+      if(input.age>=10&&/elefante|passarinho|coelhinho|gatinho|historinha/i.test(d))issues.push(`aula ${li+1}, bloco ${bi+1}: linguagem infantil para 10+`);
+    });
+  });
+  return issues.slice(0,24);
+}
+
+async function callPlanner(c,input,prompt,repairText,signal){
+  const response=await fetch("https://api.openai.com/v1/responses",{
+    method:"POST",
+    headers:{"content-type":"application/json","authorization":"Bearer "+c.openai},
+    body:JSON.stringify({
+      model:c.model,store:false,reasoning:{effort:"low"},max_output_tokens:12000,
+      input:[
+        {role:"developer",content:prompt},
+        {role:"user",content:repairText||"Gera agora o plano mensal seguindo exatamente o esquema pedido."}
+      ],
+      text:{verbosity:"low",format:{type:"json_schema",name:"luwipi_lesson_plan",strict:true,schema:PLAN_SCHEMA}}
+    }),
+    signal
+  });
+  const body=await response.json().catch(()=>null);
+  if(!response.ok){
+    console.error("OpenAI planner failed",response.status,body&&body.error&&body.error.type,body&&body.error&&body.error.code,c.model);
+    if(response.status===429){const e=new Error("planner_busy");e.busy=true;throw e}
+    throw new Error("openai_"+response.status);
+  }
+  if(body&&body.status==="incomplete")throw new Error("openai_incomplete");
+  const rawText=outputText(body);
+  if(!rawText)throw new Error("openai_empty");
+  return normalizePlan(JSON.parse(rawText),input);
 }
 
 function normalizePlan(plan,input){
@@ -276,50 +328,22 @@ export async function POST(request){
   const controller=new AbortController();
   const timer=setTimeout(()=>controller.abort(),95000);
   try{
-    const response=await fetch("https://api.openai.com/v1/responses",{
-      method:"POST",
-      headers:{
-        "content-type":"application/json",
-        "authorization":"Bearer "+c.openai
-      },
-      body:JSON.stringify({
-        model:c.model,
-        store:false,
-        reasoning:{effort:"low"},
-        max_output_tokens:12000,
-        input:[
-          {role:"developer",content:developerPrompt(input)},
-          {role:"user",content:"Gera agora o plano mensal seguindo exatamente o esquema pedido."}
-        ],
-        text:{
-          verbosity:"low",
-          format:{
-            type:"json_schema",
-            name:"luwipi_lesson_plan",
-            strict:true,
-            schema:PLAN_SCHEMA
-          }
-        }
-      }),
-      signal:controller.signal
-    });
-    const body=await response.json().catch(()=>null);
-    if(!response.ok){
-      console.error("OpenAI planner failed",response.status,body&&body.error&&body.error.type,body&&body.error&&body.error.code,c.model);
-      if(response.status===429)return json({error:"planner_busy"},503);
-      throw new Error("openai_"+response.status);
+    const prompt=developerPrompt(input);
+    let plan=await callPlanner(c,input,prompt,"",controller.signal);
+    let issues=flowIssues(plan,input);
+    if(issues.length){
+      const repair="O plano anterior passou no JSON, mas falhou nas regras pedagógicas do Luwipi. Reescreve o plano inteiro, mantendo duração e número de aulas. Corrige especificamente:\n- "+issues.join("\n- ")+"\nNão comentes as correções; devolve apenas o plano no esquema exigido.";
+      plan=await callPlanner(c,input,prompt,repair,controller.signal);
+      issues=flowIssues(plan,input);
+      if(issues.length)throw new Error("planner_quality_failed");
     }
-    if(body&&body.status==="incomplete")throw new Error("openai_incomplete");
-    const rawText=outputText(body);
-    if(!rawText)throw new Error("openai_empty");
-    const parsed=JSON.parse(rawText);
-    const plan=normalizePlan(parsed,input);
     return json({plan});
   }catch(error){
     if(error&&error.name==="AbortError"){
       console.error("OpenAI planner timed out");
       return json({error:"planner_timeout"},504);
     }
+    if(error&&error.busy)return json({error:"planner_busy"},503);
     console.error("Lesson planner failed",error);
     return json({error:"planner_unavailable"},503);
   }finally{
