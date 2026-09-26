@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" role="img" aria-label="Bolhas musicais coloridas com elefante, piano e gesto de silêncio">
+<defs>
+  <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#79dcff"/><stop offset="1" stop-color="#c7f3ff"/></linearGradient>
+  <radialGradient id="pink" cx=".3" cy=".2"><stop stop-color="#fff4fb"/><stop offset=".28" stop-color="#ffb4dc"/><stop offset="1" stop-color="#ff66ad"/></radialGradient>
+  <radialGradient id="yellow" cx=".3" cy=".2"><stop stop-color="#fff9bd"/><stop offset=".3" stop-color="#ffd84d"/><stop offset="1" stop-color="#ffad2e"/></radialGradient>
+  <radialGradient id="blue" cx=".3" cy=".2"><stop stop-color="#e4fbff"/><stop offset=".3" stop-color="#6dddff"/><stop offset="1" stop-color="#2db8ff"/></radialGradient>
+</defs>
+<rect width="640" height="360" rx="34" fill="url(#sky)"/>
+<circle cx="535" cy="70" r="43" fill="#ffd84d"/><circle cx="535" cy="70" r="58" fill="none" stroke="#fff3a8" stroke-width="14" opacity=".45"/>
+<path d="M0 256c86-63 173-56 247 0 78-60 181-70 393-10v114H0z" fill="#7dde77"/>
+<path d="M0 302c113-49 215-39 310 8 91-48 204-42 330-4v54H0z" fill="#60c969"/>
+<g transform="translate(244 146)">
+  <ellipse cx="70" cy="88" rx="76" ry="66" fill="#c9dfff" stroke="#fff" stroke-width="9"/>
+  <circle cx="70" cy="57" r="58" fill="#d8e8ff"/>
+  <ellipse cx="19" cy="59" rx="30" ry="41" fill="#b7d4ff"/><ellipse cx="121" cy="59" rx="30" ry="41" fill="#b7d4ff"/>
+  <circle cx="51" cy="47" r="5" fill="#25314e"/><circle cx="89" cy="47" r="5" fill="#25314e"/>
+  <path d="M70 63c0 27 4 44 20 48 10 3 18-1 22-7" fill="none" stroke="#8eb7ee" stroke-width="15" stroke-linecap="round"/>
+  <path d="M57 73c8 7 19 7 27 0" fill="none" stroke="#6979a0" stroke-width="4" stroke-linecap="round"/>
+</g>
+<g transform="translate(196 270)">
+ <rect x="0" y="0" width="250" height="64" rx="14" fill="#fff" stroke="#2f3036" stroke-width="5"/>
+ <path d="M31 0v64M62 0v64M93 0v64M124 0v64M155 0v64M186 0v64M217 0v64" stroke="#2f3036" stroke-width="3"/>
+ <path d="M22 0h18v37H22zM53 0h18v37H53zM115 0h18v37h-18zM146 0h18v37h-18zM177 0h18v37h-18z" fill="#2f3036"/>
+</g>
+<g>
+ <circle cx="113" cy="116" r="49" fill="url(#yellow)" stroke="#fff" stroke-width="8"/><circle cx="113" cy="116" r="65" fill="none" stroke="#fff" stroke-width="7" opacity=".55"/><text x="113" y="134" text-anchor="middle" font-size="52" font-family="Arial,sans-serif" font-weight="700" fill="#5b4330">♪</text>
+ <circle cx="504" cy="176" r="50" fill="url(#pink)" stroke="#fff" stroke-width="8"/><circle cx="504" cy="176" r="67" fill="none" stroke="#fff" stroke-width="7" opacity=".55"/><text x="504" y="194" text-anchor="middle" font-size="50" font-family="Arial,sans-serif" font-weight="700" fill="#6c3152">♫</text>
+ <circle cx="153" cy="225" r="38" fill="url(#blue)" stroke="#fff" stroke-width="7"/><text x="153" y="239" text-anchor="middle" font-size="39" font-family="Arial,sans-serif" font-weight="700" fill="#22506b">♪</text>
+</g>
+<g transform="translate(511 260)">
+ <circle r="57" fill="#ffd4e8" stroke="#fff" stroke-width="8"/>
+ <circle cx="-16" cy="-11" r="5" fill="#4d3441"/><circle cx="16" cy="-11" r="5" fill="#4d3441"/>
+ <path d="M-15 12c10 8 20 8 30 0" fill="none" stroke="#4d3441" stroke-width="4" stroke-linecap="round"/>
+ <path d="M7 10c15 1 25 11 25 29" fill="none" stroke="#f3a7c7" stroke-width="14" stroke-linecap="round"/>
+ <circle cx="34" cy="41" r="11" fill="#ffd4e8" stroke="#fff" stroke-width="4"/>
+</g>
+</svg>

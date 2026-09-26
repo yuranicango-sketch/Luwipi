@@ -142,3 +142,16 @@
 - Respostas podem ser feitas pelos botões de nomes ou pelo piano virtual em desktop.
 - Visual Normal é o padrão e serve adolescentes/adultos.
 - Trenzinho é uma apresentação opcional para crianças; nunca é ativado automaticamente para adultos e a preferência fica guardada localmente.
+
+## Pequeninos · Bolhas do Som
+- Local: `Jogos → Pequeninos · 2–4 anos`; o card usa thumbnail própria e abre um playfield dedicado.
+- Nome da atividade: **Bolhas do Som**.
+- A criança joga sem depender de leitura: tocar nas bolhas é a ação principal; início, silêncio e conclusão são comunicados visualmente.
+- Cada toque válido numa bolha toca **exatamente a próxima nota** da melodia atual. Bolhas ignoradas não avançam a música.
+- A cada 4 acertos entra um intervalo de silêncio obrigatório de aproximadamente 2,7 s com o sticker visual 🤫; durante esse intervalo não toca nenhuma nota e a sequência musical não avança.
+- Cada nova partida usa um shuffle-bag entre melodias infantis de domínio público (inicialmente Brilha, Brilha, Estrelinha; Mary Had a Little Lamb; Irmão João), evitando repetir a mesma música em partidas consecutivas quando possível.
+- O feedback sonoro usa timbre de piano/musical; beep/bip não é permitido em nenhum estado.
+- A atividade não guarda identidade da criança nem pontuação pessoal. O único estado local persistente é a rotação anónima das melodias para reduzir repetição.
+- Alvos interativos são grandes e táteis; controles adultos de entrar/sair/repetir mantêm nomes acessíveis e `focus-visible`.
+- `prefers-reduced-motion` desativa animações não essenciais sem alterar a sequência som → silêncio → som.
+

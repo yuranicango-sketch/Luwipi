@@ -1,0 +1,61 @@
+/* Bolhas do Som · atividade 2–4 anos */
+.sound-bubbles-entry{grid-column:1/-1!important;display:grid!important;grid-template-columns:minmax(150px,220px) 1fr!important;align-items:center!important;gap:14px!important;padding:10px!important;background:#fff!important;min-height:150px!important;overflow:hidden}
+.sound-bubbles-entry:hover{border-color:#cbd3ff;box-shadow:0 10px 26px rgba(69,104,255,.10)}
+.tiny-thumb{width:100%;height:128px;object-fit:cover;border-radius:14px;display:block;background:#7edcff}
+.sound-bubbles-entry strong{font-size:20px!important;letter-spacing:-.03em}
+.sound-bubbles-entry span{font-size:12px!important;max-width:36ch}
+.sound-bubbles-page{max-width:1080px}
+.sb-shell{background:#fff;border:1px solid var(--line);border-radius:26px;padding:10px;box-shadow:var(--shadow)}
+.sb-top{min-height:38px;display:flex;align-items:center;justify-content:flex-end;padding:2px 6px 8px}
+.sb-progress{display:flex;gap:7px;align-items:center;justify-content:flex-end;flex-wrap:wrap}
+.sb-progress-dot{width:16px;height:16px;border-radius:50%;background:#e8e0d3;box-shadow:inset 0 2px 0 rgba(255,255,255,.8);transition:transform .18s ease,background .18s ease}
+.sb-progress-dot.on{background:#ffd449;transform:scale(1.12)}
+.sb-stage{position:relative;min-height:min(68vh,660px);overflow:hidden;border-radius:24px;border:5px solid #fff;background:linear-gradient(#7edcff 0 62%,#88df7c 62% 100%);box-shadow:0 14px 34px rgba(67,42,30,.13);isolation:isolate}
+.sb-sun{position:absolute;right:4%;top:5%;width:88px;height:88px;border-radius:50%;background:#ffd64f;box-shadow:0 0 0 15px rgba(255,214,79,.2);z-index:1}
+.sb-cloud,.sb-cloud-two{position:absolute;z-index:1;font-size:62px;filter:drop-shadow(0 7px 8px rgba(255,255,255,.14))}
+.sb-cloud{left:4%;top:5%}.sb-cloud-two{left:17%;top:12%;font-size:40px;opacity:.82}
+.sb-hill,.sb-hill-two{position:absolute;bottom:-7%;border-radius:50%;z-index:1}
+.sb-hill{left:-8%;width:61%;height:29%;background:#65cc6e}.sb-hill-two{right:-12%;width:56%;height:27%;background:#72d37d}
+.sb-flowers{position:absolute;left:0;right:0;bottom:100px;height:48px;z-index:2;background:radial-gradient(circle at 10% 64%,#ff72b8 0 10px,transparent 11px),radial-gradient(circle at 20% 44%,#ffd650 0 10px,transparent 11px),radial-gradient(circle at 33% 68%,#9b7cff 0 10px,transparent 11px),radial-gradient(circle at 47% 48%,#ff915f 0 10px,transparent 11px),radial-gradient(circle at 60% 67%,#ff72b8 0 10px,transparent 11px),radial-gradient(circle at 74% 50%,#ffd650 0 10px,transparent 11px),radial-gradient(circle at 88% 66%,#9b7cff 0 10px,transparent 11px)}
+.sb-animal-wrap{position:absolute;left:50%;bottom:145px;transform:translateX(-50%);z-index:6;text-align:center}
+.sb-animal{width:148px;height:148px;border-radius:46% 46% 44% 44%;display:grid;place-items:center;font-size:84px;background:#fff3bb;border:7px solid rgba(255,255,255,.94);box-shadow:0 15px 30px rgba(0,0,0,.12)}
+.sb-animal.hit{animation:sb-bounce .35s ease}
+.sb-piano-mark{font-size:38px;margin-top:-12px;filter:drop-shadow(0 4px 2px rgba(0,0,0,.12))}
+@keyframes sb-bounce{50%{transform:translateY(-15px) scale(1.05)}}
+.sb-piano{position:absolute;left:50%;bottom:22px;transform:translateX(-50%);width:min(540px,84vw);height:104px;background:#fff;border:6px solid #302e2e;border-radius:22px;display:flex;overflow:hidden;z-index:5;box-shadow:0 12px 25px rgba(0,0,0,.14)}
+.sb-key{flex:1;border-right:3px solid #302e2e;position:relative}.sb-key:last-child{border-right:0}
+.sb-key::after{content:"";position:absolute;top:0;right:-18%;width:36%;height:62%;background:#302e2e;border-radius:0 0 9px 9px;z-index:3}
+.sb-key:nth-child(3)::after,.sb-key:nth-child(7)::after{display:none}
+.sb-bubble{position:absolute;z-index:15;width:104px;height:104px;border-radius:50%;display:grid;place-items:center;border:7px solid rgba(255,255,255,.96);box-shadow:0 16px 28px rgba(61,38,60,.2),inset 0 -9px 0 rgba(255,255,255,.2);cursor:pointer;touch-action:manipulation;animation:sb-rise 4.5s linear forwards,sb-attract .75s ease-in-out infinite alternate}
+.sb-bubble span{font-size:44px;font-weight:900;color:#3d3150;text-shadow:0 2px 0 rgba(255,255,255,.45)}
+.sb-bubble::before,.sb-bubble::after{content:"";position:absolute;border:6px solid rgba(255,255,255,.74);border-radius:50%;inset:-16px;animation:sb-ring 1s ease-out infinite;pointer-events:none}
+.sb-bubble::after{inset:-31px;animation-delay:.28s}
+.sb-bubble.sun{background:radial-gradient(circle at 30% 25%,#fff8ae 0 13%,#ffd84e 28%,#ffad30 100%)}
+.sb-bubble.berry{background:radial-gradient(circle at 30% 25%,#ffd7ef 0 13%,#ff80c8 28%,#ff5b9f 100%)}
+.sb-bubble.sky{background:radial-gradient(circle at 30% 25%,#d6f8ff 0 13%,#69dfff 28%,#2eb8ff 100%)}
+.sb-bubble.leaf{background:radial-gradient(circle at 30% 25%,#e7ffc2 0 13%,#91ee54 28%,#57cf3b 100%)}
+.sb-bubble.grape{background:radial-gradient(circle at 30% 25%,#eadbff 0 13%,#b98cff 28%,#8c5cff 100%)}
+.sb-bubble.pop{animation:sb-pop .2s ease forwards!important}
+@keyframes sb-ring{0%{opacity:.86;transform:scale(.72)}100%{opacity:0;transform:scale(1.18)}}
+@keyframes sb-attract{from{filter:brightness(1)}to{filter:brightness(1.12);box-shadow:0 18px 36px rgba(61,38,60,.28),inset 0 -9px 0 rgba(255,255,255,.2)}}
+@keyframes sb-rise{from{transform:translate(-50%,-50%) scale(.70)}to{transform:translate(var(--dx),var(--dy)) scale(1.06)}}
+@keyframes sb-pop{to{opacity:0;transform:scale(1.8)}}
+.sb-spark{position:absolute;z-index:40;pointer-events:none;font-size:28px;animation:sb-spark .58s ease-out forwards;color:#fff}
+@keyframes sb-spark{to{opacity:0;transform:translate(var(--sx),var(--sy)) scale(1.4)}}
+.sb-overlay{position:absolute;inset:0;z-index:60;display:grid;place-items:center;background:rgba(255,249,235,.63);backdrop-filter:blur(5px)}
+.sb-overlay.hidden{display:none!important}
+.sb-start-art{font-size:50px;display:flex;gap:15px;justify-content:center;margin-bottom:20px}
+.sb-round-button{width:132px;height:132px;border-radius:50%;border:0;background:#ffd34f;color:#31291b;box-shadow:0 12px 0 rgba(135,92,16,.16),0 18px 28px rgba(0,0,0,.12);font-size:58px;font-weight:900;cursor:pointer}
+.sb-round-button:active{transform:translateY(4px)}
+.sb-finish-trophy{font-size:86px;margin-bottom:12px}.sb-finish-stars{font-size:46px;letter-spacing:8px;margin-bottom:18px}
+.sb-silence{position:absolute;inset:0;z-index:50;display:none;place-items:center;background:rgba(199,222,236,.62);backdrop-filter:saturate(.42)}
+.sb-silence.show{display:grid}
+.sb-freeze-ring{position:absolute;width:292px;height:292px;border-radius:50%;border:9px solid rgba(255,255,255,.58);animation:sb-breathe 1.4s ease-in-out infinite}
+.sb-shhh-sticker{position:relative;width:220px;height:220px;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle at 30% 25%,#fff 0 16%,#ffe0ef 18%,#ffc0db 58%,#ff8fc0 100%);border:8px solid rgba(255,255,255,.94);box-shadow:0 18px 40px rgba(0,0,0,.13);font-size:110px;animation:sb-sticker-pulse 1.1s ease-in-out infinite}
+.sb-shhh-sticker::before,.sb-shhh-sticker::after{content:"✨";position:absolute;font-size:34px}.sb-shhh-sticker::before{left:-48px;top:26px}.sb-shhh-sticker::after{right:-45px;bottom:32px}
+.sb-shhh-sticker.nudge{animation:sb-nudge .26s ease}
+.sb-moon{position:absolute;right:8%;top:8%;font-size:72px}.sb-silence-cloud{position:absolute;left:9%;top:11%;font-size:38px}
+@keyframes sb-breathe{50%{transform:scale(.92);opacity:.45}}@keyframes sb-sticker-pulse{50%{transform:scale(1.05)}}@keyframes sb-nudge{50%{transform:scale(.92) rotate(-4deg)}}
+@media(max-width:680px){.sound-bubbles-entry{grid-template-columns:128px 1fr!important}.tiny-thumb{height:106px}.sb-shell{padding:6px}.sb-stage{min-height:610px;border-radius:20px}.sb-animal-wrap{bottom:132px}.sb-animal{width:124px;height:124px;font-size:70px}.sb-piano{height:92px;width:88vw}.sb-bubble{width:90px;height:90px}.sb-bubble span{font-size:38px}.sb-shhh-sticker{width:182px;height:182px;font-size:88px}.sb-freeze-ring{width:244px;height:244px}}
+@media(max-width:430px){.sound-bubbles-entry{grid-template-columns:112px 1fr!important}.tiny-thumb{height:96px}.sound-bubbles-entry strong{font-size:17px!important}.sb-stage{min-height:570px}}
+@media(prefers-reduced-motion:reduce){.sb-bubble,.sb-animal.hit,.sb-freeze-ring,.sb-shhh-sticker,.sb-progress-dot{animation:none!important;transition:none!important}}

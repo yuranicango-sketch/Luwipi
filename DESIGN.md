@@ -109,7 +109,7 @@ A interface deve cortar texto sempre que o layout ou o nome da ação já comuni
 
 ## Anti-patterns
 
-- estética infantil;
+- estética infantil fora de atividades explicitamente infantis;
 - excesso de cards;
 - sombras em todas as caixas;
 - gradientes decorativos;
@@ -118,3 +118,18 @@ A interface deve cortar texto sempre que o layout ou o nome da ação já comuni
 - copy explicativa onde uma label resolve;
 - badges demográficos na landing;
 - dashboards que parecem kits de UI.
+
+## Child activity surfaces
+
+A área de produto continua adulta, editorial e contida. Atividades explicitamente destinadas a crianças pequenas podem abrir um **playfield infantil isolado** sem alterar a identidade do shell.
+
+Para atividades 2–4 anos:
+- o jogo pode usar cor mais saturada, personagens, cenário ilustrado e alvos táteis grandes;
+- a criança não deve depender de leitura para compreender a ação principal;
+- texto de orientação fica no contexto do adulto/professor, não no centro do jogo;
+- som, silêncio, movimento e reação visual comunicam a mecânica;
+- feedback sonoro deve ser musical ou usar samples reais apropriados. **Nunca usar beep/bip como som de piano, recompensa ou confirmação.**
+- ao sair da atividade, a interface volta integralmente ao sistema visual adulto do Luwipi.
+
+A exceção infantil é local ao conteúdo pedagógico; não deve vazar para navegação, conta, planeador, billing ou outras superfícies de produto.
+
