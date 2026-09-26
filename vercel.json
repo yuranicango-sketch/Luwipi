@@ -19,6 +19,14 @@
       "destination": "/api/honeypot?trap=admin-backup"
     },
     {
+      "source": "/ensine",
+      "destination": "/app.html?mode=ensine"
+    },
+    {
+      "source": "/aprenda",
+      "destination": "/app.html?mode=aprenda"
+    },
+    {
       "source": "/auth/callback",
       "destination": "/auth/callback.html"
     },
