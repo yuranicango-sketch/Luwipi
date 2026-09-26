@@ -68,7 +68,7 @@ function parseVideoUrl(input){
 }
 function normalizeBody(body,parsed){
   const audience=["both","ensine","aprenda"].includes(body.audience)?body.audience:"both";
-  const ageTrack=["all","criancas","adolescentes"].includes(body.ageTrack)?body.ageTrack:"all";
+  const ageTrack=["all","2-4","5-9","10+","criancas","adolescentes"].includes(body.ageTrack)?body.ageTrack:"all";
   const sortOrder=Number.isFinite(Number(body.sortOrder))?Math.max(-9999,Math.min(9999,Math.trunc(Number(body.sortOrder)))):0;
   return {
     title:cleanText(body.title,120),
@@ -133,7 +133,7 @@ export async function PATCH(request){
   if("title" in body)patch.title=cleanText(body.title,120);
   if("description" in body)patch.description=cleanText(body.description,300);
   if("audience" in body&&["both","ensine","aprenda"].includes(body.audience))patch.audience=body.audience;
-  if("ageTrack" in body&&["all","criancas","adolescentes"].includes(body.ageTrack))patch.age_track=body.ageTrack;
+  if("ageTrack" in body&&["all","2-4","5-9","10+","criancas","adolescentes"].includes(body.ageTrack))patch.age_track=body.ageTrack;
   if("sortOrder" in body&&Number.isFinite(Number(body.sortOrder)))patch.sort_order=Math.max(-9999,Math.min(9999,Math.trunc(Number(body.sortOrder))));
   if("published" in body)patch.published=Boolean(body.published);
   if("url" in body){

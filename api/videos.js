@@ -45,8 +45,11 @@ function embedUrl(row){
 }
 export async function GET(request){
   if(!(await authenticated(request)))return json({error:"unauthorized"},401);
-  const audience=new URL(request.url).searchParams.get("audience");
+  const params=new URL(request.url).searchParams;
+  const audience=params.get("audience");
   const mode=audience==="aprenda"?"aprenda":"ensine";
+  const requestedTrack=params.get("track")||"";
+  const track=["2-4","5-9","10+"].includes(requestedTrack)?requestedTrack:"";
   try{
     const c=cfg();
     const response=await fetch(
@@ -56,7 +59,8 @@ export async function GET(request){
     if(!response.ok)throw new Error("video_catalog_unavailable");
     const rows=await response.json();
     const lessons=rows
-      .filter(row=>row.audience==="both"||row.audience===mode)
+      .filter(row=>(row.audience==="both"||row.audience===mode)&&row.provider&&row.video_id)
+      .filter(row=>mode!=="aprenda"||!track||row.age_track==="all"||row.age_track===track)
       .map(row=>({
         id:row.id,
         title:row.title,
