@@ -9,6 +9,8 @@ const FALLBACK_KEY="luwipi_reading_library_v1";
 
 const listEl=document.getElementById("importedReadingList");
 const emptyEl=document.getElementById("importedReadingEmpty");
+const exerciseListEl=document.getElementById("importedExerciseList");
+const exerciseEmptyEl=document.getElementById("importedExerciseEmpty");
 const view=document.getElementById("readingImportedView");
 const svg=document.getElementById("readingImportedSvg");
 const titleEl=document.getElementById("readingImportedTitle");
@@ -36,19 +38,20 @@ function hashString(s){
   for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619)}
   return(h>>>0).toString(36);
 }
-function fingerprint(score){
-  return hashString(JSON.stringify([
+function fingerprint(score,kind){
+  return hashString(JSON.stringify([kind||"music",
     score.title,
     score.tempoBpm,
     score.meter,
     score.events.map(e=>[e.midi,e.startBeat,e.durationBeat,e.velocity])
   ]));
 }
-function clean(score,sourceName){
+function clean(score,sourceName,kind){
   const s=Engine.normalizeScore(score);
   return{
-    id:"score-"+fingerprint(s),
+    id:(kind==="exercise"?"exercise-":"score-")+fingerprint(s,kind),
     title:s.title||String(sourceName||"Partitura"),
+    kind:kind==="exercise"?"exercise":"music",
     sourceName:String(sourceName||s.title||"").slice(0,180),
     createdAt:new Date().toISOString(),
     updatedAt:new Date().toISOString(),
@@ -134,18 +137,32 @@ function escapeHtml(s){
   return String(s||"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 }
 async function renderList(){
-  if(!listEl)return;
   const items=(await all()).sort((a,b)=>String(b.updatedAt||"").localeCompare(String(a.updatedAt||"")));
-  listEl.replaceChildren();
-  if(emptyEl)emptyEl.classList.toggle("hidden",items.length>0);
-  items.forEach(item=>{
-    const card=document.createElement("article");
-    card.className="song-card reading-imported-card";
-    const meter=Array.isArray(item.score?.meter)?item.score.meter.join("/"):"—";
-    card.innerHTML='<div class="song-icon">𝄞</div><div><h3>'+escapeHtml(item.title||"Partitura")+'</h3><p>'+escapeHtml(meter)+' · '+Math.round(item.score?.tempoBpm||120)+' BPM</p><span class="reading-imported-source">Modo ao Vivo</span></div><div class="song-actions"><button type="button">Abrir na Leitura</button></div>';
-    card.querySelector("button").addEventListener("click",()=>open(item.id));
-    listEl.appendChild(card);
-  });
+  const musics=items.filter(item=>(item.kind||"music")!=="exercise");
+  const exercises=items.filter(item=>item.kind==="exercise");
+  if(listEl){
+    listEl.replaceChildren();
+    emptyEl?.classList.toggle("hidden",musics.length>0);
+    musics.forEach(item=>{
+      const card=document.createElement("article");
+      card.className="song-card reading-imported-card";
+      const meter=Array.isArray(item.score?.meter)?item.score.meter.join("/"):"—";
+      card.innerHTML='<div class="song-icon">𝄞</div><div><h3>'+escapeHtml(item.title||"Partitura")+'</h3><p>'+escapeHtml(meter)+' · '+Math.round(item.score?.tempoBpm||120)+' BPM</p><span class="reading-imported-source">Modo ao Vivo</span></div><div class="song-actions"><button type="button">Abrir na Leitura</button></div>';
+      card.querySelector("button").addEventListener("click",()=>open(item.id));
+      listEl.appendChild(card);
+    });
+  }
+  if(exerciseListEl){
+    exerciseListEl.replaceChildren();
+    exerciseEmptyEl?.classList.toggle("hidden",exercises.length>0);
+    exercises.forEach(item=>{
+      const row=document.createElement("article");
+      row.className="exercise-row reading-imported-card";
+      row.innerHTML='<div class="song-icon">𝄞</div><div><strong>'+escapeHtml(item.title||"Exercício")+'</strong><span>'+escapeHtml(item.score?.meter?.join("/")||"—")+' · '+Math.round(item.score?.tempoBpm||120)+' BPM · importado</span></div><button type="button">Abrir exercício</button>';
+      row.querySelector("button").addEventListener("click",()=>open(item.id));
+      exerciseListEl.appendChild(row);
+    });
+  }
 }
 function clearTimers(){
   timers.forEach(clearTimeout);
@@ -159,7 +176,7 @@ function render(){
   Engine.render(svg,current.score,{currentGroupIndex:guide?currentGroup:-1});
   headingEl.textContent=current.title;
   titleEl.textContent=current.title;
-  metaEl.textContent=current.score.meter.join("/")+" · "+Math.round(tempo)+" BPM";
+  metaEl.textContent=(current.kind==="exercise"?"Exercício · ":"Música · ")+current.score.meter.join("/")+" · "+Math.round(tempo)+" BPM";
   tempoEl.textContent="♩ = "+Math.round(tempo);
   syncPianoTarget();
 }
@@ -215,7 +232,7 @@ function play(){
   playing=true;
   playBtn.textContent="■ Parar";
   const beatMs=60000/tempo;
-  const events=current.score.events;
+  const events=Engine.performanceEvents?Engine.performanceEvents(current.score):current.score.events;
   const first=events[0]?.startBeat||0;
   events.forEach(e=>{
     timers.push(setTimeout(
@@ -239,8 +256,8 @@ function play(){
     render();
   },end+100));
 }
-async function add(score,sourceName){
-  const item=clean(score,sourceName);
+async function add(score,sourceName,kind="music"){
+  const item=clean(score,sourceName,kind);
   const existing=await get(item.id);
   if(existing)item.createdAt=existing.createdAt||item.createdAt;
   await put(item);

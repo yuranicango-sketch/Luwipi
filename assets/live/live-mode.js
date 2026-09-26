@@ -24,6 +24,7 @@ const playButton=document.getElementById("livePlay");
 const stopButton=document.getElementById("liveStop");
 const hearButton=document.getElementById("liveHear");
 const addReadingButton=document.getElementById("liveAddReading");
+const addExerciseButton=document.getElementById("liveAddExercise");
 const practiceButton=document.getElementById("livePractice");
 const tempoDown=document.getElementById("liveTempoDown");
 const tempoUp=document.getElementById("liveTempoUp");
@@ -121,7 +122,12 @@ function updateFileState(){
   const stageTitle=document.getElementById("liveStageTitle");
   if(stageTitle)stageTitle.textContent=score?score.title:(pdfFileName||"Modo ao Vivo");
   if(score){
-    fileMeta.textContent=Math.round(score.tempoBpm)+" BPM · "+score.meter[0]+"/"+score.meter[1]+" · "+score.events.length+" notas · "+score.keyName;
+    const perfCount=Engine.performanceEvents?Engine.performanceEvents(score).length:score.events.length;
+    const trans=score.transcription;
+    const fidelity=score.source==="midi"&&trans
+      ?" · MIDI preservado: "+perfCount+" eventos · notação automática "+(trans.gridBeat?("grade "+String(trans.gridBeat.toFixed(3)).replace(/0+$/,"").replace(/\.$/,"")+" tempo"):"")
+      :"";
+    fileMeta.textContent=Math.round(score.tempoBpm)+" BPM · "+score.meter[0]+"/"+score.meter[1]+" · "+score.events.length+" eventos notados · "+score.keyName+fidelity;
   }else if(pdfFileName){
     fileMeta.textContent="PDF preservado como original · associa MIDI/MusicXML para Play, Guia e avaliação";
   }else{
@@ -132,7 +138,8 @@ function updateFileState(){
   playButton.disabled=!score;
   practiceButton.disabled=!score;
   hearButton.disabled=!score;
-  if(addReadingButton){addReadingButton.disabled=!score;addReadingButton.textContent="＋ Adicionar à Leitura";}
+  if(addReadingButton){addReadingButton.disabled=!score;addReadingButton.textContent="＋ Música na Leitura";}
+  if(addExerciseButton){addExerciseButton.disabled=!score;addExerciseButton.textContent="＋ Exercício na Leitura";}
   clearButton.classList.toggle("hidden",bits.length===0);
   updateTabs();
 }
@@ -213,8 +220,9 @@ function playScore(){
   if(!score||playing)return;
   stopPlayback();
   playing=true;playButton.textContent="■ Parar";
-  const beatMs=60000/tempo,first=score.events.length?score.events[0].startBeat:0;
-  score.events.forEach(event=>playNoteEvent(event,(event.startBeat-first)*beatMs,beatMs));
+  const perfEvents=Engine.performanceEvents?Engine.performanceEvents(score):score.events;
+  const beatMs=60000/tempo,first=perfEvents.length?perfEvents[0].startBeat:0;
+  perfEvents.forEach(event=>playNoteEvent(event,(event.startBeat-first)*beatMs,beatMs));
   groups.forEach(group=>{
     const timer=setTimeout(()=>{
       if(!playing)return;
@@ -223,7 +231,7 @@ function playScore(){
     },Math.max(0,(group.startBeat-first)*beatMs));
     playTimers.push(timer);
   });
-  const end=Math.max.apply(null,score.events.map(e=>(e.startBeat-first+e.durationBeat)*beatMs));
+  const end=Math.max.apply(null,perfEvents.map(e=>(e.startBeat-first+e.durationBeat)*beatMs));
   playTimers.push(setTimeout(()=>{playing=false;playButton.textContent="▶ Tocar";renderScore()},end+120));
 }
 function hearPhrase(){
@@ -368,23 +376,24 @@ interactiveTab.addEventListener("click",()=>chooseView("interactive"));
 playButton.addEventListener("click",()=>playing?stopPlayback():playScore());
 stopButton.addEventListener("click",()=>{stopPlayback();if(practice)stopPractice()});
 hearButton.addEventListener("click",hearPhrase);
-if(addReadingButton)addReadingButton.addEventListener("click",async()=>{
-  if(!score)return;
+async function saveToReading(kind,button){
+  if(!score||!button)return;
   const library=window.LuwipiReadingLibrary;
   if(!library||typeof library.add!=="function"){setFeedback("A biblioteca de Leitura não está disponível nesta sessão.","bad");return}
-  addReadingButton.disabled=true;
-  addReadingButton.textContent="A guardar…";
+  const original=kind==="exercise"?"＋ Exercício na Leitura":"＋ Música na Leitura";
+  button.disabled=true;button.textContent="A guardar…";
   try{
-    const result=await library.add(score,structuredFileName||score.title);
-    addReadingButton.textContent=result&&result.existed?"✓ Já está na Leitura":"✓ Adicionada à Leitura";
-    setFeedback(result&&result.existed?"Esta música já estava na Leitura.":"Música adicionada à Leitura. Só foi guardada porque escolheste adicionar.","good");
+    const result=await library.add(score,structuredFileName||score.title,kind);
+    button.textContent=result&&result.existed?"✓ Já existe":kind==="exercise"?"✓ Exercício adicionado":"✓ Música adicionada";
+    setFeedback(result&&result.existed?"Esta partitura já estava guardada nesta categoria.":kind==="exercise"?"Exercício adicionado à Leitura por tua decisão.":"Música adicionada à Leitura por tua decisão.","good");
   }catch(error){
     console.error("Reading library save failed",error);
-    addReadingButton.disabled=false;
-    addReadingButton.textContent="＋ Adicionar à Leitura";
-    setFeedback("Não foi possível guardar esta música na Leitura neste browser.","bad");
+    button.disabled=false;button.textContent=original;
+    setFeedback("Não foi possível guardar esta partitura na Leitura neste browser.","bad");
   }
-});
+}
+if(addReadingButton)addReadingButton.addEventListener("click",()=>saveToReading("music",addReadingButton));
+if(addExerciseButton)addExerciseButton.addEventListener("click",()=>saveToReading("exercise",addExerciseButton));
 practiceButton.addEventListener("click",()=>practice?stopPractice():startPractice());
 tempoDown.addEventListener("click",()=>{tempo=Math.max(30,tempo-4);tempoLabel.textContent=tempo+" BPM";if(practice)resetPractice()});
 tempoUp.addEventListener("click",()=>{tempo=Math.min(240,tempo+4);tempoLabel.textContent=tempo+" BPM";if(practice)resetPractice()});

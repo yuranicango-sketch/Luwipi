@@ -16,3 +16,8 @@ body.reading-imported-open.piano-open{padding-bottom:150px}
   body.reading-imported-open .piano-dock:not(.hidden){display:block!important}
   body.reading-imported-open.piano-open{padding-bottom:150px!important}
 }
+
+.reading-imported-exercises{margin-top:20px;margin-bottom:4px}
+.reading-imported-exercises .exercise-row{align-items:center}
+.reading-imported-exercises .exercise-row .song-icon{width:40px;height:40px;border-radius:11px;background:#f3f1ff;display:grid;place-items:center;color:#655ab1;font-size:19px}
+.reading-imported-exercises .exercise-row span{display:block;margin-top:3px;color:var(--muted);font-size:10px}

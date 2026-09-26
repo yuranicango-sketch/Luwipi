@@ -211,3 +211,14 @@
 - O botão **Fechar** continua disponível.
 - O piano reutiliza o motor/samples já existentes; não cria áudio alternativo ou beep.
 
+
+
+### MIDI como fonte de verdade
+- A importação manual de MIDI é um fluxo de produto, não uma operação de desenvolvimento. O utilizador deve poder adicionar ficheiros sem pedir que uma música/exercício seja codificado manualmente.
+- O motor mantém duas camadas: **performance MIDI original** e **notação automática**. A performance conserva ataques, durações, velocity, acordes e sustain; a notação é quantizada para leitura sem destruir os dados originais.
+- Playback de MIDI importado usa a camada de performance original. Leitura/Guia usam a camada notada.
+- O parser preserva mapas de tempo, compasso e tonalidade quando presentes no MIDI, além do pedal sustain (CC64).
+- A notação automática escolhe uma grelha rítmica, usa a tonalidade para preferir sustenidos/bemóis e divide notas que atravessam barras com ligaduras.
+- MIDI não contém todas as decisões editoriais de uma partitura impressa. Para beaming, vozes, dedilhado, slurs, layout e grafia editorial exata, MusicXML é a fonte preferida. O Luwipi não deve apresentar essas decisões ausentes como se viessem do MIDI.
+- No Modo ao Vivo há decisões separadas **Música na Leitura** e **Exercício na Leitura**. Nenhuma delas acontece automaticamente.
+- A mesma partitura pode ser guardada como música e como exercício; duplicação dentro da mesma categoria é evitada.
