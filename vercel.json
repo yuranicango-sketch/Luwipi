@@ -54,6 +54,18 @@
         {
           "key": "Origin-Agent-Cluster",
           "value": "?1"
+        },
+        {
+          "key": "Content-Disposition",
+          "value": "inline"
+        },
+        {
+          "key": "X-Download-Options",
+          "value": "noopen"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "private, no-store"
         }
       ]
     },

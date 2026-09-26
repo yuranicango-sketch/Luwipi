@@ -39,7 +39,7 @@ function embedUrl(row){
   if(row.provider==="youtube"){
     return "https://www.youtube-nocookie.com/embed/"+encodeURIComponent(row.video_id)+"?rel=0";
   }
-  const params=new URLSearchParams({dnt:"1",title:"0",byline:"0",portrait:"0"});
+  const params=new URLSearchParams({dnt:"1",title:"0",byline:"0",portrait:"0",pip:"0",keyboard:"0"});
   if(row.video_hash)params.set("h",row.video_hash);
   return "https://player.vimeo.com/video/"+encodeURIComponent(row.video_id)+"?"+params.toString();
 }
