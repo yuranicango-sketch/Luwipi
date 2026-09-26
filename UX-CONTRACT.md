@@ -180,3 +180,20 @@
 - Com o Guia desligado, o comportamento existente da Leitura é preservado.
 - Em ecrãs onde o piano virtual não é mostrado por limitação responsiva, o destaque da partitura continua disponível sem inventar uma segunda superfície de piano.
 
+## Modo ao Vivo · motor musical
+- Local: ferramenta própria na sequência principal do dashboard, disponível em **Ensine** e **Aprenda**. Não substitui Leitura, Ritmo, Jogos ou Aulas.
+- O motor central vive em `assets/music/score-engine.js` e trabalha sobre um modelo estruturado de eventos musicais. Posição na pauta é calculada a partir do pitch + clave; músicas futuras não devem redesenhar coordenadas nota a nota.
+- O renderer cobre clave de Sol/Fá, linhas suplementares, acidentes, figuras básicas conforme duração, ponto de aumento, compasso, tonalidade, dinâmica e articulações quando a fonte contém esses dados.
+- **MIDI** é o formato estruturado principal: notas, ataques, duração, velocity/dinâmica aproximada, BPM e compasso são lidos localmente. MIDI format 0/1 é suportado; SMPTE e format 2 são recusados explicitamente.
+- **MusicXML** também é estruturado e preserva mais informação editorial quando presente, incluindo dinâmica e articulações básicas.
+- **PDF** é tratado defensivamente como documento visual original. O Luwipi nunca inventa notas a partir do PDF. Play, Guia e avaliação só ficam disponíveis quando existir MIDI/MusicXML; PDF + MIDI da mesma peça podem coexistir.
+- Os ficheiros importados nesta versão são processados localmente no browser; não são enviados para uma nova API nem guardados automaticamente no servidor.
+- Playback usa o mesmo motor de samples de piano já existente no Luwipi; não cria beep/bip nem um segundo som de confirmação.
+- Entrada externa preferida: **Web MIDI**, por fornecer pitch, acordes, velocity e note-off com precisão.
+- Entrada por **microfone** é explicitamente monofónica/experimental para piano acústico. Serve melhor uma nota de cada vez e não afirma reconhecer acordes polifónicos com precisão.
+- No treino, pitch e ritmo são avaliados separadamente. A primeira nota correta estabelece a referência temporal; ataques seguintes são comparados ao BPM da partitura.
+- Timing próximo recebe feedback **Quase** com indicação cedo/tarde. Um erro rítmico maior não avança automaticamente: o utilizador pode ouvir o trecho esperado e repetir.
+- Em MIDI, a duração da tecla também é comparada com a duração escrita e pode indicar nota curta/longa.
+- Guia visual é opcional: destaca a nota/grupo atual sem alterar a cabeça da nota. Com Guia desligado, a avaliação pode continuar sem revelar a próxima nota.
+- Ao sair do Modo ao Vivo, microfone/MIDI são desligados e playback/treino são interrompidos.
+
