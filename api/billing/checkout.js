@@ -1,7 +1,6 @@
 const prices = {
-  monthly: () => process.env.PADDLE_PRICE_MONTHLY,
-  quarterly: () => process.env.PADDLE_PRICE_QUARTERLY,
-  semiannual: () => process.env.PADDLE_PRICE_SEMIANNUAL
+  ensine: { monthly: () => process.env.PADDLE_PRICE_ENSINE_MONTHLY || process.env.PADDLE_PRICE_MONTHLY, quarterly: () => process.env.PADDLE_PRICE_ENSINE_QUARTERLY || process.env.PADDLE_PRICE_QUARTERLY, semiannual: () => process.env.PADDLE_PRICE_ENSINE_SEMIANNUAL || process.env.PADDLE_PRICE_SEMIANNUAL },
+  aprenda: { monthly: () => process.env.PADDLE_PRICE_APRENDA_MONTHLY, quarterly: () => process.env.PADDLE_PRICE_APRENDA_QUARTERLY, semiannual: () => process.env.PADDLE_PRICE_APRENDA_SEMIANNUAL }
 };
 
 function json(body, status = 200) {
@@ -38,7 +37,8 @@ export async function POST(request) {
     return json({ error: "invalid_request" }, 400);
   }
 
-  const price = prices[body.plan] && prices[body.plan]();
+  const product = body.product === "aprenda" ? "aprenda" : body.product === "ensine" ? "ensine" : "";
+  const price = product && prices[product] && prices[product][body.plan] && prices[product][body.plan]();
   const apiKey = process.env.PADDLE_API_KEY;
   if (!price || !apiKey) return json({ error: "billing_not_configured" }, 503);
 
@@ -55,8 +55,8 @@ export async function POST(request) {
     },
     body: JSON.stringify({
       items: [{ price_id: price, quantity: 1 }],
-      custom_data: { user_id: user.id, plan: body.plan },
-      checkout: { url: appUrl + "/app?billing=return" }
+      custom_data: { user_id: user.id, plan: body.plan, product },
+      checkout: { url: appUrl + "/" + product + "?billing=return" }
     })
   });
 
