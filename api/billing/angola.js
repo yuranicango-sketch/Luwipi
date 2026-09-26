@@ -16,6 +16,10 @@ export async function POST(request){
   const plan=["monthly","quarterly","semiannual"].includes(body.plan)?body.plan:null;
   if(!product||!plan)return json({error:"invalid_request"},400);
   const labels={monthly:"mensal",quarterly:"trimestral",semiannual:"semestral"};
-  const message=`Olá, quero ativar o Luwipi ${product}. Plano ${labels[plan]}.`;
+  const prices={
+    Aprenda:{monthly:"15.000 Kz",quarterly:"40.000 Kz",semiannual:"75.000 Kz"},
+    Ensine:{monthly:"20.000 Kz",quarterly:"55.000 Kz",semiannual:"105.000 Kz"}
+  };
+  const message=`Olá, quero ativar o Luwipi ${product}. Plano ${labels[plan]} — ${prices[product][plan]}.`;
   return json({url:`https://wa.me/${PHONE}?text=${encodeURIComponent(message)}`});
 }
