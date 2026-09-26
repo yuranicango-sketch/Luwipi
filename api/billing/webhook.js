@@ -64,13 +64,12 @@ async function alreadyProcessed(eventId) {
   return Array.isArray(rows) && rows.length > 0;
 }
 
-async function patchProfile(userId, patch) {
-  const response = await adminFetch("profiles?id=eq." + encodeURIComponent(userId), {
-    method: "PATCH",
-    headers: { Prefer: "return=minimal" },
-    body: JSON.stringify(patch)
+async function patchEntitlement(userId, product, patch) {
+  if (!["ensine","aprenda"].includes(product)) throw new Error("invalid_product");
+  const response = await adminFetch("product_entitlements?user_id=eq." + encodeURIComponent(userId) + "&product=eq." + encodeURIComponent(product), {
+    method: "PATCH", headers: { Prefer: "return=minimal" }, body: JSON.stringify({ ...patch, updated_at: new Date().toISOString() })
   });
-  if (!response.ok) throw new Error("profile_update_failed");
+  if (!response.ok) throw new Error("entitlement_update_failed");
 }
 
 async function rememberEvent(eventId, eventType) {
@@ -118,26 +117,27 @@ export async function POST(request) {
       (firstItem && firstItem.price_id) ||
       null;
 
-    if (userId && ["subscription.created","subscription.activated","subscription.updated","transaction.completed"].includes(eventType)) {
+    const product = d.custom_data && d.custom_data.product;
+    if (userId && ["ensine","aprenda"].includes(product) && ["subscription.created","subscription.activated","subscription.updated","transaction.completed"].includes(eventType)) {
       const patch = {
         billing_provider: "paddle",
         paddle_customer_id: d.customer_id || null,
         paddle_subscription_id: subscriptionId,
         paddle_price_id: priceId,
         subscription_status: d.status || "active",
-        access_status: "active",
+        status: "active",
         activated_at: new Date().toISOString(),
         access_until: d.current_billing_period && d.current_billing_period.ends_at
           ? d.current_billing_period.ends_at
           : null
       };
       if (d.custom_data && d.custom_data.plan) patch.subscription_period = d.custom_data.plan;
-      await patchProfile(String(userId), patch);
+      await patchEntitlement(String(userId), product, patch);
     }
 
-    if (userId && ["subscription.canceled","subscription.paused"].includes(eventType)) {
-      await patchProfile(String(userId), {
-        billing_provider: "paddle",
+    if (userId && ["ensine","aprenda"].includes(product) && ["subscription.canceled","subscription.paused"].includes(eventType)) {
+      await patchEntitlement(String(userId), product, {
+        billing_provider: "paddle", status: "expired",
         paddle_subscription_id: subscriptionId,
         subscription_status: d.status || "canceled",
         access_until:
