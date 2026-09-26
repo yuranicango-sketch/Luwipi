@@ -155,3 +155,15 @@
 - Alvos interativos são grandes e táteis; controles adultos de entrar/sair/repetir mantêm nomes acessíveis e `focus-visible`.
 - `prefers-reduced-motion` desativa animações não essenciais sem alterar a sequência som → silêncio → som.
 
+## Pequeninos · Piano dos Bichinhos
+- Local: `Jogos → Pequeninos · 2–4 anos`; o jogo é uma atividade dedicada e não substitui **Bolhas do Som**.
+- Nome da atividade: **Piano dos Bichinhos**.
+- O piano tem cinco teclas grandes. Cada tecla possui um animal e uma cor própria.
+- A tecla correta fica **inteiramente colorida**; não se usa apenas uma barra, faixa ou pequeno indicador.
+- O animal da tecla-alvo salta continuamente até a criança tocar. O cenário mantém movimento ambiental leve para a atividade parecer viva.
+- Quando a próxima nota exige a **mesma tecla novamente**, o estado muda para uma animação distinta: dois saltos, dois pulsos e movimento da própria tecla. A repetição precisa parecer uma nova ação, não um indicador parado.
+- Cada acerto avança exatamente uma nota da sequência musical; tocar numa tecla errada apenas produz uma pequena reação visual e não avança a música.
+- Cada partida usa shuffle-bag entre as melodias atualmente disponíveis (Mary Had a Little Lamb, Irmão João, Ode to Joy, Row Row Row Your Boat e uma adaptação de Brilha Brilha para cinco teclas), evitando repetição imediata quando possível.
+- A versão **Happy Birthday não faz parte da atividade neste momento**.
+- O feedback sonoro é musical/piano-like e nunca usa beep/bip. Durante `prefers-reduced-motion`, movimento ambiental é reduzido, mas a indicação essencial da tecla-alvo permanece perceptível.
+

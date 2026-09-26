@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" role="img" aria-label="Piano colorido com animais nas teclas">
+<rect width="640" height="360" rx="34" fill="#82ddff"/>
+<circle cx="540" cy="68" r="44" fill="#ffd84f"/><circle cx="540" cy="68" r="59" fill="none" stroke="#fff3a8" stroke-width="14" opacity=".45"/>
+<path d="M0 205c130-55 250-38 340 10 102-54 207-51 300-20v165H0z" fill="#76d475"/>
+<g transform="translate(60 158)">
+<rect x="0" y="0" width="520" height="164" rx="24" fill="#303136"/>
+<g>
+<rect x="7" y="7" width="98" height="150" fill="#ff6f86"/><rect x="109" y="7" width="98" height="150" fill="#ffad45"/><rect x="211" y="7" width="98" height="150" fill="#ffd94d"/><rect x="313" y="7" width="98" height="150" fill="#59d277"/><rect x="415" y="7" width="98" height="150" fill="#5aaeff"/>
+<text x="56" y="78" text-anchor="middle" font-size="56">🐘</text><text x="158" y="78" text-anchor="middle" font-size="56">🐰</text><text x="260" y="78" text-anchor="middle" font-size="56">🐥</text><text x="362" y="78" text-anchor="middle" font-size="56">🐸</text><text x="464" y="78" text-anchor="middle" font-size="56">🐼</text>
+<text x="56" y="132" text-anchor="middle" font-size="38" fill="#fff">♪</text><text x="158" y="132" text-anchor="middle" font-size="38" fill="#fff">♪</text><text x="260" y="132" text-anchor="middle" font-size="38" fill="#fff">♪</text><text x="362" y="132" text-anchor="middle" font-size="38" fill="#fff">♪</text><text x="464" y="132" text-anchor="middle" font-size="38" fill="#fff">♪</text>
+</g></g>
+<g font-size="36"><text x="77" y="104">🦋</text><text x="205" y="88">✨</text><text x="316" y="118">♫</text><text x="440" y="92">✨</text></g>
+</svg>
