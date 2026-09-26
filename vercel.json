@@ -3,20 +3,20 @@
   "cleanUrls": true,
   "rewrites": [
     {
-      "source": "/api/admin-backup",
-      "destination": "/api/security-probe?trap=admin-backup"
+      "source": "/api/video-download",
+      "destination": "/api/honeypot?trap=video-download"
     },
     {
       "source": "/api/export-videos",
-      "destination": "/api/security-probe?trap=export-videos"
+      "destination": "/api/honeypot?trap=export-videos"
     },
     {
       "source": "/api/raw-video",
-      "destination": "/api/security-probe?trap=raw-video"
+      "destination": "/api/honeypot?trap=raw-video"
     },
     {
-      "source": "/api/video-download",
-      "destination": "/api/security-probe?trap=video-download"
+      "source": "/api/admin-backup",
+      "destination": "/api/honeypot?trap=admin-backup"
     },
     {
       "source": "/auth/callback",
@@ -152,6 +152,32 @@
     },
     {
       "source": "/admin.html",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow, noarchive"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "private, no-store"
+        }
+      ]
+    },
+    {
+      "source": "/ensine",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow, noarchive"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "private, no-store"
+        }
+      ]
+    },
+    {
+      "source": "/aprenda",
       "headers": [
         {
           "key": "X-Robots-Tag",
