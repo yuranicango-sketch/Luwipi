@@ -11,48 +11,44 @@
 .reading-guide-dot{width:9px;height:9px;border-radius:50%;background:#b9bbc2;transition:.16s ease}
 .reading-guide-toggle[aria-pressed="true"] .reading-guide-dot{background:#4568ff;box-shadow:0 0 0 4px rgba(69,104,255,.12)}
 
+/* Guia: a nota mantém a aparência original; apenas recebe uma aura/holograma externo. */
 body.reading-guide-enabled #exerciseSvg g.reading-guide-current,
 body.reading-guide-enabled #songSvg g.reading-guide-current{
-  filter:drop-shadow(0 0 6px rgba(243,200,91,.72))
-}
-body.reading-guide-enabled #exerciseSvg g.reading-guide-current>ellipse,
-body.reading-guide-enabled #songSvg g.reading-guide-current>ellipse,
-body.reading-guide-enabled #exerciseSvg g.reading-guide-current>circle,
-body.reading-guide-enabled #songSvg g.reading-guide-current>circle{
-  fill:#f3c85b;stroke:#4568ff;stroke-width:4.5px;
-  paint-order:stroke fill;animation:readingGuideNotePulse .78s ease-in-out infinite
+  filter:drop-shadow(0 0 4px rgba(69,104,255,.52)) drop-shadow(0 0 11px rgba(69,104,255,.28));
+  animation:readingGuideAura .82s ease-in-out infinite
 }
 body.reading-guide-enabled .note-flow-item.reading-guide-current .note-flow-headmark{
-  fill:#f3c85b;stroke:#4568ff;stroke-width:4px;
-  paint-order:stroke fill;filter:drop-shadow(0 0 5px rgba(243,200,91,.65));
-  animation:readingGuideNotePulse .78s ease-in-out infinite
+  filter:drop-shadow(0 0 4px rgba(69,104,255,.52)) drop-shadow(0 0 10px rgba(69,104,255,.28));
+  animation:readingGuideAura .82s ease-in-out infinite
 }
-@keyframes readingGuideNotePulse{50%{filter:brightness(1.08);stroke-width:6px}}
-
+@keyframes readingGuideAura{
+  0%,100%{filter:drop-shadow(0 0 4px rgba(69,104,255,.42)) drop-shadow(0 0 9px rgba(69,104,255,.20))}
+  50%{filter:drop-shadow(0 0 7px rgba(69,104,255,.70)) drop-shadow(0 0 16px rgba(69,104,255,.34))}
+}
 body.reading-guide-enabled #pianoBoard .piano-white.target:not(.reading-guide-target){
   background:#fff;box-shadow:inset 0 -6px 0 var(--key-color,#ddd)
 }
 body.reading-guide-enabled #pianoBoard .piano-black.target:not(.reading-guide-target)::after{height:4px}
 #pianoBoard .piano-white.reading-guide-target{
-  background:linear-gradient(180deg,#fff3ad 0%,#f3c85b 100%);
-  box-shadow:inset 0 0 0 4px #4568ff,inset 0 -9px 0 #d7a92e,0 0 20px rgba(69,104,255,.23);
+  background:linear-gradient(180deg,color-mix(in srgb,var(--key-color,#ddd) 18%,white) 0%,color-mix(in srgb,var(--key-color,#ddd) 44%,white) 100%);
+  box-shadow:inset 0 0 0 3px color-mix(in srgb,var(--key-color,#ddd) 78%,#222 22%),inset 0 -10px 0 var(--key-color,#ddd),0 0 22px color-mix(in srgb,var(--key-color,#ddd) 42%,transparent);
   z-index:2;animation:readingGuideKeyGlow .78s ease-in-out infinite
 }
 #pianoBoard .piano-black.reading-guide-target{
-  outline:4px solid #f3c85b;outline-offset:2px;
-  box-shadow:0 0 0 4px rgba(69,104,255,.28),0 5px 10px rgba(0,0,0,.28);
+  outline:4px solid var(--key-color,#777);outline-offset:2px;
+  box-shadow:0 0 0 4px color-mix(in srgb,var(--key-color,#777) 34%,transparent),0 5px 10px rgba(0,0,0,.22);
   animation:readingGuideBlackGlow .78s ease-in-out infinite
 }
 #pianoBoard .reading-guide-target::before{
   content:"";position:absolute;left:50%;top:54%;width:44px;height:44px;border-radius:50%;
-  transform:translate(-50%,-50%);border:4px solid rgba(255,255,255,.88);
+  transform:translate(-50%,-50%);border:4px solid var(--key-color,#ddd);
   pointer-events:none;z-index:8;animation:readingGuideRing .78s ease-out infinite
 }
 #pianoBoard .piano-black.reading-guide-target::before{top:52%;width:28px;height:28px;border-width:3px}
 #pianoBoard .reading-guide-target.reading-guide-repeat{animation-duration:.58s}
 #pianoBoard .reading-guide-target.reading-guide-repeat::before{animation:readingGuideDoubleRing .72s ease-out infinite}
 #pianoBoard .reading-guide-wrong{animation:readingGuideWrong .24s ease}
-@keyframes readingGuideKeyGlow{50%{filter:brightness(1.06);box-shadow:inset 0 0 0 5px #4568ff,inset 0 -11px 0 #d7a92e,0 0 28px rgba(69,104,255,.34)}}
+@keyframes readingGuideKeyGlow{50%{filter:brightness(1.04);box-shadow:inset 0 0 0 4px color-mix(in srgb,var(--key-color,#ddd) 78%,#222 22%),inset 0 -11px 0 var(--key-color,#ddd),0 0 28px color-mix(in srgb,var(--key-color,#ddd) 52%,transparent)}}
 @keyframes readingGuideBlackGlow{50%{filter:brightness(1.25)}}
 @keyframes readingGuideRing{0%{opacity:.95;transform:translate(-50%,-50%) scale(.62)}100%{opacity:0;transform:translate(-50%,-50%) scale(1.55)}}
 @keyframes readingGuideDoubleRing{
@@ -76,3 +72,15 @@ body.reading-guide-enabled #pianoBoard .piano-black.target:not(.reading-guide-ta
   #pianoBoard .reading-guide-target,
   #pianoBoard .reading-guide-target::before{animation:none}
 }
+
+/* Piano de prática: moldura leve */
+.piano-dock{
+  background:rgba(255,255,255,.98);
+  border-top:1px solid #17181d;
+  padding:6px 10px 8px;
+  box-shadow:0 -10px 28px rgba(17,18,20,.10)
+}
+.piano-head{margin-bottom:4px;color:var(--ink)}
+.piano-head small{color:var(--muted)}
+.piano-head button{border:1px solid var(--line);background:#fff;color:var(--ink)}
+.piano-scroll{border-top:4px solid #17181d;padding-top:0;padding-bottom:2px}
