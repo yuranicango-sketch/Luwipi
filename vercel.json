@@ -3,12 +3,20 @@
   "cleanUrls": true,
   "rewrites": [
     {
-      "source": "/ensine",
-      "destination": "/app.html?mode=ensine"
+      "source": "/api/admin-backup",
+      "destination": "/api/security-probe?trap=admin-backup"
     },
     {
-      "source": "/aprenda",
-      "destination": "/app.html?mode=aprenda"
+      "source": "/api/export-videos",
+      "destination": "/api/security-probe?trap=export-videos"
+    },
+    {
+      "source": "/api/raw-video",
+      "destination": "/api/security-probe?trap=raw-video"
+    },
+    {
+      "source": "/api/video-download",
+      "destination": "/api/security-probe?trap=video-download"
     },
     {
       "source": "/auth/callback",

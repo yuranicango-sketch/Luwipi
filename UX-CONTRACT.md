@@ -167,3 +167,16 @@
 - A versão **Happy Birthday não faz parte da atividade neste momento**.
 - O feedback sonoro é musical/piano-like e nunca usa beep/bip. Durante `prefers-reduced-motion`, movimento ambiental é reduzido, mas a indicação essencial da tecla-alvo permanece perceptível.
 
+## Leitura · Guia visual
+- O **Guia** é uma ajuda opcional e persistente para Leitura. Fica desligado por padrão e pode ser ativado/desativado dentro da área Leitura, Leitura contínua, exercícios e músicas.
+- Quando ativo, apenas a **nota atual** recebe destaque visual na partitura e apenas a **tecla correspondente** recebe um highlight animado no piano virtual.
+- O highlight do piano move-se/rola para a próxima tecla automaticamente quando a leitura avança.
+- O highlight **nunca toca som sozinho**. O som ocorre uma única vez, através do comportamento normal da tecla quando o utilizador a pressiona.
+- Em exercícios e músicas de mão direita, um toque correto avança o Guia para a próxima nota. Se a próxima nota repetir a mesma tecla, a animação muda para um pulso duplo para comunicar claramente “toca novamente”.
+- Com o Guia ativo, uma tecla errada no piano recebe apenas feedback visual e fica silenciosa; não avança a leitura.
+- Em Leitura contínua, o Guia acompanha a nota corrente do fluxo temporal existente e não altera o princípio “ler sem parar”.
+- Em páginas de música, o Guia acompanha atualmente a linha melódica da mão direita; a sincronização passo a passo de duas mãos não é inferida como se fosse uma única sequência.
+- Ao terminar os compassos visíveis de uma música e existir página seguinte, o Guia avança para os compassos seguintes.
+- Com o Guia desligado, o comportamento existente da Leitura é preservado.
+- Em ecrãs onde o piano virtual não é mostrado por limitação responsiva, o destaque da partitura continua disponível sem inventar uma segunda superfície de piano.
+

@@ -1,0 +1,78 @@
+
+/* Leitura · Guia visual opcional */
+.reading-guide-toggle{
+  min-height:34px;border:1px solid var(--line);background:#fff;color:var(--ink);
+  border-radius:999px;padding:6px 10px;display:inline-flex;align-items:center;gap:7px;
+  font:800 10px/1 var(--ui);cursor:pointer;white-space:nowrap;transition:.16s ease
+}
+.reading-guide-toggle:hover{border-color:#bfc7e7;background:#f8f9ff}
+.reading-guide-toggle:focus-visible{outline:3px solid rgba(69,104,255,.28);outline-offset:2px}
+.reading-guide-toggle[aria-pressed="true"]{background:#f5f7ff;border-color:#b9c5ff;color:#294cc9}
+.reading-guide-dot{width:9px;height:9px;border-radius:50%;background:#b9bbc2;transition:.16s ease}
+.reading-guide-toggle[aria-pressed="true"] .reading-guide-dot{background:#4568ff;box-shadow:0 0 0 4px rgba(69,104,255,.12)}
+
+body.reading-guide-enabled #exerciseSvg g.reading-guide-current,
+body.reading-guide-enabled #songSvg g.reading-guide-current{
+  filter:drop-shadow(0 0 6px rgba(243,200,91,.72))
+}
+body.reading-guide-enabled #exerciseSvg g.reading-guide-current>ellipse,
+body.reading-guide-enabled #songSvg g.reading-guide-current>ellipse,
+body.reading-guide-enabled #exerciseSvg g.reading-guide-current>circle,
+body.reading-guide-enabled #songSvg g.reading-guide-current>circle{
+  fill:#f3c85b;stroke:#4568ff;stroke-width:4.5px;
+  paint-order:stroke fill;animation:readingGuideNotePulse .78s ease-in-out infinite
+}
+body.reading-guide-enabled .note-flow-item.reading-guide-current .note-flow-headmark{
+  fill:#f3c85b;stroke:#4568ff;stroke-width:4px;
+  paint-order:stroke fill;filter:drop-shadow(0 0 5px rgba(243,200,91,.65));
+  animation:readingGuideNotePulse .78s ease-in-out infinite
+}
+@keyframes readingGuideNotePulse{50%{filter:brightness(1.08);stroke-width:6px}}
+
+body.reading-guide-enabled #pianoBoard .piano-white.target:not(.reading-guide-target){
+  background:#fff;box-shadow:inset 0 -6px 0 var(--key-color,#ddd)
+}
+body.reading-guide-enabled #pianoBoard .piano-black.target:not(.reading-guide-target)::after{height:4px}
+#pianoBoard .piano-white.reading-guide-target{
+  background:linear-gradient(180deg,#fff3ad 0%,#f3c85b 100%);
+  box-shadow:inset 0 0 0 4px #4568ff,inset 0 -9px 0 #d7a92e,0 0 20px rgba(69,104,255,.23);
+  z-index:2;animation:readingGuideKeyGlow .78s ease-in-out infinite
+}
+#pianoBoard .piano-black.reading-guide-target{
+  outline:4px solid #f3c85b;outline-offset:2px;
+  box-shadow:0 0 0 4px rgba(69,104,255,.28),0 5px 10px rgba(0,0,0,.28);
+  animation:readingGuideBlackGlow .78s ease-in-out infinite
+}
+#pianoBoard .reading-guide-target::before{
+  content:"";position:absolute;left:50%;top:54%;width:44px;height:44px;border-radius:50%;
+  transform:translate(-50%,-50%);border:4px solid rgba(255,255,255,.88);
+  pointer-events:none;z-index:8;animation:readingGuideRing .78s ease-out infinite
+}
+#pianoBoard .piano-black.reading-guide-target::before{top:52%;width:28px;height:28px;border-width:3px}
+#pianoBoard .reading-guide-target.reading-guide-repeat{animation-duration:.58s}
+#pianoBoard .reading-guide-target.reading-guide-repeat::before{animation:readingGuideDoubleRing .72s ease-out infinite}
+#pianoBoard .reading-guide-wrong{animation:readingGuideWrong .24s ease}
+@keyframes readingGuideKeyGlow{50%{filter:brightness(1.06);box-shadow:inset 0 0 0 5px #4568ff,inset 0 -11px 0 #d7a92e,0 0 28px rgba(69,104,255,.34)}}
+@keyframes readingGuideBlackGlow{50%{filter:brightness(1.25)}}
+@keyframes readingGuideRing{0%{opacity:.95;transform:translate(-50%,-50%) scale(.62)}100%{opacity:0;transform:translate(-50%,-50%) scale(1.55)}}
+@keyframes readingGuideDoubleRing{
+  0%{opacity:.95;transform:translate(-50%,-50%) scale(.58)}
+  38%{opacity:0;transform:translate(-50%,-50%) scale(1.35)}
+  45%{opacity:.9;transform:translate(-50%,-50%) scale(.62)}
+  100%{opacity:0;transform:translate(-50%,-50%) scale(1.55)}
+}
+@keyframes readingGuideWrong{25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+
+@media(max-width:560px){
+  .reading-guide-toggle{padding:6px 8px}
+  .page-head .reading-guide-toggle{margin-left:4px}
+}
+@media(prefers-reduced-motion:reduce){
+  body.reading-guide-enabled #exerciseSvg g.reading-guide-current>ellipse,
+  body.reading-guide-enabled #songSvg g.reading-guide-current>ellipse,
+  body.reading-guide-enabled #exerciseSvg g.reading-guide-current>circle,
+  body.reading-guide-enabled #songSvg g.reading-guide-current>circle,
+  body.reading-guide-enabled .note-flow-item.reading-guide-current .note-flow-headmark,
+  #pianoBoard .reading-guide-target,
+  #pianoBoard .reading-guide-target::before{animation:none}
+}

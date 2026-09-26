@@ -2,10 +2,12 @@
 set -eu
 
 rm -rf public
-mkdir -p public/auth public/assets
+mkdir -p public/auth public/assets public/ensine public/aprenda
 
 cp index.html public/index.html
 cp app.html public/app.html
+cp app.html public/ensine/index.html
+cp app.html public/aprenda/index.html
 cp admin.html public/admin.html
 cp privacidade.html public/privacidade.html
 cp termos.html public/termos.html
