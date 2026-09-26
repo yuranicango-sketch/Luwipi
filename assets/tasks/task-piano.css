@@ -1,0 +1,11 @@
+
+/* Tarefas: o piano faz parte da experiência, inclusive em ecrãs pequenos. */
+body.parent-mode.piano-open{padding-bottom:150px}
+body.parent-mode .piano-dock:not(.hidden){display:block!important}
+body.parent-mode .piano-dock{z-index:95}
+@media(max-width:699px){
+  body.parent-mode .piano-dock:not(.hidden){display:block!important}
+  body.parent-mode.piano-open{padding-bottom:150px!important}
+  body.parent-mode .piano-scroll{overflow-x:auto}
+  body.parent-mode .piano-board{min-width:max-content}
+}

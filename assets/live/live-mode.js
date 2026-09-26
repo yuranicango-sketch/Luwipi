@@ -23,6 +23,7 @@ const interactiveTab=document.getElementById("liveInteractiveTab");
 const playButton=document.getElementById("livePlay");
 const stopButton=document.getElementById("liveStop");
 const hearButton=document.getElementById("liveHear");
+const addReadingButton=document.getElementById("liveAddReading");
 const practiceButton=document.getElementById("livePractice");
 const tempoDown=document.getElementById("liveTempoDown");
 const tempoUp=document.getElementById("liveTempoUp");
@@ -131,6 +132,7 @@ function updateFileState(){
   playButton.disabled=!score;
   practiceButton.disabled=!score;
   hearButton.disabled=!score;
+  if(addReadingButton){addReadingButton.disabled=!score;addReadingButton.textContent="＋ Adicionar à Leitura";}
   clearButton.classList.toggle("hidden",bits.length===0);
   updateTabs();
 }
@@ -366,6 +368,23 @@ interactiveTab.addEventListener("click",()=>chooseView("interactive"));
 playButton.addEventListener("click",()=>playing?stopPlayback():playScore());
 stopButton.addEventListener("click",()=>{stopPlayback();if(practice)stopPractice()});
 hearButton.addEventListener("click",hearPhrase);
+if(addReadingButton)addReadingButton.addEventListener("click",async()=>{
+  if(!score)return;
+  const library=window.LuwipiReadingLibrary;
+  if(!library||typeof library.add!=="function"){setFeedback("A biblioteca de Leitura não está disponível nesta sessão.","bad");return}
+  addReadingButton.disabled=true;
+  addReadingButton.textContent="A guardar…";
+  try{
+    const result=await library.add(score,structuredFileName||score.title);
+    addReadingButton.textContent=result&&result.existed?"✓ Já está na Leitura":"✓ Adicionada à Leitura";
+    setFeedback(result&&result.existed?"Esta música já estava na Leitura.":"Música adicionada à Leitura. Só foi guardada porque escolheste adicionar.","good");
+  }catch(error){
+    console.error("Reading library save failed",error);
+    addReadingButton.disabled=false;
+    addReadingButton.textContent="＋ Adicionar à Leitura";
+    setFeedback("Não foi possível guardar esta música na Leitura neste browser.","bad");
+  }
+});
 practiceButton.addEventListener("click",()=>practice?stopPractice():startPractice());
 tempoDown.addEventListener("click",()=>{tempo=Math.max(30,tempo-4);tempoLabel.textContent=tempo+" BPM";if(practice)resetPractice()});
 tempoUp.addEventListener("click",()=>{tempo=Math.min(240,tempo+4);tempoLabel.textContent=tempo+" BPM";if(practice)resetPractice()});

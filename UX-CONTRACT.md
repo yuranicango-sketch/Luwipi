@@ -197,3 +197,17 @@
 - Guia visual é opcional: destaca a nota/grupo atual sem alterar a cabeça da nota. Com Guia desligado, a avaliação pode continuar sem revelar a próxima nota.
 - Ao sair do Modo ao Vivo, microfone/MIDI são desligados e playback/treino são interrompidos.
 
+## Modo ao Vivo → Leitura
+- Uma partitura estruturada importada no **Modo ao Vivo** só entra no módulo **Leitura** por decisão explícita através de **Adicionar à Leitura**.
+- Importar, tocar ou treinar uma peça no Modo ao Vivo não modifica automaticamente a biblioteca de Leitura.
+- As músicas adicionadas aparecem em **Leitura → Músicas adicionadas** e são renderizadas pelo mesmo `Score Engine`.
+- A biblioteca usa IndexedDB no browser, com fallback local. Nesta fase, a decisão persiste no mesmo browser/dispositivo; não é apresentada como sincronização cloud.
+- Abrir uma música adicionada oferece partitura, playback com os samples existentes, Guia opcional e acesso ao piano de prática.
+- Adicionar novamente a mesma partitura é idempotente e não cria duplicados.
+
+## Tarefas · piano de prática
+- Links de tarefa de leitura (exercício ou música) abrem com o piano de prática visível automaticamente.
+- O piano faz parte da tarefa também em ecrãs pequenos; a regra global que esconde o dock abaixo de 700 px é sobrescrita apenas em `parent-mode`.
+- O botão **Fechar** continua disponível.
+- O piano reutiliza o motor/samples já existentes; não cria áudio alternativo ou beep.
+
