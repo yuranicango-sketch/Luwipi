@@ -182,6 +182,7 @@ function normalizeScore(raw){
       sourceEventId:String(event.sourceEventId||event.id||kind+"-"+index),
       midi,
       note:String(event.note||midiToSpelledName(midi,keyFifths)),
+      noteName:String(event.noteName||event.note||midiToSpelledName(midi,keyFifths)),
       startBeat:roundBeat(startBeat),
       durationBeat:roundBeat(durationBeat),
       performanceStartBeat:Number.isFinite(Number(event.performanceStartBeat))?roundBeat(Number(event.performanceStartBeat)):undefined,
@@ -469,6 +470,7 @@ function parseMusicXML(xmlText){
   const title=(doc.querySelector("work-title")||doc.querySelector("movement-title"));
   const parts=Array.from(doc.querySelectorAll(":scope > part, score-partwise > part"));
   const events=[];
+  const rests=[];
   let globalMeter=[4,4],globalFifths=0,globalMinor=false,tempoBpm=120;
   parts.forEach((part,partIndex)=>{
     let divisions=1,cursor=0,lastStart=0,currentDynamic="mf";
@@ -518,6 +520,7 @@ function parseMusicXML(xmlText){
               events.push({
                 id:"xml-"+partIndex+"-"+events.length,
                 midi,
+                noteName:(stepName+(alter>0?"♯".repeat(alter):alter<0?"♭".repeat(Math.abs(alter)):""))+octave,
                 startBeat:start,
                 durationBeat:dur,
                 velocity:velocityFromDynamic(currentDynamic),
@@ -684,9 +687,8 @@ function createMusicalAudio(){
 function playNote(midi,durationBeat,beatMs,velocity){
   try{
     const bridge=window.LuwipiAudioBridge;
-    if(bridge&&typeof bridge.play==="function")return bridge.play(midi,durationBeat,beatMs,velocity);
-    if(!window.LuwipiScoreAudio)window.LuwipiScoreAudio=createMusicalAudio();
-    return window.LuwipiScoreAudio.play(nameToMidi(midi)||midi,durationBeat,beatMs,velocity);
+    if(bridge&&typeof bridge.play==="function")return bridge.play(typeof midi==="number"?midiToName(midi):midi,durationBeat,beatMs,velocity);
+    return false;
   }catch(e){return false}
 }
 function svgEl(name,attrs){
@@ -840,7 +842,7 @@ function render(svg,rawScore,options){
       const beatInMeasure=event.startBeat-measureIndex*measureBeats;
       const baseY=50+system*systemHeight,trebleBottom=baseY+73,bassBottom=baseY+160;
       const x=left+slot*measureWidth+42+(beatInMeasure/measureBeats)*(measureWidth-50);
-      event.noteName=showNoteNames?ptSolfege(event.midi):null;
+      event.noteName=showNoteNames?(event.noteName||ptSolfege(event.midi)):null;
       event.showName=showNoteNames;
       drawNote(svg,event,x,event.clef==="bass"?bassBottom:trebleBottom,groupIndex,groupIndex===currentGroup);
       if(eventIndex===0&&event.dynamic&&event.dynamic!==lastDynamic){
