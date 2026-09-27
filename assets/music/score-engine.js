@@ -744,7 +744,7 @@ function drawNote(svg,event,x,bottom,groupIndex,current){
     }
   }
   if(kind.dots)addText(svg,x+17,y+4,"·",{"font-size":24,fill:"#292d34","font-weight":800});
-  if(current || event.showName || event.noteName) addText(svg,x,y+58, event.noteName || ptSolfege(event.midi), {"font-size":11,"font-weight":800,fill:"#555a63","text-anchor":"middle"});
+  
   if(kind.tuplet)addText(svg,x,y-52,String(kind.tuplet),{"font-size":10,fill:"#555a63","font-weight":800,"text-anchor":"middle"});
   if(event.articulations.includes("staccato"))svg.appendChild(svgEl("circle",{cx:x,cy:y+(stepValue<5?13:-13),r:2.4,fill:"#292d34"}));
   if(event.articulations.includes("tenuto"))addLine(svg,x-7,y+(stepValue<5?14:-14),x+7,y+(stepValue<5?14:-14),{stroke:"#292d34","stroke-width":2});
@@ -757,7 +757,7 @@ function drawNote(svg,event,x,bottom,groupIndex,current){
 function render(svg,rawScore,options){
   if(!svg)throw new Error("score_svg_missing");
   const score=rawScore&&rawScore.events?normalizeScore(rawScore):normalizeScore(rawScore);
-  const opts=options||{},groups=groupEvents(score),currentGroup=Number.isInteger(opts.currentGroupIndex)?opts.currentGroupIndex:-1,showNoteNames=opts.showNoteNames!==false;
+  const opts=options||{},groups=groupEvents(score),currentGroup=Number.isInteger(opts.currentGroupIndex)?opts.currentGroupIndex:-1,showNoteNames=opts.showNoteNames===true;
   while(svg.firstChild)svg.removeChild(svg.firstChild);
   const width=1120,measuresPerSystem=4,systemHeight=220,systems=Math.max(1,Math.ceil(score.measures/measuresPerSystem));
   const height=50+systems*systemHeight;
@@ -812,7 +812,7 @@ function render(svg,rawScore,options){
       const beatInMeasure=event.startBeat-measureIndex*measureBeats;
       const baseY=50+system*systemHeight,trebleBottom=baseY+73,bassBottom=baseY+160;
       const x=left+slot*measureWidth+42+(beatInMeasure/measureBeats)*(measureWidth-50);
-      event.noteName=showNoteNames?(event.noteName||ptSolfege(event.midi)):null;
+      event.noteName=null;
       event.showName=showNoteNames;
       drawNote(svg,event,x,event.clef==="bass"?bassBottom:trebleBottom,groupIndex,groupIndex===currentGroup);
       if(eventIndex===0&&event.dynamic&&event.dynamic!==lastDynamic){
