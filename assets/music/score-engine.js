@@ -654,36 +654,6 @@ function auditScore(rawScore){
   };
 }
 
-function createMusicalAudio(){
-  let ctx=null;
-  function ensure(){
-    if(!ctx)ctx=new (window.AudioContext||window.webkitAudioContext)();
-    if(ctx.state==="suspended")ctx.resume();
-    return ctx;
-  }
-  function play(midi,durationBeat,beatMs,velocity){
-    const ac=ensure();
-    const now=ac.currentTime;
-    const f=440*Math.pow(2,(Number(midi)-69)/12);
-    const dur=Math.max(.08,Math.min(3.5,(Number(durationBeat)||.5)*(Number(beatMs)||500)/1000));
-    const gain=ac.createGain();
-    const master=ac.createGain();
-    master.gain.value=.22*Math.max(.25,Math.min(1.1,Number(velocity)||.8));
-    const partials=[1,2,3,4,5,6,8];
-    const amps=[1,.36,.18,.09,.045,.022,.012];
-    partials.forEach((p,i)=>{
-      const o=ac.createOscillator();
-      o.type=i===0?"triangle":"sine";o.frequency.value=f*p;
-      const g=ac.createGain();g.gain.value=amps[i];o.connect(g).connect(gain);o.start(now);o.stop(now+dur+.08);
-    });
-    gain.connect(master).connect(ac.destination);
-    gain.gain.setValueAtTime(.0001,now);
-    gain.gain.exponentialRampToValueAtTime(1,now+.008);
-    gain.gain.exponentialRampToValueAtTime(.34,now+Math.min(.16,dur*.35));
-    gain.gain.exponentialRampToValueAtTime(.0001,now+dur);
-  }
-  return Object.freeze({play});
-}
 function playNote(midi,durationBeat,beatMs,velocity){
   try{
     const bridge=window.LuwipiAudioBridge;
