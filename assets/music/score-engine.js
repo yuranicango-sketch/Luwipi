@@ -392,6 +392,66 @@ function textNum(node,selector,fallback){
   const n=el?Number(el.textContent):NaN;
   return Number.isFinite(n)?n:fallback;
 }
+function readZipU16(view,pos){return view.getUint16(pos,true)}
+function readZipU32(view,pos){return view.getUint32(pos,true)}
+function zipBytesToText(bytes){
+  try{return new TextDecoder("utf-8",{fatal:false}).decode(bytes)}catch{return new TextDecoder().decode(bytes)}
+}
+async function inflateZipEntry(bytes,method){
+  if(method===0)return bytes;
+  if(method===8){
+    if(typeof DecompressionStream==="undefined")throw new Error("mxl_deflate_unsupported");
+    const stream=new Blob([bytes]).stream().pipeThrough(new DecompressionStream("deflate-raw"));
+    return new Uint8Array(await new Response(stream).arrayBuffer());
+  }
+  throw new Error("mxl_compression_unsupported");
+}
+function findZipEnd(view){
+  const start=Math.max(0,view.byteLength-65557);
+  for(let p=view.byteLength-22;p>=start;p--){
+    if(readZipU32(view,p)===0x06054b50)return p;
+  }
+  return -1;
+}
+async function readZipEntries(arrayBuffer){
+  const view=new DataView(arrayBuffer),bytes=new Uint8Array(arrayBuffer),eocd=findZipEnd(view);
+  if(eocd<0)throw new Error("mxl_zip_invalid");
+  const count=readZipU16(view,eocd+10),centralSize=readZipU32(view,eocd+12),centralOffset=readZipU32(view,eocd+16);
+  if(centralOffset+centralSize>bytes.length)throw new Error("mxl_zip_invalid");
+  const entries=new Map(),decoder=new TextDecoder("utf-8");
+  let pos=centralOffset;
+  for(let i=0;i<count;i++){
+    if(pos+46>bytes.length||readZipU32(view,pos)!==0x02014b50)throw new Error("mxl_zip_directory_invalid");
+    const flags=readZipU16(view,pos+8),method=readZipU16(view,pos+10),compressedSize=readZipU32(view,pos+20),nameLen=readZipU16(view,pos+28),extraLen=readZipU16(view,pos+30),commentLen=readZipU16(view,pos+32),localOffset=readZipU32(view,pos+42);
+    if(flags&0x1)throw new Error("mxl_encrypted_unsupported");
+    const name=decoder.decode(bytes.slice(pos+46,pos+46+nameLen));
+    if(localOffset+30>bytes.length||readZipU32(view,localOffset)!==0x04034b50)throw new Error("mxl_zip_local_invalid");
+    const localNameLen=readZipU16(view,localOffset+26),localExtraLen=readZipU16(view,localOffset+28);
+    const dataStart=localOffset+30+localNameLen+localExtraLen,dataEnd=dataStart+compressedSize;
+    if(dataEnd>bytes.length)throw new Error("mxl_zip_invalid");
+    entries.set(name,await inflateZipEntry(bytes.slice(dataStart,dataEnd),method));
+    pos+=46+nameLen+extraLen+commentLen;
+  }
+  return entries;
+}
+async function parseMXL(arrayBuffer){
+  const entries=await readZipEntries(arrayBuffer);
+  const containerBytes=entries.get("META-INF/container.xml")||entries.get("meta-inf/container.xml");
+  if(!containerBytes)throw new Error("mxl_container_missing");
+  const container=new DOMParser().parseFromString(zipBytesToText(containerBytes),"application/xml");
+  if(container.querySelector("parsererror"))throw new Error("mxl_container_invalid");
+  const rootfile=container.querySelector("rootfile[full-path]")||container.querySelector("rootfile");
+  const fullPath=rootfile?.getAttribute("full-path");
+  if(!fullPath)throw new Error("mxl_rootfile_missing");
+  const xmlBytes=entries.get(fullPath);
+  if(!xmlBytes)throw new Error("mxl_rootfile_missing");
+  const parsed=parseMusicXML(zipBytesToText(xmlBytes));
+  parsed.source="mxl";
+  parsed.title=parsed.title==="Partitura MusicXML"?"Partitura MXL":parsed.title;
+  parsed.containerRootFile=fullPath;
+  return parsed;
+}
+
 function parseMusicXML(xmlText){
   const doc=new DOMParser().parseFromString(String(xmlText||""),"application/xml");
   if(doc.querySelector("parsererror"))throw new Error("musicxml_invalid");
@@ -711,6 +771,7 @@ window.LuwipiScoreEngine=Object.freeze({
   normalizeScore,
   parseMIDI,
   parseMusicXML,
+  parseMXL,
   render,
   groupEvents,
   midiToName,

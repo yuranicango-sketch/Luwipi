@@ -223,7 +223,14 @@ function readableError(code){
     musicxml_invalid:"O MusicXML não pôde ser lido.",
     musicxml_root_unsupported:"Este XML não é uma partitura MusicXML compatível.",
     musicxml_timewise_unsupported:"MusicXML timewise ainda não é suportado.",
-    musicxml_no_notes:"O MusicXML não contém notas reconhecíveis."
+    musicxml_no_notes:"O MusicXML não contém notas reconhecíveis.",
+    mxl_zip_invalid:"Este ficheiro MXL não é um pacote ZIP válido.",
+    mxl_container_missing:"O MXL não contém META-INF/container.xml.",
+    mxl_container_invalid:"O manifesto interno do MXL não pôde ser lido.",
+    mxl_rootfile_missing:"O MXL não indica onde está a partitura MusicXML.",
+    mxl_encrypted_unsupported:"Este MXL está protegido por palavra-passe.",
+    mxl_compression_unsupported:"Este MXL usa uma compressão ainda não suportada pelo browser.",
+    mxl_deflate_unsupported:"Este browser não consegue descompactar este MXL localmente."
   };
   return map[code]||"Não foi possível interpretar este ficheiro com segurança.";
 }
@@ -235,6 +242,10 @@ async function importFile(file){
       if(file.size>8*1024*1024)throw new Error("file_too_large");
       const parsed=Engine.parseMIDI(await file.arrayBuffer());
       setScore(parsed,name);setFeedback("MIDI lido. A partitura interativa e o treino já estão prontos.","good");
+    }else if(lower.endsWith(".mxl")){
+      if(file.size>20*1024*1024)throw new Error("file_too_large");
+      const parsed=await Engine.parseMXL(await file.arrayBuffer());
+      setScore(parsed,name);setFeedback("MXL lido. A partitura MusicXML foi extraída localmente com a notação estruturada preservada.","good");
     }else if(lower.endsWith(".musicxml")||lower.endsWith(".xml")||/musicxml|xml/i.test(file.type||"")){
       if(file.size>12*1024*1024)throw new Error("file_too_large");
       const parsed=Engine.parseMusicXML(await file.text());

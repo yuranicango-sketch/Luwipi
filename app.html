@@ -248,9 +248,9 @@ body[data-mode="aprenda"] .video-empty,body[data-mode="aprenda"] .video-state{bo
 <div class="live-layout">
 <aside class="live-sidebar">
 <section class="live-panel"><div class="live-panel-head"><div><small>01 · Partitura</small><strong>Adicionar ficheiro</strong></div><button id="liveClearFiles" class="hidden" type="button">Limpar</button></div>
-<label class="live-import-button" for="liveScoreFile"><span aria-hidden="true">＋</span><span>MIDI · MusicXML · PDF</span></label>
-<input id="liveScoreFile" type="file" hidden accept=".mid,.midi,.musicxml,.xml,.pdf,application/pdf,audio/midi,audio/x-midi">
-<p class="live-import-help">MIDI/MusicXML dão ao motor notas, duração, tempo e compasso. PDF é preservado como página original e pode ser associado ao MIDI da mesma peça.</p>
+<label class="live-import-button" for="liveScoreFile"><span aria-hidden="true">＋</span><span>MIDI · MusicXML · MXL · PDF</span></label>
+<input id="liveScoreFile" type="file" hidden accept=".mid,.midi,.musicxml,.xml,.mxl,.pdf,application/pdf,audio/midi,audio/x-midi,application/vnd.recordare.musicxml">
+<p class="live-import-help">MIDI/MusicXML/MXL dão ao motor notas, duração, tempo e compasso. PDF é preservado como página original e pode ser associado ao MIDI da mesma peça.</p>
 <div id="liveFileState" class="live-file-state is-empty"><strong id="liveFileName">Nenhuma partitura carregada</strong><span id="liveFileMeta">MIDI e MusicXML estruturam a partitura; PDF é mantido como documento visual.</span></div><div id="liveFidelityState" class="live-fidelity-state hidden"><span id="liveFidelityBadge">A verificar</span><div><strong id="liveFidelityTitle">Confiabilidade da partitura</strong><small id="liveFidelityText">O motor compara a notação gerada com os eventos de origem.</small></div></div></section>
 
 <section class="live-panel"><div class="live-panel-head"><div><small>02 · Escuta</small><strong>Piano externo</strong></div></div>
@@ -270,7 +270,7 @@ body[data-mode="aprenda"] .video-empty,body[data-mode="aprenda"] .video-state{bo
 <div id="liveViewTabs" class="live-view-tabs hidden" role="group" aria-label="Vista da partitura"><button id="liveOriginalTab" type="button">Original</button><button id="liveInteractiveTab" type="button" class="active">Interativo</button></div></div>
 <div id="livePdfWarning" class="live-inline-warning hidden">PDF sozinho não é usado para inventar notas. Adiciona o MIDI/MusicXML correspondente para ativar Play, Guia e avaliação.</div>
 <div class="live-score-shell">
-<div id="liveScoreEmpty" class="live-score-empty"><div><strong>Adiciona uma partitura.</strong><p>Para treino interativo, usa MIDI ou MusicXML. Se quiseres manter a página original, adiciona também o PDF.</p></div></div>
+<div id="liveScoreEmpty" class="live-score-empty"><div><strong>Adiciona uma partitura.</strong><p>Para treino interativo, usa MIDI, MusicXML ou MXL. Se quiseres manter a página original, adiciona também o PDF.</p></div></div>
 <div id="liveSvgWrap" class="live-svg-wrap hidden"><svg id="liveScoreSvg" viewBox="0 0 1120 520" aria-label="Partitura interativa"></svg></div>
 <div id="livePdfWrap" class="live-pdf-wrap hidden"><iframe id="livePdfFrame" title="Preview da partitura PDF"></iframe><div id="livePdfFallback" class="live-pdf-fallback hidden"></div></div>
 </div>
