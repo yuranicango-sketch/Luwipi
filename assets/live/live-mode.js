@@ -96,7 +96,10 @@ function audio(){
 }
 function playNoteEvent(event,delayMs,durationMs,level){
   const bridge=audio();
-  if(!bridge||typeof bridge.play!=="function")return;
+  if(!bridge||typeof bridge.play!=="function"){
+    if(Engine&&typeof Engine.playNote==="function")Engine.playNote(event.midi||event.note,durationMs/baseBeatMs,baseBeatMs,level||Math.max(.42,Math.min(1.05,event.velocity/92)));
+    return;
+  }
   const baseBeatMs=60000/Math.max(20,tempo);
   const effectiveBeats=Math.max(.03,Number(durationMs||baseBeatMs)/baseBeatMs);
   const timer=setTimeout(()=>{
