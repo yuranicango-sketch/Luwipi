@@ -198,10 +198,17 @@ function normalizeScore(raw){
     };
   };
   const events=(Array.isArray(score.events)?score.events:[]).map((e,i)=>normalizeEvent(e,i,"ev")).sort((a,b)=>a.startBeat-b.startBeat||a.midi-b.midi);
+  const rests=(Array.isArray(score.rests)?score.rests:[]).map((r,i)=>({
+      id:String(r.id||"rest-"+i), sourceEventId:String(r.sourceEventId||r.id||"rest-"+i),
+      startBeat:roundBeat(Math.max(0,Number(r.startBeat)||0)),
+      durationBeat:roundBeat(Math.max(.03125,Number(r.durationBeat)||1)),
+      voice:Number(r.voice)||1, track:Number(r.track)||0,
+      dotted:Boolean(r.dotted), type:String(r.type||durationKind(r.durationBeat).name)
+    })).sort((a,b)=>a.startBeat-b.startBeat);
   const perf=(Array.isArray(score.performanceEvents)?score.performanceEvents:[]).map((e,i)=>normalizeEvent(e,i,"perf")).sort((a,b)=>a.startBeat-b.startBeat||a.midi-b.midi);
   const tempoBpm=clamp(Number(score.tempoBpm)||120,20,300);
   const beatsPerMeasure=meter[0]*(4/meter[1]);
-  const endBeat=events.reduce((max,e)=>Math.max(max,e.startBeat+e.durationBeat),0);
+  const endBeat=Math.max(events.reduce((max,e)=>Math.max(max,e.startBeat+e.durationBeat),0),rests.reduce((max,r)=>Math.max(max,r.startBeat+r.durationBeat),0));
   return{
     title:String(score.title||"Partitura").slice(0,160),
     source:String(score.source||"structured"),
@@ -215,6 +222,7 @@ function normalizeScore(raw){
     keyMap:Array.isArray(score.keyMap)?score.keyMap.map(x=>({beat:roundBeat(Number(x.beat)||0),fifths:clamp(Math.round(Number(x.fifths)||0),-7,7),minor:Boolean(x.minor)})):[],
     ppq:Number(score.ppq)||480,
     events,
+    rests,
     performanceEvents:perf.length?perf:events,
     transcription:score.transcription&&typeof score.transcription==="object"?Object.assign({},score.transcription):null,
     beatsPerMeasure,
@@ -490,9 +498,14 @@ function parseMusicXML(xmlText){
         }else if(tag==="note"){
           const dur=Math.max(.0625,textNum(node,"duration",divisions)/divisions);
           const chord=Boolean(node.querySelector("chord"));
-          const rest=Boolean(node.querySelector("rest"));
+          const restNode=node.querySelector("rest");
+          const rest=Boolean(restNode);
           const start=chord?lastStart:cursor;
-          if(!rest){
+          if(rest){
+            const restType=String(restNode?.getAttribute("type")||"").toLowerCase();
+            const dotted=Boolean(node.querySelector("dot"));
+            rests.push({id:"rest-"+partIndex+"-"+rests.length,startBeat:start,durationBeat:dur,track:partIndex,voice:Number(node.querySelector("voice")?.textContent)||1,dotted,type:restType||durationKind(dur).name});
+          }else{
             const stepEl=node.querySelector("pitch > step"),octEl=node.querySelector("pitch > octave");
             if(stepEl&&octEl){
               const stepName=String(stepEl.textContent||"C").trim().toUpperCase();
@@ -530,7 +543,8 @@ function parseMusicXML(xmlText){
     meter:globalMeter,
     keyFifths:globalFifths,
     keyMinor:globalMinor,
-    events
+    events,
+    rests
   });
 }
 
@@ -637,6 +651,44 @@ function auditScore(rawScore){
   };
 }
 
+function createMusicalAudio(){
+  let ctx=null;
+  function ensure(){
+    if(!ctx)ctx=new (window.AudioContext||window.webkitAudioContext)();
+    if(ctx.state==="suspended")ctx.resume();
+    return ctx;
+  }
+  function play(midi,durationBeat,beatMs,velocity){
+    const ac=ensure();
+    const now=ac.currentTime;
+    const f=440*Math.pow(2,(Number(midi)-69)/12);
+    const dur=Math.max(.08,Math.min(3.5,(Number(durationBeat)||.5)*(Number(beatMs)||500)/1000));
+    const gain=ac.createGain();
+    const master=ac.createGain();
+    master.gain.value=.22*Math.max(.25,Math.min(1.1,Number(velocity)||.8));
+    const partials=[1,2,3,4,5,6,8];
+    const amps=[1,.36,.18,.09,.045,.022,.012];
+    partials.forEach((p,i)=>{
+      const o=ac.createOscillator();
+      o.type=i===0?"triangle":"sine";o.frequency.value=f*p;
+      const g=ac.createGain();g.gain.value=amps[i];o.connect(g).connect(gain);o.start(now);o.stop(now+dur+.08);
+    });
+    gain.connect(master).connect(ac.destination);
+    gain.gain.setValueAtTime(.0001,now);
+    gain.gain.exponentialRampToValueAtTime(1,now+.008);
+    gain.gain.exponentialRampToValueAtTime(.34,now+Math.min(.16,dur*.35));
+    gain.gain.exponentialRampToValueAtTime(.0001,now+dur);
+  }
+  return Object.freeze({play});
+}
+function playNote(midi,durationBeat,beatMs,velocity){
+  try{
+    const bridge=window.LuwipiAudioBridge;
+    if(bridge&&typeof bridge.play==="function")return bridge.play(midi,durationBeat,beatMs,velocity);
+    if(!window.LuwipiScoreAudio)window.LuwipiScoreAudio=createMusicalAudio();
+    return window.LuwipiScoreAudio.play(nameToMidi(midi)||midi,durationBeat,beatMs,velocity);
+  }catch(e){return false}
+}
 function svgEl(name,attrs){
   const el=document.createElementNS("http://www.w3.org/2000/svg",name);
   Object.entries(attrs||{}).forEach(([key,value])=>{
@@ -673,6 +725,27 @@ function drawKeySignature(svg,fifths,clef,x,top){
   }
   return count*14;
 }
+function ptSolfege(midi){
+  const names=["Dó","Dó♯","Ré","Ré♯","Mi","Fá","Fá♯","Sol","Sol♯","Lá","Lá♯","Si"];
+  const n=clamp(Math.round(Number(midi)||60),0,127);
+  return names[n%12]+(Math.floor(n/12)-1);
+}
+function restSymbol(type){
+  const t=String(type||"").toLowerCase();
+  if(t.includes("whole")||t.includes("semibreve"))return "𝄻";
+  if(t.includes("half")||t.includes("mínima"))return "𝄼";
+  if(t.includes("quarter")||t.includes("semínima"))return "𝄽";
+  if(t.includes("eighth")||t.includes("colcheia"))return "𝄾";
+  if(t.includes("sixteenth")||t.includes("semicolcheia"))return "𝄿";
+  if(t.includes("thirty-second")||t.includes("fusa"))return "𝅀";
+  return "𝄽";
+}
+function drawRest(svg,rest,x,bottom,current){
+  const symbol=restSymbol(rest.type);
+  addText(svg,x,bottom-17,symbol,{"font-size":42,"font-family":"serif","text-anchor":"middle",fill:current?"#6670f5":"#292d34"});
+  if(rest.dotted)addText(svg,x+22,bottom-13,"·",{"font-size":24,fill:"#292d34","font-weight":800});
+  if(current)svg.appendChild(svgEl("ellipse",{cx:x,cy:bottom-30,rx:27,ry:25,fill:"rgba(69,104,255,.07)",stroke:"rgba(69,104,255,.62)","stroke-width":3,class:"live-score-halo"}));
+}
 function drawNote(svg,event,x,bottom,groupIndex,current){
   const y=staffY(event.midi,event.clef,bottom,event.note),stepValue=staffStep(event.midi,event.clef,event.note),kind=durationKind(event.durationBeat);
   drawLedger(svg,x,bottom,stepValue);
@@ -699,6 +772,7 @@ function drawNote(svg,event,x,bottom,groupIndex,current){
     }
   }
   if(kind.dots)addText(svg,x+17,y+4,"·",{"font-size":24,fill:"#292d34","font-weight":800});
+  if(current || event.showName || event.noteName) addText(svg,x,y+58, event.noteName || ptSolfege(event.midi), {"font-size":11,"font-weight":800,fill:"#555a63","text-anchor":"middle"});
   if(kind.tuplet)addText(svg,x,y-52,String(kind.tuplet),{"font-size":10,fill:"#555a63","font-weight":800,"text-anchor":"middle"});
   if(event.articulations.includes("staccato"))svg.appendChild(svgEl("circle",{cx:x,cy:y+(stepValue<5?13:-13),r:2.4,fill:"#292d34"}));
   if(event.articulations.includes("tenuto"))addLine(svg,x-7,y+(stepValue<5?14:-14),x+7,y+(stepValue<5?14:-14),{stroke:"#292d34","stroke-width":2});
@@ -711,7 +785,7 @@ function drawNote(svg,event,x,bottom,groupIndex,current){
 function render(svg,rawScore,options){
   if(!svg)throw new Error("score_svg_missing");
   const score=rawScore&&rawScore.events?normalizeScore(rawScore):normalizeScore(rawScore);
-  const opts=options||{},groups=groupEvents(score),currentGroup=Number.isInteger(opts.currentGroupIndex)?opts.currentGroupIndex:-1;
+  const opts=options||{},groups=groupEvents(score),currentGroup=Number.isInteger(opts.currentGroupIndex)?opts.currentGroupIndex:-1,showNoteNames=opts.showNoteNames!==false;
   while(svg.firstChild)svg.removeChild(svg.firstChild);
   const width=1120,measuresPerSystem=4,systemHeight=220,systems=Math.max(1,Math.ceil(score.measures/measuresPerSystem));
   const height=50+systems*systemHeight;
@@ -750,6 +824,15 @@ function render(svg,rawScore,options){
     }
   }
   let lastDynamic="";
+  (score.rests||[]).forEach((rest)=>{
+    const measureIndex=Math.floor(rest.startBeat/measureBeats);
+    const system=Math.floor(measureIndex/measuresPerSystem),slot=measureIndex%measuresPerSystem;
+    if(system>=systems)return;
+    const beatInMeasure=rest.startBeat-measureIndex*measureBeats;
+    const baseY=50+system*systemHeight,trebleBottom=baseY+73;
+    const x=left+slot*measureWidth+42+(beatInMeasure/measureBeats)*(measureWidth-50);
+    drawRest(svg,rest,x,trebleBottom,false);
+  });
   groups.forEach((group,groupIndex)=>{
     group.events.forEach((event,eventIndex)=>{
       const measureIndex=Math.floor(event.startBeat/measureBeats);
@@ -757,6 +840,8 @@ function render(svg,rawScore,options){
       const beatInMeasure=event.startBeat-measureIndex*measureBeats;
       const baseY=50+system*systemHeight,trebleBottom=baseY+73,bassBottom=baseY+160;
       const x=left+slot*measureWidth+42+(beatInMeasure/measureBeats)*(measureWidth-50);
+      event.noteName=showNoteNames?ptSolfege(event.midi):null;
+      event.showName=showNoteNames;
       drawNote(svg,event,x,event.clef==="bass"?bassBottom:trebleBottom,groupIndex,groupIndex===currentGroup);
       if(eventIndex===0&&event.dynamic&&event.dynamic!==lastDynamic){
         addText(svg,x,(event.clef==="bass"?bassBottom:trebleBottom)+38,event.dynamic,{"font-size":15,fill:"#353940","font-family":"serif","font-style":"italic","font-weight":700,"text-anchor":"middle"});
@@ -787,6 +872,9 @@ window.LuwipiScoreEngine=Object.freeze({
   performanceEvents,
   beatToMs,
   durationToMs,
-  auditScore
+  auditScore,
+  ptSolfege,
+  restSymbol,
+  playNote
 });
 })();
