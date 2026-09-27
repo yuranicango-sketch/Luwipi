@@ -95,15 +95,16 @@ function audio(){
   return window.LuwipiAudioBridge||null;
 }
 function playNoteEvent(event,delayMs,durationMs,level){
-  const bridge=audio();
-  if(!bridge||typeof bridge.play!=="function"){
-    if(Engine&&typeof Engine.playNote==="function")Engine.playNote(event.midi||event.note,durationMs/baseBeatMs,baseBeatMs,level||Math.max(.42,Math.min(1.05,event.velocity/92)));
-    return;
-  }
   const baseBeatMs=60000/Math.max(20,tempo);
   const effectiveBeats=Math.max(.03,Number(durationMs||baseBeatMs)/baseBeatMs);
+  const velocity=level||Math.max(.42,Math.min(1.05,event.velocity/92));
+  const bridge=audio();
   const timer=setTimeout(()=>{
-    bridge.play(event.note,effectiveBeats,baseBeatMs,level||Math.max(.42,Math.min(1.05,event.velocity/92)));
+    if(bridge&&typeof bridge.play==="function"){
+      bridge.play(event.note,effectiveBeats,baseBeatMs,velocity);
+    }else if(Engine&&typeof Engine.playNote==="function"){
+      Engine.playNote(event.midi,effectiveBeats,baseBeatMs,velocity);
+    }
   },Math.max(0,delayMs));
   playTimers.push(timer);
 }
