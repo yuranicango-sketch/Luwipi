@@ -46,8 +46,12 @@
       const ac=audioContext(),source=ac.createBufferSource(),filter=ac.createBiquadFilter(),gain=ac.createGain();
       source.buffer=makePianoBuffer();
       source.playbackRate.value=Math.pow(2,semitones[index]/12);
-      filter.type="lowpass";filter.frequency.value=5200;filter.Q.value=.45;gain.gain.value=.96;
-      source.connect(filter);filter.connect(gain);gain.connect(ac.destination);source.start();
+      filter.type="lowpass";filter.frequency.value=5200;filter.Q.value=.45;
+      const t=ac.currentTime,duration=source.buffer.duration/source.playbackRate.value;
+      gain.gain.setValueAtTime(.0001,t);gain.gain.linearRampToValueAtTime(.58,t+.008);
+      gain.gain.setValueAtTime(.58,t+Math.max(.01,duration-.07));
+      gain.gain.exponentialRampToValueAtTime(.0001,t+Math.max(.025,duration-.012));
+      source.connect(filter);filter.connect(gain);gain.connect(ac.destination);source.start(t);source.stop(t+duration);
     }catch(_){}
   }
   function chooseSong(){
