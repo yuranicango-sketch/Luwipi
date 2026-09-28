@@ -104,6 +104,35 @@ await test("Score engine: MIDI corrompido é recusado",async()=>{
   assert(failed,"malformed MIDI was accepted");
 });
 
+await test("Score engine: figuras musicais usam desenho estável",async()=>{
+  const E=await engine();
+  assert(E.restSymbol("whole")==="whole","whole rest classification failed");
+  assert(E.restSymbol("half")==="half","half rest classification failed");
+  assert(E.restSymbol("quarter")==="quarter","quarter rest classification failed");
+  assert(E.restSymbol("eighth")==="eighth","eighth rest classification failed");
+  assert(E.restSymbol("sixteenth")==="sixteenth","sixteenth rest classification failed");
+  assert(E.durationKind(.5).flags===1&&E.durationKind(.25).flags===2,"flag count regression");
+  const source=await read("assets/music/score-engine.js");
+  assert(source.includes('svgEl("circle",{cx:x+18,cy:y-1,r:2.35'),"augmentation dot is not vector-rendered");
+  assert(source.includes('C "+(sx+12)+" "+(sy2+2+offset)'),"curved note flags missing");
+  assert(source.includes('type==="whole"||type==="half"'),"vector rest rendering missing");
+});
+
+await test("Partituras: nome editável e identidade independente do título",async()=>{
+  const app=await read("app.html");
+  const live=await read("assets/live/live-mode.js");
+  const library=await read("assets/reading/reading-library.js");
+  const api=await read("api/reading-library.js");
+  assert(app.includes('id="livePublishName"'),"score name field missing from publish preview");
+  assert(live.includes("suggestedScoreTitle()"),"score title suggestion flow missing");
+  assert(live.includes("explicitTitle")===false,"live mode should not depend on library internals");
+  assert(library.includes('explicitTitle=""'),"explicit score title is not accepted by library");
+  const clientFingerprint=library.slice(library.indexOf("function fingerprint(score,kind)"),library.indexOf("function localClean",library.indexOf("function fingerprint(score,kind)")));
+  assert(!clientFingerprint.includes("score.title"),"client score identity still depends on title");
+  const serverFingerprint=api.slice(api.indexOf("async function fingerprint(score,kind)"),api.indexOf("async function parseBody",api.indexOf("async function fingerprint(score,kind)")));
+  assert(!serverFingerprint.includes("title:"),"server score identity still depends on title");
+});
+
 await test("Google Drive: criar, ler e guardar aluno no appDataFolder",async()=>{
   const app=await read("app.html"),core=decodeCore(app);
   const start=core.indexOf("const LuwipiStudentVault=(()=>{"),end=core.indexOf("const LuwipiProductionAccess",start);

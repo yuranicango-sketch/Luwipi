@@ -704,19 +704,28 @@ function ptSolfege(midi){
 }
 function restSymbol(type){
   const t=String(type||"").toLowerCase();
-  if(t.includes("whole")||t.includes("semibreve"))return "𝄻";
-  if(t.includes("half")||t.includes("mínima"))return "𝄼";
-  if(t.includes("quarter")||t.includes("semínima"))return "𝄽";
-  if(t.includes("eighth")||t.includes("colcheia"))return "𝄾";
-  if(t.includes("sixteenth")||t.includes("semicolcheia"))return "𝄿";
-  if(t.includes("thirty-second")||t.includes("fusa"))return "𝅀";
-  return "𝄽";
+  if(t.includes("whole")||t.includes("semibreve"))return "whole";
+  if(t.includes("half")||t.includes("mínima"))return "half";
+  if(t.includes("eighth")||t.includes("colcheia"))return "eighth";
+  if(t.includes("sixteenth")||t.includes("semicolcheia"))return "sixteenth";
+  if(t.includes("thirty-second")||t.includes("fusa"))return "thirty-second";
+  return "quarter";
 }
 function drawRest(svg,rest,x,bottom,current){
-  const symbol=restSymbol(rest.type);
-  addText(svg,x,bottom-17,symbol,{"font-size":42,"font-family":"serif","text-anchor":"middle",fill:current?"#6670f5":"#292d34"});
-  if(rest.dotted)addText(svg,x+22,bottom-13,"·",{"font-size":24,fill:"#292d34","font-weight":800});
-  if(current)svg.appendChild(svgEl("ellipse",{cx:x,cy:bottom-30,rx:27,ry:25,fill:"rgba(69,104,255,.07)",stroke:"rgba(69,104,255,.62)","stroke-width":3,class:"live-score-halo"}));
+  const type=restSymbol(rest.type),ink=current?"#6670f5":"#292d34",y=bottom-24;
+  if(current)svg.appendChild(svgEl("ellipse",{cx:x,cy:y,rx:25,ry:24,fill:"rgba(69,104,255,.07)",stroke:"rgba(69,104,255,.62)","stroke-width":2.5,class:"live-score-halo"}));
+  if(type==="whole"||type==="half"){
+    const ry=type==="whole"?bottom-24:bottom-30;
+    svg.appendChild(svgEl("rect",{x:x-10,y:ry,width:20,height:6,rx:1.2,fill:ink}));
+  }else{
+    const stem=svgEl("path",{d:"M "+(x+5)+" "+(y-16)+" C "+(x-7)+" "+(y-7)+", "+(x+11)+" "+(y-1)+", "+(x-3)+" "+(y+8)+" C "+(x-12)+" "+(y+14)+", "+(x+4)+" "+(y+20)+", "+(x-7)+" "+(y+30),fill:"none",stroke:ink,"stroke-width":3.4,"stroke-linecap":"round","stroke-linejoin":"round"});
+    svg.appendChild(stem);
+    const flags=type==="eighth"?1:type==="sixteenth"?2:type==="thirty-second"?3:0;
+    for(let i=0;i<flags;i++){
+      svg.appendChild(svgEl("path",{d:"M "+(x+4)+" "+(y-12+i*7)+" Q "+(x+18)+" "+(y-5+i*7)+" "+(x+8)+" "+(y+5+i*7),fill:"none",stroke:ink,"stroke-width":2.8,"stroke-linecap":"round"}));
+    }
+  }
+  if(rest.dotted)svg.appendChild(svgEl("circle",{cx:x+20,cy:y+2,r:2.4,fill:ink}));
 }
 function drawNote(svg,event,x,bottom,groupIndex,current){
   const y=staffY(event.midi,event.clef,bottom,event.note),stepValue=staffStep(event.midi,event.clef,event.note),kind=durationKind(event.durationBeat);
@@ -727,31 +736,30 @@ function drawNote(svg,event,x,bottom,groupIndex,current){
     const halo=svgEl("ellipse",{cx:x,cy:y,rx:24,ry:19,fill:"rgba(69,104,255,.07)",stroke:"rgba(69,104,255,.62)","stroke-width":3,class:"live-score-halo"});
     svg.appendChild(halo);
   }
-  const head=svgEl("ellipse",{cx:x,cy:y,rx:10.5,ry:7,fill:kind.open?"#fff":"#292d34",stroke:"#292d34","stroke-width":kind.open?2.5:0,transform:"rotate(-18 "+x+" "+y+")","data-live-group":groupIndex});
+  const head=svgEl("ellipse",{cx:x,cy:y,rx:10.8,ry:7.1,fill:kind.open?"#fff":"#292d34",stroke:"#292d34","stroke-width":kind.open?2.2:1.1,transform:"rotate(-20 "+x+" "+y+")","data-live-group":groupIndex});
   svg.appendChild(head);
   if(kind.stem){
     const stemUp=stepValue<5;
-    const sx=stemUp?x+9:x-9,sy2=stemUp?y-43:y+43;
-    addLine(svg,sx,y,sx,sy2,{stroke:"#292d34","stroke-width":3,"stroke-linecap":"round"});
+    const sx=stemUp?x+9.1:x-9.1,stemStart=stemUp?y-1:y+1,sy2=stemUp?y-45:y+45;
+    addLine(svg,sx,stemStart,sx,sy2,{stroke:"#292d34","stroke-width":2.45,"stroke-linecap":"round"});
     for(let flag=0;flag<kind.flags;flag++){
+      const offset=flag*7.2;
       if(stemUp){
-        const path=svgEl("path",{d:"M "+sx+" "+(sy2+flag*7)+" Q "+(sx+18)+" "+(sy2+5+flag*7)+" "+(sx+13)+" "+(sy2+20+flag*7),fill:"none",stroke:"#292d34","stroke-width":3});
-        svg.appendChild(path);
+        svg.appendChild(svgEl("path",{d:"M "+sx+" "+(sy2+offset)+" C "+(sx+12)+" "+(sy2+2+offset)+", "+(sx+19)+" "+(sy2+10+offset)+", "+(sx+11)+" "+(sy2+22+offset),fill:"none",stroke:"#292d34","stroke-width":2.7,"stroke-linecap":"round"}));
       }else{
-        const path=svgEl("path",{d:"M "+sx+" "+(sy2-flag*7)+" Q "+(sx-18)+" "+(sy2-5-flag*7)+" "+(sx-13)+" "+(sy2-20-flag*7),fill:"none",stroke:"#292d34","stroke-width":3});
-        svg.appendChild(path);
+        svg.appendChild(svgEl("path",{d:"M "+sx+" "+(sy2-offset)+" C "+(sx-12)+" "+(sy2-2-offset)+", "+(sx-19)+" "+(sy2-10-offset)+", "+(sx-11)+" "+(sy2-22-offset),fill:"none",stroke:"#292d34","stroke-width":2.7,"stroke-linecap":"round"}));
       }
     }
   }
-  if(kind.dots)addText(svg,x+17,y+4,"·",{"font-size":24,fill:"#292d34","font-weight":800});
+  if(kind.dots)svg.appendChild(svgEl("circle",{cx:x+18,cy:y-1,r:2.35,fill:"#292d34"}));
   
   if(kind.tuplet)addText(svg,x,y-52,String(kind.tuplet),{"font-size":10,fill:"#555a63","font-weight":800,"text-anchor":"middle"});
   if(event.articulations.includes("staccato"))svg.appendChild(svgEl("circle",{cx:x,cy:y+(stepValue<5?13:-13),r:2.4,fill:"#292d34"}));
   if(event.articulations.includes("tenuto"))addLine(svg,x-7,y+(stepValue<5?14:-14),x+7,y+(stepValue<5?14:-14),{stroke:"#292d34","stroke-width":2});
   if(event.articulations.includes("accent"))addText(svg,x,y+(stepValue<5?19:-15),">",{"font-size":17,fill:"#292d34","text-anchor":"middle","font-weight":700});
   if(event.tieStart){
-    const dy=stepValue<5?14:-14;
-    svg.appendChild(svgEl("path",{d:"M "+(x-8)+" "+(y+dy)+" Q "+x+" "+(y+dy+(stepValue<5?7:-7))+" "+(x+18)+" "+(y+dy),fill:"none",stroke:"#292d34","stroke-width":1.7}));
+    const below=stepValue<5,dy=below?14:-14,curve=below?8:-8;
+    svg.appendChild(svgEl("path",{d:"M "+(x-9)+" "+(y+dy)+" C "+(x-2)+" "+(y+dy+curve)+", "+(x+12)+" "+(y+dy+curve)+", "+(x+20)+" "+(y+dy),fill:"none",stroke:"#292d34","stroke-width":1.8,"stroke-linecap":"round"}));
   }
 }
 function render(svg,rawScore,options){
