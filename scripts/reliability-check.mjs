@@ -353,5 +353,18 @@ await test("Publicação: ambos os jogos entram no build estático",async()=>{
   }
 });
 
+await test("Jogos: compassos separados e acompanhamentos de estudo variados",async()=>{
+  for(const file of ["super-paw-paw.html","paw-paw-notas.html"]){
+    const html=await read(file),start=html.indexOf("const grooves=["),end=html.indexOf("];",start);
+    assert(start>=0&&end>start,"missing accompaniment styles in "+file);
+    const grooves=new Function("return "+html.slice(start+14,end+1))();
+    assert(grooves.length===5,"expected five study styles in "+file);
+    assert(new Set(grooves.map(g=>JSON.stringify([g.kick,g.snare,g.hat,g.bass,g.chord]))).size===5,"styles share the same arrangement in "+file);
+    assert(grooves[0].kick.length===0&&grooves[4].kick.length===0,"quiet study modes must not use drums");
+    assert(grooves.every(g=>!["Amapiano","House","Afrobeat","Kizomba","Jazz"].includes(g.name)),"unwanted style in "+file);
+    assert(html.includes("'Compasso '+(bar+1)")&&html.includes("bar%2===0"),"moving score has no visible bar spacing in "+file);
+  }
+});
+
 console.log("\nLuwipi reliability gate: "+passed+" checks passed");
 for(const line of notes)console.log(line);
