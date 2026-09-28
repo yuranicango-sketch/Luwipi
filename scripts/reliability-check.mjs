@@ -337,5 +337,13 @@ await test("Paw Paw Notas: mãos, peças e alturas musicais",async()=>{
   assert(html.includes("hand==='both'")&&html.includes("hand!=='left'")&&html.includes("hand!=='right'"),"combined hand lanes missing");
 });
 
+await test("Entrada: script descodificado arranca e não deixa o ecrã de sessão preso",async()=>{
+  const app=await read("app.html"),core=decodeCore(app);
+  new Function("window",core);
+  assert(!core.includes("ZSSSSS"),"stray statement after access bootstrap");
+  assert(core.includes("loadingTimer=setTimeout")&&core.includes("show('error',true)"),"session-loading timeout missing");
+  assert(app.includes('id="accessLoading"')&&app.includes('id="retryAccessButton"'),"loading/error recovery UI missing");
+});
+
 console.log("\nLuwipi reliability gate: "+passed+" checks passed");
 for(const line of notes)console.log(line);
