@@ -375,5 +375,18 @@ await test("Paw Paw Notas: alturas corretas nas claves de Sol e Fá",async()=>{
   assert(html.includes("e.hand==='right'&&e.note===0"),"middle C ledger line missing");
 });
 
+await test("Piano: margem de volume, fade final e notas repetidas",async()=>{
+  const core=decodeCore(await read("app.html"));
+  assert(core.includes("pianoMaster.gain.value=.95")&&core.includes("pianoOutput.gain.value=.82"),"piano master lacks headroom");
+  assert(core.includes("Math.min(.78,Math.max(.14,.72*level))"),"sample voices are too loud");
+  assert(core.includes("buffer.duration-.03")&&core.includes("gain.gain.exponentialRampToValueAtTime(.0001,now+dur)"),"sample can stop before its release fade");
+  assert(core.includes("pianoNoteOffVoice(previous,.05)"),"rapid retrigger layers the same note");
+  assert(core.includes("o.connect(g).connect(pianoMaster)"),"metronome bypasses the audio bus");
+  for(const file of ["assets/games/piano-dos-bichinhos.js","assets/games/bolhas-do-som.js"]){
+    const src=await read(file);
+    assert(src.includes(".58")&&/duration\s*-\s*0?\.012/.test(src),"children's piano lacks gain headroom or end fade: "+file);
+  }
+});
+
 console.log("\nLuwipi reliability gate: "+passed+" checks passed");
 for(const line of notes)console.log(line);

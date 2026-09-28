@@ -118,12 +118,18 @@
     filter.type = "lowpass";
     filter.frequency.value = 5200;
     filter.Q.value = 0.45;
-    gain.gain.value = 0.95;
+    const t = ctx.currentTime;
+    const duration = source.buffer.duration / source.playbackRate.value;
+    gain.gain.setValueAtTime(0.0001, t);
+    gain.gain.linearRampToValueAtTime(0.58, t + 0.008);
+    gain.gain.setValueAtTime(0.58, t + Math.max(0.01, duration - 0.07));
+    gain.gain.exponentialRampToValueAtTime(0.0001, t + Math.max(0.025, duration - 0.012));
 
     source.connect(filter);
     filter.connect(gain);
     gain.connect(ctx.destination);
-    source.start();
+    source.start(t);
+    source.stop(t + duration);
   }
 
   function shuffle(values) {
