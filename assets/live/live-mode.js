@@ -56,6 +56,7 @@ const publishFidelityBadge=document.getElementById("livePublishFidelityBadge");
 const publishFidelityTitle=document.getElementById("livePublishFidelityTitle");
 const publishFidelityText=document.getElementById("livePublishFidelityText");
 const publishIssues=document.getElementById("livePublishIssues");
+const publishName=document.getElementById("livePublishName");
 const scopePersonal=document.getElementById("liveScopePersonal");
 const scopeGlobal=document.getElementById("liveScopeGlobal");
 const scopeHelp=document.getElementById("livePublishScopeHelp");
@@ -71,6 +72,18 @@ const PT={C:"Dó","C#":"Dó♯",D:"Ré","D#":"Ré♯",E:"Mi",F:"Fá","F#":"Fá�
 function ptNote(midi){
   const name=Engine.midiToName(midi),match=/^([A-G]#?)(-?\d+)$/.exec(name);
   return match?(PT[match[1]]||match[1])+match[2]:name;
+}
+function scoreNameFromFile(name){
+  return String(name||"").replace(/\.(?:mid|midi|musicxml|xml|mxl|pdf)$/i,"").trim();
+}
+function isGenericScoreTitle(title){
+  const value=String(title||"").trim().toLowerCase();
+  return !value||value==="partitura"||value==="partitura midi"||value==="partitura musicxml";
+}
+function suggestedScoreTitle(){
+  const embedded=String(score?.title||"").trim();
+  if(embedded&&!isGenericScoreTitle(embedded))return embedded.slice(0,160);
+  return (scoreNameFromFile(structuredFileName)||embedded||"Nova partitura").slice(0,160);
 }
 function setFeedback(text,tone){
   feedback.textContent=text||"";
@@ -465,6 +478,7 @@ async function openPublishPreview(kind,opener){
   fidelityReport=Engine.auditScore?Engine.auditScore(score):{rating:"review",score:0,blocked:false,canPublishGlobal:false,warnings:["Relatório de fidelidade indisponível."],issues:[]};
   const label=fidelityLabel(fidelityReport);
   publishTitle.textContent=kind==="exercise"?"Preview do exercício":"Preview da música";
+  if(publishName){publishName.value=suggestedScoreTitle();publishName.removeAttribute("aria-invalid")}
   publishFidelityBadge.textContent=label.label;
   publishFidelityBadge.dataset.tone=label.tone;
   publishFidelityTitle.textContent=label.title;
@@ -511,9 +525,19 @@ async function confirmPublish(){
   if(!score||publishConfirm.disabled)return;
   const library=window.LuwipiReadingLibrary;
   if(!library||typeof library.publish!=="function"){setFeedback("A biblioteca de Leitura não está disponível nesta sessão.","bad");return}
+  const chosenTitle=String(publishName?.value||suggestedScoreTitle()).trim().replace(/\s+/g," ").slice(0,160);
+  if(!chosenTitle){
+    if(publishName){publishName.setAttribute("aria-invalid","true");publishName.focus()}
+    const p=document.createElement("p");p.className="bad";p.textContent="Escreve um nome para a partitura antes de guardar.";publishIssues.prepend(p);
+    return;
+  }
+  if(publishName)publishName.removeAttribute("aria-invalid");
+  score=Engine.normalizeScore({...score,title:chosenTitle});
+  groups=Engine.groupEvents(score);
+  updateFileState();renderScore();
   publishConfirm.disabled=true;publishConfirm.textContent="A guardar…";
   try{
-    const result=await library.publish(score,structuredFileName||score.title,publishKind,publishScope,fidelityReport);
+    const result=await library.publish(score,structuredFileName||chosenTitle,publishKind,publishScope,fidelityReport,chosenTitle);
     closePublishPreview();
     const button=publishKind==="exercise"?addExerciseButton:addReadingButton;
     if(button)button.textContent=publishKind==="exercise"?"✓ Exercício adicionado":"✓ Música adicionada";
@@ -536,6 +560,12 @@ scopeGlobal?.addEventListener("click",()=>selectPublishScope("global"));
 publishClose?.addEventListener("click",closePublishPreview);
 publishCancel?.addEventListener("click",closePublishPreview);
 publishConfirm?.addEventListener("click",confirmPublish);
+publishName?.addEventListener("input",()=>{
+  publishName.removeAttribute("aria-invalid");
+  const title=String(publishName.value||"").trim();
+  if(score&&title)Engine.render(publishSvg,{...score,title},{currentGroupIndex:-1});
+});
+publishName?.addEventListener("keydown",event=>{if(event.key==="Enter"){event.preventDefault();confirmPublish()}});
 publishModal?.addEventListener("click",event=>{if(event.target===publishModal)closePublishPreview()});
 document.addEventListener("keydown",event=>{if(event.key==="Escape"&&!publishModal?.classList.contains("hidden"))closePublishPreview()});
 practiceButton.addEventListener("click",()=>practice?stopPractice():startPractice());
