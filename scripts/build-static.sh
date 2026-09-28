@@ -8,6 +8,8 @@ mkdir -p public/auth public/assets public/ensine public/aprenda
 
 cp index.html public/index.html
 cp app.html public/app.html
+cp super-paw-paw.html public/super-paw-paw.html
+cp paw-paw-notas.html public/paw-paw-notas.html
 cp app.html public/ensine/index.html
 cp app.html public/aprenda/index.html
 cp admin.html public/admin.html
