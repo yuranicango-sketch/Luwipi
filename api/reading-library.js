@@ -71,7 +71,6 @@ async function fingerprint(score,kind){
   const material=JSON.stringify({
     kind,
     source:score.source||"",
-    title:score.title||"",
     tempoBpm:score.tempoBpm||120,
     meter:score.meter||[4,4],
     keyFifths:score.keyFifths||0,
