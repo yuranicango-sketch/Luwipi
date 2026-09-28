@@ -114,7 +114,7 @@ await test("Score engine: figuras musicais usam desenho estável",async()=>{
   assert(E.durationKind(.5).flags===1&&E.durationKind(.25).flags===2,"flag count regression");
   const source=await read("assets/music/score-engine.js");
   assert(source.includes('svgEl("circle",{cx:x+18,cy:y-1,r:2.35'),"augmentation dot is not vector-rendered");
-  assert(source.includes('C "+(x+12)+" "+(sy2+2+offset)'),"curved note flags missing");
+  assert(source.includes('C "+(sx+12)+" "+(sy2+2+offset)'),"curved note flags missing");
   assert(source.includes('type==="whole"||type==="half"'),"vector rest rendering missing");
 });
 
