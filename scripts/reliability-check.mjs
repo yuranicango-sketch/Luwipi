@@ -321,5 +321,21 @@ await test("Super Paw Paw: 10 níveis, cinco peças e compassos completos",async
   assert(html.includes('min="50"')&&html.includes('id="preview"'),"slow tempo or upcoming-bar preview missing");
 });
 
+await test("Paw Paw Notas: mãos, peças e alturas musicais",async()=>{
+  const html=await read("paw-paw-notas.html"),app=await read("app.html");
+  assert(app.includes('href="/paw-paw-notas.html"'),"pitch game missing from Jogos");
+  for(const mode of ["right","left","both"])assert(html.includes('value="'+mode+'"'),"hand mode missing: "+mode);
+  const from=html.indexOf("const $=id=>"),songsStart=html.indexOf("songs=[",from),end=html.indexOf(";let events=[]",songsStart);
+  assert(songsStart>=0&&end>songsStart,"song data missing");
+  const songs=new Function("return "+html.slice(songsStart+6,end))();
+  assert(songs.length>=4,"not enough playable pieces");
+  for(const song of songs){
+    assert(song.melody.length===32&&song.bass.length===8,"piece must have eight 4/4 bars");
+    assert([...song.melody,...song.bass].every(n=>Number.isInteger(n)&&n>=0&&n<7),"note outside displayed keyboard");
+  }
+  assert(html.includes("choice.note!==note")&&html.includes("midi(event.hand,event.note)"),"pitch matching or played note missing");
+  assert(html.includes("hand==='both'")&&html.includes("hand!=='left'")&&html.includes("hand!=='right'"),"combined hand lanes missing");
+});
+
 console.log("\nLuwipi reliability gate: "+passed+" checks passed");
 for(const line of notes)console.log(line);
