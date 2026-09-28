@@ -51,7 +51,7 @@ async function permissions(force=false){
 function hashString(s){let h=2166136261;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619)}return(h>>>0).toString(36)}
 function fingerprint(score,kind){
   const perf=Engine.performanceEvents?Engine.performanceEvents(score):score.performanceEvents||score.events||[];
-  return hashString(JSON.stringify([kind||"music",score.title,score.tempoBpm,score.meter,score.keyFifths,score.events.map(e=>[e.midi,e.startBeat,e.durationBeat,e.velocity]),perf.map(e=>[e.midi,e.startBeat,e.durationBeat,e.velocity,e.pedal])]));
+  return hashString(JSON.stringify([kind||"music",score.source||"",score.tempoBpm,score.meter,score.keyFifths,score.events.map(e=>[e.midi,e.startBeat,e.durationBeat,e.velocity]),perf.map(e=>[e.midi,e.startBeat,e.durationBeat,e.velocity,e.pedal])]));
 }
 function localClean(score,sourceName,kind,fidelity){
   const s=Engine.normalizeScore(score),now=new Date().toISOString();
@@ -119,8 +119,9 @@ async function remove(id){
   remoteCache=remoteCache.filter(x=>x.id!==id);
   return{ok:true,local:false};
 }
-async function publish(score,sourceName,kind="music",scope="personal",fidelity){
-  const s=Engine.normalizeScore(score);
+async function publish(score,sourceName,kind="music",scope="personal",fidelity,explicitTitle=""){
+  const chosenTitle=String(explicitTitle||score?.title||"").trim().replace(/\s+/g," ").slice(0,160);
+  const s=Engine.normalizeScore({...score,title:chosenTitle||score?.title||String(sourceName||"Partitura")});
   const report=fidelity||(Engine.auditScore?Engine.auditScore(s):null);
   if(report?.blocked)throw new Error("fidelity_blocked");
   if(scope==="global"&&!report?.canPublishGlobal)throw new Error("fidelity_blocked");
