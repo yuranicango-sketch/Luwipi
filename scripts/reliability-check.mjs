@@ -345,5 +345,13 @@ await test("Entrada: script descodificado arranca e não deixa o ecrã de sessã
   assert(app.includes('id="accessLoading"')&&app.includes('id="retryAccessButton"'),"loading/error recovery UI missing");
 });
 
+await test("Publicação: ambos os jogos entram no build estático",async()=>{
+  const build=await read("scripts/build-static.sh"),app=await read("app.html");
+  for(const name of ["super-paw-paw.html","paw-paw-notas.html"]){
+    assert(build.includes("cp "+name+" public/"+name),name+" is omitted from Vercel output");
+    assert(app.includes('href="/'+name+'"'),name+" has no matching game link");
+  }
+});
+
 console.log("\nLuwipi reliability gate: "+passed+" checks passed");
 for(const line of notes)console.log(line);
