@@ -315,8 +315,10 @@ await test("Super Paw Paw: 10 níveis, cinco peças e compassos completos",async
   assert(levels[0].patterns.every(p=>p==="q q q q"),"first level must teach a simple quarter-note pulse");
   assert(levels.at(-1).patterns.some(p=>p.includes("s")),"last level must include sixteenth notes");
   assert(html.includes("synth(e.pitch,ac.currentTime"),"player input does not play the score pitch");
-  assert(html.includes("X=480")&&html.indexOf('id="jump"')<html.indexOf('class="overlay"'),"timing zone or in-game button is not centered in the playfield");
+  assert(html.includes("X=480")&&html.indexOf('id="jump"')<html.indexOf('class="overlay"'),"in-game timing button or desktop hit zone missing");
   assert(html.includes("c.addEventListener('pointerdown'"),"tapping the score does not trigger the note");
+  assert(html.includes("visible*.16")&&html.includes("run/lead"),"mobile hit zone does not preserve room for a four-beat preview");
+  assert(html.includes('min="50"')&&html.includes('id="preview"'),"slow tempo or upcoming-bar preview missing");
 });
 
 console.log("\nLuwipi reliability gate: "+passed+" checks passed");
