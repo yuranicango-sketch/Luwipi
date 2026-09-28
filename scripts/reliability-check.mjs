@@ -297,5 +297,25 @@ await test("Static security: microfone, PDF, preview, paywall e serverless limit
   const count=await countJs(apiDir);assert(count<=12,"Vercel Hobby serverless limit exceeded: "+count);
 });
 
+await test("Super Paw Paw: 10 níveis, cinco peças e compassos completos",async()=>{
+  const html=await read("super-paw-paw.html"),app=await read("app.html");
+  assert(app.includes('href="/super-paw-paw.html"')&&app.includes('Super Paw Paw'),"game is not linked from Jogos");
+  assert(html.includes('id="speed"')&&html.includes('id="song"')&&html.includes('id="levelSelect"'),"song, speed or level controls missing");
+  const from=html.indexOf("const baseLevels=["),to=html.indexOf("let index=0,ev=[]",from);
+  assert(from>=0&&to>from,"game data missing");
+  const {levels,songs}=new Function(html.slice(from,to)+";return {levels,songs}")();
+  assert(levels.length===10&&songs.length===5,"expected 10 levels and five pieces");
+  for(const [index,level] of levels.entries()){
+    assert(level.patterns.length>=8,"level "+(index+1)+" is too short");
+    for(const pattern of level.patterns){
+      const ticks=pattern.split(" ").reduce((sum,kind)=>sum+({q:4,e:2,s:1,r:4}[kind]||0),0);
+      assert(ticks===16,"invalid 4/4 bar in level "+(index+1)+": "+pattern);
+    }
+  }
+  assert(levels[0].patterns.every(p=>p==="q q q q"),"first level must teach a simple quarter-note pulse");
+  assert(levels.at(-1).patterns.some(p=>p.includes("s")),"last level must include sixteenth notes");
+  assert(html.includes("synth(e.pitch,ac.currentTime"),"player input does not play the score pitch");
+});
+
 console.log("\nLuwipi reliability gate: "+passed+" checks passed");
 for(const line of notes)console.log(line);
