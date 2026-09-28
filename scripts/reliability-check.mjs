@@ -366,5 +366,14 @@ await test("Jogos: compassos separados e acompanhamentos de estudo variados",asy
   }
 });
 
+await test("Paw Paw Notas: alturas corretas nas claves de Sol e Fá",async()=>{
+  const html=await read("paw-paw-notas.html"),start=html.indexOf("function staffNoteY("),end=html.indexOf("function note(",start);
+  assert(start>=0&&end>start,"staff placement function missing");
+  const y=new Function(html.slice(start,end)+";return staffNoteY")();
+  assert(y("right",0,0)===135&&y("right",2,0)===108&&y("right",6,0)===54,"treble C4, E4 or B4 is off the staff");
+  assert(y("left",0,0)===67.5&&y("left",3,0)===27&&y("left",5,0)===0,"bass C3, F3 or A3 is off the staff");
+  assert(html.includes("e.hand==='right'&&e.note===0"),"middle C ledger line missing");
+});
+
 console.log("\nLuwipi reliability gate: "+passed+" checks passed");
 for(const line of notes)console.log(line);
