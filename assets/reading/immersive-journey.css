@@ -16,3 +16,43 @@ body[data-mode="aprenda"] #homeView .home-tool-list{display:none}body[data-mode=
 #songView .parent-task-badge,#songView .measure-hint,#songView .reader-top p{display:none}#songView .reader-top{margin-bottom:12px}#exerciseView .reader{border-radius:25px;background:#eff3fb;padding:clamp(12px,2vw,28px)}#exerciseView .score-wrap{border-radius:20px;background:#fff;padding:18px;box-shadow:0 14px 35px #172b6414;overflow:auto}#exerciseView .secondary-actions button{border-radius:12px;min-height:44px}#readingView .reading-library .tabs,#readingView .reading-library .reading-levels{position:relative;margin-top:16px}
 #gamesView .page{max-width:1240px}.games-path{padding:clamp(20px,4vw,36px);margin:12px 0 18px;border-radius:28px;background:linear-gradient(140deg,#132554,#2c4bab);color:#fff}.games-path>small{font-size:13px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#c9d9ff}.games-path h2{margin:7px 0 22px;font-size:clamp(29px,4vw,46px);line-height:1.05}.games-path-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}.games-path-grid .game-card{min-height:185px;border:1px solid #ffffff66!important;border-radius:20px!important;background:#ffffffed!important;color:#15244d!important;box-shadow:none!important;text-decoration:none}.games-path-grid .game-card img{max-height:90px}.games-path-grid .game-card strong{font-size:18px}.games-path-grid .game-card span{font-size:14px}.games-path-grid .game-card:focus-visible{outline:3px solid #ffe17c;outline-offset:3px}#gamesView:not(.library-open) .games-library{display:none}#gamesView .games-library{margin-top:22px}#gamesView .journey-library-toggle{margin-top:22px}@media(max-width:700px){.games-path{border-radius:22px}.games-path-grid{grid-template-columns:1fr}.games-path-grid .game-card{min-height:94px;display:grid;grid-template-columns:100px 1fr;gap:12px;align-items:center}.games-path-grid .game-card img{width:100px;max-height:80px}}
 body[data-mode="aprenda"] #homeResume{display:none!important}
+/* A single blue visual language, with the score as the centre of each activity. */
+:root{--bg:#e9f0ff;--primary:#365ed0;--primary-soft:#e4ecff;--line:#cbd8f1;--muted:#526381}
+html,body{background:#e9f0ff;color:#152653}
+header{background:#dce8ff;border-color:#b8cbed}
+.page-head .back,.page-head small{color:#24427d}
+#readingView .page,#exerciseView .page,#songView .page{max-width:1080px}
+#exerciseView .reader,#songView .reader{background:#dce8ff;border:1px solid #b6caef;box-shadow:0 18px 40px #152d6820}
+#exerciseView .score-wrap,#songView .score-wrap{background:#fff;border:1px solid #c8d6ef;box-shadow:0 12px 28px #16326b17}
+#exerciseView .reader-top small,#songView .reader-top small{color:#365ed0}
+#exerciseView .aid-row button.active,#songView .aid-row button.active{background:#203b83;color:#fff;border-color:#203b83}
+#exerciseView .transport,#songView .transport{background:#162e69;border-radius:18px;padding:12px;box-shadow:0 16px 30px #142c6340}
+#exerciseView .transport button,#songView .transport button{color:#18336e;background:#f9fbff;border-color:#c4d4f4}
+#exerciseView .transport .play,#songView .transport .play{color:#182d61;background:#ffdc78;border-color:#ffdc78}
+#exerciseView .transport .metro.active,#songView .transport .metro.active{color:#fff;background:#26345c;border-color:#26345c}
+#exerciseView .transport .tempo,#songView .transport .tempo{color:#172e64;background:#fff;border-color:#c6d4ee}
+#exerciseView .transport .tempo span,#songView .transport .tempo span{color:#172e64}
+#exerciseView .transport .tempo button,#songView .transport .tempo button{color:#172e64;background:#e9effb;border:0}
+#exerciseView #exercisePianoBtn,#songView #songPianoBtn{display:none!important}
+body[data-mode="aprenda"] #exerciseView .secondary-actions,body[data-mode="aprenda"] #songView .secondary-actions{display:none}
+#exerciseView .pager button,#songView .pager button{border-color:#b8c9e9;background:#f9fbff;color:#1b3978}
+#exerciseView .page-label,#songView .page-label{color:#485d84}
+#readingView .journey-stage{margin-top:8px}
+#readingView .journey-stage h2{margin-top:18px}
+#readingView .journey-score{padding:12px}
+@media(max-width:700px){
+ #exerciseView .page,#songView .page{padding:14px 12px 64px}
+ #exerciseView .reader,#songView .reader{padding:15px 12px}
+ #exerciseView .reader-top h2,#songView .reader-top h2{font-size:clamp(28px,8vw,38px)}
+ #exerciseView .score-wrap,#songView .score-wrap{padding:8px}
+ #exerciseView #exerciseSvg{min-width:610px;width:610px}
+ #exerciseView .transport,#songView .transport{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;position:relative;bottom:auto}
+ #exerciseView .transport>* ,#songView .transport>*{min-width:0;width:100%;flex:auto}
+ #exerciseView .transport .tempo,#songView .transport .tempo{min-height:46px;justify-content:space-between}
+ #exerciseView .transport .tempo span,#songView .transport .tempo span{min-width:0}
+ #exerciseView .transport .play,#songView .transport .play{grid-column:1/-1;grid-row:1}
+ #exerciseView .transport .reading-immersive,#songView .transport .reading-immersive{min-height:46px}
+ #readingView .journey-stage{padding:20px 16px}
+ #readingView .journey-stage-top small{font-size:11px}
+ #readingView .journey-actions button{flex:1;min-width:140px}
+}

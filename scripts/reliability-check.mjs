@@ -347,6 +347,11 @@ await test("Leitura: jornada imersiva, peças tradicionais e alturas certas",asy
   const journey=await read("assets/reading/immersive-journey.js"),layout=await read("assets/reading/immersive-journey.css");
   assert(app.includes('id="readingStage"')&&app.includes('data-journey-start')&&app.includes('data-library-toggle'),"visual journey is missing");
   assert(journey.includes("journey-note")&&journey.includes("LuwipiAudioBridge")&&layout.includes("#songView .transport"),"score, piano and immersive reader are disconnected");
+  assert(core.includes("window.LuwipiJourneyExercises=exercises.right")&&journey.includes("exercise.notes.slice()")&&journey.includes('view.querySelector(`[data-ex="${next}"]`)?.click()'),"stage preview and next exercise use different notes");
+  assert(!app.includes('id="readingJourney"')&&!journey.includes('const notes=["C4"'),"duplicate journey or fixed demonstration remains");
+  assert(journey.includes('A:"Lá",B:"Si"')&&!journey.includes('labels[n[0]]||n'),"piano displays pitch codes instead of note names");
+  assert(layout.includes('#songView .transport .tempo span{color:#172e64}')&&layout.includes('#songView #songPianoBtn{display:none!important}'),"song controls are unreadable or duplicated");
+
   assert(!core.includes("const studyDefinitions=")&&!core.includes("const originalThemes=")&&!core.includes("const solfegePatterns="),"invented music remains in catalog");
   const start=core.indexOf("const publicMelodies="),end=core.indexOf("for(const [key,piece]",start);
   assert(start>=0&&end>start,"traditional melodies are missing");
