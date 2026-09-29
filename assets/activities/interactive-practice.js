@@ -57,7 +57,19 @@ function buildReactivePiano(surface,host,label){
   const api={shell,board,scroll};pianoSurfaces.set(surface,api);return api;
 }
 function lightReactivePiano(surface,notes,hold=520){
-  const api=pianoSurfaces.get(surface);if(!api)return;
+  const api=pianoSurfaces.get(surface);
+  if(!api&&["exercise","song","noteFlow"].includes(surface)){
+    const board=document.getElementById("pianoBoard"),scroll=document.querySelector("#pianoDock .piano-scroll");
+    if(!board)return;
+    board.querySelectorAll(".reading-preview-key").forEach(key=>key.classList.remove("reading-preview-key"));
+    const note=(notes||[])[0];
+    const key=note&&board.querySelector('[data-piano-note="'+CSS.escape(note)+'"]');
+    if(key){key.classList.add("reading-preview-key");scroll?.scrollTo({left:Math.max(0,key.offsetLeft-scroll.clientWidth*.42),behavior:"smooth"})}
+    clearTimeout(lightReactivePiano.readingTimer);
+    if(key)lightReactivePiano.readingTimer=setTimeout(()=>key.classList.remove("reading-preview-key"),hold);
+    return;
+  }
+  if(!api)return;
   const mids=(notes||[]).map(midiForName).filter(m=>m>=0);
   api.board.querySelectorAll(".activity-piano-key.lit").forEach(k=>k.classList.remove("lit"));
   if(!mids.length){api.shell.classList.remove("is-playing");return}
@@ -112,13 +124,9 @@ function playExercisePreview(){
 function ensureExercisePreview(){
   const view=document.getElementById("exerciseView"),actions=view?.querySelector(".secondary-actions");
   if(!view||!actions||document.getElementById("exercisePreviewBtn"))return;
-  const scoreWrap=view.querySelector(".score-wrap");
-  const pianoHost=document.createElement("div");
-  scoreWrap?.insertAdjacentElement("afterend",pianoHost);
-  buildReactivePiano("exercise",pianoHost,"a tecla acende com a nota");
   const status=document.createElement("div");
   status.id="exercisePreviewNote";status.className="exercise-preview-note";status.setAttribute("aria-live","polite");
-  pianoHost.insertAdjacentElement("afterend",status);
+  view.querySelector(".score-wrap")?.insertAdjacentElement("afterend",status);
   const btn=document.createElement("button");
   btn.id="exercisePreviewBtn";btn.type="button";btn.className="exercise-preview-button";btn.textContent="▶ Ver e ouvir";
   btn.setAttribute("aria-label","Ouvir o exercício e ver cada nota destacada na partitura");
@@ -258,9 +266,8 @@ function ensureDurationInteraction(){
 
 function ensureSongReactivePiano(){
   const view=document.getElementById("songView"),scoreWrap=view?.querySelector(".score-wrap");
-  if(!view||!scoreWrap||pianoSurfaces.has("song"))return;
-  const host=document.createElement("div");scoreWrap.insertAdjacentElement("afterend",host);
-  buildReactivePiano("song",host,"partitura + som + tecla");
+  if(!view||!scoreWrap||view.dataset.previewObserverReady)return;
+  view.dataset.previewObserverReady="1";
   const svg=document.getElementById("songSvg");if(!svg)return;
   let lastLit="";
   const sync=()=>{
@@ -279,11 +286,6 @@ function ensureSongReactivePiano(){
 function ensureNoteFlowGuide(){
   const view=document.getElementById("noteFlowView");if(!view||view.dataset.pianoGuideReady)return;
   view.dataset.pianoGuideReady="1";
-  const windowEl=document.getElementById("noteFlowWindow");
-  if(windowEl){
-    const host=document.createElement("div");windowEl.insertAdjacentElement("afterend",host);
-    buildReactivePiano("noteFlow",host,"no modo visual, a tecla mostra o caminho");
-  }
   const track=document.getElementById("noteFlowTrack");if(!track)return;
   let last=-1;
   const sync=()=>{

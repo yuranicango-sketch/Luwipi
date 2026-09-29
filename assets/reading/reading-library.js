@@ -163,12 +163,13 @@ async function renderList(){
       const card=document.createElement("article");card.className="song-card reading-imported-card";
       const meter=Array.isArray(item.score?.meter)?item.score.meter.join("/"):"—";
       const bpm=item.score?.tempoBpm?Math.round(item.score.tempoBpm)+" BPM":item.fidelity?.score?("fidelidade "+item.fidelity.score+"%"):"partitura";
-      card.innerHTML='<div class="song-icon">𝄞</div><div><h3>'+escapeHtml(item.title)+'</h3><p>'+escapeHtml(meter)+' · '+escapeHtml(bpm)+'</p><span class="reading-imported-source">Modo ao Vivo</span>'+badgeHtml(item)+'</div><div class="song-actions"><button type="button">Abrir na Leitura</button></div>';
+      card.innerHTML='<div class="song-icon">𝄞</div><div><h3>'+escapeHtml(item.title)+'</h3><p>'+escapeHtml(meter)+' · '+escapeHtml(bpm)+'</p><span class="reading-imported-source">Prática</span>'+badgeHtml(item)+'</div><div class="song-actions"><button type="button">Abrir na Leitura</button></div>';
       card.querySelector("button").addEventListener("click",()=>open(item.id));listEl.appendChild(card);
     });
   }
   if(exerciseListEl){
     exerciseListEl.replaceChildren();exerciseEmptyEl?.classList.toggle("hidden",exercises.length>0);
+    document.getElementById("importedExerciseSection")?.classList.toggle("hidden",exercises.length===0);
     exercises.forEach(item=>{
       const row=document.createElement("article");row.className="exercise-row reading-imported-card";
       const bpm=item.score?.tempoBpm?Math.round(item.score.tempoBpm)+" BPM":"importado";

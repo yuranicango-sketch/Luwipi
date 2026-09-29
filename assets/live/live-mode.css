@@ -95,7 +95,7 @@
 .live-inline-warning.hidden{display:none}
 
 .live-home-entry{position:relative}
-.live-home-entry::after{content:"AO VIVO";margin-left:auto;margin-right:9px;border:1px solid var(--line);border-radius:999px;padding:4px 6px;color:#777c85;font-size:7px;font-weight:900;letter-spacing:.07em}
+.live-home-entry::after{content:"PARTITURA";margin-left:auto;margin-right:9px;border:1px solid var(--line);border-radius:999px;padding:4px 6px;color:#777c85;font-size:7px;font-weight:900;letter-spacing:.07em}
 .live-home-entry .tool-line-arrow{margin-left:0}
 
 @media(max-width:880px){
