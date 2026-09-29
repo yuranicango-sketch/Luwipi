@@ -415,6 +415,22 @@ await test("Jogos: todos os cartões mostram miniaturas",async()=>{
   for(const card of cards){const src=card[0].match(/src="\/assets\/images\/games\/([^"]+\.svg)"/);assert(src,"game card lacks thumbnail");await read("assets/images/games/"+src[1])}
 });
 
+
+await test("Acesso: sessão móvel não fica presa no bloqueio do navegador",async()=>{
+  const core=decodeCore(await read("app.html"));
+  const start=core.indexOf("const mobileAuthQueues=new Map()"),end=core.indexOf("async function withDeadline",start);
+  assert(start>=0&&end>start,"mobile auth queue missing");
+  const lock=new Function(core.slice(start,end)+";return mobileAuthLock")();
+  const order=[];
+  await Promise.all([
+    lock("session",-1,async()=>{order.push(1);await new Promise(done=>setTimeout(done,5));order.push(2)}),
+    lock("session",-1,async()=>{order.push(3)})
+  ]);
+  assert(order.join(',')==='1,2,3',"mobile auth operations overlapped");
+  assert(core.includes("/Android/i.test(navigator.userAgent)?{lock:mobileAuthLock}"),"Android does not use bounded local lock");
+  assert(core.includes("withDeadline(client.auth.getSession(),10000,'session')")&&core.includes("lastFailure==='session_timeout'?start()"),"session timeout cannot recover");
+});
+
 console.log("\nLuwipi reliability gate: "+passed+" checks passed");
 for(const line of notes)console.log(line);
 
