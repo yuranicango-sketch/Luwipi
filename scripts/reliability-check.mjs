@@ -334,6 +334,22 @@ await test("Acesso: rede pendente termina e sessão tem limite",async()=>{
   assert(failure?.name==="AbortError","hung access request was not aborted");
 });
 
+await test("Leitura: estudos completos e amostras com piano visível",async()=>{
+  const app=await read("app.html"),core=decodeCore(app),guide=await read("assets/reading/guide.js"),css=await read("assets/reading/guide.css");
+  assert(!app.includes('id="videosView"')&&!app.includes('id="plannerView"'),"legacy lesson views returned");
+  const start=core.indexOf("const studyDefinitions="),end=core.indexOf("let songKey=",start);
+  assert(start>=0&&end>start,"reading studies missing");
+  const studies=new Function("const out={};"+core.slice(start,end).replace("songs[id]=","out[id]=")+"return out")();
+  assert(Object.keys(studies).length===5,"expected five new studies");
+  for(const study of Object.values(studies)){
+    assert(study.right.length===8&&study.left.length===8,"study needs eight bars per hand");
+    for(const hand of [study.right,study.left])for(const bar of hand)assert(bar.reduce((sum,n)=>sum+n.d,0)===study.meter[0],"incomplete reading bar");
+  }
+  assert((app.match(/data-preview-song=/g)||[]).length===8,"preview missing from a song card");
+  assert(core.includes("pianoSample(item.n,item.d,beatMs,.8)")&&core.includes("reading-preview-key"),"audible lit-key preview missing");
+  assert(guide.includes("if(!enabled||!kind)return")&&css.includes("body.piano-open .piano-dock:not(.hidden)"),"mobile piano guide missing");
+});
+
 await test("Activity-first: sem aulas, piano reativo e formatos musicais",async()=>{
   const app=await read("app.html"),live=await read("assets/live/live-mode.js"),engine=await read("assets/music/score-engine.js"),practice=await read("assets/activities/interactive-practice.js");
   assert(!app.includes('id="videosView"')&&!app.includes('id="plannerView"'),"lesson/video views should be removed");
