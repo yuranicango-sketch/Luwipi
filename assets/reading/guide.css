@@ -84,3 +84,19 @@ body.reading-guide-enabled #pianoBoard .piano-black.target:not(.reading-guide-ta
 .piano-head small{color:var(--muted)}
 .piano-head button{border:1px solid var(--line);background:#fff;color:var(--ink)}
 .piano-scroll{border-top:4px solid #17181d;padding-top:0;padding-bottom:2px}
+
+/* Clear audio preview, useful at every age and without relying on colour alone. */
+.reading-study-card .song-actions{flex-wrap:wrap}
+.reading-preview-active{outline:3px solid #4568ff;outline-offset:2px;background:#f5f7ff}
+#pianoBoard .piano-white.reading-preview-key{background:#b8c9ff;box-shadow:inset 0 0 0 4px #3154df,0 0 24px #4568ff}
+#pianoBoard .piano-black.reading-preview-key{outline:4px solid #4568ff;box-shadow:0 0 22px #4568ff}
+@media(max-width:699px){
+  #exerciseView .desktop-piano,#songView .desktop-piano,#noteFlowView .desktop-piano{display:inline-flex!important}
+  body.reading-guide-enabled .piano-dock:not(.hidden),body.piano-open .piano-dock:not(.hidden){display:block!important}
+  body.piano-open:has(#exerciseView.active,#songView.active,#noteFlowView.active){padding-bottom:150px}
+}
+@media(max-width:699px){
+  body.piano-open:has(#readingView.active){padding-bottom:150px}
+  #readingView .song-actions{display:flex;flex-wrap:wrap;gap:7px}
+  #readingView .song-actions button{min-height:40px}
+}

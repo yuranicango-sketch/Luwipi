@@ -63,7 +63,7 @@
     openedByGuide=false;
   }
   function ensurePianoOpen(kind){
-    if(!enabled||window.innerWidth<700||!kind)return;
+    if(!enabled||!kind)return;
     const dock=document.getElementById("pianoDock");
     if(!dock||!dock.classList.contains("hidden"))return;
     const buttonId=kind==="exercise"?"exercisePianoBtn":kind==="song"?"songPianoBtn":kind==="noteFlow"?"noteFlowPianoBtn":"";
