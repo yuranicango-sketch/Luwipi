@@ -459,3 +459,201 @@ body.piano-open:has(#noteFlowView.active) #noteFlowView .note-flow-activity{
   #songView .transport{grid-template-columns:repeat(4,minmax(0,1fr));padding:4px}
   #songView .transport button,#songView .transport .tempo{min-height:30px}
 }
+
+
+/* Navbarless SaaS shell + better viewport use after visual review. */
+/* The SaaS no longer spends a horizontal band on a global navbar.
+   Account access stays available on Home without consuming layout height. */
+body > .brand-header{
+  position:fixed!important;
+  inset:0 0 auto 0!important;
+  width:100%!important;
+  height:0!important;
+  min-height:0!important;
+  padding:0!important;
+  margin:0!important;
+  border:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  backdrop-filter:none!important;
+  overflow:visible!important;
+  pointer-events:none;
+  z-index:90;
+}
+body > .brand-header .brand-lockup,
+body > .brand-header .mode-switch,
+body > .brand-header > .grow{
+  display:none!important;
+}
+body > .brand-header .account-header-btn{
+  display:none!important;
+}
+body:has(#homeView.active) > .brand-header .account-header-btn{
+  display:inline-flex!important;
+  position:absolute;
+  top:max(10px,env(safe-area-inset-top));
+  right:max(12px,env(safe-area-inset-right));
+  min-height:36px;
+  align-items:center;
+  gap:6px;
+  padding:8px 11px;
+  border:1px solid #c9d7ef;
+  border-radius:999px;
+  background:rgba(255,255,255,.9);
+  color:#28406f;
+  box-shadow:0 5px 18px rgba(30,58,110,.09);
+  pointer-events:auto;
+}
+#homeView .premium-home{
+  min-height:100dvh;
+  box-sizing:border-box;
+  padding-top:clamp(24px,5dvh,54px);
+}
+
+/* Exercise: use the screen, don't merely shrink the interface. */
+#exerciseView .reader{
+  display:grid;
+  grid-template-rows:auto auto minmax(150px,1fr) auto auto;
+  align-content:stretch;
+}
+#exerciseView .reader-top{
+  align-self:center;
+}
+#exerciseView .score-wrap{
+  min-height:0;
+  height:auto;
+}
+#exerciseView #exerciseSvg{
+  transform:scale(1.18);
+  transform-origin:center;
+}
+#exerciseView .exercise-practice{
+  grid-template-columns:minmax(0,1fr) auto;
+  align-items:center;
+}
+#exerciseView .pager{
+  align-self:end;
+}
+
+/* If the practice piano is injected into the activity, give it real playing space. */
+#exerciseView .piano-dock,
+#songView .piano-dock,
+#noteFlowView .piano-dock{
+  flex:0 0 auto!important;
+  width:100%!important;
+  height:clamp(118px,20dvh,160px)!important;
+  max-height:clamp(118px,20dvh,160px)!important;
+  margin:0!important;
+  padding:5px 9px 7px!important;
+  overflow:hidden!important;
+  border-radius:13px!important;
+  box-sizing:border-box!important;
+}
+#exerciseView .piano-head,
+#songView .piano-head,
+#noteFlowView .piano-head{
+  min-height:22px;
+  margin:0 0 4px;
+}
+#exerciseView .piano-board,
+#songView .piano-board,
+#noteFlowView .piano-board{
+  height:calc(clamp(118px,20dvh,160px) - 33px)!important;
+}
+#exerciseView .piano-white,
+#songView .piano-white,
+#noteFlowView .piano-white{
+  height:calc(100% - 2px)!important;
+}
+#exerciseView .piano-black,
+#songView .piano-black,
+#noteFlowView .piano-black{
+  height:62%!important;
+}
+
+/* Desktop/laptop: keep the score prominent and controls comfortably readable. */
+@media(min-width:701px){
+  #exerciseView .reader{
+    grid-template-rows:auto auto minmax(185px,1fr) auto auto;
+    gap:7px;
+  }
+  #exerciseView .reader-top h2{font-size:clamp(27px,2.4vw,36px)}
+  #exerciseView .aid-row{width:min(100%,650px)}
+  #exerciseView .aid-row button{font-size:11px;min-height:36px}
+  #exerciseView .exercise-practice{
+    padding:9px 12px;
+  }
+  #exerciseView .exercise-practice strong{font-size:14px}
+  #exerciseView .exercise-practice p{font-size:11px}
+  #exerciseView .pager button{min-height:36px;font-size:11px}
+}
+
+/* Tablet portrait: compact, but never miniature. */
+@media(min-width:600px) and (max-width:900px) and (orientation:portrait){
+  #exerciseView .reader{
+    grid-template-rows:auto auto minmax(210px,1fr) auto auto;
+  }
+  #exerciseView #exerciseSvg{transform:scale(1.1)}
+  #exerciseView .piano-dock,
+  #songView .piano-dock,
+  #noteFlowView .piano-dock{
+    height:clamp(125px,18dvh,155px)!important;
+    max-height:clamp(125px,18dvh,155px)!important;
+  }
+}
+
+/* Phone portrait: preserve tappability and prioritize score + keyboard. */
+@media(max-width:599px) and (orientation:portrait){
+  #exerciseView .reader{
+    grid-template-rows:auto auto minmax(150px,1fr) auto auto;
+    gap:4px;
+  }
+  #exerciseView #exerciseSvg{transform:scale(1.04)}
+  #exerciseView .exercise-practice{
+    grid-template-columns:1fr auto;
+    padding:6px 7px;
+  }
+  #exerciseView .exercise-practice strong{font-size:12px}
+  #exerciseView .exercise-practice-steps span{
+    min-width:27px;
+    min-height:25px;
+  }
+  #exerciseView .piano-dock,
+  #songView .piano-dock,
+  #noteFlowView .piano-dock{
+    height:clamp(110px,18dvh,138px)!important;
+    max-height:clamp(110px,18dvh,138px)!important;
+  }
+}
+
+/* Short landscape screens: make one-screen use intentional rather than squeezed. */
+@media(max-height:620px) and (orientation:landscape){
+  #exerciseView .page-head,#songView .page-head,#noteFlowView .page-head{
+    min-height:38px;
+    padding-top:4px;
+    padding-bottom:4px;
+  }
+  #exerciseView .reader{
+    grid-template-columns:minmax(0,1.35fr) minmax(250px,.65fr);
+    grid-template-rows:auto auto minmax(0,1fr) auto;
+    column-gap:8px;
+    row-gap:4px;
+  }
+  #exerciseView .reader-top,
+  #exerciseView .aid-row,
+  #exerciseView .score-wrap{
+    grid-column:1;
+  }
+  #exerciseView .exercise-practice{
+    grid-column:2;
+    grid-row:1 / span 3;
+    align-self:stretch;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+  }
+  #exerciseView .pager{
+    grid-column:1 / -1;
+  }
+  #exerciseView #exerciseSvg{transform:scale(1.12)}
+}
