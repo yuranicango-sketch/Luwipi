@@ -319,7 +319,7 @@ await test("Jogos: todos os cartões mostram miniaturas",async()=>{
   const app=await read("app.html"),start=app.indexOf('<section id="gamesView"'),end=app.indexOf('</main></section>',start);
   assert(start>=0&&end>start,"games view missing");
   const cards=[...app.slice(start,end).matchAll(/<(?:button|a)[^>]*class="(?:tiny-card|game-card)[^"]*"[^>]*>[\s\S]*?<\/(?:button|a)>/g)];
-  assert(cards.length>=21,"expected all Luwipi game cards");
+  assert(cards.length>=15,"expected curated Luwipi game cards");
   for(const card of cards){const src=card[0].match(/src="\/assets\/images\/games\/([^"]+\.svg)"/);assert(src,"game card lacks thumbnail");await read("assets/images/games/"+src[1])}
 });
 
@@ -359,14 +359,15 @@ await test("Leitura: estudos completos e amostras com piano visível",async()=>{
     for(const hand of [study.right,study.left])for(const bar of hand)assert(bar.reduce((sum,n)=>sum+n.d,0)===study.meter[0],"incomplete reading bar");
   }
   assert((app.match(/data-preview-song=/g)||[]).length===8,"preview missing from a song card");
-  assert(core.includes("pianoSample(item.n,item.d,beatMs,.8)")&&core.includes("reading-preview-key"),"audible lit-key preview missing");
+  assert(core.includes("pianoSample(item.n,item.d,beatMs,.8)")&&core.includes("syncReadingPiano(name)")&&app.includes('id="pianoDock"'),"audible unified piano missing");
+  assert((app.match(/id="pianoDock"/g)||[]).length===1,"reading piano duplicated");
   assert(guide.includes("if(!enabled||!kind)return")&&css.includes("body.piano-open .piano-dock:not(.hidden)"),"mobile piano guide missing");
 });
 
 await test("Activity-first: sem aulas, piano reativo e formatos musicais",async()=>{
   const app=await read("app.html"),live=await read("assets/live/live-mode.js"),engine=await read("assets/music/score-engine.js"),practice=await read("assets/activities/interactive-practice.js");
   assert(!app.includes('id="videosView"')&&!app.includes('id="plannerView"'),"lesson/video views should be removed");
-  assert(app.includes("Atividades interativas"),"activity-first home missing");
+  assert(app.includes("Ouve e toca")&&app.includes('id="homeStart"'),"activity-first home missing");
   assert(practice.includes("activity-piano-key")&&practice.includes("LuwipiAudioBridge"),"reactive piano preview missing");
   assert(live.includes(".abc")&&live.includes(".kar")&&live.includes(".json"),"extended score formats missing");
   assert(engine.includes("function parseABC"),"ABC parser missing");

@@ -1,0 +1,92 @@
+/* Activity-first surfaces: one clear action, readable controls, one piano. */
+.hidden,[hidden]{display:none!important}
+.home-duration-link{display:none!important}
+.premium-home{justify-content:center}
+.home-feature.is-learn{background:linear-gradient(145deg,#244bd4,#4568ff 62%,#7291ff);box-shadow:0 18px 48px rgba(44,80,194,.2)}
+.home-feature small{font-size:12px;color:#e5ebff}
+.home-feature strong{max-width:12ch}
+.home-tool-list{margin-top:22px}
+.home-tool-list button{min-height:76px}
+.home-tool-list strong{font-size:17px}
+
+#gamesView .section-title{margin-bottom:24px}
+#gamesView .tiny-section{padding:0;border:0;background:transparent;box-shadow:none}
+#gamesView .tiny-head,#gamesView .game-group-title{margin-bottom:12px}
+#gamesView .tiny-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+#gamesView .tiny-card{min-height:180px;display:flex;flex-direction:column;align-items:stretch;text-align:left;gap:10px}
+#gamesView .tiny-thumb{width:100%;height:95px;object-fit:cover;border-radius:12px}
+#gamesView .tiny-card strong,#gamesView .game-card strong{font-size:17px;line-height:1.2}
+#gamesView .tiny-card span,#gamesView .game-card span{font-size:12px;line-height:1.4}
+#gamesView .game-groups{display:grid;gap:28px}
+#gamesView .game-grid{gap:10px}
+#gamesView .game-card{min-height:104px}
+#gamesView .game-card img{object-fit:cover;border-radius:12px}
+.game-stage{max-width:900px;margin-inline:auto}
+.game-stage-head{max-width:650px}
+.game-stage-head small{font-size:12px}
+.game-stage-head h2{font-size:clamp(32px,5vw,54px)}
+.game-stage-head p{font-size:14px;line-height:1.5}
+.game-canvas{min-height:285px;display:grid;place-items:center}
+.game-feedback{min-height:38px;font-size:15px;line-height:1.4}
+.game-bottom-actions button,.game-controls button{min-height:46px;font-size:14px}
+.aid-row button{min-height:40px;font-size:12px}
+.tiny-key{min-height:150px}
+
+#readingView .section-title{margin-bottom:20px}
+#readingView .reading-flow-entry{margin-bottom:24px}
+#readingView .exercise-row,#readingView .song-card{padding:16px;gap:13px}
+#readingView .exercise-row h3,#readingView .song-card h3{font-size:17px}
+#readingView .exercise-row p,#readingView .song-card p{font-size:12px}
+#readingView .exercise-row button,#readingView .song-actions button{font-size:12px;min-height:40px;padding:9px 12px}
+#readingView .tabs button{font-size:13px;min-height:44px}
+#readingView .divider-title{margin-top:32px}
+#importedExerciseSection.hidden{display:none!important}
+
+/* The existing playable dock replaces the display-only preview keyboard. */
+#exerciseView .piano-dock,#songView .piano-dock,#noteFlowView .piano-dock{
+  position:relative;inset:auto;z-index:1;display:block!important;
+  width:100%;margin:12px 0 14px;border-radius:18px;
+  box-shadow:0 14px 36px rgba(17,19,24,.14)
+}
+#exerciseView .piano-dock.hidden,#songView .piano-dock.hidden,#noteFlowView .piano-dock.hidden{display:none!important}
+body.piano-open:has(#exerciseView.active),body.piano-open:has(#songView.active),body.piano-open:has(#noteFlowView.active){padding-bottom:0!important}
+#exercisePianoBtn,#songPianoBtn,#noteFlowPianoBtn{display:none!important}
+#exerciseView .piano-head small,#songView .piano-head small,#noteFlowView .piano-head small{font-size:11px}
+#exerciseView .piano-head button,#songView .piano-head button,#noteFlowView .piano-head button{display:none}
+.reading-guide-toggle{min-height:40px;font-size:12px}
+.transport button,.secondary-actions button,.pager button{min-height:42px;font-size:12px}
+
+#rhythmView .rhythm-menu-card{min-height:115px}
+#rhythmView .rhythm-menu-card strong{font-size:17px}
+#rhythmView .rhythm-menu-card span{font-size:12px;line-height:1.4}
+#rhythmView .pattern-card p,#rhythmView .rhythm-song-card span{font-size:12px}
+#rhythmView .pattern-library-head span{font-size:12px}
+#liveModeView .live-import-help,#liveModeView .live-file-state span,
+#liveModeView .live-source-button span,#liveModeView .live-input-state,
+#liveModeView .live-session p{font-size:12px}
+#liveModeView .live-panel-head small,#liveModeView .live-stage-head small{font-size:11px}
+#liveModeView .live-import-button{min-height:50px}
+
+@media(max-width:700px){
+  .home-heading h1{font-size:clamp(46px,13vw,66px)}
+  .home-feature{min-height:175px;padding:22px}
+  .home-feature strong{font-size:clamp(29px,8vw,40px)}
+  #gamesView .tiny-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  #gamesView .tiny-card{min-height:175px;display:flex;flex-direction:column;gap:9px}
+  #gamesView .tiny-card .tiny-thumb{width:100%;height:88px}
+  #gamesView .game-grid{grid-template-columns:1fr}
+  #readingView .song-actions{display:flex;flex-wrap:wrap}
+  #readingView .song-actions button{flex:1 1 auto}
+  .game-stage{padding:16px!important}
+  .game-canvas{min-height:235px}
+  .tiny-key{min-height:130px}
+  #liveModeView .live-svg-wrap svg{min-width:620px}
+}
+@media(max-width:430px){
+  #gamesView .tiny-grid{grid-template-columns:1fr}
+  #gamesView .tiny-card{display:grid;grid-template-columns:108px 1fr;min-height:108px;align-items:center}
+  #gamesView .tiny-card .tiny-thumb{width:108px;height:86px}
+  #readingView .exercise-row,#readingView .song-card{padding:13px}
+  #readingView .song-actions{grid-column:1/-1}
+}
+@media(prefers-reduced-motion:reduce){.home-feature,.game-card,.tiny-card{transition:none!important}}
