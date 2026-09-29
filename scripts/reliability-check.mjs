@@ -396,6 +396,25 @@ await test("Pinta o Piano: pincel e três teclados publicados",async()=>{
   assert(html.includes("document.addEventListener('contextmenu'"),"long press should not open tools");
 });
 
+await test("Jogos: miniaturas e visual Luwipi consistentes",async()=>{
+  const app=await read("app.html"),cards=await read("assets/games/game-cards.css"),shell=await read("assets/games/luwipi-game-shell.css");
+  assert(app.includes('/assets/games/game-cards.css')&&cards.includes('.game-thumb-card')&&cards.includes('.paint-piano-entry'),"illustrated cards are not styled");
+  for(const [game,thumb] of [["super-paw-paw","super-paw-paw"],["paw-paw-notas","paw-paw-notas"],["pintar-teclas","pinta-o-piano"]]){
+    const html=await read(game+".html"),svg=await read("assets/images/games/"+thumb+"-thumb.svg");
+    assert(html.includes('/assets/games/luwipi-game-shell.css')&&html.includes('class="site-brand"')||html.includes('class="head site-brand"'),game+" lacks Luwipi framing");
+    assert(app.includes('/assets/images/games/'+thumb+'-thumb.svg')&&svg.includes('<svg'),game+" thumbnail missing");
+  }
+  assert(shell.includes('--luwipi-primary:#4568ff'),"game shell differs from site palette");
+});
+
+await test("Jogos: todos os cartões mostram miniaturas",async()=>{
+  const app=await read("app.html"),start=app.indexOf('<section id="gamesView"'),end=app.indexOf('</main></section>',start);
+  assert(start>=0&&end>start,"games view missing");
+  const cards=[...app.slice(start,end).matchAll(/<(?:button|a)[^>]*class="(?:tiny-card|game-card)[^"]*"[^>]*>[\s\S]*?<\/(?:button|a)>/g)];
+  assert(cards.length>=21,"expected all Luwipi game cards");
+  for(const card of cards){const src=card[0].match(/src="\/assets\/images\/games\/([^"]+\.svg)"/);assert(src,"game card lacks thumbnail");await read("assets/images/games/"+src[1])}
+});
+
 console.log("\nLuwipi reliability gate: "+passed+" checks passed");
 for(const line of notes)console.log(line);
 

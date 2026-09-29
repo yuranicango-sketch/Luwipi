@@ -1,0 +1,44 @@
+/* Shared Luwipi framing for the standalone music games. The playfields keep their own colors. */
+:root{--luwipi-bg:#f5f5f1;--luwipi-ink:#111214;--luwipi-muted:#747780;--luwipi-line:rgba(17,18,20,.11);--luwipi-primary:#4568ff;--luwipi-soft:#edf0ff}
+body.luwipi-game-page{background:var(--luwipi-bg);color:var(--luwipi-ink);font-family:Manrope,system-ui,-apple-system,"Segoe UI",sans-serif;display:block;min-height:100vh}
+body.luwipi-game-page .wrap{width:min(1040px,100%);max-width:1040px;margin:auto;padding:22px 16px 48px}
+body.luwipi-game-page .site-brand{display:flex;align-items:center;justify-content:space-between;gap:14px;margin:0 0 19px;padding:0 1px}
+body.luwipi-game-page .site-brand img{width:156px;max-height:48px;object-fit:contain;object-position:left}
+body.luwipi-game-page .site-brand small{font-size:11px;font-weight:850;letter-spacing:.14em;color:var(--luwipi-primary)}
+body.luwipi-game-page h1,body.luwipi-game-page h2{font-family:"Bricolage Grotesque",Manrope,sans-serif;letter-spacing:-.04em}
+body.luwipi-game-page h1{font-size:clamp(31px,5vw,48px);line-height:1.05;color:var(--luwipi-ink);margin:8px 0 6px}
+body.luwipi-game-page .back-link{display:inline-flex;align-items:center;gap:5px;padding:8px 13px;border:1px solid var(--luwipi-line);border-radius:999px;background:#fff;color:#343b56!important;font-size:12px;font-weight:850;text-decoration:none;min-height:38px}
+body.luwipi-game-page .back-link:hover{border-color:#cbd0ff;background:var(--luwipi-soft)}
+body.luwipi-game-page .sub,body.luwipi-game-page .wrap>p{color:var(--luwipi-muted)}
+body.luwipi-game-page .top{align-items:flex-start}
+body.luwipi-game-page .stats,body.luwipi-game-page .scores{color:#485177;background:#fff;border:1px solid var(--luwipi-line);border-radius:16px;padding:10px 13px;box-shadow:0 6px 18px #18203d0a}
+body.luwipi-game-page .scores{margin:12px 0}
+body.luwipi-game-page .options{background:#fff;border:1px solid var(--luwipi-line);border-radius:20px;padding:14px!important;box-shadow:0 6px 18px #18203d0a}
+body.luwipi-game-page .options label{color:#4c5363;font-size:12px;font-weight:800}
+body.luwipi-game-page .options select{border:1px solid var(--luwipi-line)!important;background:#fff!important;color:var(--luwipi-ink)!important;min-height:40px}
+body.luwipi-game-page .options input[type=range]{accent-color:var(--luwipi-primary)}
+body.luwipi-game-page .stage,body.luwipi-game-page main:has(>canvas#game){border:5px solid #fff;box-shadow:0 14px 36px #17191f20;border-radius:24px}
+body.luwipi-game-page .action p,body.luwipi-game-page .controls small,body.luwipi-game-page .action small{color:var(--luwipi-muted)}
+body.luwipi-game-page .hand-title{color:#485177}
+body.luwipi-game-page .hand-title.left{color:#316e87}
+body.luwipi-game-page .hand-title.right{color:#af5d45}
+body.luwipi-game-page #preview{background:var(--luwipi-soft)!important;color:#4e5699!important;border:1px solid #dfe2ff}
+body.luwipi-game-page .hint{background:var(--luwipi-soft);color:#4e5699;border:1px solid #dfe2ff}
+body.luwipi-game-page .hint b{color:#4a52a1}
+body.luwipi-game-page .overlay h2,body.luwipi-game-page .overlay p{color:#fff}
+body.luwipi-game-page .overlay button{background:#f6d77b;color:#262747}
+body.luwipi-game-page button,body.luwipi-game-page canvas{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+@media(max-width:640px){body.luwipi-game-page .wrap{padding:14px 9px 28px}body.luwipi-game-page .site-brand{margin-bottom:14px}body.luwipi-game-page .site-brand img{width:133px}body.luwipi-game-page .top{gap:10px}body.luwipi-game-page .stats{flex-wrap:wrap;gap:5px 13px}}
+body.paint-game-page .head{margin:0 0 16px}
+body.paint-game-page .head img{width:156px}
+body.paint-game-page .title{text-align:center;margin:8px 0 19px}
+body.paint-game-page .mode{border:1px solid var(--luwipi-line);box-shadow:0 5px 16px #17191f0b;background:#fff}
+body.paint-game-page .mode.on{border:2px solid var(--luwipi-primary);background:var(--luwipi-soft);box-shadow:0 5px 18px #6670f522}
+body.paint-game-page .game{border:1px solid var(--luwipi-line);box-shadow:0 12px 30px #181a2212;background:#fff}
+body.paint-game-page .canvas-area{background:#f8f9fc}
+body.paint-game-page .tool.next{background:var(--luwipi-primary)}
+body.paint-game-page .color.on{box-shadow:0 0 0 3px var(--luwipi-primary),0 4px 0 #0002}
+body.paint-game-page .controls{background:#fff}
+body.paint-game-page .instruction{color:#67708a}
+body.paint-game-page .nav input{accent-color:var(--luwipi-primary)}
+@media(max-width:640px){body.paint-game-page .head img{width:133px}}
