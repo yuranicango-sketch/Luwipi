@@ -657,3 +657,207 @@ body:has(#homeView.active) > .brand-header .account-header-btn{
   }
   #exerciseView #exerciseSvg{transform:scale(1.12)}
 }
+
+
+/* Sandwich navigation: the experience owns the viewport. */
+.experience-menu-trigger,.experience-menu-shell{display:none}
+body[data-mode="aprenda"] > .brand-header .account-header-btn{display:none!important}
+body[data-mode="aprenda"] .experience-menu-trigger{
+  position:fixed;
+  top:max(10px,env(safe-area-inset-top));
+  left:max(10px,env(safe-area-inset-left));
+  z-index:120;
+  width:44px;
+  height:44px;
+  padding:0;
+  border:1px solid rgba(46,72,126,.18);
+  border-radius:14px;
+  background:rgba(255,255,255,.92);
+  box-shadow:0 7px 22px rgba(18,42,91,.14);
+  backdrop-filter:blur(10px);
+  display:grid;
+  place-content:center;
+  gap:4px;
+}
+body[data-mode="aprenda"] .experience-menu-trigger span{
+  display:block;
+  width:19px;
+  height:2px;
+  border-radius:99px;
+  background:#19356f;
+}
+body[data-mode="aprenda"] .experience-menu-shell{
+  position:fixed;
+  inset:0;
+  z-index:119;
+}
+body[data-mode="aprenda"] .experience-menu-shell:not(.hidden){display:block}
+.experience-menu-backdrop{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  border:0;
+  background:rgba(9,19,43,.34);
+  backdrop-filter:blur(5px);
+}
+.experience-menu-panel{
+  position:absolute;
+  inset:0 auto 0 0;
+  box-sizing:border-box;
+  width:min(340px,88vw);
+  padding:max(18px,env(safe-area-inset-top)) 16px max(18px,env(safe-area-inset-bottom));
+  display:flex;
+  flex-direction:column;
+  gap:16px;
+  overflow:auto;
+  background:#f8fbff;
+  border-right:1px solid #c8d6ef;
+  box-shadow:18px 0 48px rgba(14,34,77,.18);
+}
+.experience-menu-top{
+  display:flex;
+  align-items:flex-start;
+  gap:12px;
+  padding:4px 2px 14px;
+  border-bottom:1px solid #d9e3f3;
+}
+.experience-menu-top>div{min-width:0;flex:1}
+.experience-menu-top small{
+  display:block;
+  margin-bottom:5px;
+  color:#5470a7;
+  font-size:10px;
+  font-weight:900;
+  letter-spacing:.09em;
+  text-transform:uppercase;
+}
+.experience-menu-top strong{
+  display:block;
+  color:#122c62;
+  font-size:20px;
+  line-height:1.15;
+  letter-spacing:-.03em;
+}
+.experience-menu-top span{
+  display:block;
+  margin-top:4px;
+  color:#66799e;
+  font-size:11px;
+  font-weight:700;
+}
+.experience-menu-close{
+  flex:0 0 36px;
+  width:36px;
+  height:36px;
+  border:1px solid #d4dff0;
+  border-radius:11px;
+  background:#fff;
+  color:#213b70;
+  font-size:23px;
+  line-height:1;
+}
+.experience-menu-nav{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+}
+.experience-menu-nav button,
+.experience-menu-context-actions button{
+  min-height:58px;
+  border:1px solid #d8e2f2;
+  border-radius:14px;
+  background:#fff;
+  color:#19356f;
+  text-align:left;
+  padding:11px 12px;
+  display:grid;
+  grid-template-columns:26px 1fr;
+  align-items:center;
+  gap:8px;
+}
+.experience-menu-nav button span,
+.experience-menu-context-actions button span{
+  display:grid;
+  place-items:center;
+  width:26px;
+  height:26px;
+  border-radius:8px;
+  background:#e7efff;
+  color:#274da9;
+  font-size:14px;
+  font-weight:900;
+}
+.experience-menu-nav button b,
+.experience-menu-context-actions button b{
+  font-size:13px;
+  font-weight:850;
+}
+.experience-menu-context-actions{
+  margin-top:auto;
+  display:grid;
+  gap:8px;
+  padding-top:14px;
+  border-top:1px solid #d9e3f3;
+}
+.experience-menu-context-actions button{
+  grid-template-columns:26px 1fr auto;
+}
+.experience-menu-context-actions em{
+  color:#63779f;
+  font-size:10px;
+  font-style:normal;
+  font-weight:850;
+}
+body.experience-menu-open{overflow:hidden!important}
+
+/* All learner navigation chrome lives in the sandwich menu. */
+body[data-mode="aprenda"] .view:not(#homeView) .page-head{display:none!important}
+body[data-mode="aprenda"] #exerciseView.active>.page,
+body[data-mode="aprenda"] #songView.active>.page,
+body[data-mode="aprenda"] #noteFlowView.active>.page{
+  height:100dvh;
+  min-height:100dvh;
+}
+body[data-mode="aprenda"] #exerciseView .reader,
+body[data-mode="aprenda"] #songView .reader,
+body[data-mode="aprenda"] #noteFlowView .note-flow-activity{
+  border-radius:0!important;
+}
+body[data-mode="aprenda"] #exerciseView .reader{
+  grid-template-rows:auto auto minmax(180px,1fr) auto auto;
+}
+body[data-mode="aprenda"] #exerciseView #exerciseSvg{
+  transform:scale(1.24);
+}
+body[data-mode="aprenda"] #songView .reader{
+  padding-top:clamp(10px,1.8dvh,18px);
+}
+body[data-mode="aprenda"] #noteFlowView .note-flow-activity{
+  padding-top:clamp(12px,2dvh,20px);
+}
+
+@media(max-width:700px){
+  body[data-mode="aprenda"] .experience-menu-trigger{
+    width:42px;
+    height:42px;
+    border-radius:13px;
+  }
+  body[data-mode="aprenda"] #exerciseView .reader{
+    grid-template-rows:auto auto minmax(160px,1fr) auto auto;
+    padding-top:10px;
+  }
+  body[data-mode="aprenda"] #exerciseView #exerciseSvg{transform:scale(1.1)}
+  .experience-menu-panel{width:min(320px,92vw)}
+}
+@media(max-height:560px) and (orientation:landscape){
+  body[data-mode="aprenda"] .experience-menu-trigger{
+    top:7px;
+    left:7px;
+    width:38px;
+    height:38px;
+  }
+  body[data-mode="aprenda"] #exerciseView .reader{
+    padding-top:6px;
+  }
+}
