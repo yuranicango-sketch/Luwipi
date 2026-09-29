@@ -294,6 +294,7 @@ await test("Piano: amostras, ressonância leve e fim de nota natural",async()=>{
   const chosen=await resolve("F#4");
   assert(chosen.buffer.duration===2&&Math.abs(chosen.rate-Math.pow(2,-1/12))<1e-8&&fetches.join(",")==="F#4,G4","missing F# does not use its nearest recorded G");
   assert(core.includes("return pianoSample(n,1,560,level)"),"manual piano does not use the exact journey preview voice");
+  assert(core.includes("function pianoSamplePeak(level)")&&core.includes("function pianoSampleAttack(gain,now,peak)"),"shared piano playback helpers are missing");
   assert(core.includes("o.connect(g).connect(pianoMaster)"),"metronome bypasses the audio bus");
   for(const file of ["assets/games/piano-dos-bichinhos.js","assets/games/bolhas-do-som.js"]){
     const src=await read(file);
