@@ -278,11 +278,21 @@ await test("Paw Paw Notas: alturas corretas nas claves de Sol e Fá",async()=>{
   assert(html.includes("e.hand==='right'&&e.note===0"),"middle C ledger line missing");
 });
 
-await test("Piano: margem de volume, fade final e notas repetidas",async()=>{
+await test("Piano: amostras, ressonância leve e fim de nota natural",async()=>{
   const core=decodeCore(await read("app.html"));
-  assert(core.includes("pianoMaster.gain.value=.95")&&core.includes("pianoOutput.gain.value=.82"),"piano master lacks headroom");
-  assert(core.includes("Math.min(.78,Math.max(.14,.72*level))"),"sample voices are too loud");
-  assert(core.includes("buffer.duration-.03")&&core.includes("gain.gain.exponentialRampToValueAtTime(.0001,now+dur)"),"sample can stop before its release fade");
+  assert(core.includes("pianoCompressor.ratio.value=2.4")&&core.includes("pianoOutput.gain.value=.84"),"audio bus is still over-compressed or lacks headroom");
+  assert(core.includes("c.createConvolver")&&core.includes("pianoInput.connect(send).connect(room).connect(wet).connect(pianoMaster)"),"recorded piano has no subtle room resonance");
+  assert(core.includes("loadPlayableSample(n)")&&core.includes("rate:Math.pow(2,(target-noteMidi(candidate))/12)"),"missing keys fall back to synthetic audio before nearby recordings");
+  assert(core.includes("sample.buffer.duration/sample.rate")&&core.includes("releaseStart+.22")&&core.includes("gain.gain.exponentialRampToValueAtTime(.0001,now+Math.max(releaseStart+.01,fadeEnd))"),"recording is clipped before its release tail");
+  const resolverStart=core.indexOf("async function loadPlayableSample(n){"),resolverEnd=core.indexOf("function preloadPiano(n)",resolverStart);
+  assert(resolverStart>=0&&resolverEnd>resolverStart,"recorded sample resolver missing");
+  const fetches=[];
+  const resolve=new Function("loadPianoBuffer","pianoPlayableCache","noteMidi","midiNote",core.slice(resolverStart,resolverEnd)+";return loadPlayableSample")(
+    async note=>{fetches.push(note);return note==="G4"?{duration:2}:null},new Map(),
+    note=>({"F#4":66,"G4":67,"F4":65})[note],midi=>({65:"F4",67:"G4"})[midi]||"F#4"
+  );
+  const chosen=await resolve("F#4");
+  assert(chosen.buffer.duration===2&&Math.abs(chosen.rate-Math.pow(2,-1/12))<1e-8&&fetches.join(",")==="F#4,G4","missing F# does not use its nearest recorded G");
   assert(core.includes("pianoNoteOffVoice(previous,.05)"),"rapid retrigger layers the same note");
   assert(core.includes("o.connect(g).connect(pianoMaster)"),"metronome bypasses the audio bus");
   for(const file of ["assets/games/piano-dos-bichinhos.js","assets/games/bolhas-do-som.js"]){
