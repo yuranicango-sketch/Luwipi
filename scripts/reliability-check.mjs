@@ -323,6 +323,17 @@ await test("Jogos: todos os cartões mostram miniaturas",async()=>{
   for(const card of cards){const src=card[0].match(/src="\/assets\/images\/games\/([^"]+\.svg)"/);assert(src,"game card lacks thumbnail");await read("assets/images/games/"+src[1])}
 });
 
+await test("Acesso: rede pendente termina e sessão tem limite",async()=>{
+  const core=decodeCore(await read("app.html"));
+  assert(core.includes("withDeadline(client.auth.getSession(),8000,'session')"),"session can hang indefinitely");
+  assert(core.includes("withDeadline(readProfile(session.user.id),8000,'profile')"),"profile can hang indefinitely");
+  const start=core.indexOf("async function fetchAccessJson("),end=core.indexOf("function parentLink()",start);
+  assert(start>=0&&end>start,"bounded access fetch missing");
+  const fetchJson=new Function("fetch","AbortController",core.slice(start,end)+"return fetchAccessJson")(async(_path,{signal})=>new Promise((_,reject)=>signal.addEventListener("abort",()=>reject(Object.assign(new Error("aborted"),{name:"AbortError"})))),AbortController);
+  let failure=null;try{await fetchJson("/api/public-config",25)}catch(error){failure=error}
+  assert(failure?.name==="AbortError","hung access request was not aborted");
+});
+
 await test("Activity-first: sem aulas, piano reativo e formatos musicais",async()=>{
   const app=await read("app.html"),live=await read("assets/live/live-mode.js"),engine=await read("assets/music/score-engine.js"),practice=await read("assets/activities/interactive-practice.js");
   assert(!app.includes('id="videosView"')&&!app.includes('id="plannerView"'),"lesson/video views should be removed");
