@@ -56,3 +56,29 @@ body[data-mode="aprenda"] #exerciseView .secondary-actions,body[data-mode="apren
  #readingView .journey-stage-top small{font-size:11px}
  #readingView .journey-actions button{flex:1;min-width:140px}
 }
+/* The repertoire map replaces the song cards while open, so there is one choice surface. */
+#readingView .repertoire-roadmap{margin:14px 0 16px}
+#readingView .repertoire-open{width:100%;display:flex;align-items:center;justify-content:space-between;text-align:left;gap:12px;border:1px solid #aebfe9;border-radius:18px;padding:16px 18px;background:#e4ecff;color:#1c3978}
+#readingView .repertoire-open strong{display:block;font-size:18px}
+#readingView .repertoire-open small{display:block;margin-top:3px;color:#526994;font-size:13px}
+#readingView .repertoire-open b{font-size:23px}
+#readingView .repertoire-open[aria-expanded="true"] b{transform:rotate(180deg)}
+#readingView #repertoireLevels[hidden],#readingView .song-list[hidden]{display:none!important}
+#readingView .repertoire-rule{margin:12px 4px 16px;color:#526381;font-size:13px;line-height:1.5}
+#readingView .repertoire-level{margin:8px 0;border:1px solid #cad7f1;border-radius:17px;background:#f8faff;overflow:hidden}
+#readingView .repertoire-level summary{display:flex;justify-content:space-between;align-items:center;gap:10px;cursor:pointer;padding:15px 17px;color:#1b3774;font-weight:800;list-style:none}
+#readingView .repertoire-level summary::-webkit-details-marker{display:none}
+#readingView .repertoire-level summary span strong{margin-left:8px}
+#readingView .repertoire-level summary small{color:#61749e;white-space:nowrap}
+#readingView .repertoire-level[open] summary{background:#e8efff}
+#readingView .repertoire-level ol{margin:0;padding:4px 16px 12px 52px}
+#readingView .repertoire-level li{padding:9px 0;color:#53678e;border-bottom:1px solid #e1e8f5}
+#readingView .repertoire-level li:last-child{border-bottom:0}
+#readingView .repertoire-item{display:flex;align-items:center;gap:12px;color:#172e65}
+#readingView .repertoire-item>div{min-width:0;flex:1}
+#readingView .repertoire-item strong{display:block;font-size:14px}
+#readingView .repertoire-item small,#readingView .repertoire-item em{display:block;font-size:12px;line-height:1.4;color:#526381;font-style:normal}
+#readingView .repertoire-item em{color:#5570a2}
+#readingView .repertoire-kind{display:grid;place-items:center;flex:0 0 26px;width:26px;height:26px;border-radius:9px;background:#dce8ff;color:#2851a8;font-size:12px;font-weight:900}
+#readingView .repertoire-item button{border:0;border-radius:10px;padding:9px 12px;background:#264cb7;color:#fff;font-weight:800;white-space:nowrap}
+@media(max-width:700px){#readingView .repertoire-level ol{padding-left:38px}#readingView .repertoire-item{gap:7px;flex-wrap:wrap}#readingView .repertoire-item button{margin-left:33px}}

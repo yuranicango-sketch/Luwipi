@@ -367,6 +367,20 @@ await test("Leitura: jornada imersiva, peças tradicionais e alturas certas",asy
   assert(guide.includes("if(!enabled||!kind)return")&&css.includes("body.piano-open .piano-dock:not(.hidden)"),"mobile piano guide missing");
 });
 
+await test("Repertório: 40 peças em oito níveis sem prometer partituras ausentes",async()=>{
+  const app=await read("app.html"),roadmap=await read("assets/reading/repertoire-roadmap.js"),css=await read("assets/reading/immersive-journey.css");
+  const start=roadmap.indexOf("const works=["),end=roadmap.indexOf("const names=",start);
+  assert(start>=0&&end>start,"repertoire data missing");
+  const works=new Function(roadmap.slice(start,end)+";return works")();
+  assert(works.length===40,"expected exactly 40 distinct works");
+  assert(new Set(works.map(work=>work[0])).size===40,"duplicate repertoire work");
+  assert(works.every(work=>["C","P"].includes(work[1])&&["public","protected"].includes(work[4])),"genre or rights status missing");
+  const playable=works.filter(work=>work[3]);
+  assert(playable.length===4&&playable.every(work=>app.includes('data-song="'+work[3]+'"')),"repertoire promises an unavailable excerpt");
+  assert(roadmap.includes('partitura não incluída')&&roadmap.includes('Trecho disponível'),"availability is ambiguous");
+  assert(css.includes('.song-list[hidden]{display:none!important}'),"opening repertoire duplicates the song list");
+});
+
 await test("Activity-first: sem aulas, piano reativo e formatos musicais",async()=>{
   const app=await read("app.html"),live=await read("assets/live/live-mode.js"),engine=await read("assets/music/score-engine.js"),practice=await read("assets/activities/interactive-practice.js");
   const journey=await read("assets/reading/immersive-journey.js"),layout=await read("assets/reading/immersive-journey.css");
