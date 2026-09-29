@@ -2,8 +2,8 @@
 
 Plataforma musical com duas experiências:
 
-- **Luwipi Ensine** — preparar aulas, guardar alunos no Google Drive do professor e abrir ferramentas durante a aula.
-- **Luwipi Aprenda** — aulas em vídeo e prática de leitura, ritmo, duração e jogos para crianças e adolescentes.
+- **Luwipi Ensine** — escolhe, prepara e atribui atividades interativas.
+- **Luwipi Aprenda** — vê, ouve, toca, joga, lê e acompanha a própria evolução.
 
 ## Estrutura
 
@@ -30,3 +30,8 @@ Dados pessoais/pedagógicos de alunos do planeador ficam no Google Drive do prof
 Este repositório é um projeto estático com Vercel Functions em `/api`. `vercel.json` força `framework: null` para impedir que um preset antigo de Next.js execute `next build`.
 
 Chaves privadas nunca devem entrar em HTML.
+
+
+## Activity-first
+
+O Luwipi é centrado em **ver → ouvir → imitar → tocar → repetir**. O motor de partitura e prática interativa destaca notas, reage no teclado e dá feedback de pitch, ritmo e duração.

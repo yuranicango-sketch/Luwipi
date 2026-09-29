@@ -74,7 +74,7 @@ function ptNote(midi){
   return match?(PT[match[1]]||match[1])+match[2]:name;
 }
 function scoreNameFromFile(name){
-  return String(name||"").replace(/\.(?:mid|midi|musicxml|xml|mxl|pdf)$/i,"").trim();
+  return String(name||"").replace(/\.(?:mid|midi|kar|smf|musicxml|mxml|xml|mxl|abc|json|pdf)$/i,"").trim();
 }
 function isGenericScoreTitle(title){
   const value=String(title||"").trim().toLowerCase();
@@ -84,6 +84,9 @@ function suggestedScoreTitle(){
   const embedded=String(score?.title||"").trim();
   if(embedded&&!isGenericScoreTitle(embedded))return embedded.slice(0,160);
   return (scoreNameFromFile(structuredFileName)||embedded||"Nova partitura").slice(0,160);
+}
+function emitPianoLight(notes,hold){
+  try{window.dispatchEvent(new CustomEvent("luwipi:piano-light",{detail:{surface:"practice",notes:Array.isArray(notes)?notes:[],hold:hold||560}}))}catch(_){}
 }
 function setFeedback(text,tone){
   feedback.textContent=text||"";
@@ -102,6 +105,7 @@ function clearTimers(){
 }
 function stopPlayback(){
   clearTimers();
+  emitPianoLight([]);
   renderScore();
 }
 function audio(){
@@ -179,7 +183,7 @@ function updateFileState(){
   fileState.classList.toggle("is-empty",bits.length===0);
   fileName.textContent=bits.length?bits.join(" + "):"Nenhuma partitura carregada";
   const stageTitle=document.getElementById("liveStageTitle");
-  if(stageTitle)stageTitle.textContent=score?score.title:(pdfFileName||"Modo ao Vivo");
+  if(stageTitle)stageTitle.textContent=score?score.title:(pdfFileName||"Prática");
   if(score){
     const perfCount=Engine.performanceEvents?Engine.performanceEvents(score).length:score.events.length;
     const trans=score.transcription;
@@ -249,24 +253,36 @@ function readableError(code){
     mxl_compression_unsupported:"Este MXL usa uma compressão ainda não suportada pelo browser.",
     mxl_deflate_unsupported:"Este browser não consegue descompactar este MXL localmente."
   };
+  if(code==="abc_empty")return"O ficheiro ABC está vazio.";
+  if(code==="abc_no_notes")return"O ABC não contém notas reconhecíveis.";
+  if(code==="json_no_notes")return"O JSON não contém eventos musicais reconhecíveis.";
   return map[code]||"Não foi possível interpretar este ficheiro com segurança.";
 }
 async function importFile(file){
   if(!file)return;
   const name=String(file.name||"ficheiro"),lower=name.toLowerCase();
   try{
-    if(lower.endsWith(".mid")||lower.endsWith(".midi")||/midi/i.test(file.type||"")){
+    if(lower.endsWith(".mid")||lower.endsWith(".midi")||lower.endsWith(".kar")||lower.endsWith(".smf")||/midi/i.test(file.type||"")){
       if(file.size>8*1024*1024)throw new Error("file_too_large");
       const parsed=Engine.parseMIDI(await file.arrayBuffer());
-      setScore(parsed,name);setFeedback("MIDI lido. A partitura interativa e o treino já estão prontos.","good");
+      setScore(parsed,name);setFeedback("MIDI/KAR lido. A partitura interativa e o treino já estão prontos.","good");
     }else if(lower.endsWith(".mxl")){
       if(file.size>20*1024*1024)throw new Error("file_too_large");
       const parsed=await Engine.parseMXL(await file.arrayBuffer());
       setScore(parsed,name);setFeedback("MXL lido. A partitura MusicXML foi extraída localmente com a notação estruturada preservada.","good");
-    }else if(lower.endsWith(".musicxml")||lower.endsWith(".xml")||/musicxml|xml/i.test(file.type||"")){
+    }else if(lower.endsWith(".musicxml")||lower.endsWith(".mxml")||lower.endsWith(".xml")||/musicxml|xml/i.test(file.type||"")){
       if(file.size>12*1024*1024)throw new Error("file_too_large");
       const parsed=Engine.parseMusicXML(await file.text());
       setScore(parsed,name);setFeedback("MusicXML lido com notação estruturada.","good");
+    }else if(lower.endsWith(".abc")){
+      if(file.size>4*1024*1024)throw new Error("file_too_large");
+      const parsed=Engine.parseABC(await file.text());
+      setScore(parsed,name);setFeedback("ABC lido. O padrão musical já está pronto para ouvir e praticar.","good");
+    }else if(lower.endsWith(".json")||file.type==="application/json"){
+      if(file.size>8*1024*1024)throw new Error("file_too_large");
+      const parsed=Engine.normalizeScore(JSON.parse(await file.text()));
+      if(!parsed.events.length)throw new Error("json_no_notes");
+      setScore(parsed,name);setFeedback("Partitura estruturada JSON carregada.","good");
     }else if(lower.endsWith(".pdf")||file.type==="application/pdf"){
       if(file.size>30*1024*1024)throw new Error("file_too_large");
       if(pdfUrl)URL.revokeObjectURL(pdfUrl);
@@ -279,7 +295,7 @@ async function importFile(file){
       updateFileState();
       setFeedback(score?"PDF associado à partitura estruturada. Usa Original ou Interativo conforme precisares.":"PDF preservado. Para tocar ou avaliar, adiciona o MIDI/MusicXML correspondente.","near");
     }else{
-      setFeedback("Formato não suportado. Usa MIDI, MusicXML ou PDF.","bad");
+      setFeedback("Formato não suportado. Usa MIDI/KAR/SMF, MusicXML/MXL, ABC, JSON ou PDF.","bad");
     }
   }catch(error){
     setFeedback(error&&error.message==="file_too_large"?"O ficheiro é demasiado grande para processamento local.":readableError(error&&error.message), "bad");
@@ -304,6 +320,7 @@ function playScore(){
     const timer=setTimeout(()=>{
       if(!playing)return;
       Engine.render(svg,score,{currentGroupIndex:guideOn?group.index:-1});
+      emitPianoLight(group.events.map(e=>e.note),Math.max(260,Math.min(900,group.durationBeat*(60000/tempo)*.82)));
     },Math.max(0,at));
     playTimers.push(timer);
   });
@@ -311,7 +328,7 @@ function playScore(){
     const finish=e.startBeat+e.durationBeat;
     return (Engine.beatToMs?Engine.beatToMs(score,finish,tempo):finish*(60000/tempo))-firstMs;
   }));
-  playTimers.push(setTimeout(()=>{playing=false;playButton.textContent="▶ Tocar";renderScore()},Math.max(0,end)+120));
+  playTimers.push(setTimeout(()=>{playing=false;playButton.textContent="▶ Tocar";emitPianoLight([]);renderScore()},Math.max(0,end)+120));
 }
 function hearPhrase(){
   if(!score||!groups.length)return;
@@ -321,14 +338,18 @@ function hearPhrase(){
   const start=Math.min(practiceIndex,groups.length-1),slice=groups.slice(Math.max(0,start-1),Math.min(groups.length,start+3));
   const first=slice[0].startBeat;
   const firstMs=Engine.beatToMs?Engine.beatToMs(score,first,tempo):first*(60000/tempo);
-  slice.forEach(group=>group.events.forEach(event=>{
-    const at=(Engine.beatToMs?Engine.beatToMs(score,event.startBeat,tempo):event.startBeat*(60000/tempo))-firstMs;
-    const duration=Engine.durationToMs?Engine.durationToMs(score,event.startBeat,event.durationBeat,tempo):event.durationBeat*(60000/tempo);
-    playNoteEvent(event,at,duration,.9);
-  }));
+  slice.forEach(group=>{
+    const groupAt=(Engine.beatToMs?Engine.beatToMs(score,group.startBeat,tempo):group.startBeat*(60000/tempo))-firstMs;
+    playTimers.push(setTimeout(()=>emitPianoLight(group.events.map(e=>e.note),Math.max(260,Math.min(900,group.durationBeat*(60000/tempo)*.82))),Math.max(0,groupAt)));
+    group.events.forEach(event=>{
+      const at=(Engine.beatToMs?Engine.beatToMs(score,event.startBeat,tempo):event.startBeat*(60000/tempo))-firstMs;
+      const duration=Engine.durationToMs?Engine.durationToMs(score,event.startBeat,event.durationBeat,tempo):event.durationBeat*(60000/tempo);
+      playNoteEvent(event,at,duration,.9);
+    });
+  });
   const last=slice[slice.length-1];
   const total=(Engine.beatToMs?Engine.beatToMs(score,last.startBeat+last.durationBeat,tempo):(last.startBeat+last.durationBeat)*(60000/tempo))-firstMs;
-  playTimers.push(setTimeout(()=>{playTimers=[];renderScore()},Math.max(0,total)+80));
+  playTimers.push(setTimeout(()=>{playTimers=[];emitPianoLight([]);renderScore()},Math.max(0,total)+80));
   setFeedback("Ouve o ataque e o espaço até à nota seguinte. Depois repete.","near");
 }
 async function selectSource(kind){
@@ -366,10 +387,11 @@ function startPractice(){
   setSession(true,"A ouvir");
   setFeedback(guideOn?"Toca a nota destacada.":"Começa pela primeira nota da partitura.","");
   updateMetrics();renderScore();
+  const next=groups[practiceIndex];if(practice&&next)emitPianoLight(next.events.map(e=>e.note),900);
 }
 function stopPractice(){
   practice=false;chordSeen.clear();noteOnTimes.clear();practiceButton.textContent="Começar treino";
-  setSession(false,"Pausado");renderScore();
+  emitPianoLight([]);setSession(false,"Pausado");renderScore();
 }
 function expectedGroup(){return groups[practiceIndex]||null}
 function directionText(diff){
@@ -381,13 +403,16 @@ function advancePractice(tone,message){
   if(practiceIndex>=groups.length){
     practice=false;practiceButton.textContent="Repetir treino";setSession(false,"Concluído");
     setFeedback("Terminaste a partitura. Revê a precisão de notas e o ritmo abaixo.","good");
+    emitPianoLight([]);
   }else{
     setFeedback(message||"Certo. Continua.",tone||"good");
   }
   updateMetrics();renderScore();
+  const next=groups[practiceIndex];if(practice&&next)emitPianoLight(next.events.map(e=>e.note),900);
 }
 function handleNoteOn(detail){
   lastDetected=ptNote(detail.midi);detected.textContent=lastDetected;
+  emitPianoLight([Engine.midiToName(detail.midi)],520);
   if(!practice)return;
   const group=expectedGroup();if(!group)return;
   if(inputMode==="microphone"&&group.pitches.length>1){
@@ -454,7 +479,7 @@ function cleanupWhenHidden(){
   if(view.classList.contains("active"))return;
   stopPlayback();stopPractice();
   Input.disconnect();inputMode="none";sourceMidi.classList.remove("active");sourceMic.classList.remove("active");
-  setInputState("Entrada desligada ao sair do Modo ao Vivo.");
+  setInputState("Entrada desligada ao sair do Prática.");
 }
 
 fileInput.addEventListener("change",()=>importFile(fileInput.files&&fileInput.files[0]));

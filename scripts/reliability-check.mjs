@@ -34,29 +34,6 @@ function decodeCore(app){
   for(let i=0;i<bytes.length;i++)bytes[i]^=83;
   return bytes.toString("utf8");
 }
-function validPlan(){
-  const description=(i)=>"Toque um padrão curto no piano. Diga: \"Escuta e repete comigo.\" [ESPERE] Peça ao aluno para imitar o padrão "+i+" e repita uma vez se houver hesitação.";
-  return{
-    longGoal:"Tocar pequenos padrões com pulso estável.",
-    longWhy:"Construir ouvido, coordenação e autonomia musical.",
-    cycleName:"Ouvir e responder",
-    cycleRule:"Avança quando o aluno imita com segurança.",
-    holdRule:"Repete quando o pulso ou a resposta ainda não estão estáveis.",
-    monthGoal:"Imitar e tocar padrões curtos mantendo o pulso.",
-    methods:["Luwipi"],
-    lessons:Array.from({length:4},(_,i)=>({
-      intention:"Ouvir, imitar e tocar com segurança.",
-      observe:"Pulso, resposta auditiva e coordenação.",
-      easyHint:"Reduz o padrão para duas notas.",
-      hardHint:"Muda o ponto de partida mantendo o mesmo pulso.",
-      blocks:[
-        {min:10,title:"Ouvir "+(i+1),description:description(1),method:"Luwipi",resource:""},
-        {min:10,title:"Imitar "+(i+1),description:description(2),method:"Gordon",resource:"Eco do Piano"},
-        {min:10,title:"Tocar "+(i+1),description:description(3),method:"Luwipi",resource:"Leitura"}
-      ]
-    }))
-  };
-}
 
 await test("Score engine: MIDI, sustain, tonalidade e fidelity",async()=>{
   const E=await engine();
@@ -114,8 +91,8 @@ await test("Score engine: figuras musicais usam desenho estável",async()=>{
   assert(E.durationKind(.5).flags===1&&E.durationKind(.25).flags===2,"flag count regression");
   const source=await read("assets/music/score-engine.js");
   assert(source.includes('svgEl("circle",{cx:x+18,cy:y-1,r:2.35'),"augmentation dot is not vector-rendered");
-  assert(source.includes('C "+(sx+12)+" "+(sy2+2+offset)'),"curved note flags missing");
-  assert(source.includes('type==="whole"||type==="half"'),"vector rest rendering missing");
+  assert(source.includes('for(let flag=0;flag<kind.flags;flag++)')&&source.includes('fill:"#292d34"'),"filled note flags missing");
+  assert(source.includes("function restGlyph(type)")&&source.includes("𝄻")&&source.includes("𝄼")&&source.includes("𝄾")&&source.includes("𝄿"),"music rest glyph rendering missing");
 });
 
 await test("Partituras: nome editável e identidade independente do título",async()=>{
@@ -133,84 +110,15 @@ await test("Partituras: nome editável e identidade independente do título",asy
   assert(!serverFingerprint.includes("title:"),"server score identity still depends on title");
 });
 
-await test("Google Drive: criar, ler e guardar aluno no appDataFolder",async()=>{
-  const app=await read("app.html"),core=decodeCore(app);
-  const start=core.indexOf("const LuwipiStudentVault=(()=>{"),end=core.indexOf("const LuwipiProductionAccess",start);
-  assert(start>=0&&end>start,"Drive vault source not found");
-  const vaultSrc=core.slice(start,end);
-  let stored={version:1,students:[]},fileCreated=false;
-  const fakeFetch=async(url,options={})=>{
-    const u=String(url);
-    if(u.includes("files?spaces=appDataFolder"))return response({files:fileCreated?[{id:"drive-file-1"}]:[]});
-    if(u.includes("/drive/v3/files?fields=id")&&options.method==="POST"){fileCreated=true;return response({id:"drive-file-1"})}
-    if(u.includes("/upload/drive/v3/files/")&&options.method==="PATCH"){stored=JSON.parse(options.body);return response({},200)}
-    if(u.includes("alt=media"))return new Response(JSON.stringify(stored),{status:200,headers:{"content-type":"text/plain"}});
-    return response({},404);
-  };
-  const fakeSelect={innerHTML:"",disabled:false,value:"",addEventListener:()=>{}};
-  const doc={getElementById:id=>id==="plannerSavedStudent"?fakeSelect:null,querySelectorAll:()=>[]};
-  const vault=new Function("document","fetch","crypto","plannerEsc","plannerKindButtons","plannerKind",vaultSrc+";return LuwipiStudentVault;")(doc,fakeFetch,crypto,s=>String(s),[], "individual");
-  assert(await vault.init("provider-token")===true,"Drive init/create/read failed");
-  assert(await vault.save({name:"Aluno 001",age:6,frequency:1,duration:30,experience:"first",approach:"luwipi",profile:"",priority:"",isGroup:false},{monthGoal:"Pulso",totalLessons:4,methods:["Luwipi"],lessons:[]})===true,"Drive save failed");
-  assert(stored.students?.length===1&&stored.students[0].name==="Aluno 001","Drive persisted record differs");
-});
 
-await test("Google Drive: 401/403 exige reconexão sem perder a app",async()=>{
-  const app=await read("app.html"),core=decodeCore(app),start=core.indexOf("const LuwipiStudentVault=(()=>{"),end=core.indexOf("const LuwipiProductionAccess",start);
-  const vaultSrc=core.slice(start,end),fakeSelect={innerHTML:"",disabled:false,value:"",addEventListener:()=>{}},doc={getElementById:id=>id==="plannerSavedStudent"?fakeSelect:null,querySelectorAll:()=>[]};
-  const vault=new Function("document","fetch","crypto","plannerEsc","plannerKindButtons","plannerKind",vaultSrc+";return LuwipiStudentVault;")(doc,async()=>response({},401),crypto,s=>String(s),[],"individual");
-  assert(await vault.init("expired-token")===false,"Drive reconnect failure was not contained");
-});
 
-await test("Planeador: geração válida mantém 4 aulas e duração exata",async()=>{
-  process.env.SUPABASE_URL="https://supabase.test";process.env.SUPABASE_PUBLISHABLE_KEY="pub";process.env.OPENAI_API_KEY="openai";process.env.OPENAI_MODEL="gpt-5.6-sol";
-  const mod=await moduleFrom("api/prepare-lesson.js"),plan=validPlan();
-  globalThis.fetch=async url=>{
-    const u=String(url);
-    if(u.includes("/auth/v1/user"))return response({id:"11111111-1111-4111-8111-111111111111",email:"teacher@example.com"});
-    if(u.includes("product_entitlements"))return response([{status:"active",access_until:null}]);
-    if(u.includes("api.openai.com"))return response({status:"completed",output:[{type:"message",content:[{type:"output_text",text:JSON.stringify(plan)}]}]});
-    return response({},404);
-  };
-  const req=new Request("https://app.test/api/prepare-lesson",{method:"POST",headers:{authorization:"Bearer ok","content-type":"application/json"},body:JSON.stringify({age:6,duration:30,frequency:1,experience:"first",approach:"luwipi",profile:"",priority:""})});
-  const res=await mod.POST(req),body=await res.json();
-  assert(res.status===200&&body.plan.lessons.length===4,"planner valid response failed");
-  assert(body.plan.lessons.every(l=>l.blocks.reduce((s,b)=>s+b.min,0)===30),"lesson duration invariant failed");
-});
 
-await test("Planeador/paywall: input inválido e acesso expirado falham fechados",async()=>{
-  process.env.SUPABASE_URL="https://supabase.test";process.env.SUPABASE_PUBLISHABLE_KEY="pub";process.env.OPENAI_API_KEY="openai";
-  const mod=await moduleFrom("api/prepare-lesson.js");
-  let expired=false;
-  globalThis.fetch=async url=>{
-    const u=String(url);
-    if(u.includes("/auth/v1/user"))return response({id:"11111111-1111-4111-8111-111111111111",email:"teacher@example.com"});
-    if(u.includes("product_entitlements"))return response(expired?[{status:"expired",trial_ends_at:"2020-01-01T00:00:00Z"}]:[{status:"active"}]);
-    return response({},500);
-  };
-  let res=await mod.POST(new Request("https://app.test/api/prepare-lesson",{method:"POST",headers:{authorization:"Bearer ok","content-type":"application/json"},body:JSON.stringify({age:1,duration:30,frequency:1,experience:"first",approach:"luwipi"})}));
-  assert(res.status===400,"invalid planner input did not return 400");
-  expired=true;
-  res=await mod.POST(new Request("https://app.test/api/prepare-lesson",{method:"POST",headers:{authorization:"Bearer ok","content-type":"application/json"},body:JSON.stringify({age:6,duration:30,frequency:1,experience:"first",approach:"luwipi"})}));
-  assert(res.status===402,"expired entitlement did not close planner");
-});
 
-await test("Aulas audiovisuais: catálogo respeita entitlement e audiência",async()=>{
-  process.env.SUPABASE_URL="https://supabase.test";process.env.SUPABASE_PUBLISHABLE_KEY="pub";process.env.SUPABASE_SECRET_KEY="secret";
-  const mod=await moduleFrom("api/videos.js");
-  globalThis.fetch=async url=>{
-    const u=String(url);
-    if(u.includes("/auth/v1/user"))return response({id:"11111111-1111-4111-8111-111111111111",email:"teacher@example.com"});
-    if(u.includes("product_entitlements"))return response([{status:"active",access_until:null}]);
-    if(u.includes("video_lessons"))return response([
-      {id:"1",title:"Aula 1",description:"",provider:"vimeo",video_id:"12345",video_hash:null,audience:"aprenda",age_track:"10+",sort_order:1},
-      {id:"2",title:"Ensine",description:"",provider:"vimeo",video_id:"999",video_hash:null,audience:"ensine",age_track:"all",sort_order:2}
-    ]);
-    return response({},404);
-  };
-  const res=await mod.GET(new Request("https://app.test/api/videos?audience=aprenda&track=10+",{headers:{authorization:"Bearer ok"}})),body=await res.json();
-  assert(res.status===200&&body.lessons.length===1&&body.lessons[0].title==="Aula 1","video lesson filtering failed");
-});
+
+
+
+
+
 
 await test("Paddle checkout: auth, custom_data e URL de retorno",async()=>{
   process.env.SUPABASE_URL="https://supabase.test";process.env.SUPABASE_PUBLISHABLE_KEY="pub";process.env.PADDLE_API_KEY="pdl";process.env.PADDLE_PRICE_ENSINE_MONTHLY="pri_ensine";process.env.APP_URL="https://app.test";process.env.PADDLE_ENV="sandbox";
@@ -291,7 +199,7 @@ await test("Static security: microfone, PDF, preview, paywall e serverless limit
   assert(app.includes('id="livePublishModal"'),"score preview modal missing");
   assert(app.includes('id="livePdfFrame"'),"PDF iframe preview missing");
   assert(core.includes("product_entitlements"),"paywall is not reading product entitlements");
-  assert(core.includes("drive.appdata"),"Google Drive appDataFolder scope missing");
+  assert(!core.includes("/api/prepare-lesson")&&!core.includes("/api/videos"),"obsolete lesson/video runtime remains");
   const apiDir=path.join(ROOT,"api");
   async function countJs(dir){let n=0;for(const ent of await fs.readdir(dir,{withFileTypes:true})){const p=path.join(dir,ent.name);if(ent.isDirectory())n+=await countJs(p);else if(ent.isFile()&&ent.name.endsWith(".js"))n++}return n}
   const count=await countJs(apiDir);assert(count<=12,"Vercel Hobby serverless limit exceeded: "+count);
@@ -415,6 +323,14 @@ await test("Jogos: todos os cartões mostram miniaturas",async()=>{
   for(const card of cards){const src=card[0].match(/src="\/assets\/images\/games\/([^"]+\.svg)"/);assert(src,"game card lacks thumbnail");await read("assets/images/games/"+src[1])}
 });
 
+await test("Activity-first: sem aulas, piano reativo e formatos musicais",async()=>{
+  const app=await read("app.html"),live=await read("assets/live/live-mode.js"),engine=await read("assets/music/score-engine.js"),practice=await read("assets/activities/interactive-practice.js");
+  assert(!app.includes('id="videosView"')&&!app.includes('id="plannerView"'),"lesson/video views should be removed");
+  assert(app.includes("Atividades interativas"),"activity-first home missing");
+  assert(practice.includes("activity-piano-key")&&practice.includes("LuwipiAudioBridge"),"reactive piano preview missing");
+  assert(live.includes(".abc")&&live.includes(".kar")&&live.includes(".json"),"extended score formats missing");
+  assert(engine.includes("function parseABC"),"ABC parser missing");
+});
+
 console.log("\nLuwipi reliability gate: "+passed+" checks passed");
 for(const line of notes)console.log(line);
-

@@ -242,3 +242,8 @@
 - `private.has_product_access()` usa `product_entitlements` (e admin), alinhado com o estado escrito pelos webhooks Paddle.
 - A biblioteca global vive em `public.reading_library_scores` com RLS: utilizadores leem próprio+global; só admin pode inserir/atualizar `visibility='global'`.
 - O limite Vercel Hobby é verificado no gate; o build deve manter no máximo 12 Serverless Functions.
+
+
+## Princípio de interação musical
+
+Para crianças, priorizar **ver → ouvir → imitar → tocar → repetir**. Texto é apoio. Previews sincronizam som, destaque na partitura e luz evidente no teclado. A progressão privilegia padrões musicais frequentes antes de explicações abstratas.

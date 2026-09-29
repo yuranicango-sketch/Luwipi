@@ -1,0 +1,101 @@
+/* Luwipi · atividade primeiro */
+.exercise-preview-button{
+  border:0!important;background:var(--primary)!important;color:#fff!important;
+  display:inline-flex;align-items:center;justify-content:center;gap:7px;
+}
+.exercise-preview-button.is-playing{background:#17181d!important}
+.exercise-preview-note{
+  min-height:24px;text-align:center;margin:10px 0 2px;
+  font-size:13px;font-weight:900;color:var(--primary);
+}
+#exerciseSvg g[data-note]{transition:filter .16s ease,opacity .16s ease}
+#exerciseSvg g[data-note].exercise-preview-dim{opacity:.42}
+#exerciseSvg g[data-note].exercise-preview-active{
+  opacity:1;filter:drop-shadow(0 0 7px rgba(69,104,255,.7));
+}
+#exerciseSvg g[data-note].exercise-preview-active ellipse{
+  fill:#4568ff!important;stroke:#4568ff!important;
+}
+#exerciseSvg g[data-note].exercise-preview-active line,
+#exerciseSvg g[data-note].exercise-preview-active path{
+  stroke:#4568ff!important;
+}
+#exerciseSvg g[data-note].exercise-preview-active text{fill:#4568ff!important}
+@media(prefers-reduced-motion:no-preference){
+  #exerciseSvg g[data-note].exercise-preview-active{animation:luwipi-note-pulse .38s ease}
+  @keyframes luwipi-note-pulse{0%{filter:drop-shadow(0 0 0 rgba(69,104,255,0))}55%{filter:drop-shadow(0 0 10px rgba(69,104,255,.82))}100%{filter:drop-shadow(0 0 7px rgba(69,104,255,.7))}}
+}
+.pattern-library{margin-top:28px}
+.pattern-library-head{display:flex;align-items:end;gap:10px;margin-bottom:11px}
+.pattern-library-head>div{flex:1}
+.pattern-library-head small{display:block;color:var(--muted);font-size:11px;font-weight:800}
+.pattern-library-head h3{margin:3px 0 0;font-size:25px;letter-spacing:-.04em}
+.pattern-library-head span{font-size:11px;color:var(--muted);font-weight:750}
+.pattern-level{margin-top:14px}
+.pattern-level-title{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.pattern-level-title strong{font-size:12px}
+.pattern-level-title span{font-size:10px;color:var(--muted)}
+.pattern-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.pattern-card{border:1px solid var(--line);background:#fff;border-radius:18px;padding:13px;text-align:left;box-shadow:0 5px 15px rgba(24,26,34,.04)}
+.pattern-card-top{display:flex;align-items:center;gap:8px}
+.pattern-card-top>div{flex:1}
+.pattern-card small{display:block;color:var(--primary);font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:.07em}
+.pattern-card strong{display:block;font-size:15px;margin-top:2px}
+.pattern-play{width:38px;height:38px;border:0;border-radius:12px;background:var(--primary-soft);color:var(--primary);font-weight:900}
+.pattern-strip{display:flex;align-items:flex-end;gap:5px;margin-top:12px;min-height:52px}
+.pattern-beat{height:46px;min-width:32px;flex:1;border-radius:10px;background:#f5f6f9;display:grid;place-items:center;position:relative;transition:.12s}
+.pattern-beat b{font-family:"Apple Symbols","Segoe UI Symbol","Noto Music",serif;font-size:25px;line-height:1}
+.pattern-beat em{position:absolute;bottom:3px;font-size:8px;font-style:normal;color:#8a8e98;font-weight:800}
+.pattern-beat.active{background:var(--primary-soft);transform:translateY(-3px);box-shadow:0 7px 15px rgba(69,104,255,.12)}
+.pattern-beat.active b{color:var(--primary)}
+.pattern-card p{margin:8px 0 0;color:var(--muted);font-size:11px;line-height:1.4}
+@media(max-width:700px){.pattern-grid{grid-template-columns:1fr}.pattern-library-head span{display:none}}
+
+.activity-piano{
+  margin:12px 0 4px;border:1px solid var(--line);background:#111318;border-radius:20px;
+  padding:10px 10px 12px;box-shadow:0 12px 30px rgba(17,19,24,.14)
+}
+.activity-piano-head{display:flex;align-items:center;gap:8px;color:#fff;margin-bottom:8px;padding:0 2px}
+.activity-piano-head strong{font-size:12px}
+.activity-piano-head span{margin-left:auto;color:#b7bcc8;font-size:10px;font-weight:800}
+.activity-piano-scroll{overflow-x:auto;overflow-y:hidden;padding:0 1px 3px;scrollbar-width:thin}
+.activity-piano-board{height:116px;position:relative;min-width:1040px;margin:auto}
+.activity-piano-key{position:absolute;border:0;transition:transform .08s,background .1s,box-shadow .1s,filter .1s;pointer-events:none}
+.activity-piano-key.white{top:0;width:36px;height:112px;background:#fff;border:1px solid #cfd3db;border-radius:0 0 7px 7px;z-index:1}
+.activity-piano-key.white span{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);font-size:8px;color:#747985;font-weight:900}
+.activity-piano-key.black{top:0;width:23px;height:70px;background:linear-gradient(#2d3038,#050608);border-radius:0 0 5px 5px;z-index:3;box-shadow:0 4px 6px rgba(0,0,0,.35)}
+.activity-piano-key.lit{
+  background:#4568ff!important;filter:brightness(1.14);
+  box-shadow:0 0 0 4px rgba(69,104,255,.28),0 0 28px rgba(69,104,255,.95),0 8px 22px rgba(69,104,255,.55)!important;
+  transform:translateY(4px) scale(.985)
+}
+.activity-piano-key.lit span{color:#fff!important}
+.activity-piano-flash{
+  position:absolute;inset:0;border-radius:20px;pointer-events:none;opacity:0;
+  box-shadow:inset 0 0 0 3px rgba(69,104,255,.75),inset 0 0 40px rgba(69,104,255,.18);
+  transition:opacity .08s
+}
+.activity-piano.is-playing .activity-piano-flash{opacity:1}
+#liveModeView .activity-piano{margin:12px 0}
+@media(max-width:700px){
+  .activity-piano{border-radius:16px;padding:8px 8px 10px;margin-top:9px}
+  .activity-piano-board{height:102px}
+  .activity-piano-key.white{height:98px;width:34px}
+  .activity-piano-key.black{height:62px;width:22px}
+}
+
+.duration-listen{
+  display:inline-flex;align-items:center;justify-content:center;margin:10px 0 0;
+  border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:11px;
+  padding:8px 12px;font-size:11px;font-weight:900
+}
+.duration-listen.is-playing{background:var(--primary);border-color:var(--primary);color:#fff}
+#durationView svg g[data-note]{transition:filter .12s,opacity .12s}
+#durationView svg g[data-note].duration-preview-active{
+  filter:drop-shadow(0 0 8px rgba(69,104,255,.85));opacity:1
+}
+#durationView svg g[data-note].duration-preview-active ellipse{fill:#4568ff!important;stroke:#4568ff!important}
+#durationView svg g[data-note].duration-preview-active line,
+#durationView svg g[data-note].duration-preview-active path{stroke:#4568ff!important}
+#durationView svg g[data-note].duration-preview-active text{fill:#4568ff!important}
+#songView .activity-piano,#noteFlowView .activity-piano,#durationView .activity-piano{margin:10px 0 12px}
