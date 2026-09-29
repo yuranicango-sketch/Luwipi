@@ -334,6 +334,16 @@ await test("Acesso: rede pendente termina e sessão tem limite",async()=>{
   assert(failure?.name==="AbortError","hung access request was not aborted");
 });
 
+await test("Acesso: observador espera pela sessão e há recuperação local",async()=>{
+  const app=await read("app.html"),core=decodeCore(app);
+  const refresh=core.slice(core.indexOf("async function refresh("),core.indexOf("async function start()"));
+  assert(refresh.includes("await withDeadline(client.auth.getSession()"),"session read missing");
+  assert(refresh.indexOf("await withDeadline(client.auth.getSession()")<refresh.indexOf("client.auth.onAuthStateChange("),"auth observer starts before stored session resolves");
+  assert(core.includes("localStorage.removeItem('sb-'+supabaseRef+'-auth-token')"),"local session recovery missing");
+  assert(app.includes('id="restartAccessButton"')&&app.includes('Entrar de novo'),"recovery action not visible");
+  assert(core.includes("lastFailure='access_timeout'"),"generic loading timeout lacks recovery state");
+});
+
 await test("Leitura: estudos completos e amostras com piano visível",async()=>{
   const app=await read("app.html"),core=decodeCore(app),guide=await read("assets/reading/guide.js"),css=await read("assets/reading/guide.css");
   assert(!app.includes('id="videosView"')&&!app.includes('id="plannerView"'),"legacy lesson views returned");
