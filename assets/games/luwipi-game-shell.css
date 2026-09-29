@@ -42,3 +42,4 @@ body.paint-game-page .controls{background:#fff}
 body.paint-game-page .instruction{color:#67708a}
 body.paint-game-page .nav input{accent-color:var(--luwipi-primary)}
 @media(max-width:640px){body.paint-game-page .head img{width:133px}}
+body.paint-game-page .keyboard:not(.full){margin-inline:auto}
