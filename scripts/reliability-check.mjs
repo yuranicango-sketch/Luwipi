@@ -388,5 +388,14 @@ await test("Piano: margem de volume, fade final e notas repetidas",async()=>{
   }
 });
 
+await test("Pinta o Piano: pincel e três teclados publicados",async()=>{
+  const html=await read("pintar-teclas.html"),app=await read("app.html"),build=await read("scripts/build-static.sh");
+  assert(app.includes('href="/pintar-teclas.html"')&&build.includes('cp pintar-teclas.html public/pintar-teclas.html'),"painting game missing from site");
+  for(const mode of ['data-mode="two"','data-mode="three"','data-mode="all"'])assert(html.includes(mode),"missing keyboard option "+mode);
+  assert(html.includes("canvas.addEventListener('pointermove'")&&html.includes("ctx.arc(x,y,radius"),"painting should follow a brush stroke");
+  assert(html.includes("document.addEventListener('contextmenu'"),"long press should not open tools");
+});
+
 console.log("\nLuwipi reliability gate: "+passed+" checks passed");
 for(const line of notes)console.log(line);
+
