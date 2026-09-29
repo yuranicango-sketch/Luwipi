@@ -320,6 +320,8 @@ await test("Ateliê musical: seis jogos individuais publicados",async()=>{
     assert((await read(`assets/images/games/atelie-${id}.svg`)).includes("<svg"),`missing game artwork ${id}`);
   }
   assert(page.includes("atelie-musical.js")&&build.includes("cp atelie-musical.html public/atelie-musical.html"),"atelier is absent from static build");
+  const group=html.slice(html.indexOf('<section class="tiny-section atelie-section">'),html.indexOf('<div class="game-groups">'));
+  assert(group.includes("Pinta o Piano")&&group.includes("Pinta a Partitura")&&group.includes("Pinta e Toca"),"painting games are split across categories");
   assert(game.includes("function partitura()")&&game.includes("function jardim()")&&game.includes("function rhythmGame(kind)")&&game.includes("function melodia()")&&game.includes("function pinta()"),"one or more games has no interaction");
 });
 
