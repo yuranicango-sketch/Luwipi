@@ -82,3 +82,37 @@ body[data-mode="aprenda"] #exerciseView .secondary-actions,body[data-mode="apren
 #readingView .repertoire-kind{display:grid;place-items:center;flex:0 0 26px;width:26px;height:26px;border-radius:9px;background:#dce8ff;color:#2851a8;font-size:12px;font-weight:900}
 #readingView .repertoire-item button{border:0;border-radius:10px;padding:9px 12px;background:#264cb7;color:#fff;font-weight:800;white-space:nowrap}
 @media(max-width:700px){#readingView .repertoire-level ol{padding-left:38px}#readingView .repertoire-item{gap:7px;flex-wrap:wrap}#readingView .repertoire-item button{margin-left:33px}}
+/* Fullscreen score: one system per screen, then a real piano, then controls. */
+#songView .reader:fullscreen,#songView .reader.reading-immersive-fallback{
+ display:grid;grid-template-rows:minmax(0,1fr) minmax(150px,180px) auto;
+ gap:10px;align-content:stretch;overflow:hidden;
+ width:100%;height:100dvh;padding:clamp(8px,1.4vw,18px);
+ border:0;border-radius:0;background:#dce8ff
+}
+#songView .reader:fullscreen .score-wrap,#songView .reader.reading-immersive-fallback .score-wrap{
+ min-width:0;min-height:0;width:100%;height:auto;max-height:none;
+ display:flex;align-items:center;justify-content:center;overflow:auto;
+ margin:0;padding:8px 14px;border-radius:17px
+}
+#songView .reader:fullscreen #songSvg,#songView .reader.reading-immersive-fallback #songSvg{
+ width:100%;min-width:0;max-height:100%;height:auto;flex:none
+}
+#songView .reader:fullscreen .piano-dock,#songView .reader.reading-immersive-fallback .piano-dock{
+ min-width:0;min-height:0;width:100%;height:100%;max-height:none;
+ overflow:visible;margin:0!important;padding:7px 12px;
+ box-shadow:0 8px 22px #142b6020
+}
+#songView .reader:fullscreen .piano-board,#songView .reader.reading-immersive-fallback .piano-board{height:calc(100% - 28px)}
+#songView .reader:fullscreen .transport,#songView .reader.reading-immersive-fallback .transport{
+ position:relative;bottom:auto;z-index:auto;margin:0;padding:8px;
+ border-radius:14px;background:#162e69;box-shadow:none
+}
+@media(max-width:700px) and (orientation:portrait){
+ #songView .reader:fullscreen,#songView .reader.reading-immersive-fallback{grid-template-rows:minmax(210px,1fr) 165px auto;overflow:auto}
+ #songView .reader:fullscreen #songSvg,#songView .reader.reading-immersive-fallback #songSvg{min-width:760px}
+}
+@media(max-height:560px) and (orientation:landscape){
+ #songView .reader:fullscreen,#songView .reader.reading-immersive-fallback{grid-template-rows:minmax(0,1fr) 125px auto;gap:5px;padding:6px}
+ #songView .reader:fullscreen .transport,#songView .reader.reading-immersive-fallback .transport{padding:5px}
+ #songView .reader:fullscreen .transport button,#songView .reader.reading-immersive-fallback .transport button{min-height:36px;padding:5px 9px}
+}

@@ -367,6 +367,15 @@ await test("Leitura: jornada imersiva, peças tradicionais e alturas certas",asy
   assert(guide.includes("if(!enabled||!kind)return")&&css.includes("body.piano-open .piano-dock:not(.hidden)"),"mobile piano guide missing");
 });
 
+await test("Leitor imersivo: pauta legível, piano inteiro e páginas sincronizadas",async()=>{
+  const core=decodeCore(await read("app.html")),css=await read("assets/reading/immersive-journey.css");
+  assert(core.includes("function songPageSize()")&&core.includes("songPage*pageSize")&&core.includes("immersive?1:2"),"fullscreen still squeezes four bars into the score");
+  assert(core.includes("Math.floor(measure/songPageSize())")&&core.includes("songPage*songPageSize()"),"playback and piano targets use the old paging");
+  assert(core.includes("songPage=Math.floor(measure/size);renderSong()"),"entering fullscreen loses the current measure");
+  assert(css.includes("grid-template-rows:minmax(0,1fr) minmax(150px,180px) auto")&&css.includes("max-height:none;"),"score, piano and controls do not have separate space");
+  assert(css.includes("position:relative;bottom:auto;z-index:auto"),"transport still covers the piano");
+});
+
 await test("Minueto de Petzold: Sol maior na partitura e no áudio",async()=>{
   const app=await read("app.html"),core=decodeCore(app),roadmap=await read("assets/reading/repertoire-roadmap.js");
   const start=core.indexOf(" minuet:{title:"),end=core.indexOf("\n ]}",start)+4;
