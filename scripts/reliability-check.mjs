@@ -205,14 +205,14 @@ await test("Static security: microfone, PDF, preview, paywall e serverless limit
   const count=await countJs(apiDir);assert(count<=12,"Vercel Hobby serverless limit exceeded: "+count);
 });
 
-await test("Super Paw Paw: 10 níveis, cinco peças e compassos completos",async()=>{
+await test("Super Paw Paw: 10 níveis rítmicos e compassos completos",async()=>{
   const html=await read("super-paw-paw.html"),app=await read("app.html");
   assert(app.includes('href="/super-paw-paw.html"')&&app.includes('Super Paw Paw'),"game is not linked from Jogos");
-  assert(html.includes('id="speed"')&&html.includes('id="song"')&&html.includes('id="levelSelect"'),"song, speed or level controls missing");
+  assert(html.includes('id="speed"')&&html.includes('id="levelSelect"')&&!html.includes('id="song"'),"rhythm-only controls incorrect");
   const from=html.indexOf("const baseLevels=["),to=html.indexOf("let index=0,ev=[]",from);
   assert(from>=0&&to>from,"game data missing");
-  const {levels,songs}=new Function(html.slice(from,to)+";return {levels,songs}")();
-  assert(levels.length===10&&songs.length===5,"expected 10 levels and five pieces");
+  const {levels}=new Function(html.slice(from,to)+";return {levels}")();
+  assert(levels.length===10,"expected 10 rhythm levels");
   for(const [index,level] of levels.entries()){
     assert(level.patterns.length>=8,"level "+(index+1)+" is too short");
     for(const pattern of level.patterns){
@@ -222,21 +222,21 @@ await test("Super Paw Paw: 10 níveis, cinco peças e compassos completos",async
   }
   assert(levels[0].patterns.every(p=>p==="q q q q"),"first level must teach a simple quarter-note pulse");
   assert(levels.at(-1).patterns.some(p=>p.includes("s")),"last level must include sixteenth notes");
-  assert(html.includes("synth(e.pitch,ac.currentTime"),"player input does not play the score pitch");
+  assert(html.includes("hat(ac.currentTime,.16)"),"rhythm input has no audible percussion");
   assert(html.includes("X=480")&&html.indexOf('id="jump"')<html.indexOf('class="overlay"'),"in-game timing button or desktop hit zone missing");
   assert(html.includes("c.addEventListener('pointerdown'"),"tapping the score does not trigger the note");
   assert(html.includes("visible*.16")&&html.includes("run/lead"),"mobile hit zone does not preserve room for a four-beat preview");
   assert(html.includes('min="50"')&&html.includes('id="preview"'),"slow tempo or upcoming-bar preview missing");
 });
 
-await test("Paw Paw Notas: mãos, peças e alturas musicais",async()=>{
+await test("Paw Paw Notas: mãos, leitura e alturas musicais",async()=>{
   const html=await read("paw-paw-notas.html"),app=await read("app.html");
   assert(app.includes('href="/paw-paw-notas.html"'),"pitch game missing from Jogos");
   for(const mode of ["right","left","both"])assert(html.includes('value="'+mode+'"'),"hand mode missing: "+mode);
   const from=html.indexOf("const $=id=>"),songsStart=html.indexOf("songs=[",from),end=html.indexOf(";let events=[]",songsStart);
   assert(songsStart>=0&&end>songsStart,"song data missing");
   const songs=new Function("return "+html.slice(songsStart+6,end))();
-  assert(songs.length>=4,"not enough playable pieces");
+  assert(songs.length===1,"pitch exercise should not claim invented songs");
   for(const song of songs){
     assert(song.melody.length===32&&song.bass.length===8,"piece must have eight 4/4 bars");
     assert([...song.melody,...song.bass].every(n=>Number.isInteger(n)&&n>=0&&n<7),"note outside displayed keyboard");
@@ -261,17 +261,12 @@ await test("Publicação: ambos os jogos entram no build estático",async()=>{
   }
 });
 
-await test("Jogos: compassos separados e acompanhamentos de estudo variados",async()=>{
-  for(const file of ["super-paw-paw.html","paw-paw-notas.html"]){
-    const html=await read(file),start=html.indexOf("const grooves=["),end=html.indexOf("];",start);
-    assert(start>=0&&end>start,"missing accompaniment styles in "+file);
-    const grooves=new Function("return "+html.slice(start+14,end+1))();
-    assert(grooves.length===5,"expected five study styles in "+file);
-    assert(new Set(grooves.map(g=>JSON.stringify([g.kick,g.snare,g.hat,g.bass,g.chord]))).size===5,"styles share the same arrangement in "+file);
-    assert(grooves[0].kick.length===0&&grooves[4].kick.length===0,"quiet study modes must not use drums");
-    assert(grooves.every(g=>!["Amapiano","House","Afrobeat","Kizomba","Jazz"].includes(g.name)),"unwanted style in "+file);
-    assert(html.includes("'Compasso '+(bar+1)")&&html.includes("bar%2===0"),"moving score has no visible bar spacing in "+file);
-  }
+await test("Jogos: ritmo e alturas sem músicas inventadas",async()=>{
+  const rhythm=await read("super-paw-paw.html"),pitch=await read("paw-paw-notas.html");
+  assert(!rhythm.includes('id="song"')&&!pitch.includes('id="song"'),"invented game songs are still selectable");
+  assert(rhythm.includes("let y=170;")&&rhythm.includes("hat(ac.currentTime,.16)"),"rhythm lane is still pretending to be a pitch score");
+  assert(pitch.includes("choice.note!==note")&&pitch.includes("staffNoteY"),"pitch game does not validate displayed notes");
+  assert(!rhythm.includes("object-fit:cover")&&!pitch.includes("object-fit:cover"),"mobile score is clipped");
 });
 
 await test("Paw Paw Notas: alturas corretas nas claves de Sol e Fá",async()=>{
@@ -347,34 +342,30 @@ await test("Acesso: observador espera pela sessão e há recuperação local",as
   assert(unlock.includes("clearTimeout(loadingTimer)"),"successful access leaves loading error timer active");
 });
 
-await test("Leitura: estudos completos e amostras com piano visível",async()=>{
+await test("Leitura: jornada imersiva, peças tradicionais e alturas certas",async()=>{
   const app=await read("app.html"),core=decodeCore(app),guide=await read("assets/reading/guide.js"),css=await read("assets/reading/guide.css");
-  assert(!app.includes('id="videosView"')&&!app.includes('id="plannerView"'),"legacy lesson views returned");
-  const start=core.indexOf("const studyDefinitions="),end=core.indexOf("const originalThemes=",start);
-  assert(start>=0&&end>start,"reading studies missing");
-  const studies=new Function("const out={};"+core.slice(start,end).replace("songs[id]=","out[id]=")+"return out")();
-  assert(Object.keys(studies).length===5,"expected five new studies");
-  const themeStart=core.indexOf("const originalThemes="),themeEnd=core.indexOf("for(const [id,title,description,themeTempo,bars] of originalThemes)",themeStart);
-  const themes=new Function(core.slice(themeStart,themeEnd)+";return originalThemes")();
-  assert(themes.length===6,"expected six additional original themes");
-  for(const [,title,,tempo,bars] of themes)assert(title&&tempo>=60&&bars.length===8&&bars.every(bar=>bar.length===4),"original theme must have eight complete bars");
-  const exerciseStart=core.indexOf("const exercises="),exerciseEnd=core.indexOf("const exerciseLevels=",exerciseStart);
-  const exerciseData=new Function(core.slice(exerciseStart,exerciseEnd)+";return exercises")();
-  assert(exerciseData.right.length===14&&exerciseData.left.length===14,"solfege journey must include both hands");
-  for(const study of Object.values(studies)){
-    assert(study.right.length===8&&study.left.length===8,"study needs eight bars per hand");
-    for(const hand of [study.right,study.left])for(const bar of hand)assert(bar.reduce((sum,n)=>sum+n.d,0)===study.meter[0],"incomplete reading bar");
-  }
-  assert((app.match(/data-preview-song=/g)||[]).length===12,"preview missing from a song card");
-  assert(core.includes("pianoSample(item.n,item.d,beatMs,.8)")&&core.includes("syncReadingPiano(name)")&&app.includes('id="pianoDock"'),"audible unified piano missing");
-  assert((app.match(/id="pianoDock"/g)||[]).length===1,"reading piano duplicated");
+  const journey=await read("assets/reading/immersive-journey.js"),layout=await read("assets/reading/immersive-journey.css");
+  assert(app.includes('id="readingStage"')&&app.includes('data-journey-start')&&app.includes('data-library-toggle'),"visual journey is missing");
+  assert(journey.includes("journey-note")&&journey.includes("LuwipiAudioBridge")&&layout.includes("#songView .transport"),"score, piano and immersive reader are disconnected");
+  assert(!core.includes("const studyDefinitions=")&&!core.includes("const originalThemes=")&&!core.includes("const solfegePatterns="),"invented music remains in catalog");
+  const start=core.indexOf("const publicMelodies="),end=core.indexOf("for(const [key,piece]",start);
+  assert(start>=0&&end>start,"traditional melodies are missing");
+  const pieces=new Function(core.slice(start,end)+";return publicMelodies")();
+  assert(Object.keys(pieces).length===2,"expected two traditional melodies");
+  for(const piece of Object.values(pieces))for(const bar of piece.right)assert(bar.reduce((sum,n)=>sum+n.d,0)===piece.meter[0],"incomplete traditional measure");
+  assert((app.match(/data-preview-song=/g)||[]).length===5,"preview missing from a public-domain song card");
+  assert(core.includes("return 106-(idx-e4)*6"),"moving score still places E4 on the wrong line");
+  const noteStart=core.indexOf("function noteFlowY("),noteEnd=core.indexOf("function noteFlowSvg(",noteStart);
+  const y=new Function("const parsePitch=n=>({l:n[0],o:Number(n.slice(-1))});"+core.slice(noteStart,noteEnd)+";return noteFlowY")();
+  assert(y("C4")===118&&y("E4")===106&&y("G4")===94,"C4, E4 or G4 is shown on the wrong staff position");
+  assert(core.includes("pianoSample(item.n,item.d,beatMs,.8)")&&core.includes("syncReadingPiano(name)")&&app.includes('id="pianoDock"'),"audible piano missing");
   assert(guide.includes("if(!enabled||!kind)return")&&css.includes("body.piano-open .piano-dock:not(.hidden)"),"mobile piano guide missing");
 });
 
 await test("Activity-first: sem aulas, piano reativo e formatos musicais",async()=>{
   const app=await read("app.html"),live=await read("assets/live/live-mode.js"),engine=await read("assets/music/score-engine.js"),practice=await read("assets/activities/interactive-practice.js");
   assert(!app.includes('id="videosView"')&&!app.includes('id="plannerView"'),"lesson/video views should be removed");
-  assert(app.includes("Ouve e toca")&&app.includes('id="homeStart"'),"activity-first home missing");
+  assert(app.includes("Continuar a jornada")&&app.includes('id="homeStart"'),"activity-first home missing");
   assert(practice.includes("activity-piano-key")&&practice.includes("LuwipiAudioBridge"),"reactive piano preview missing");
   assert(live.includes(".abc")&&live.includes(".kar")&&live.includes(".json"),"extended score formats missing");
   assert(engine.includes("function parseABC"),"ABC parser missing");
