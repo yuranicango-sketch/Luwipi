@@ -110,6 +110,7 @@ function playExercisePreview(){
     previewTimers.push(setTimeout(()=>{
       if(!previewRunning)return;
       parts.forEach(x=>{x.el.classList.toggle("exercise-preview-active",x===part);x.el.classList.toggle("exercise-preview-dim",x!==part)});
+      part.el.scrollIntoView({block:"nearest",inline:"center",behavior:"smooth"});
       if(status)status.textContent=noteLabel(part.note);
       lightReactivePiano("exercise",[part.note],beatMs*.82);
       playPiano(part.note,beatMs);
