@@ -293,7 +293,7 @@ await test("Piano: amostras, ressonância leve e fim de nota natural",async()=>{
   );
   const chosen=await resolve("F#4");
   assert(chosen.buffer.duration===2&&Math.abs(chosen.rate-Math.pow(2,-1/12))<1e-8&&fetches.join(",")==="F#4,G4","missing F# does not use its nearest recorded G");
-  assert(core.includes("pianoNoteOffVoice(previous,.12)"),"rapid retrigger layers the same note");
+  assert(core.includes("return pianoSample(n,1,560,level)"),"manual piano does not use the exact journey preview voice");
   assert(core.includes("o.connect(g).connect(pianoMaster)"),"metronome bypasses the audio bus");
   for(const file of ["assets/games/piano-dos-bichinhos.js","assets/games/bolhas-do-som.js"]){
     const src=await read(file);
@@ -303,10 +303,10 @@ await test("Piano: amostras, ressonância leve e fim de nota natural",async()=>{
 
 await test("Piano manual: ataque suave e teclado imóvel durante o toque",async()=>{
   const core=decodeCore(await read("app.html")),guide=await read("assets/reading/guide.js"),practice=await read("assets/activities/interactive-practice.js");
-  const start=core.indexOf("async function pianoNoteOn(n,level=1){"),end=core.indexOf("function pianoNoteOff(n,",start),manual=core.slice(start,end);
-  assert(manual.includes("const peak=pianoSamplePeak(level)")&&manual.includes("pianoSampleAttack(gain,now,peak)"),"manual and preview piano attacks diverged");
-  assert(core.includes("exponentialRampToValueAtTime(peak,now+.006)")&&core.includes("function pianoSamplePeak(level){return Math.min(.84,Math.max(.12,.78*level))}"),"shared piano attack or volume changed");
-  assert(core.includes("pianoNoteOn(n,.96)")&&core.includes("pianoNoteOff(n,.22)"),"physical keys use the old short envelope");
+  const start=core.indexOf("async function pianoNoteOn(n,level=.98){"),end=core.indexOf("function pianoNoteOff(n)",start),manual=core.slice(start,end);
+  assert(manual.includes("return pianoSample(n,1,560,level)"),"manual piano is not playing the same full note as the journey card");
+  assert(core.includes("pianoNoteOn(n,.98)")&&core.includes("pianoNoteOff(n)"),"physical keys do not match the journey preview volume");
+  assert(!core.includes("pianoNoteOffVoice("),"manual key release still truncates the sample");
   assert(core.includes("performance.now()-lastPianoTouchAt<900")&&guide.includes("window.LuwipiPianoInteracting?.()"),"guided piano scrolls during touch");
   assert(practice.includes("!lightReactivePiano.fromPointer")&&practice.includes("lightReactivePiano.fromPointer=true"),"reactive key scrolls as soon as a finger touches it");
   assert(!core.includes("?.scrollIntoView({block:'nearest',inline:'center',behavior:'smooth'});renderExerciseSteps()")&&core.includes("scoreScroller.scrollBy"),"exercise moves the whole page while playing");
