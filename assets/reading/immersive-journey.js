@@ -45,4 +45,9 @@
   view.querySelectorAll("[data-journey]").forEach(button=>button.addEventListener("click",()=>{view.classList.add("library-open");toggle?.setAttribute("aria-expanded","true");if(toggle)toggle.textContent="Fechar escolhas"},true));
   new MutationObserver(()=>{if(view.classList.contains("active"))refresh()}).observe(view,{attributes:true,attributeFilter:["class"]});
   refresh();
+  const games=document.getElementById("gamesView"),gameGrid=document.getElementById("gamesPathGrid"),gameToggle=document.getElementById("gamesLibraryToggle");
+  if(games&&gameGrid&&gameToggle){
+    [games.querySelector('[data-game="noteHunt"]'),games.querySelector('[href="/paw-paw-notas.html"]'),games.querySelector('[href="/super-paw-paw.html"]')].forEach(card=>{if(card)gameGrid.appendChild(card)});
+    gameToggle.addEventListener("click",()=>{const open=games.classList.toggle("library-open");gameToggle.setAttribute("aria-expanded",String(open));gameToggle.textContent=open?"Fechar jogos":"Ver todos os jogos"});
+  }
 })();

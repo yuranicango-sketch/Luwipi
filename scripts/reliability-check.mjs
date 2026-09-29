@@ -351,9 +351,9 @@ await test("Leitura: jornada imersiva, peças tradicionais e alturas certas",asy
   const start=core.indexOf("const publicMelodies="),end=core.indexOf("for(const [key,piece]",start);
   assert(start>=0&&end>start,"traditional melodies are missing");
   const pieces=new Function(core.slice(start,end)+";return publicMelodies")();
-  assert(Object.keys(pieces).length===2,"expected two traditional melodies");
+  assert(Object.keys(pieces).length===4,"expected four additional public-domain melodies");
   for(const piece of Object.values(pieces))for(const bar of piece.right)assert(bar.reduce((sum,n)=>sum+n.d,0)===piece.meter[0],"incomplete traditional measure");
-  assert((app.match(/data-preview-song=/g)||[]).length===5,"preview missing from a public-domain song card");
+  assert((app.match(/data-preview-song=/g)||[]).length===7,"preview missing from a public-domain song card");
   assert(core.includes("return 106-(idx-e4)*6"),"moving score still places E4 on the wrong line");
   const noteStart=core.indexOf("function noteFlowY("),noteEnd=core.indexOf("function noteFlowSvg(",noteStart);
   const y=new Function("const parsePitch=n=>({l:n[0],o:Number(n.slice(-1))});"+core.slice(noteStart,noteEnd)+";return noteFlowY")();
@@ -364,8 +364,12 @@ await test("Leitura: jornada imersiva, peças tradicionais e alturas certas",asy
 
 await test("Activity-first: sem aulas, piano reativo e formatos musicais",async()=>{
   const app=await read("app.html"),live=await read("assets/live/live-mode.js"),engine=await read("assets/music/score-engine.js"),practice=await read("assets/activities/interactive-practice.js");
+  const journey=await read("assets/reading/immersive-journey.js"),layout=await read("assets/reading/immersive-journey.css");
   assert(!app.includes('id="videosView"')&&!app.includes('id="plannerView"'),"lesson/video views should be removed");
   assert(app.includes("Continuar a jornada")&&app.includes('id="homeStart"'),"activity-first home missing");
+  for(const path of ["reading","rhythm","games","live"])assert(app.includes('data-home-path="'+path+'"'),"learner path missing: "+path);
+  assert(app.includes('id="gamesPathGrid"')&&journey.includes('gameGrid.appendChild(card)')&&layout.includes('#gamesView:not(.library-open) .games-library'),"games still expose a competing legacy index");
+  assert(layout.includes('body[data-mode="aprenda"] #homeView .home-tool-list{display:none}'),"duplicate learner navigation remains");
   assert(practice.includes("activity-piano-key")&&practice.includes("LuwipiAudioBridge"),"reactive piano preview missing");
   assert(live.includes(".abc")&&live.includes(".kar")&&live.includes(".json"),"extended score formats missing");
   assert(engine.includes("function parseABC"),"ABC parser missing");
