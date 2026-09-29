@@ -343,6 +343,8 @@ await test("Acesso: observador espera pela sessão e há recuperação local",as
   assert(core.includes("localStorage.removeItem('sb-'+supabaseRef+'-auth-token')"),"local session recovery missing");
   assert(app.includes('id="restartAccessButton"')&&app.includes('Entrar de novo'),"recovery action not visible");
   assert(core.includes("lastFailure='access_timeout'"),"generic loading timeout lacks recovery state");
+  const unlock=core.slice(core.indexOf("function unlock(){"),core.indexOf("function hasAccess("));
+  assert(unlock.includes("clearTimeout(loadingTimer)"),"successful access leaves loading error timer active");
 });
 
 await test("Leitura: estudos completos e amostras com piano visível",async()=>{
