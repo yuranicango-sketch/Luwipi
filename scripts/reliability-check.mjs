@@ -301,6 +301,16 @@ await test("Piano: amostras, ressonância leve e fim de nota natural",async()=>{
   }
 });
 
+await test("Piano manual: ataque suave e teclado imóvel durante o toque",async()=>{
+  const core=decodeCore(await read("app.html")),guide=await read("assets/reading/guide.js"),practice=await read("assets/activities/interactive-practice.js");
+  const start=core.indexOf("async function pianoNoteOn(n,level=1){"),end=core.indexOf("function pianoNoteOff(n,",start),manual=core.slice(start,end);
+  assert(manual.includes("exponentialRampToValueAtTime(peak,now+.032)")&&manual.includes("Math.min(.72,Math.max(.1,.67*level))"),"manual attack is still too sharp or loud");
+  assert(core.includes("pianoNoteOn(n,.9)")&&core.includes("pianoNoteOff(n,.32)"),"physical keys use the old short envelope");
+  assert(core.includes("performance.now()-lastPianoTouchAt<900")&&guide.includes("window.LuwipiPianoInteracting?.()"),"guided piano scrolls during touch");
+  assert(practice.includes("!lightReactivePiano.fromPointer")&&practice.includes("lightReactivePiano.fromPointer=true"),"reactive key scrolls as soon as a finger touches it");
+  assert(!core.includes("?.scrollIntoView({block:'nearest',inline:'center',behavior:'smooth'});renderExerciseSteps()")&&core.includes("scoreScroller.scrollBy"),"exercise moves the whole page while playing");
+});
+
 await test("Pinta o Piano: pincel e três teclados publicados",async()=>{
   const html=await read("pintar-teclas.html"),app=await read("app.html"),build=await read("scripts/build-static.sh");
   assert(app.includes('href="/pintar-teclas.html"')&&build.includes('cp pintar-teclas.html public/pintar-teclas.html'),"painting game missing from site");

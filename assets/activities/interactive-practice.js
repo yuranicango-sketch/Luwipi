@@ -64,7 +64,7 @@ function lightReactivePiano(surface,notes,hold=520){
     board.querySelectorAll(".reading-preview-key").forEach(key=>key.classList.remove("reading-preview-key"));
     const note=(notes||[])[0];
     const key=note&&board.querySelector('[data-piano-note="'+CSS.escape(note)+'"]');
-    if(key){key.classList.add("reading-preview-key");scroll?.scrollTo({left:Math.max(0,key.offsetLeft-scroll.clientWidth*.42),behavior:"smooth"})}
+    if(key){key.classList.add("reading-preview-key");if(!window.LuwipiPianoInteracting?.()&&!lightReactivePiano.fromPointer)scroll?.scrollTo({left:Math.max(0,key.offsetLeft-scroll.clientWidth*.42),behavior:"smooth"})}
     clearTimeout(lightReactivePiano.readingTimer);
     if(key)lightReactivePiano.readingTimer=setTimeout(()=>key.classList.remove("reading-preview-key"),hold);
     return;
@@ -197,7 +197,7 @@ document.addEventListener("pointerdown",event=>{
   const key=event.target.closest?.("[data-piano-note]");
   if(key){
     const note=key.dataset.pianoNote;
-    if(document.getElementById("exerciseView")?.classList.contains("active"))lightReactivePiano("exercise",[note],500);
+    if(document.getElementById("exerciseView")?.classList.contains("active")){lightReactivePiano.fromPointer=true;try{lightReactivePiano("exercise",[note],500)}finally{lightReactivePiano.fromPointer=false}}
   }
 },{capture:true,passive:true});
 function ensurePatterns(){

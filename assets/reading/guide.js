@@ -72,7 +72,7 @@
   }
   function scrollPianoTo(key){
     const scroller=document.querySelector("#pianoDock .piano-scroll");
-    if(!scroller||!key||scroller.clientWidth<=0)return;
+    if(!scroller||!key||scroller.clientWidth<=0||window.LuwipiPianoInteracting?.())return;
     const target=Math.max(0,key.offsetLeft-scroller.clientWidth/2+key.offsetWidth/2);
     scroller.scrollTo({left:target,behavior:"smooth"});
   }
