@@ -313,6 +313,16 @@ await test("Piano manual: ataque suave e teclado imóvel durante o toque",async(
   assert(!core.includes("?.scrollIntoView({block:'nearest',inline:'center',behavior:'smooth'});renderExerciseSteps()")&&core.includes("scoreScroller.scrollBy"),"exercise moves the whole page while playing");
 });
 
+await test("Ateliê musical: seis jogos individuais publicados",async()=>{
+  const html=await read("app.html"),page=await read("atelie-musical.html"),game=await read("assets/games/atelie-musical.js"),build=await read("scripts/build-static.sh");
+  for(const id of ["partitura","jardim","ritmo","melodia","compassos","pinta"]){
+    assert(html.includes(`/atelie-musical.html?jogo=${id}`),`missing independent game ${id}`);
+    assert((await read(`assets/images/games/atelie-${id}.svg`)).includes("<svg"),`missing game artwork ${id}`);
+  }
+  assert(page.includes("atelie-musical.js")&&build.includes("cp atelie-musical.html public/atelie-musical.html"),"atelier is absent from static build");
+  assert(game.includes("function partitura()")&&game.includes("function jardim()")&&game.includes("function rhythmGame(kind)")&&game.includes("function melodia()")&&game.includes("function pinta()"),"one or more games has no interaction");
+});
+
 await test("Pinta o Piano: pincel e três teclados publicados",async()=>{
   const html=await read("pintar-teclas.html"),app=await read("app.html"),build=await read("scripts/build-static.sh");
   assert(app.includes('href="/pintar-teclas.html"')&&build.includes('cp pintar-teclas.html public/pintar-teclas.html'),"painting game missing from site");
