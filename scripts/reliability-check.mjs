@@ -350,15 +350,22 @@ await test("Acesso: observador espera pela sessão e há recuperação local",as
 await test("Leitura: estudos completos e amostras com piano visível",async()=>{
   const app=await read("app.html"),core=decodeCore(app),guide=await read("assets/reading/guide.js"),css=await read("assets/reading/guide.css");
   assert(!app.includes('id="videosView"')&&!app.includes('id="plannerView"'),"legacy lesson views returned");
-  const start=core.indexOf("const studyDefinitions="),end=core.indexOf("let songKey=",start);
+  const start=core.indexOf("const studyDefinitions="),end=core.indexOf("const originalThemes=",start);
   assert(start>=0&&end>start,"reading studies missing");
   const studies=new Function("const out={};"+core.slice(start,end).replace("songs[id]=","out[id]=")+"return out")();
   assert(Object.keys(studies).length===5,"expected five new studies");
+  const themeStart=core.indexOf("const originalThemes="),themeEnd=core.indexOf("for(const [id,title,description,themeTempo,bars] of originalThemes)",themeStart);
+  const themes=new Function(core.slice(themeStart,themeEnd)+";return originalThemes")();
+  assert(themes.length===6,"expected six additional original themes");
+  for(const [,title,,tempo,bars] of themes)assert(title&&tempo>=60&&bars.length===8&&bars.every(bar=>bar.length===4),"original theme must have eight complete bars");
+  const exerciseStart=core.indexOf("const exercises="),exerciseEnd=core.indexOf("const exerciseLevels=",exerciseStart);
+  const exerciseData=new Function(core.slice(exerciseStart,exerciseEnd)+";return exercises")();
+  assert(exerciseData.right.length===14&&exerciseData.left.length===14,"solfege journey must include both hands");
   for(const study of Object.values(studies)){
     assert(study.right.length===8&&study.left.length===8,"study needs eight bars per hand");
     for(const hand of [study.right,study.left])for(const bar of hand)assert(bar.reduce((sum,n)=>sum+n.d,0)===study.meter[0],"incomplete reading bar");
   }
-  assert((app.match(/data-preview-song=/g)||[]).length===8,"preview missing from a song card");
+  assert((app.match(/data-preview-song=/g)||[]).length===12,"preview missing from a song card");
   assert(core.includes("pianoSample(item.n,item.d,beatMs,.8)")&&core.includes("syncReadingPiano(name)")&&app.includes('id="pianoDock"'),"audible unified piano missing");
   assert((app.match(/id="pianoDock"/g)||[]).length===1,"reading piano duplicated");
   assert(guide.includes("if(!enabled||!kind)return")&&css.includes("body.piano-open .piano-dock:not(.hidden)"),"mobile piano guide missing");

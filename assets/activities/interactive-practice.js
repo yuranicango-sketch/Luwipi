@@ -101,6 +101,7 @@ function stopExercisePreview(){
 function playExercisePreview(){
   const parts=exerciseParts();if(!parts.length)return;
   if(previewRunning){stopExercisePreview();return}
+  if(["active","done"].includes(document.getElementById("exerciseView")?.dataset.exerciseAttempt))return;
   stopExercisePreview();unlockAudio();previewRunning=true;
   const btn=document.getElementById("exercisePreviewBtn");
   const status=document.getElementById("exercisePreviewNote");
@@ -122,6 +123,7 @@ function playExercisePreview(){
     if(status)status.textContent="Agora é a tua vez";
   },parts.length*beatMs+220));
 }
+window.LuwipiStopExercisePreview=stopExercisePreview;
 function ensureExercisePreview(){
   const view=document.getElementById("exerciseView"),actions=view?.querySelector(".secondary-actions");
   if(!view||!actions||document.getElementById("exercisePreviewBtn"))return;
@@ -140,7 +142,7 @@ function scheduleAutomaticPreview(){
   stopExercisePreview();
   previewTimers.push(setTimeout(()=>{
     const view=document.getElementById("exerciseView");
-    if(view?.classList.contains("active"))playExercisePreview();
+    if(view?.classList.contains("active")&&!["active","done"].includes(view.dataset.exerciseAttempt))playExercisePreview();
   },260));
 }
 document.addEventListener("pointerdown",e=>{

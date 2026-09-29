@@ -115,3 +115,31 @@ body.piano-open:has(#exerciseView.active),body.piano-open:has(#songView.active),
 #songView .reader:fullscreen .transport,#songView .reader.reading-immersive-fallback .transport{position:sticky;bottom:0;z-index:3;display:flex;justify-content:center;background:#f7f8fb;padding:6px}
 #songView .reader.reading-immersive-fallback{position:fixed;inset:0;z-index:1000}
 @media(max-width:700px){.home-path-grid{grid-template-columns:1fr}.home-path-grid button{min-height:76px;display:grid;grid-template-columns:42px 1fr;gap:3px 8px}.home-path-grid button span{grid-row:span 2}.home-path-grid button small{grid-column:2}#songView .reader:fullscreen,#songView .reader.reading-immersive-fallback{padding:8px}#songView .reader:fullscreen .score-wrap,#songView .reader.reading-immersive-fallback .score-wrap{height:calc(100dvh - 165px)}}
+
+.reading-journey{margin:4px 0 22px;padding:20px;border:1px solid #dfe6f9;border-radius:22px;background:linear-gradient(155deg,#f8faff,#eef3ff);box-shadow:0 10px 28px rgba(42,77,180,.08)}
+.reading-journey-head small{color:#3554b8;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.08em}
+.reading-journey-head strong{display:block;margin:4px 0;font-size:22px;letter-spacing:-.035em}
+.reading-journey-head p{margin:0 0 16px;color:#59647b;font-size:13px}
+.reading-journey-steps{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px}
+.reading-journey-steps button{display:flex;align-items:flex-start;gap:10px;padding:13px;border:1px solid #dfe6f5;border-radius:14px;background:#fff;text-align:left;cursor:pointer}
+.reading-journey-steps button:hover,.reading-journey-steps button:focus-visible,.reading-journey-steps button.active{border-color:#4568ff;box-shadow:0 5px 14px rgba(69,104,255,.13)}
+.reading-journey-steps b{display:grid;place-items:center;flex:0 0 28px;height:28px;border-radius:9px;background:#eaf0ff;color:#3554b8;font-size:13px}
+.reading-journey-steps .done b{background:#daf4e9;color:#226c4d}
+.reading-journey-steps span{display:flex;flex-direction:column;gap:3px}.reading-journey-steps strong{font-size:13px}.reading-journey-steps small{font-size:11px;line-height:1.35;color:#606b7d}
+#readingJourneyProgress{margin:13px 0 0;color:#45628e;font-size:12px;font-weight:800}
+.reading-levels{display:flex;flex-wrap:wrap;gap:8px;margin:20px 0 14px}
+.reading-levels button{min-height:42px;padding:9px 14px;border:1px solid #dce2ed;border-radius:12px;background:#fff;color:#39445a;font-weight:800;cursor:pointer}
+.reading-levels button.active{background:#244bd4;border-color:#244bd4;color:#fff}
+.exercise-practice{display:grid;grid-template-columns:1fr auto;gap:12px;margin:14px 0;padding:16px;border:1px solid #dfe6f9;border-radius:18px;background:#f7f9ff}
+.exercise-practice strong{display:block;font-size:16px}.exercise-practice p{margin:4px 0;color:#4c5971;font-size:13px;line-height:1.4}
+.exercise-practice button{min-height:44px;align-self:center;padding:10px 16px;border:0;border-radius:12px;background:#244bd4;color:#fff;font-weight:800;cursor:pointer}
+.exercise-practice-steps{display:flex;flex-wrap:wrap;gap:5px;grid-column:1/-1}
+.exercise-practice-steps span{display:grid;place-items:center;min-width:37px;min-height:34px;padding:4px 7px;border:1px solid #d9e1ef;border-radius:9px;background:#fff;color:#4a5670;font-size:12px;font-weight:800}
+.exercise-practice-steps span.current{border-color:#4568ff;background:#e6ecff;color:#244bd4;box-shadow:0 0 0 3px rgba(69,104,255,.15)}
+.exercise-practice-steps span.done{border-color:#70c8a0;background:#e2f7ed;color:#247351}
+#exerciseSvg g.exercise-attempt-current{filter:drop-shadow(0 0 8px #4568ff)}
+#exerciseSvg g.exercise-attempt-current ellipse{fill:#4568ff!important;stroke:#4568ff!important}
+#exerciseSvg g.exercise-attempt-done{opacity:.55}
+.game-pick-note{cursor:pointer}.game-pick-note:focus-visible,.game-pick-note:hover{filter:drop-shadow(0 0 8px #4568ff)}.game-found-note{filter:drop-shadow(0 0 10px #38b988)}
+@media(max-width:800px){.reading-journey-steps{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:520px){.reading-journey{padding:15px}.reading-journey-steps{grid-template-columns:1fr 1fr}.reading-journey-steps button{padding:9px;gap:7px}.reading-journey-steps b{flex-basis:23px;height:23px}.reading-journey-steps strong{font-size:12px}.exercise-practice{grid-template-columns:1fr}.exercise-practice button{width:100%}.exercise-practice-steps{grid-column:1}}
