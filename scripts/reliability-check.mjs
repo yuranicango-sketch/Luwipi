@@ -326,7 +326,8 @@ await test("Jogos: todos os cartões mostram miniaturas",async()=>{
 await test("Acesso: rede pendente termina e sessão tem limite",async()=>{
   const core=decodeCore(await read("app.html"));
   assert(core.includes("withDeadline(client.auth.getSession(),8000,'session')"),"session can hang indefinitely");
-  assert(core.includes("withDeadline(readProfile(session.user.id),8000,'profile')"),"profile can hang indefinitely");
+  assert(core.includes("withDeadline(readProfile(session.user.id),15000,'profile')"),"profile can hang indefinitely");
+  assert(core.includes("fetch(supabaseUrl+'/rest/v1/'+table")&&core.includes("authorization:'Bearer '+session.access_token"),"profile lookup should bypass SDK auth lock while preserving RLS");
   const start=core.indexOf("async function fetchAccessJson("),end=core.indexOf("function parentLink()",start);
   assert(start>=0&&end>start,"bounded access fetch missing");
   const fetchJson=new Function("fetch","AbortController",core.slice(start,end)+"return fetchAccessJson")(async(_path,{signal})=>new Promise((_,reject)=>signal.addEventListener("abort",()=>reject(Object.assign(new Error("aborted"),{name:"AbortError"})))),AbortController);
