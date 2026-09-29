@@ -861,3 +861,254 @@ body[data-mode="aprenda"] #noteFlowView .note-flow-activity{
     padding-top:6px;
   }
 }
+
+
+/* Score + piano first: learner exercises reserve space for the musical experience. */
+body[data-mode="aprenda"] #exerciseView .reader{
+  position:relative;
+  display:grid!important;
+  grid-template-columns:1fr!important;
+  grid-template-rows:auto auto minmax(190px,1fr) auto!important;
+  align-content:stretch;
+  gap:6px!important;
+  padding:10px 12px max(10px,env(safe-area-inset-bottom))!important;
+}
+body[data-mode="aprenda"] #exerciseView .reader-top{
+  grid-column:1!important;
+  grid-row:1!important;
+  display:block!important;
+  text-align:center;
+  margin:0!important;
+}
+body[data-mode="aprenda"] #exerciseView .aid-row{
+  grid-column:1!important;
+  grid-row:2!important;
+  margin:0 auto!important;
+}
+body[data-mode="aprenda"] #exerciseView .score-wrap{
+  grid-column:1!important;
+  grid-row:3!important;
+  width:100%!important;
+  min-width:0!important;
+  min-height:190px!important;
+  height:auto!important;
+  max-height:none!important;
+  margin:0!important;
+  padding:6px!important;
+  overflow:hidden!important;
+}
+body[data-mode="aprenda"] #exerciseView #exerciseSvg{
+  width:100%!important;
+  height:100%!important;
+  min-width:0!important;
+  transform:scale(1.08)!important;
+  transform-origin:center!important;
+}
+
+/* Keep feedback for screen readers, but don't spend visual space on "Agora é a tua vez". */
+body[data-mode="aprenda"] #exercisePreviewNote{
+  position:absolute!important;
+  width:1px!important;
+  height:1px!important;
+  padding:0!important;
+  margin:-1px!important;
+  overflow:hidden!important;
+  clip:rect(0,0,0,0)!important;
+  white-space:nowrap!important;
+  border:0!important;
+}
+
+/* Sequence guidance becomes one compact control strip. */
+body[data-mode="aprenda"] #exerciseView .exercise-practice{
+  grid-column:1!important;
+  grid-row:4!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:8px!important;
+  width:100%!important;
+  min-height:38px!important;
+  margin:0!important;
+  padding:4px 6px!important;
+  border:0!important;
+  border-radius:10px!important;
+  background:transparent!important;
+}
+body[data-mode="aprenda"] #exerciseView .exercise-practice>div:first-child{
+  display:none!important;
+}
+body[data-mode="aprenda"] #exerciseView .exercise-practice-steps{
+  display:flex!important;
+  flex:0 1 auto!important;
+  grid-column:auto!important;
+  flex-wrap:nowrap!important;
+  gap:3px!important;
+  margin:0!important;
+}
+body[data-mode="aprenda"] #exerciseView .exercise-practice-steps span{
+  min-width:24px!important;
+  min-height:24px!important;
+  width:24px!important;
+  height:24px!important;
+  padding:0!important;
+  border-radius:7px!important;
+  font-size:9px!important;
+}
+body[data-mode="aprenda"] #exercisePracticeStart{
+  flex:0 0 auto!important;
+  min-height:30px!important;
+  padding:5px 10px!important;
+  border-radius:9px!important;
+  font-size:10px!important;
+}
+
+/* Previous/next are floating arrows. They never reserve a row and never shrink the piano. */
+body[data-mode="aprenda"] #exerciseView .pager{
+  position:absolute!important;
+  inset:0!important;
+  z-index:18!important;
+  display:block!important;
+  width:auto!important;
+  height:auto!important;
+  margin:0!important;
+  padding:0!important;
+  pointer-events:none!important;
+}
+body[data-mode="aprenda"] #exerciseView .pager .page-label{
+  display:none!important;
+}
+body[data-mode="aprenda"] #exerciseView .pager button{
+  position:absolute!important;
+  top:50%!important;
+  width:38px!important;
+  min-width:38px!important;
+  height:38px!important;
+  min-height:38px!important;
+  padding:0!important;
+  border-radius:50%!important;
+  background:rgba(255,255,255,.9)!important;
+  border:1px solid rgba(36,66,125,.18)!important;
+  box-shadow:0 5px 16px rgba(18,42,91,.13)!important;
+  color:#17366f!important;
+  font-size:0!important;
+  line-height:1!important;
+  pointer-events:auto!important;
+  transform:translateY(-50%)!important;
+  opacity:.88;
+}
+body[data-mode="aprenda"] #exerciseView #exPrev{left:6px!important}
+body[data-mode="aprenda"] #exerciseView #exNext{right:6px!important}
+body[data-mode="aprenda"] #exerciseView #exPrev::before{
+  content:"←";
+  font-size:18px;
+  font-weight:900;
+}
+body[data-mode="aprenda"] #exerciseView #exNext::before{
+  content:"→";
+  font-size:18px;
+  font-weight:900;
+}
+
+/* Piano is a primary surface, not a footer. */
+body[data-mode="aprenda"] #exerciseView .piano-dock,
+body[data-mode="aprenda"] #songView .piano-dock,
+body[data-mode="aprenda"] #noteFlowView .piano-dock{
+  width:100%!important;
+  height:clamp(175px,28dvh,230px)!important;
+  max-height:clamp(175px,28dvh,230px)!important;
+  min-height:175px!important;
+  margin:0!important;
+  padding:0 8px 8px!important;
+  border-radius:14px!important;
+  overflow:hidden!important;
+  box-sizing:border-box!important;
+}
+body[data-mode="aprenda"] #exerciseView .piano-head,
+body[data-mode="aprenda"] #songView .piano-head,
+body[data-mode="aprenda"] #noteFlowView .piano-head{
+  display:none!important;
+}
+body[data-mode="aprenda"] #exerciseView .piano-scroll,
+body[data-mode="aprenda"] #songView .piano-scroll,
+body[data-mode="aprenda"] #noteFlowView .piano-scroll{
+  width:100%!important;
+  max-width:none!important;
+  height:100%!important;
+  margin:0!important;
+  padding:0!important;
+  overflow-x:auto!important;
+  overflow-y:hidden!important;
+}
+body[data-mode="aprenda"] #exerciseView .piano-board,
+body[data-mode="aprenda"] #songView .piano-board,
+body[data-mode="aprenda"] #noteFlowView .piano-board{
+  height:100%!important;
+  min-height:0!important;
+}
+body[data-mode="aprenda"] #exerciseView .piano-white,
+body[data-mode="aprenda"] #songView .piano-white,
+body[data-mode="aprenda"] #noteFlowView .piano-white{
+  height:calc(100% - 2px)!important;
+}
+body[data-mode="aprenda"] #exerciseView .piano-black,
+body[data-mode="aprenda"] #songView .piano-black,
+body[data-mode="aprenda"] #noteFlowView .piano-black{
+  height:62%!important;
+}
+
+/* Kill the old short-landscape split: score and piano always own the full width. */
+@media(max-height:620px) and (orientation:landscape){
+  body[data-mode="aprenda"] #exerciseView .reader{
+    display:grid!important;
+    grid-template-columns:1fr!important;
+    grid-template-rows:auto auto minmax(150px,1fr) auto!important;
+    column-gap:0!important;
+    row-gap:4px!important;
+    padding:6px 8px!important;
+  }
+  body[data-mode="aprenda"] #exerciseView .reader-top,
+  body[data-mode="aprenda"] #exerciseView .aid-row,
+  body[data-mode="aprenda"] #exerciseView .score-wrap,
+  body[data-mode="aprenda"] #exerciseView .exercise-practice{
+    grid-column:1!important;
+    grid-row:auto!important;
+  }
+  body[data-mode="aprenda"] #exerciseView .reader-top{
+    display:block!important;
+  }
+  body[data-mode="aprenda"] #exerciseView .score-wrap{
+    min-height:150px!important;
+  }
+  body[data-mode="aprenda"] #exerciseView #exerciseSvg{
+    transform:scale(1.04)!important;
+  }
+  body[data-mode="aprenda"] #exerciseView .piano-dock,
+  body[data-mode="aprenda"] #songView .piano-dock,
+  body[data-mode="aprenda"] #noteFlowView .piano-dock{
+    height:clamp(165px,31dvh,205px)!important;
+    max-height:clamp(165px,31dvh,205px)!important;
+    min-height:165px!important;
+  }
+}
+@media(max-width:700px) and (orientation:portrait){
+  body[data-mode="aprenda"] #exerciseView .reader{
+    grid-template-rows:auto auto minmax(145px,1fr) auto!important;
+    padding:8px 7px max(8px,env(safe-area-inset-bottom))!important;
+  }
+  body[data-mode="aprenda"] #exerciseView .score-wrap{
+    min-height:145px!important;
+  }
+  body[data-mode="aprenda"] #exerciseView .piano-dock,
+  body[data-mode="aprenda"] #songView .piano-dock,
+  body[data-mode="aprenda"] #noteFlowView .piano-dock{
+    height:clamp(150px,25dvh,205px)!important;
+    max-height:clamp(150px,25dvh,205px)!important;
+    min-height:150px!important;
+  }
+  body[data-mode="aprenda"] #exerciseView .pager button{
+    width:34px!important;
+    min-width:34px!important;
+    height:34px!important;
+    min-height:34px!important;
+  }
+}
