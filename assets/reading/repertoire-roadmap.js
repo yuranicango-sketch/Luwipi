@@ -12,7 +12,7 @@
     ["When the Saints Go Marching In","P","Anacruse · articulação swing no arranjo",null,"public"],
     ["Noite Feliz · Gruber","P","6/8 · semínima pontuada",null,"public"],
     ["Greensleeves","P","Modo menor · 6/8 nesta versão",null,"public"],
-    ["Minueto em Sol · Petzold, BWV Anh. 114","C","3/4 · trecho transposto para Dó","minuet","public"],
+    ["Minueto em Sol · Petzold, BWV Anh. 114","C","3/4 · duas mãos · Fá♯","minuet","public"],
     ["Melodia · Schumann, Op. 68 nº 1","C","Melodia e acompanhamento · duas mãos",null,"public"],
     ["Canção de Ninar · Brahms, Op. 49 nº 4","C","3/4 · arranjo de piano com arpejo",null,"public"],
     ["Marcha dos Soldados · Schumann, Op. 68 nº 2","C","Acentos · articulação curta",null,"public"],

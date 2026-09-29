@@ -367,6 +367,18 @@ await test("Leitura: jornada imersiva, peças tradicionais e alturas certas",asy
   assert(guide.includes("if(!enabled||!kind)return")&&css.includes("body.piano-open .piano-dock:not(.hidden)"),"mobile piano guide missing");
 });
 
+await test("Minueto de Petzold: Sol maior na partitura e no áudio",async()=>{
+  const app=await read("app.html"),core=decodeCore(app),roadmap=await read("assets/reading/repertoire-roadmap.js");
+  const start=core.indexOf(" minuet:{title:"),end=core.indexOf("\n ]}",start)+4;
+  assert(start>=0&&end>start,"Minueto ausente");
+  const score=core.slice(start,end);
+  assert(score.includes("title:'Minueto em Sol maior · BWV Anh. 114'")&&score.includes("keyOffset:7"),"title or key still in C");
+  assert(score.includes("[{n:'D5',d:1},{n:'G4',d:.5},{n:'A4',d:.5},{n:'B4',d:.5},{n:'C5',d:.5}]")&&score.includes("{n:'F#5'"),"right hand does not match the original G-major melody");
+  assert(score.includes("[{n:'B2',d:2},{n:'A2',d:1}]")&&score.includes("{n:'F#2'"),"left hand not restored to G major");
+  assert(core.includes("keySignature==='G'&&p.l==='F'")&&core.includes("songKey==='minuet'&&songTranspose===0?'G':'C'"),"F-sharp key signature missing");
+  assert(app.includes('<h3>Minueto em Sol maior</h3>')&&!app.includes('Minuet em G → Dó maior')&&!roadmap.includes('transposto para Dó'),"old transposed label remains");
+});
+
 await test("Repertório: 40 peças em oito níveis sem prometer partituras ausentes",async()=>{
   const app=await read("app.html"),roadmap=await read("assets/reading/repertoire-roadmap.js"),css=await read("assets/reading/immersive-journey.css");
   const start=roadmap.indexOf("const works=["),end=roadmap.indexOf("const names=",start);
