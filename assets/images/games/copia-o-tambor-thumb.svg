@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" role="img" aria-label="Miniatura de copia o tambor">
+<rect width="640" height="360" rx="32" fill="#fce7d9"/><circle cx="540" cy="52" r="90" fill="#fff" opacity=".25"/><circle cx="55" cy="288" r="85" fill="#fff" opacity=".22"/>
+<circle cx="122" cy="89" r="58" fill="#fff" opacity=".92"/><text x="122" y="111" text-anchor="middle" font-family="system-ui,sans-serif" font-size="56" font-weight="850" fill="#d89772">♩</text>
+<rect x="62" y="149" width="516" height="168" rx="19" fill="#25344f"/><rect x="70" y="155" width="98" height="153" rx="0 0 8 8" fill="#fff"/><rect x="172" y="155" width="98" height="153" rx="0 0 8 8" fill="#fff"/><rect x="274" y="155" width="98" height="153" rx="0 0 8 8" fill="#fff"/><rect x="376" y="155" width="98" height="153" rx="0 0 8 8" fill="#d89772"/><rect x="478" y="155" width="98" height="153" rx="0 0 8 8" fill="#fff"/><g fill="#25344f"><rect x="146" y="155" width="38" height="88" rx="0 0 6 6"/><rect x="248" y="155" width="38" height="88" rx="0 0 6 6"/><rect x="452" y="155" width="38" height="88" rx="0 0 6 6"/></g><path d="M70 312h500" stroke="#fff" stroke-width="4" opacity=".5"/>
+<circle cx="494" cy="79" r="13" fill="#d89772" opacity=".72"/><circle cx="535" cy="116" r="8" fill="#d89772" opacity=".55"/>
+</svg>
