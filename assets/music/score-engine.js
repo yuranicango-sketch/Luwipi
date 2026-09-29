@@ -711,21 +711,15 @@ function restSymbol(type){
   if(t.includes("thirty-second")||t.includes("fusa"))return "thirty-second";
   return "quarter";
 }
+function restGlyph(type){
+ const t=restSymbol(type);
+ return t==="whole"?"𝄻":t==="half"?"𝄼":t==="eighth"?"𝄾":t==="sixteenth"?"𝄿":t==="thirty-second"?"𝅀":"𝄽";
+}
 function drawRest(svg,rest,x,bottom,current){
-  const type=restSymbol(rest.type),ink=current?"#6670f5":"#292d34",y=bottom-24;
-  if(current)svg.appendChild(svgEl("ellipse",{cx:x,cy:y,rx:25,ry:24,fill:"rgba(69,104,255,.07)",stroke:"rgba(69,104,255,.62)","stroke-width":2.5,class:"live-score-halo"}));
-  if(type==="whole"||type==="half"){
-    const ry=type==="whole"?bottom-24:bottom-30;
-    svg.appendChild(svgEl("rect",{x:x-10,y:ry,width:20,height:6,rx:1.2,fill:ink}));
-  }else{
-    const stem=svgEl("path",{d:"M "+(x+5)+" "+(y-16)+" C "+(x-7)+" "+(y-7)+", "+(x+11)+" "+(y-1)+", "+(x-3)+" "+(y+8)+" C "+(x-12)+" "+(y+14)+", "+(x+4)+" "+(y+20)+", "+(x-7)+" "+(y+30),fill:"none",stroke:ink,"stroke-width":3.4,"stroke-linecap":"round","stroke-linejoin":"round"});
-    svg.appendChild(stem);
-    const flags=type==="eighth"?1:type==="sixteenth"?2:type==="thirty-second"?3:0;
-    for(let i=0;i<flags;i++){
-      svg.appendChild(svgEl("path",{d:"M "+(x+4)+" "+(y-12+i*7)+" Q "+(x+18)+" "+(y-5+i*7)+" "+(x+8)+" "+(y+5+i*7),fill:"none",stroke:ink,"stroke-width":2.8,"stroke-linecap":"round"}));
-    }
-  }
-  if(rest.dotted)svg.appendChild(svgEl("circle",{cx:x+20,cy:y+2,r:2.4,fill:ink}));
+ const type=restSymbol(rest.type),ink=current?"#4568ff":"#292d34",y=bottom-18;
+ if(current)svg.appendChild(svgEl("ellipse",{cx:x,cy:y-8,rx:25,ry:25,fill:"rgba(69,104,255,.07)",stroke:"rgba(69,104,255,.62)","stroke-width":2.5,class:"live-score-halo"}));
+ addText(svg,x,y,restGlyph(type),{"font-size":34,fill:ink,"text-anchor":"middle","font-family":"'Noto Music','Apple Symbols','Segoe UI Symbol',serif"});
+ if(rest.dotted)svg.appendChild(svgEl("circle",{cx:x+20,cy:y-7,r:2.4,fill:ink}));
 }
 function drawNote(svg,event,x,bottom,groupIndex,current){
   const y=staffY(event.midi,event.clef,bottom,event.note),stepValue=staffStep(event.midi,event.clef,event.note),kind=durationKind(event.durationBeat);
@@ -743,11 +737,13 @@ function drawNote(svg,event,x,bottom,groupIndex,current){
     const sx=stemUp?x+9.1:x-9.1,stemStart=stemUp?y-1:y+1,sy2=stemUp?y-45:y+45;
     addLine(svg,sx,stemStart,sx,sy2,{stroke:"#292d34","stroke-width":2.45,"stroke-linecap":"round"});
     for(let flag=0;flag<kind.flags;flag++){
-      const offset=flag*7.2;
+      const offset=flag*8;
       if(stemUp){
-        svg.appendChild(svgEl("path",{d:"M "+sx+" "+(sy2+offset)+" C "+(sx+12)+" "+(sy2+2+offset)+", "+(sx+19)+" "+(sy2+10+offset)+", "+(sx+11)+" "+(sy2+22+offset),fill:"none",stroke:"#292d34","stroke-width":2.7,"stroke-linecap":"round"}));
+        const fy=sy2+offset;
+        svg.appendChild(svgEl("path",{d:"M "+sx+" "+fy+" C "+(sx+12)+" "+(fy+2)+", "+(sx+20)+" "+(fy+10)+", "+(sx+13)+" "+(fy+21)+" C "+(sx+18)+" "+(fy+13)+", "+(sx+10)+" "+(fy+8)+", "+sx+" "+(fy+7)+" Z",fill:"#292d34"}));
       }else{
-        svg.appendChild(svgEl("path",{d:"M "+sx+" "+(sy2-offset)+" C "+(sx-12)+" "+(sy2-2-offset)+", "+(sx-19)+" "+(sy2-10-offset)+", "+(sx-11)+" "+(sy2-22-offset),fill:"none",stroke:"#292d34","stroke-width":2.7,"stroke-linecap":"round"}));
+        const fy=sy2-offset;
+        svg.appendChild(svgEl("path",{d:"M "+sx+" "+fy+" C "+(sx-12)+" "+(fy-2)+", "+(sx-20)+" "+(fy-10)+", "+(sx-13)+" "+(fy-21)+" C "+(sx-18)+" "+(fy-13)+", "+(sx-10)+" "+(fy-8)+", "+sx+" "+(fy-7)+" Z",fill:"#292d34"}));
       }
     }
   }
