@@ -1,4 +1,3 @@
-import { Sandbox } from '@vercel/sandbox';
 import { readFile } from 'node:fs/promises';
 
 export function validateMidi(bytes) {
@@ -41,6 +40,7 @@ export async function configurationForMuseScore() {
 export async function convertMidi(bytes) {
   const configuration=await configurationForMuseScore();
   if(!configuration.snapshotId)throw Error('musescore_not_ready');
+  const { Sandbox }=await import('@vercel/sandbox');
   const sandbox=await Sandbox.create({source:{type:'snapshot',snapshotId:configuration.snapshotId},region:configuration.region,resources:{vcpus:2},timeout:65000,networkPolicy:'deny-all'});
   try{return {xml:await runConversion(sandbox,bytes),engine:'MuseScore',version:configuration.version}}
   finally{await sandbox.stop().catch(()=>{})}
