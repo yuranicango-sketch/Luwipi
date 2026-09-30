@@ -52,4 +52,3 @@ body[data-mode="aprenda"] #songView.song-piano-hidden .score-wrap{flex:1 1 auto!
 .experience-score-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px}
 .experience-score-actions[hidden],.experience-menu-panel.catalog-open>.experience-score-actions{display:none!important}
 .experience-score-actions button{min-height:34px;padding:6px 7px;border:1px solid #cddaf0;border-radius:9px;background:#f8fbff;color:#20427c;font-size:11px;font-weight:750;text-align:left}
-body.parent-mode .experience-menu-trigger{display:none!important}

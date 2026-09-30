@@ -502,6 +502,7 @@ await test('Entrada única, menu, tema e karaokê MIDI',async()=>{
   assert(core.includes("const initialMode='aprenda'"),'a entrada ainda escolhe duas experiências');
   assert(core.includes('product=in.(aprenda,ensine)'),'acessos antigos não são considerados');
   assert(app.includes('id="experienceMenuButton"')&&app.includes('id="experienceMenuTheme"')&&app.includes('id="karaokeBack"'),'menu, tema ou voltar ausente');
+  assert(!app.includes('.parent-mode header{display:none}')&&!((await read('assets/reading/score-experience.css')).includes('body.parent-mode .experience-menu-trigger{display:none!important}')),'modo tarefa oculta navegação interna');
   assert(app.includes('id="karaokeFiles"')&&app.includes('multiple'),'importação de vários MIDI ausente');
   assert(config.redirects.some(x=>x.source==='/ensine'&&x.destination==='/')&&config.redirects.some(x=>x.source==='/aprenda'&&x.destination==='/'),'rotas antigas não convergem');
   const karaoke=await read('assets/karaoke/karaoke.js');
