@@ -68,3 +68,11 @@ body.luwipi-dark .karaoke-head,body.luwipi-dark .course-head{background:#071021!
 #karaokeView .karaoke-key:nth-child(1){left:0}#karaokeView .karaoke-key:nth-child(3){left:14.2857%}#karaokeView .karaoke-key:nth-child(5){left:28.5714%}#karaokeView .karaoke-key:nth-child(6){left:42.8571%}#karaokeView .karaoke-key:nth-child(8){left:57.1428%}#karaokeView .karaoke-key:nth-child(10){left:71.4285%}#karaokeView .karaoke-key:nth-child(12){left:85.7142%}
 #karaokeView .karaoke-key.black{width:8.5%;max-width:none;height:62%;margin:0;z-index:2}
 #karaokeView .karaoke-key:nth-child(2){left:10.0357%}#karaokeView .karaoke-key:nth-child(4){left:24.3214%}#karaokeView .karaoke-key:nth-child(7){left:52.8928%}#karaokeView .karaoke-key:nth-child(9){left:67.1785%}#karaokeView .karaoke-key:nth-child(11){left:81.4642%}
+
+/* Engraved MusicXML replaces the hand-drawn MIDI staff. */
+#karaokeView .karaoke-score{width:max-content;min-width:100%;padding:8px 14px;align-items:stretch}
+#karaokeView #karaokeStaff{flex:none;width:auto;min-width:900px;height:auto;max-height:none;aspect-ratio:auto;background:#fff;color:#111}
+#karaokeView #karaokeStaff svg{width:auto;height:auto;max-height:none;border-radius:0;min-height:0;aspect-ratio:auto;background:#fff!important}
+#karaokeView .karaoke-position{position:sticky;left:14px;width:min(850px,calc(100vw - 60px))}
+#karaokeView .karaoke-controls{flex-wrap:wrap}
+body.luwipi-dark #karaokeView #karaokeStaff{background:#fff;color:#111}

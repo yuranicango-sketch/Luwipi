@@ -24,3 +24,7 @@ A pauta desliza na horizontal sem cortar clave e notas. O piano não se desloca 
 ## Fonte de estilos
 
 `assets/activities/activity-workspace.css` define o shell atual. `viewport-canvas.css` reserva o ecrã para cada atividade; `interface-refinement.css` ajusta pautas de uma e duas claves. CSS da trilha permanece em `learning-path.css`, mas o módulo só inicia com `window.LUWIPI_ENABLE_LEARNING_PATH === true`.
+
+## Karaokê MIDI
+
+O arranjo original é reproduzido completo. A pista de leitura é escolhida explicitamente por nome, família de instrumento e canal, com audição isolada. A conversão MusicXML conserva cada ataque, acordes e vozes sobrepostas; quantização afeta apenas a notação. OpenSheetMusicDisplay 1.9.9 (BSD-3-Clause) organiza a pauta contínua com cursor ligado ao tempo MIDI. A exportação MusicXML permite revisão no MuseScore. Não existe neste deploy um processo de conversão MuseScore no servidor.

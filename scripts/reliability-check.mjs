@@ -533,6 +533,20 @@ await test('Karaokê preserva MIDI original e ataques do solo',async()=>{
  assert(csp.includes("'wasm-unsafe-eval'")&&!/script-src[^;]* 'unsafe-eval'/.test(csp),'decoder MIDI bloqueado ou permissões demasiado amplas');
 });
 
+await test('MusicXML: acordes, vozes, durações e isolamento de pista',async()=>{
+ const w={LuwipiScoreEngine:await engine()};new Function('window',await read('assets/karaoke/midi-notation.js'))(w);
+ const result=w.LuwipiMidiNotation.convert([
+ {id:'a',midi:60,startBeat:0,durationBeat:4},{id:'b',midi:64,startBeat:0,durationBeat:4},
+ {id:'c',midi:67,startBeat:1,durationBeat:.5},{id:'d',midi:69,startBeat:1.5,durationBeat:.5},
+ {id:'e',midi:72,startBeat:3,durationBeat:2}],{meter:[4,4],keyFifths:0},'A & B');
+ assert(result.sourceNotes===5&&result.voices===2&&result.bars===2,'acordes ou vozes perdidos');
+ assert(result.xml.includes('<chord/>')&&result.xml.includes('<backup>')&&result.xml.includes('<tied type="start"/>')&&result.xml.includes('A &amp; B'),'MusicXML incompleto');
+ const input=midiBuffer([0,0xc0,24,0,0xc1,40,0,0x90,60,100,0,0x91,64,100,0x83,0x60,0x80,60,0,0,0x81,64,0,0,0xff,0x2f,0]);
+ const isolated=w.LuwipiMidiNotation.isolate(input,'0:1'),score=w.LuwipiScoreEngine.parseMIDI(isolated),events=w.LuwipiScoreEngine.performanceEvents(score);
+ assert(events.length===1&&events[0].midi===64&&events[0].channel===1&&events[0].durationBeat===1,'audição de pista altera notas ou tempo');
+ assert(score.transcription.programs.some(p=>p.channel===1&&p.program===40),'instrumento da pista perdido');
+});
+
 await test('Entrada única, menu, tema e karaokê MIDI',async()=>{
   const app=await read('app.html'),config=JSON.parse(await read('vercel.json'));
   const core=decodeCore(app);
