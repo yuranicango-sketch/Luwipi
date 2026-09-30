@@ -401,13 +401,12 @@ await test("Leitura: jornada imersiva, peças tradicionais e alturas certas",asy
   assert(guide.includes("if(!enabled||!kind)return")&&css.includes("body.piano-open .piano-dock:not(.hidden)"),"mobile piano guide missing");
 });
 
-await test("Leitor imersivo: pauta legível, piano inteiro e páginas sincronizadas",async()=>{
-  const core=decodeCore(await read("app.html")),css=await read("assets/reading/immersive-journey.css");
-  assert(core.includes("function songPageSize()")&&core.includes("songPage*pageSize")&&core.includes("immersive?1:2"),"fullscreen still squeezes four bars into the score");
-  assert(core.includes("Math.floor(measure/songPageSize())")&&core.includes("songPage*songPageSize()"),"playback and piano targets use the old paging");
-  assert(core.includes("songPage=Math.floor(measure/size);renderSong()"),"entering fullscreen loses the current measure");
-  assert(css.includes("grid-template-rows:minmax(0,1fr) minmax(150px,180px) auto")&&css.includes("max-height:none;"),"score, piano and controls do not have separate space");
-  assert(css.includes("position:relative;bottom:auto;z-index:auto"),"transport still covers the piano");
+await test("Leitor de uma e duas claves: pauta deslizante e controlos no topo",async()=>{
+  const core=decodeCore(await read("app.html")),css=await read("assets/reading/score-experience.css"),ui=await read("assets/reading/score-experience.js");
+  assert(core.includes("songFullScore")&&core.includes("songScoreWrap.addEventListener('scroll'")&&core.includes("for(let bi=start;bi<end;bi++)"),"song is still paginated into four bars");
+  assert(core.includes("event.code!=='Space'")&&core.includes("playBtn.click()"),"spacebar does not control playback");
+  assert(css.includes("overflow-x:auto!important")&&css.includes(".score-wrap.whole-score")&&css.includes(".pager,\nbody[data-mode=\"aprenda\"] #songView .secondary-actions"),"score canvas still has controls below the piano");
+  assert(ui.includes("toolbar.append(transport)")&&ui.includes("experience-score-actions"),"playback and hidden controls are not in the top/menu");
 });
 
 await test("Minueto de Petzold: Sol maior na partitura e no áudio",async()=>{
@@ -472,9 +471,9 @@ await test("Interação infantil: sem menu de contexto nem seleção, com ediç�
 await test("Música a duas claves: partitura legível e piano opcional",async()=>{
   const html=await read("app.html"),core=decodeCore(html),css=await read("assets/activities/interface-refinement.css");
   assert(html.includes('id="songPianoToggle"')&&html.includes('aria-controls="pianoDock"'),"hide piano control is missing");
-  assert(core.includes("songVersionKey==='both'||document.fullscreenElement===reader"),"two clefs still shrink four measures into two systems");
+  assert(core.includes("const W=full?920:left+count*mw+35")&&core.includes("const x=left+(full?bi-start:bi)*mw"),"two clefs are not laid out as a continuous horizontal score");
   assert(core.includes("if(name==='song'&&!songPianoVisible)closePianoDock();else openPiano()"),"song navigation reopens a hidden piano");
-  assert(core.includes("songLayoutSize=pageSize;syncPianoTargets()")&&core.includes("const active=document.fullscreenElement===reader"),"fullscreen state is confused with two-clef pagination");
+  assert(core.includes("songLayoutSize=2;syncPianoTargets()")&&core.includes("const active=document.fullscreenElement===reader"),"fullscreen or piano state was lost");
   assert(css.includes("#songView .song-piano-toggle")&&css.includes("#songView.song-piano-hidden .score-wrap"),"song score does not reclaim space when piano is hidden");
 });
 
@@ -484,6 +483,17 @@ await test("Refinamento: pauta completa e espaços responsivos azuis",async()=>{
   assert(html.includes("interface-refinement.css")&&css.includes("transform:none!important"),"score may crop the clef");
   assert(css.includes("max-width:700px")&&css.includes("max-height:620px")&&css.includes("min-width:701px"),"phone, tablet and short landscape layouts are incomplete");
   assert(css.includes("#songView .reader:fullscreen")&&css.includes("background:#dce8ff"),"legacy grey fullscreen remains");
+});
+
+await test("Trilha inicial: onboarding por idade, progresso e tarefas em todas as superfícies",async()=>{
+  const app=await read("app.html"),path=await read("assets/activities/learning-path.js"),tasks=await read("assets/activities/universal-tasks.js"),library=await read("assets/reading/reading-library.js"),live=await read("assets/live/live-mode.js");
+  assert(app.includes('id="courseView"')&&app.includes('id="courseOnboarding"')&&app.includes('data-menu-course'),"path is not reachable from home and menu");
+  for(const age of ["5-8","9-12","13-17","18+"])assert(path.includes(`'${age}':[`)&&path.includes(`ageNames[profile.age]`),"age-specific activities missing: "+age);
+  assert(path.includes("localStorage.setItem(KEY")&&path.includes("exerciseAttempt==='done'")&&path.includes("courseFinish"),"completion is not saved or linked to the next step");
+  assert(path.includes("startingPoint")&&path.includes("profile.goal==='reading'"),"onboarding choices do not alter the journey");
+  assert(tasks.includes("CompressionStream")&&tasks.includes("openShared")&&library.includes("function openShared(item)"),"imported score task cannot be opened by a recipient");
+  assert(tasks.includes("LuwipiLiveTaskSource?.score()")&&live.includes("window.LuwipiLiveTaskSource"),"uploaded structured score cannot be sent as a task");
+  for(const file of ["atelie-musical.html","pintar-teclas.html","paw-paw-notas.html","super-paw-paw.html"])assert((await read(file)).includes("/assets/tasks/standalone-task.js"),"standalone game has no task link: "+file);
 });
 
 console.log("\nLuwipi reliability gate: "+passed+" checks passed");

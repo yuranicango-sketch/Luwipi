@@ -607,5 +607,6 @@ observer.observe(view,{attributes:true,attributeFilter:["class"]});
 window.addEventListener("pagehide",()=>{stopPlayback();Input.disconnect();if(unsubscribe)unsubscribe()});
 
 toggle(guideToggle,guideOn);toggle(rhythmToggle,rhythmOn);
+window.LuwipiLiveTaskSource=Object.freeze({score:()=>score?{title:score.title||structuredFileName||"Partitura",kind:"music",score}:null});
 updateFileState();resetPractice();
 })();

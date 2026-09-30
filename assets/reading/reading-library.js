@@ -164,6 +164,7 @@ async function renderList(){
       const meter=Array.isArray(item.score?.meter)?item.score.meter.join("/"):"—";
       const bpm=item.score?.tempoBpm?Math.round(item.score.tempoBpm)+" BPM":item.fidelity?.score?("fidelidade "+item.fidelity.score+"%"):"partitura";
       card.innerHTML='<div class="song-icon">𝄞</div><div><h3>'+escapeHtml(item.title)+'</h3><p>'+escapeHtml(meter)+' · '+escapeHtml(bpm)+'</p><span class="reading-imported-source">Prática</span>'+badgeHtml(item)+'</div><div class="song-actions"><button type="button">Abrir na Leitura</button></div>';
+      card.querySelector("button").dataset.readingId=item.id;
       card.querySelector("button").addEventListener("click",()=>open(item.id));listEl.appendChild(card);
     });
   }
@@ -174,6 +175,7 @@ async function renderList(){
       const row=document.createElement("article");row.className="exercise-row reading-imported-card";
       const bpm=item.score?.tempoBpm?Math.round(item.score.tempoBpm)+" BPM":"importado";
       row.innerHTML='<div class="song-icon">𝄞</div><div><strong>'+escapeHtml(item.title)+'</strong><span>'+escapeHtml(bpm)+' · '+badgeHtml(item)+'</span></div><button type="button">Abrir exercício</button>';
+      row.querySelector("button").dataset.readingId=item.id;
       row.querySelector("button").addEventListener("click",()=>open(item.id));exerciseListEl.appendChild(row);
     });
   }
@@ -202,6 +204,7 @@ function openPiano(){const dock=document.getElementById("pianoDock");if(!dock)re
 function closeImported(){clearTimers();document.body.classList.remove("reading-imported-open");current=null;groups=[];currentGroup=0;pianoSeen.clear()}
 async function open(id){
   const item=await get(id);if(!item?.score)return;
+  view.dataset.taskId=id;
   current=item;current.score=Engine.normalizeScore(item.score);groups=Engine.groupEvents(current.score);currentGroup=0;tempo=Math.round(current.score.tempoBpm||120);guide=false;pianoSeen.clear();
   guideBtn.setAttribute("aria-pressed","false");guideBtn.querySelector(".reading-guide-label").textContent="Guia · OFF";
   document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));view.classList.add("active");document.body.classList.add("reading-imported-open");render();scrollTo(0,0);
@@ -247,6 +250,13 @@ window.addEventListener("luwipi:access-ready",()=>{permissionCache=null;renderLi
 document.querySelectorAll('[data-nav="reading"]').forEach(button=>button.addEventListener("click",()=>setTimeout(renderList,0)));
 setTimeout(renderList,1800);
 setTimeout(renderList,5000);
-window.LuwipiReadingLibrary=Object.freeze({add,publish,permissions,list:all,get,remove,render:renderList,open,lastRemoteError:()=>lastRemoteError});
+function openShared(item){
+  if(!item?.score)return;
+  current={...item,id:"shared-task",editable:false,localOnly:false,visibility:"task"};
+  current.score=Engine.normalizeScore(current.score);groups=Engine.groupEvents(current.score);currentGroup=0;tempo=Math.round(current.score.tempoBpm||120);guide=false;pianoSeen.clear();
+  guideBtn.setAttribute("aria-pressed","false");guideBtn.querySelector(".reading-guide-label").textContent="Guia · OFF";
+  document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));view.classList.add("active");document.body.classList.add("reading-imported-open","parent-mode");render();scrollTo(0,0);
+}
+window.LuwipiReadingLibrary=Object.freeze({add,publish,permissions,list:all,get,remove,render:renderList,open,openShared,lastRemoteError:()=>lastRemoteError});
 renderList();
 })();
