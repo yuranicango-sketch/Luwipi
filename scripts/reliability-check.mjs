@@ -496,6 +496,17 @@ await test("Trilha inicial: onboarding por idade, progresso e tarefas em todas a
   for(const file of ["atelie-musical.html","pintar-teclas.html","paw-paw-notas.html","super-paw-paw.html"])assert((await read(file)).includes("/assets/tasks/standalone-task.js"),"standalone game has no task link: "+file);
 });
 
+await test('Aulas interativas: demonstração, compreensão e prática por idade',async()=>{
+  const path=await read('assets/activities/learning-path.js'),css=await read('assets/activities/learning-path.css');
+  const ideas=Function(`return (${path.match(/const lessonIdeas=(\{[\s\S]*?\n  \});/)?.[1]||'null'})`)();
+  assert(ideas,'conteúdo das aulas não foi encontrado');
+  const titles=[...path.slice(path.indexOf('const tracks='),path.indexOf('const introCount=')).matchAll(/\{title:'([^']+)'/g)].map(m=>m[1]);
+  for(const title of titles){const lesson=ideas[title];assert(lesson&&lesson.length===6,`aula sem objetivo: ${title}`);assert(lesson[2].length===3&&lesson[2][lesson[3]],`pergunta sem resposta: ${title}`)}
+  assert(path.includes('function openLesson(index)')&&path.includes('function launchPractice(index)')&&path.includes('lessonState.answered=true'),'atividade abre sem demonstrar e verificar compreensão');
+  assert(path.includes("item.kind==='exercise')coachDone.hidden=true")&&path.includes("exerciseAttempt==='done'"),'exercício pode ser dado como concluído sem execução');
+  assert(css.includes('.course-lesson.active')&&css.includes('max-height:500px')&&css.includes('orientation:landscape'),'aula não cabe em ecrãs curtos');
+});
+
 await test('Entrada única, menu, tema e karaokê MIDI',async()=>{
   const app=await read('app.html'),config=JSON.parse(await read('vercel.json'));
   const core=decodeCore(app);
