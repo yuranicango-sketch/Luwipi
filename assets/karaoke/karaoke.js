@@ -77,7 +77,7 @@ function input(e){if(!playing||e.type!=='noteon')return;const elapsed=performanc
  leadNotes.forEach((n,i)=>{const d=Math.abs(n.startBeat-beat);if(!hit.has(i)&&n.midi===e.midi&&d<.65&&d<error){best=i;error=d}});
  if(best>=0){hit.add(best);points+=error<.2?100:60;render(beat);staff.classList.remove('karaoke-flash');void staff.offsetWidth;staff.classList.add('karaoke-flash')}
 }
-async function upload(list){const incoming=[];for(const file of list){try{const score=E.parseMIDI(await file.arrayBuffer());incoming.push({name:file.name.replace(/\.midi?$/i,''),score})}catch(error){$('karaokeStatus').textContent=`${file.name}: não foi possível ler este MIDI.`}}
+async function upload(list){const incoming=[];for(const file of list){try{const score=E.parseMIDI(await file.arrayBuffer());incoming.push({name:file.name.replace(/\.midi?$/i,''),score})}catch(error){console.error('MIDI karaoke import:',error);$('karaokeStatus').textContent=`${file.name}: não foi possível ler este MIDI (${error?.message||'erro'}).`}}
  playlist.push(...incoming);song.replaceChildren();playlist.forEach((item,i)=>song.add(new Option(item.name,String(i))));if(incoming.length){song.value=String(playlist.length-incoming.length);setSong(Number(song.value))}}
 files.addEventListener('change',()=>void upload(files.files));song.addEventListener('change',()=>setSong(Number(song.value)));lead.addEventListener('change',setLead);$('karaokePlay').addEventListener('click',play);$('karaokeStop').addEventListener('click',()=>{stop();render(0)});
 $('karaokeBack').addEventListener('click',()=>{stop();view.classList.remove('active');$('homeView').classList.add('active')});
