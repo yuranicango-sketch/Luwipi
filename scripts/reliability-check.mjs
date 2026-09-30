@@ -548,7 +548,10 @@ await test('MusicXML: acordes, vozes, durações e isolamento de pista',async()=
 });
 
 await test('MuseScore: MIDI inválido recusado e conversão autenticada',async()=>{
- const {validateMidi}=await import('../server/musescore.mjs');
+ const {validateMidi,verifyNotation}=await import('../server/musescore.mjs');
+ verifyNotation('<note><pitch/></note>',0);
+ const xml='<note><pitch><step>C</step></pitch></note><note><pitch><step>C</step></pitch><tie type="stop"/></note>';
+ verifyNotation(xml,1);let lost=false;try{verifyNotation(xml,2)}catch{lost=true}assert(lost,'notas perdidas não foram detetadas');
  const valid=Buffer.from(midiBuffer([0,0xc0,24,0,0x90,60,100,0x83,0x60,0x80,60,0,0,255,47,0]));
  assert(validateMidi(valid)===1,'MIDI válido recusado');
  const meta=Buffer.from(midiBuffer([0,255,81,3,7,161,32,0,144,60,100,131,96,128,60,0,0,255,47,0]));

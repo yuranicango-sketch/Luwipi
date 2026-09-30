@@ -22,6 +22,11 @@ export function validateMidi(bytes) {
   if(pos!==bytes.length||!notes)throw Error('invalid_midi');return notes;
 }
 
+export function verifyNotation(xml,sourceNotes) {
+  const attacks=(xml.match(/<note\b[^>]*>[\s\S]*?<\/note>/g)||[]).filter(note=>note.includes('<pitch>')&&!/<tie\b[^>]*type="stop"/.test(note)).length;
+  if(attacks!==sourceNotes)throw Error('musescore_note_preservation_failed');
+}
+
 export async function runConversion(sandbox,bytes) {
   await sandbox.writeFiles([{path:'/tmp/luwipi.mid',content:bytes}]);
   const result=await sandbox.runCommand({cmd:'musescore3',args:['-s','-m','-o','/tmp/luwipi.musicxml','/tmp/luwipi.mid'],env:{QT_QPA_PLATFORM:'offscreen',XDG_RUNTIME_DIR:'/tmp/luwipi-runtime'},timeoutMs:45000});
@@ -30,6 +35,7 @@ export async function runConversion(sandbox,bytes) {
   if(!output||output.length>6000000)throw Error('invalid_musicxml');
   const xml=output.toString('utf8');
   if(!xml.includes('<score-partwise')||!xml.includes('<pitch>'))throw Error('invalid_musicxml');
+  verifyNotation(xml,validateMidi(bytes));
   return xml;
 }
 

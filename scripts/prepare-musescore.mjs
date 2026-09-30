@@ -23,7 +23,8 @@ try{
   stage='version';
   const v=await sandbox.runCommand({cmd:'musescore3',args:['--version'],env:{QT_QPA_PLATFORM:'offscreen'},timeoutMs:10000});
   if(v.exitCode!==0)throw Error('MuseScore engine unavailable');
-  const version=((await v.stdout())+' '+(await v.stderr())).trim().slice(0,200);
+  const output=(await v.stdout())+' '+(await v.stderr());
+  const version=output.match(/MuseScore[^\n]+/)?.[0]||'MuseScore 3';
   const track=[0,0xc0,24,0,0x90,60,90,0,0x90,64,90,0x83,0x60,0x80,60,0,0,0x80,64,0,0,255,47,0];
   const input=Buffer.from([77,84,104,100,0,0,0,6,0,0,0,1,1,224,77,84,114,107,0,0,0,track.length,...track]);
   stage='convert';
