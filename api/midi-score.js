@@ -3,7 +3,7 @@ import { convertMidi, validateMidi, configurationForMuseScore } from '../server/
 const busy=new Set();
 const json=(body,status=200)=>Response.json(body,{status,headers:{'cache-control':'private, no-store'}});
 export async function GET(request){
-  try{const config=await configurationForMuseScore();return json({ready:Boolean(config.snapshotId&&config.verified),engine:'MuseScore',version:config.version,verified:config.verified||false,...(new URL(request.url).searchParams.get('example')==='1'?{exampleMusicXML:config.exampleMusicXML}: {})})}
+  try{const config=await configurationForMuseScore();return json({ready:Boolean(config.snapshotId&&config.verified),engine:'MuseScore',version:config.version,verified:config.verified||false,...(process.env.VERCEL_ENV==='preview'?{diagnostic:config.diagnostic}:{}),...(new URL(request.url).searchParams.get('example')==='1'?{exampleMusicXML:config.exampleMusicXML}: {})})}
   catch{return json({ready:false,engine:'MuseScore'},503)}
 }
 export async function POST(request){
