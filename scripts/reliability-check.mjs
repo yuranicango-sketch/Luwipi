@@ -508,6 +508,13 @@ await test('Entrada única, menu, tema e karaokê MIDI',async()=>{
   const karaoke=await read('assets/karaoke/karaoke.js');
   assert(karaoke.includes('E.parseMIDI')&&karaoke.includes('E.performanceEvents')&&karaoke.includes('backing=events.filter(e=>keyOf(e)!==leadKey)'),'separação de melodia não está ligada aos eventos MIDI');
   assert(karaoke.includes('LuwipiLiveInput.connectMIDI')&&karaoke.includes('LuwipiLiveInput.connectMicrophone'),'entrada instrumental ausente');
+  assert(app.includes('id="karaokeTaskSheet"')&&karaoke.includes('CompressionStream')&&karaoke.includes('DecompressionStream'),'partilha MIDI não apresenta link ou não o consegue reabrir');
+  const css=await read('assets/karaoke/karaoke.css');assert(css.includes('max-height:540px')&&css.includes('orientation:landscape')&&css.includes('max-width:650px')&&css.includes('minmax(0,1.6fr)'),'karaokê sem adaptação vertical e horizontal');
+  const E=await engine(),name=bytes=>[...bytes];
+  const t1=[0,255,3,6,...name(Buffer.from('Melody')),0,192,73,0,144,60,100,131,96,128,60,0,0,255,47,0];
+  const t2=[0,255,3,5,...name(Buffer.from('Piano')),0,193,0,0,145,48,70,131,96,129,48,0,0,255,47,0];
+  const fixture=new Uint8Array([77,84,104,100,0,0,0,6,0,1,0,2,1,224,77,84,114,107,...u32(t1.length),...t1,77,84,114,107,...u32(t2.length),...t2]);
+  const score=E.parseMIDI(fixture.buffer);assert(score.transcription.trackNames.some(x=>x.title==='Melody')&&score.transcription.programs.some(x=>x.program===73)&&E.performanceEvents(score).some(x=>x.track===1),'pistas MIDI independentes não foram preservadas');
 });
 
 console.log("\nLuwipi reliability gate: "+passed+" checks passed");
