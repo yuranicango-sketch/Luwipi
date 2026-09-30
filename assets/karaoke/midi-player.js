@@ -28,7 +28,7 @@ async function initialize(){
 }
 async function play(binary,fileName){
  const id=++loadId;
- await initialize();
+ await Promise.race([initialize(),new Promise((_,reject)=>setTimeout(()=>reject(Error('Os instrumentos demoraram demasiado a carregar. Tenta novamente.')),30000))]);
  if(id!==loadId)return false;
  seq.pause();synth.stopAll(true);
  await new Promise((resolve,reject)=>{

@@ -530,6 +530,7 @@ await test('Karaokê preserva MIDI original e ataques do solo',async()=>{
  assert(karaoke.includes('e.channel!==9'),'bateria pode ser escolhida como solo');
  const config=JSON.parse(await read('vercel.json')),csp=config.headers[0].headers.find(x=>x.key==='Content-Security-Policy').value;
  assert(csp.includes('connect-src')&&csp.includes('https://spessasus.github.io'),'banco de instrumentos bloqueado por CSP');
+ assert(csp.includes("'wasm-unsafe-eval'")&&!/script-src[^;]* 'unsafe-eval'/.test(csp),'decoder MIDI bloqueado ou permissões demasiado amplas');
 });
 
 await test('Entrada única, menu, tema e karaokê MIDI',async()=>{

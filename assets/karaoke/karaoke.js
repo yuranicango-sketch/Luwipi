@@ -102,7 +102,7 @@ function render(beat){
   svg('text',{x,y:273,class:'note-label'},staff).textContent=noteName(n.midi);
  });
  if(cursor<windowStart+barBeats-.03)rest(cursor,windowStart+barBeats-cursor);
- const cursorX=left+(beat-windowStart)*scale;svg('line',{x1:cursorX,x2:cursorX,y1:50,y2:240,class:'karaoke-cursor'},staff);
+ const cursorX=left+(beat-windowStart)*scale;const scroll=staff.closest('.karaoke-stage');if(scroll&&playing){const target=cursorX/900*staff.getBoundingClientRect().width;scroll.scrollLeft=Math.max(0,target-scroll.clientWidth*.45)}svg('line',{x1:cursorX,x2:cursorX,y1:50,y2:240,class:'karaoke-cursor'},staff);
  const next=leadNotes.find(n=>n.startBeat+n.durationBeat>=beat);
  $('karaokeNow').textContent=next?'Solo · '+noteName(next.midi):'Fim do solo';
  $('karaokeNext').textContent=next?'Próxima nota: '+noteName(next.midi):'Boa! Terminaste a melodia.';

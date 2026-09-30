@@ -36,3 +36,28 @@ body.luwipi-dark .karaoke-head,body.luwipi-dark .course-head{background:#071021!
 @media(max-height:540px) and (orientation:landscape){.karaoke-page{padding-top:max(48px,env(safe-area-inset-top));gap:4px}.karaoke-head{min-height:39px}.karaoke-head h1{font-size:25px}.karaoke-setup{min-height:36px}.karaoke-setup select,.karaoke-upload{padding:5px 9px}.karaoke-score{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);grid-template-rows:auto minmax(0,1fr) auto;gap:4px}.karaoke-position{grid-column:1/-1}.karaoke-score svg{grid-column:1;grid-row:2;height:clamp(65px,25dvh,108px)}.karaoke-keyboard-row{grid-column:2;grid-row:2;align-self:stretch}.karaoke-keys{height:100%}.karaoke-key{font-size:10px}.karaoke-progress{grid-column:1/-1}.karaoke-next{display:none}.karaoke-controls button{min-height:29px}}
 
 #karaokeView{--karaoke-paper:#fff}body.luwipi-dark #karaokeView{--karaoke-paper:#132440}
+
+/* Reading layout: compact toolbar, full-width score, keyboard below. */
+#karaokeView.active{background:#e9f0ff}
+#karaokeView .karaoke-page{width:100%;max-width:none;height:100dvh;padding:8px 12px max(8px,env(safe-area-inset-bottom))!important;border:0!important;border-radius:0!important;background:transparent!important;gap:6px!important;box-shadow:none!important;display:flex!important;flex-direction:column!important}
+#karaokeView .karaoke-head{min-height:40px;gap:8px;padding:0 44px!important;text-align:left!important;background:transparent!important}
+#karaokeView .karaoke-head h1{font-size:clamp(20px,2.6dvh,31px);margin:0}
+#karaokeView .karaoke-head small{font-size:9px}
+#karaokeView .karaoke-head button{width:34px;height:34px;font-size:18px}
+#karaokeView .karaoke-controls{flex:none;display:flex;justify-content:center;gap:6px;margin:0;flex-wrap:wrap}
+#karaokeView .karaoke-controls button{min-height:34px;padding:5px 10px;font-size:12px;border-radius:10px}
+#karaokeView .karaoke-setup{min-height:34px;flex:none;gap:6px}
+#karaokeView .karaoke-setup select,#karaokeView .karaoke-upload{padding:6px 8px;border-radius:10px;font-size:12px}
+#karaokeView .karaoke-stage{position:relative;flex:1;min-height:0;display:block;padding:0!important;border-radius:14px;background:var(--karaoke-paper);overflow:auto;box-shadow:none}
+#karaokeView .karaoke-score{height:100%;min-width:900px;display:flex;flex-direction:column;justify-content:center;gap:4px;padding:4px 12px;box-sizing:border-box}
+#karaokeView .karaoke-position{font-size:13px;min-height:20px}
+#karaokeView #karaokeStaff{width:100%;min-width:900px;height:auto;min-height:200px;max-height:none;flex:1;overflow:visible;display:block;aspect-ratio:3/1}
+#karaokeView .karaoke-keyboard-row{position:static;flex:none;width:100%;height:clamp(125px,25dvh,220px);min-height:100px;max-width:none;box-sizing:border-box;padding:8px 10px;display:grid;grid-template-columns:32px minmax(0,1fr) 32px;gap:8px;background:#17316b;border-radius:14px;border:1px solid #a8c1ed;box-shadow:none}
+#karaokeView .karaoke-keys{height:100%;width:100%;max-width:none;min-height:0}
+#karaokeView .karaoke-key{height:100%;min-height:0}
+#karaokeView .karaoke-key.black{height:62%}
+#karaokeView .karaoke-next{font-size:12px;margin:0;min-height:16px}
+#karaokeView .karaoke-progress{height:4px;flex:none}
+#karaokeView .karaoke-status{font-size:11px;min-height:14px;line-height:1.25;margin:0;flex:none}
+@media(max-width:650px){#karaokeView .karaoke-page{padding-inline:6px!important}#karaokeView .karaoke-head{padding-inline:42px!important}#karaokeView .karaoke-controls button{font-size:10px;padding:4px 7px;min-height:32px}#karaokeView .karaoke-setup{flex-wrap:wrap}#karaokeView .karaoke-upload{flex:0 0 auto}#karaokeView .karaoke-setup select{flex:1;min-width:80px}#karaokeView .karaoke-keyboard-row{height:clamp(140px,25dvh,190px)}}
+@media(max-height:540px) and (orientation:landscape){#karaokeView .karaoke-page{gap:3px!important}#karaokeView .karaoke-head{min-height:28px}#karaokeView .karaoke-head h1{font-size:18px}#karaokeView .karaoke-head small{display:none}#karaokeView .karaoke-controls button{min-height:26px;font-size:10px}#karaokeView .karaoke-setup{min-height:26px}#karaokeView .karaoke-keyboard-row{height:90px;min-height:70px}#karaokeView #karaokeStaff{min-height:145px}#karaokeView .karaoke-score{min-width:760px}#karaokeView .karaoke-status{font-size:10px}}
