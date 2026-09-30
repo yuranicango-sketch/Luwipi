@@ -21,7 +21,12 @@ function convert(events,score,title){
  function restXML(at,dur,voice){return figureParts(at,dur).map(f=>'<note><rest/><duration>'+f.ticks+'</duration><voice>'+voice+'</voice><type>'+f.type+'</type>'+(f.dot?'<dot/>':'')+(f.triplet?'<time-modification><actual-notes>3</actual-notes><normal-notes>2</normal-notes></time-modification>':'')+'</note>').join('')}
  const measures=bars.map((bar,index)=>{
   const length=bar.end-bar.start;
-  let xml='<measure number="'+(index+1)+'"><attributes><divisions>'+D+'</divisions><key><fifths>'+bar.key+'</fifths></key><time><beats>'+bar.meter[0]+'</beats><beat-type>'+bar.meter[1]+'</beat-type></time>'+(index===0?'<clef><sign>'+(bass?'F':'G')+'</sign><line>'+(bass?4:2)+'</line></clef>':'')+'</attributes>';
+  const previous=bars[index-1];
+  let attributes=index===0?'<divisions>'+D+'</divisions>':'';
+  if(!previous||previous.key!==bar.key)attributes+='<key><fifths>'+bar.key+'</fifths></key>';
+  if(!previous||previous.meter.join('/')!==bar.meter.join('/'))attributes+='<time><beats>'+bar.meter[0]+'</beats><beat-type>'+bar.meter[1]+'</beat-type></time>';
+  if(index===0)attributes+='<clef><sign>'+(bass?'F':'G')+'</sign><line>'+(bass?4:2)+'</line></clef>';
+  let xml='<measure number="'+(index+1)+'">'+(attributes?'<attributes>'+attributes+'</attributes>':'');
   voices.forEach((voice,vi)=>{
    if(vi)xml+='<backup><duration>'+length+'</duration></backup>';
    let at=bar.start;
