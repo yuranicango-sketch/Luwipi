@@ -1,0 +1,85 @@
+/* Learner canvas: the page itself never becomes a long document. */
+body[data-mode="aprenda"]{overflow:hidden;background:#dce8ff}
+body[data-mode="aprenda"] > .brand-header{display:none!important}
+body[data-mode="aprenda"] .view.active{height:100dvh;min-height:0;overflow:hidden}
+body[data-mode="aprenda"] .view.active>.page{box-sizing:border-box;width:100%;max-width:none;height:100dvh;min-height:0;margin:0;padding:clamp(8px,1.6dvh,18px) clamp(10px,2vw,24px) max(8px,env(safe-area-inset-bottom));overflow:hidden;display:flex;flex-direction:column}
+body[data-mode="aprenda"] .view.active:not(#homeView) .page-head{display:none!important}
+body[data-mode="aprenda"] .view.active .page>.page-head+*{min-height:0}
+/* The catalog belongs to the menu on every screen, including the journey card. */
+body[data-mode="aprenda"] #readingView .journey-library-toggle,
+body[data-mode="aprenda"] #gamesView #gamesLibraryToggle,
+body[data-mode="aprenda"] #readingView .reading-library,
+body[data-mode="aprenda"] #gamesView .games-library{display:none!important}
+.experience-menu-catalog-actions{display:grid;gap:7px}
+.experience-menu-catalog-actions button{display:grid;grid-template-columns:28px minmax(0,1fr) auto;align-items:center;gap:9px;min-height:49px;padding:8px 11px;border:1px solid #cddaf0;border-radius:13px;background:#edf3ff;color:#18366d;text-align:left}
+.experience-menu-catalog-actions span{display:grid;place-items:center;width:27px;height:27px;border-radius:8px;background:#dbe7ff;font-weight:900}
+.experience-menu-catalog-actions b{font-size:12px;line-height:1.2}.experience-menu-catalog-actions em{font-size:10px;font-style:normal;font-weight:800;color:#5876ae}
+.experience-menu-panel.catalog-open>.experience-menu-nav,.experience-menu-panel.catalog-open>.experience-menu-catalog-actions,.experience-menu-panel.catalog-open>.experience-menu-context-actions{display:none}
+.experience-catalog{display:flex;flex:1;min-height:0;flex-direction:column;gap:9px}.experience-catalog.hidden{display:none}
+.experience-catalog-back{align-self:start;min-height:36px;padding:6px 11px;border:1px solid #c8d8f0;border-radius:9px;background:#fff;color:#1c3c78;font-weight:850}
+.experience-catalog h3{margin:0;font-size:20px;letter-spacing:-.04em;color:#153367}
+.experience-catalog h4{margin:12px 0 5px;font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:#6079a8}
+#experienceCatalogFilters{display:grid;gap:6px}.experience-catalog-filters{display:flex;gap:5px}
+.experience-catalog-filters .experience-catalog-item{flex:1;min-width:0;min-height:34px;padding:6px;text-align:center;justify-content:center;font-size:11px}
+.experience-catalog-filters .experience-catalog-item strong{font-size:11px}.experience-catalog-filters .selected{background:#214caa;color:#fff;border-color:#214caa}
+#experienceCatalogItems{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;display:block;padding:2px 3px 12px 0;scrollbar-color:#acc1e5 transparent}
+.experience-catalog-item{display:flex;width:100%;min-height:47px;flex-direction:column;align-items:flex-start;justify-content:center;gap:2px;margin-bottom:6px;padding:9px 11px;border:1px solid #d2def1;border-radius:11px;background:#fff;color:#1b3870;text-align:left;cursor:pointer}
+.experience-catalog-item strong{font-size:12px;line-height:1.2}.experience-catalog-item small{font-size:10px;line-height:1.2;color:#60759b}
+/* Home: one useful starting action and four compact choices. */
+body[data-mode="aprenda"] #homeView .premium-home{justify-content:center;gap:clamp(8px,1.5dvh,16px);padding-top:max(54px,env(safe-area-inset-top))!important}
+body[data-mode="aprenda"] #homeView .home-heading{flex:none;margin:0!important;padding:0!important}
+body[data-mode="aprenda"] #homeView .home-heading h1{font-size:clamp(36px,6dvh,66px);line-height:1;margin:3px 0!important}
+body[data-mode="aprenda"] #homeView .home-feature{flex:0 1 auto;width:min(100%,900px);min-height:clamp(105px,20dvh,190px);margin:0 auto!important;padding:clamp(16px,3vw,28px)}
+body[data-mode="aprenda"] #homeView .home-feature strong{font-size:clamp(24px,5vw,39px)}
+body[data-mode="aprenda"] #homeView .home-paths{flex:0 1 auto;width:min(100%,900px);margin:0 auto!important;padding:clamp(10px,2vw,18px)}
+body[data-mode="aprenda"] #homeView .home-paths>p{margin:0 0 9px;font-size:13px}
+body[data-mode="aprenda"] #homeView .home-path-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:7px}
+body[data-mode="aprenda"] #homeView .home-path-grid button{min-height:clamp(65px,11dvh,116px);padding:clamp(8px,1.5vw,13px)}
+body[data-mode="aprenda"] #homeView .home-path-grid button small{font-size:10px;line-height:1.2}
+body[data-mode="aprenda"] #homeView #homeResume{display:none!important}
+body[data-mode="aprenda"] #homeView .home-tool-list{display:none!important}
+/* The next exercise is the entire reading screen, not a preface to a long index. */
+body[data-mode="aprenda"] #readingView .page{padding-top:max(56px,env(safe-area-inset-top))}
+body[data-mode="aprenda"] #readingView .journey-stage{display:grid;grid-template-rows:auto auto auto minmax(100px,1fr) auto auto;align-content:stretch;flex:1;min-height:0;width:100%;max-width:1100px;margin:0 auto!important;padding:clamp(13px,2dvh,28px) clamp(13px,3vw,35px);gap:clamp(5px,1dvh,13px)}
+body[data-mode="aprenda"] #readingView .journey-stage h2{margin:0;font-size:clamp(28px,5dvh,54px)}
+body[data-mode="aprenda"] #readingView .journey-sub{margin:0;font-size:clamp(12px,1.8dvh,16px)}
+body[data-mode="aprenda"] #readingView .journey-score{min-height:0;padding:clamp(6px,1.4dvh,17px);display:flex;align-items:center;overflow:hidden}
+body[data-mode="aprenda"] #readingView .journey-score svg{width:100%;max-height:100%;height:100%}
+body[data-mode="aprenda"] #readingView .journey-keyboard{width:min(100%,680px);max-width:680px;height:clamp(61px,12dvh,106px);margin:0 auto}
+body[data-mode="aprenda"] #readingView .journey-actions{margin:0;gap:8px}
+body[data-mode="aprenda"] #readingView .journey-actions button{min-height:clamp(38px,6dvh,52px);padding:6px 14px;font-size:clamp(11px,1.7dvh,15px)}
+/* Hubs fit the viewport; their longer lists live in the catalog. */
+body[data-mode="aprenda"] #gamesView .page,body[data-mode="aprenda"] #rhythmView .page{padding-top:max(56px,env(safe-area-inset-top))}
+body[data-mode="aprenda"] #gamesView .games-path{flex:1;min-height:0;display:flex;flex-direction:column;margin:0;padding:clamp(14px,2dvh,25px)}
+body[data-mode="aprenda"] #gamesView .games-path h2{margin:4px 0 12px;font-size:clamp(25px,4dvh,42px)}
+body[data-mode="aprenda"] #gamesView .games-path-grid{flex:1;min-height:0;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}
+body[data-mode="aprenda"] #gamesView .games-path-grid .game-card{min-height:0;padding:9px}
+body[data-mode="aprenda"] #rhythmView .section-title{flex:none;margin:0 0 10px}
+body[data-mode="aprenda"] #rhythmView .section-title h2{font-size:clamp(25px,4dvh,40px);margin:0}
+body[data-mode="aprenda"] #rhythmView .rhythm-menu{flex:1;min-height:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+body[data-mode="aprenda"] #rhythmView .rhythm-menu-card{min-height:0;padding:clamp(7px,1.5dvh,15px)}
+body[data-mode="aprenda"] #rhythmView .rhythm-song-section{display:none}
+/* Other activity canvases share the same viewport shell without page scrolling. */
+body[data-mode="aprenda"] :is(#readingImportedView,#rhythmReadView,#pulseView,#attackView,#completeView,#rhythmSongView,#gameView,#durationView,#animalPianoView,#soundBubblesView,#liveModeView).active>.page> :is(.reader,.rhythm-activity,.game-stage,.duration-demo,.ap-shell,.sb-shell,.live-layout){flex:1;min-height:0;overflow:hidden;margin:0}
+@media(max-width:700px){
+ body[data-mode="aprenda"] #homeView .home-path-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ body[data-mode="aprenda"] #homeView .home-path-grid button{min-height:clamp(58px,10dvh,88px)}
+ body[data-mode="aprenda"] #homeView .home-path-grid button small{display:none}
+ body[data-mode="aprenda"] #gamesView .games-path-grid{grid-template-columns:1fr}
+ body[data-mode="aprenda"] #gamesView .games-path-grid .game-card{display:grid;grid-template-columns:80px 1fr;min-height:0;align-items:center}
+ body[data-mode="aprenda"] #gamesView .games-path-grid .game-card img{width:80px;max-height:65px}
+ body[data-mode="aprenda"] #rhythmView .rhythm-menu{grid-template-columns:1fr}
+ body[data-mode="aprenda"] #rhythmView .rhythm-menu-card{min-height:0}
+ body[data-mode="aprenda"] #readingView .journey-score{min-height:90px}
+ body[data-mode="aprenda"] #readingView .journey-keyboard{height:clamp(56px,10dvh,78px)}
+ .experience-menu-panel{gap:10px}
+}
+@media(max-height:590px){
+ body[data-mode="aprenda"] #homeView .home-heading h1{font-size:34px}
+ body[data-mode="aprenda"] #homeView .home-feature{min-height:95px}
+ body[data-mode="aprenda"] #homeView .home-path-grid button{min-height:52px}
+ body[data-mode="aprenda"] #readingView .journey-stage{grid-template-rows:auto auto minmax(0,1fr) auto auto;gap:4px}
+ body[data-mode="aprenda"] #readingView .journey-sub{display:none}
+ body[data-mode="aprenda"] #readingView .journey-keyboard{height:55px}
+ body[data-mode="aprenda"] #readingView .journey-actions button{min-height:36px}
+}
