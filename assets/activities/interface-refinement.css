@@ -55,3 +55,24 @@ body[data-mode="aprenda"] #exerciseView .pager{white-space:nowrap}
  body[data-mode="aprenda"] #exerciseView .score-wrap{min-height:130px!important}
  body[data-mode="aprenda"] #exerciseView .piano-dock{height:clamp(145px,29dvh,205px)!important;max-height:clamp(145px,29dvh,205px)!important;min-height:145px!important}
 }
+
+/* Two clefs share one large system instead of two miniature systems. */
+#songView .reader{position:relative}
+#songView .song-piano-toggle{
+ position:absolute;z-index:8;top:clamp(8px,1.2vw,15px);right:clamp(10px,2vw,24px);
+ min-height:36px;padding:6px 12px;border:1px solid #b9cbed;border-radius:11px;
+ background:#f8fbff;color:#1c3a7a;font-size:12px;font-weight:850;
+}
+#songView .reader-top{padding-inline:112px}
+#songView #songSvg{transform:none!important;max-width:100%!important}
+#songView.song-piano-hidden .score-wrap{flex:1 1 auto;min-height:0}
+@media(max-width:700px){
+ #songView .song-piano-toggle{top:7px;right:7px;min-height:32px;padding:5px 8px;font-size:10px}
+ #songView .reader-top{padding:0 100px 0 8px;text-align:left}
+ #songView .reader-top h2{font-size:clamp(20px,5vw,28px)}
+ #songView .aid-row{width:100%}
+}
+@media(max-width:390px){
+ #songView .reader-top{padding-right:92px}
+ #songView .song-piano-toggle{font-size:9px;padding-inline:6px}
+}

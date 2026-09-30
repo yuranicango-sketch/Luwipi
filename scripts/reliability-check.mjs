@@ -469,6 +469,15 @@ await test("Interação infantil: sem menu de contexto nem seleção, com ediç�
   }
 });
 
+await test("Música a duas claves: partitura legível e piano opcional",async()=>{
+  const html=await read("app.html"),core=decodeCore(html),css=await read("assets/activities/interface-refinement.css");
+  assert(html.includes('id="songPianoToggle"')&&html.includes('aria-controls="pianoDock"'),"hide piano control is missing");
+  assert(core.includes("songVersionKey==='both'||document.fullscreenElement===reader"),"two clefs still shrink four measures into two systems");
+  assert(core.includes("if(name==='song'&&!songPianoVisible)closePianoDock();else openPiano()"),"song navigation reopens a hidden piano");
+  assert(core.includes("songLayoutSize=pageSize;syncPianoTargets()")&&core.includes("const active=document.fullscreenElement===reader"),"fullscreen state is confused with two-clef pagination");
+  assert(css.includes("#songView .song-piano-toggle")&&css.includes("#songView.song-piano-hidden .score-wrap"),"song score does not reclaim space when piano is hidden");
+});
+
 await test("Refinamento: pauta completa e espaços responsivos azuis",async()=>{
   const html=await read("app.html"),css=await read("assets/activities/interface-refinement.css");
   assert(html.includes('id="exerciseSvg" viewBox="0 30 900 245"'),"exercise score retains excess blank space");
