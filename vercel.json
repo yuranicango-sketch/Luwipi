@@ -218,7 +218,13 @@
     }
   ],
   "framework": null,
-  "installCommand": "",
+  "installCommand": "npm ci --ignore-scripts",
   "buildCommand": "sh scripts/build-static.sh",
-  "outputDirectory": "public"
+  "outputDirectory": "public",
+  "functions": {
+    "api/midi-score.js": {
+      "maxDuration": 90,
+      "includeFiles": "server/musescore-snapshot.json"
+    }
+  }
 }

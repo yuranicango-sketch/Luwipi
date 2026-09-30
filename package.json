@@ -1,0 +1,7 @@
+{
+  "name": "luwipi",
+  "private": true,
+  "type": "module",
+  "engines": { "node": "24.x" },
+  "dependencies": { "@vercel/sandbox": "3.5.1" }
+}

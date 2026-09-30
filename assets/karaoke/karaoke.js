@@ -4,6 +4,7 @@ const E=window.LuwipiScoreEngine;
 const $=id=>document.getElementById(id);
 const view=$('karaokeView'),files=$('karaokeFiles'),song=$('karaokeSong'),lead=$('karaokeLead'),staff=$('karaokeStaff');
 if(!view||!E)return;
+let scoreRequest=0,scoreAbort;
 let playRequest=0,loading=false,audition=false,notationDocument=null;let playlist=[],current=null,leadKey='',leadNotes=[],notation=[],backing=[],timer=0,startAt=0,playing=false,points=0,hit=new Set(),unsubscribe=null;
 const keys=$('karaokeKeys');let keyboardBase=60;
 $('karaokeOctaveDown').addEventListener('click',()=>{keyboardBase=Math.max(24,keyboardBase-12);drawKeys()});$('karaokeOctaveUp').addEventListener('click',()=>{keyboardBase=Math.min(96,keyboardBase+12);drawKeys()});
@@ -26,13 +27,43 @@ function groups(score){
  }).filter(x=>x.events.length>=1).sort((a,b)=>Number(a.key.split(':')[0])-Number(b.key.split(':')[0]));
 }
 function simplify(events){return events.map(e=>({...e})).sort((a,b)=>a.startBeat-b.startBeat||a.midi-b.midi)}
-function setSong(index){stop();current=playlist[index]||null;lead.innerHTML='';if(!current)return;
+function setSong(index){scoreRequest++;scoreAbort?.abort();stop();current=playlist[index]||null;lead.innerHTML='';if(!current)return;
  const tracks=groups(current.score);
  lead.add(new Option('Escolher pista para a partitura',''));tracks.forEach(g=>{const option=new Option(`${g.title} · ${g.instrument} · canal ${Number(g.key.split(':')[1])+1} · ${g.events.length} notas`,g.key);lead.add(option)});
  if(!tracks.length){$('karaokeStatus').textContent='Este MIDI não tem uma pista melódica separada.';return}
  lead.value='';leadKey='';leadNotes=[];notationDocument=null;staff.replaceChildren();$('karaokeEmpty').classList.remove('hidden');$('karaokeEmpty').textContent='Escolhe a pista que queres ler. Usa Ouvir pista para confirmar.';$('karaokeScore').classList.add('hidden');$('karaokeListenTrack').disabled=true;$('karaokeExportXML').disabled=true;$('karaokePlay').disabled=false;$('karaokeShare').disabled=false;
 }
-async function setLead(){stop();leadKey=lead.value;if(!leadKey){leadNotes=[];notationDocument=null;staff.replaceChildren();$('karaokeEmpty').classList.remove('hidden');$('karaokeScore').classList.add('hidden');$('karaokeListenTrack').disabled=true;$('karaokeExportXML').disabled=true;return}const events=E.performanceEvents(current.score);leadNotes=simplify(events.filter(e=>keyOf(e)===leadKey));notationDocument=window.LuwipiMidiNotation.convert(leadNotes,current.score,current.name+' · '+lead.selectedOptions[0].textContent);keyboardBase=Math.max(36,Math.min(84,Math.floor((leadNotes[0]?.midi||60)/12)*12));drawKeys();backing=events.filter(e=>keyOf(e)!==leadKey).sort((a,b)=>a.startBeat-b.startBeat);hit=new Set();points=0;$('karaokeEmpty').classList.add('hidden');$('karaokeScore').classList.remove('hidden');$('karaokeListenTrack').disabled=false;$('karaokeExportXML').disabled=false;$('karaokeStatus').textContent='A organizar a partitura desta pista…';const selected=leadKey;try{await window.LuwipiNotationDisplay.load(notationDocument.xml);if(selected!==leadKey)return;$('karaokeStatus').textContent=notationDocument.sourceNotes+' notas preservadas · '+notationDocument.voices+' voz(es).';render(0)}catch(error){if(selected===leadKey)$('karaokeStatus').textContent=error.message}}
+async function setLead(){
+ stop();const request=++scoreRequest;scoreAbort?.abort();scoreAbort=new AbortController();const signal=scoreAbort.signal;
+ leadKey=lead.value;
+ if(!leadKey){leadNotes=[];notationDocument=null;staff.replaceChildren();$('karaokeEmpty').classList.remove('hidden');$('karaokeScore').classList.add('hidden');$('karaokeListenTrack').disabled=true;$('karaokeExportXML').disabled=true;return}
+ const item=current,selected=leadKey,events=E.performanceEvents(item.score);
+ leadNotes=simplify(events.filter(e=>keyOf(e)===selected));
+ notationDocument=window.LuwipiMidiNotation.convert(leadNotes,item.score,item.name+' · '+lead.selectedOptions[0].textContent);
+ keyboardBase=Math.max(36,Math.min(84,Math.floor((leadNotes[0]?.midi||60)/12)*12));drawKeys();
+ backing=events.filter(e=>keyOf(e)!==selected).sort((a,b)=>a.startBeat-b.startBeat);hit=new Set();points=0;
+ $('karaokeEmpty').classList.add('hidden');$('karaokeScore').classList.remove('hidden');$('karaokeListenTrack').disabled=false;$('karaokeExportXML').disabled=true;$('karaokeShare').disabled=true;
+ $('karaokeStatus').textContent='A organizar a partitura desta pista…';
+ try{
+  item.nativeScores??={};
+  const cached=item.nativeScores[selected];
+  if(cached)notationDocument={...notationDocument,...cached};
+  await window.LuwipiNotationDisplay.load(notationDocument.xml);
+  if(request!==scoreRequest)return;
+  render(0);
+  let warning='';
+  if(!cached&&item.binary){
+   $('karaokeStatus').textContent='Partitura disponível · a finalizar a organização…';
+   try{const native=await window.LuwipiMuseScore.prepare(item.binary,selected,signal);
+    if(request!==scoreRequest)return;
+    if(native){item.nativeScores[selected]=native;notationDocument={...notationDocument,...native};await window.LuwipiNotationDisplay.load(native.xml)}
+   }catch(error){if(signal.aborted||request!==scoreRequest)return;warning=error.message}
+  }
+  if(request!==scoreRequest)return;
+  $('karaokeStatus').textContent=warning||notationDocument.sourceNotes+' notas · partitura pronta.';render(0);
+ }catch(error){if(request===scoreRequest)$('karaokeStatus').textContent=error.message}
+ finally{if(request===scoreRequest){$('karaokeExportXML').disabled=false;$('karaokeShare').disabled=false}}
+}
 function drawKeys(){keys.replaceChildren();for(let i=0;i<12;i++){const midi=keyboardBase+i,button=document.createElement('button');button.type='button';button.className='karaoke-key'+([1,3,6,8,10].includes(i)?' black':'');button.textContent=[1,3,6,8,10].includes(i)?'':noteName(midi);button.setAttribute('aria-label',E.ptSolfege(midi));button.addEventListener('pointerdown',event=>{event.preventDefault();E.playNote(midi,1,500,80);input({type:'noteon',midi});button.classList.add('pressed')});button.addEventListener('pointerup',()=>button.classList.remove('pressed'));button.addEventListener('pointercancel',()=>button.classList.remove('pressed'));keys.append(button)}}
 function render(beat){
  window.LuwipiNotationDisplay.update(beat);
@@ -81,10 +112,10 @@ document.addEventListener('keydown',event=>{if(view.classList.contains('active')
 $('karaokeTaskClose').addEventListener('click',()=>$('karaokeTaskSheet').hidden=true);
 $('karaokeTaskSheet').addEventListener('click',event=>{if(event.target.id==='karaokeTaskSheet')event.currentTarget.hidden=true});
 $('karaokeTaskCopy').addEventListener('click',async()=>{const input=$('karaokeTaskLink');try{await navigator.clipboard.writeText(input.value);$('karaokeTaskCopy').textContent='Copiado ✓'}catch{input.focus();input.select();$('karaokeTaskCopy').textContent='Seleciona e copia'}setTimeout(()=>$('karaokeTaskCopy').textContent='Copiar link',1800)});
-$('karaokeShare').addEventListener('click',async()=>{if(!current)return;if(!current.binary){$('karaokeStatus').textContent='Importa o MIDI original para partilhar a música com os instrumentos.';return}let midiBinary='';for(const byte of new Uint8Array(current.binary))midiBinary+=String.fromCharCode(byte);const data={version:2,title:current.name,midi:btoa(midiBinary),leadKey};let bytes=new TextEncoder().encode(JSON.stringify(data));if('CompressionStream'in window){bytes=new Uint8Array(await new Response(new Blob([bytes]).stream().pipeThrough(new CompressionStream('gzip'))).arrayBuffer())}if(bytes.length>18000){$('karaokeStatus').textContent='Este MIDI é demasiado grande para um link. Envia o ficheiro MIDI diretamente.';return}let binary='';for(let i=0;i<bytes.length;i+=8192)binary+=String.fromCharCode(...bytes.subarray(i,i+8192));const encoded=btoa(binary).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');const url=new URL('/',location.origin);url.searchParams.set('parent','1');url.searchParams.set('type','karaoke');url.hash='karaoke='+encoded;$('karaokeTaskLink').value=url.href;$('karaokeTaskSheet').hidden=false});
+$('karaokeShare').addEventListener('click',async()=>{if(!current)return;if(!current.binary){$('karaokeStatus').textContent='Importa o MIDI original para partilhar a música com os instrumentos.';return}let midiBinary='';for(const byte of new Uint8Array(current.binary))midiBinary+=String.fromCharCode(byte);const data={version:2,title:current.name,midi:btoa(midiBinary),leadKey,notation:current.nativeScores?.[leadKey]||null};let bytes=new TextEncoder().encode(JSON.stringify(data));if('CompressionStream'in window){bytes=new Uint8Array(await new Response(new Blob([bytes]).stream().pipeThrough(new CompressionStream('gzip'))).arrayBuffer())}if(bytes.length>18000){$('karaokeStatus').textContent='Este MIDI é demasiado grande para um link. Envia o ficheiro MIDI diretamente.';return}let binary='';for(let i=0;i<bytes.length;i+=8192)binary+=String.fromCharCode(...bytes.subarray(i,i+8192));const encoded=btoa(binary).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');const url=new URL('/',location.origin);url.searchParams.set('parent','1');url.searchParams.set('type','karaoke');url.hash='karaoke='+encoded;$('karaokeTaskLink').value=url.href;$('karaokeTaskSheet').hidden=false});
 async function openSharedTask(){try{const q=new URLSearchParams(location.search),encoded=location.hash.match(/^#karaoke=([\w-]+)$/)?.[1];if(q.get('type')!=='karaoke'||!encoded)return;const raw=atob(encoded.replace(/-/g,'+').replace(/_/g,'/'));let bytes=Uint8Array.from(raw,c=>c.charCodeAt(0));if(bytes[0]===31&&bytes[1]===139){if(!('DecompressionStream'in window))throw Error('Este navegador não consegue abrir esta tarefa.');bytes=new Uint8Array(await new Response(new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer())}const data=JSON.parse(new TextDecoder().decode(bytes));if(data.version===2&&typeof data.midi==='string'){
  const decoded=atob(data.midi),binary=Uint8Array.from(decoded,c=>c.charCodeAt(0)).buffer;
- const score=E.parseMIDI(binary);playlist.push({name:data.title,score,binary});song.add(new Option(data.title,'0'));song.value='0';setSong(0);
+ const score=E.parseMIDI(binary);const nativeScores={};if(data.notation?.engine==='MuseScore'&&typeof data.notation.xml==='string'&&data.notation.xml.length<6000000&&!/<!ENTITY/i.test(data.notation.xml))nativeScores[data.leadKey]=data.notation;playlist.push({name:data.title,score,binary,nativeScores});song.add(new Option(data.title,'0'));song.value='0';setSong(0);
  if([...lead.options].some(o=>o.value===data.leadKey)){lead.value=data.leadKey;setLead()}
  view.classList.add('active');document.querySelectorAll('.view').forEach(v=>{if(v!==view)v.classList.remove('active')});
  }else if(Array.isArray(data.lead)&&Array.isArray(data.backing)){current={name:data.title,score:{tempoBpm:data.tempoBpm,tempoMap:data.tempoMap,meter:data.meter,keyFifths:data.keyFifths}};leadNotes=data.lead;notationDocument=window.LuwipiMidiNotation.convert(leadNotes,current.score,current.name);void window.LuwipiNotationDisplay.load(notationDocument.xml);backing=data.backing;view.classList.add('active');document.querySelectorAll('.view').forEach(v=>{if(v!==view)v.classList.remove('active')});$('karaokeEmpty').classList.add('hidden');$('karaokeScore').classList.remove('hidden');$('karaokePlay').disabled=false;keyboardBase=Math.max(36,Math.min(84,Math.floor((leadNotes[0]?.midi||60)/12)*12));drawKeys();render(0)}}catch(error){console.warn('Tarefa MIDI inválida',error);$('karaokeStatus').textContent='Não foi possível abrir a tarefa MIDI.'}}

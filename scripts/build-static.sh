@@ -3,6 +3,10 @@ set -eu
 
 node scripts/reliability-check.mjs
 
+if [ "${VERCEL:-0}" = "1" ]; then
+  node scripts/prepare-musescore.mjs
+fi
+
 rm -rf public
 mkdir -p public/auth public/assets
 

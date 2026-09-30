@@ -547,6 +547,26 @@ await test('MusicXML: acordes, vozes, durações e isolamento de pista',async()=
  assert(score.transcription.programs.some(p=>p.channel===1&&p.program===40),'instrumento da pista perdido');
 });
 
+await test('MuseScore: MIDI inválido recusado e conversão autenticada',async()=>{
+ const {validateMidi}=await import('../server/musescore.mjs');
+ const valid=Buffer.from(midiBuffer([0,0xc0,24,0,0x90,60,100,0x83,0x60,0x80,60,0,0,255,47,0]));
+ assert(validateMidi(valid)===1,'MIDI válido recusado');
+ const meta=Buffer.from(midiBuffer([0,255,81,3,7,161,32,0,144,60,100,131,96,128,60,0,0,255,47,0]));
+ assert(validateMidi(meta)===1,'metadados mudam posição do parser');
+ for(const bad of [valid.subarray(0,valid.length-1),Buffer.from('not midi'),Buffer.from(midiBuffer([0,144,255,100,0,255,47,0]))]){
+  let rejected=false;try{validateMidi(bad)}catch{rejected=true}assert(rejected,'MIDI corrompido aceite');
+ }
+ const src=(await read('api/midi-score.js')).replace("import { convertMidi, validateMidi } from '../server/musescore.mjs';","const convertMidi=()=>{throw Error('must not run')};const validateMidi=()=>1;");
+ const api=await import('data:text/javascript;base64,'+Buffer.from(src).toString('base64'));
+ const r=await api.POST(new Request('https://luwipi.vercel.app/api/midi-score',{method:'POST',headers:{'content-type':'audio/midi'},body:valid}));
+ assert(r.status===401,'conversor aberto sem sessão');
+ const foreign=await api.POST(new Request('https://luwipi.vercel.app/api/midi-score',{method:'POST',headers:{origin:'https://other.example'},body:valid}));
+ assert(foreign.status===403,'origem externa aceite');
+ const client=await read('assets/karaoke/karaoke.js');
+ assert(client.includes('scoreAbort?.abort()')&&client.includes('request!==scoreRequest')&&client.includes('notation:current.nativeScores'),'seleção concorrente ou partilha perde partitura nativa');
+ assert((await read('app.html')).includes('/assets/karaoke/musescore-client.js'),'cliente MuseScore não carregado');
+});
+
 await test('Entrada única, menu, tema e karaokê MIDI',async()=>{
   const app=await read('app.html'),config=JSON.parse(await read('vercel.json'));
   const core=decodeCore(app);
@@ -557,7 +577,7 @@ await test('Entrada única, menu, tema e karaokê MIDI',async()=>{
   assert(app.includes('id="karaokeFiles"')&&app.includes('multiple'),'importação de vários MIDI ausente');
   assert(config.redirects.some(x=>x.source==='/ensine'&&x.destination==='/')&&config.redirects.some(x=>x.source==='/aprenda'&&x.destination==='/'),'rotas antigas não convergem');
   const karaoke=await read('assets/karaoke/karaoke.js');
-  assert(karaoke.includes('E.parseMIDI')&&karaoke.includes('E.performanceEvents')&&karaoke.includes('backing=events.filter(e=>keyOf(e)!==leadKey)'),'separação de melodia não está ligada aos eventos MIDI');
+  assert(karaoke.includes('E.parseMIDI')&&karaoke.includes('E.performanceEvents')&&karaoke.includes('backing=events.filter(e=>keyOf(e)!==selected)'),'separação de melodia não está ligada aos eventos MIDI');
   assert(karaoke.includes('LuwipiLiveInput.connectMIDI')&&karaoke.includes('LuwipiLiveInput.connectMicrophone'),'entrada instrumental ausente');
   assert(app.includes('id="karaokeTaskSheet"')&&karaoke.includes('CompressionStream')&&karaoke.includes('DecompressionStream'),'partilha MIDI não apresenta link ou não o consegue reabrir');
   const css=await read('assets/karaoke/karaoke.css');assert(css.includes('max-height:540px')&&css.includes('orientation:landscape')&&css.includes('max-width:650px')&&css.includes('minmax(0,1.6fr)'),'karaokê sem adaptação vertical e horizontal');
