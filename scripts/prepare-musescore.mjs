@@ -27,6 +27,10 @@ try{
   if(!xml.includes('<chord/>')||!xml.includes('<step>C</step>')||!xml.includes('<step>E</step>'))throw Error('MuseScore smoke test lost chord notes');
   await sandbox.runCommand({cmd:'rm',args:['-f','/tmp/luwipi.mid','/tmp/luwipi.musicxml']});
   if(!snapshotId)snapshotId=(await sandbox.snapshot({expiration:0})).snapshotId;
-  await writeFile(new URL('../server/musescore-snapshot.json',import.meta.url),JSON.stringify({snapshotId,version,region:'iad1'}));
+  await sandbox.stop().catch(()=>{});
+  sandbox=await Sandbox.create({source:{type:'snapshot',snapshotId},region:'iad1',timeout:65000,networkPolicy:'deny-all'});
+  const restored=await runConversion(sandbox,input);
+  if(!restored.includes('<chord/>'))throw Error('Restored MuseScore lost chord');
+  await writeFile(new URL('../server/musescore-snapshot.json',import.meta.url),JSON.stringify({snapshotId,version,region:'iad1',verified:true,exampleMusicXML:restored}));
   console.log('MuseScore native MIDI → MusicXML chord test passed. Engine:',version);
 }finally{await sandbox?.stop().catch(()=>{})}

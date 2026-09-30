@@ -34,8 +34,12 @@ export async function runConversion(sandbox,bytes) {
   return xml;
 }
 
+export async function configurationForMuseScore() {
+  return JSON.parse(await readFile(process.cwd()+'/server/musescore-snapshot.json','utf8'));
+}
+
 export async function convertMidi(bytes) {
-  const configuration=JSON.parse(await readFile(new URL('./musescore-snapshot.json',import.meta.url),'utf8'));
+  const configuration=await configurationForMuseScore();
   if(!configuration.snapshotId)throw Error('musescore_not_ready');
   const sandbox=await Sandbox.create({source:{type:'snapshot',snapshotId:configuration.snapshotId},region:configuration.region,resources:{vcpus:2},timeout:65000,networkPolicy:'deny-all'});
   try{return {xml:await runConversion(sandbox,bytes),engine:'MuseScore',version:configuration.version}}

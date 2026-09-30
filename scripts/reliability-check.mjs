@@ -556,7 +556,7 @@ await test('MuseScore: MIDI inválido recusado e conversão autenticada',async()
  for(const bad of [valid.subarray(0,valid.length-1),Buffer.from('not midi'),Buffer.from(midiBuffer([0,144,255,100,0,255,47,0]))]){
   let rejected=false;try{validateMidi(bad)}catch{rejected=true}assert(rejected,'MIDI corrompido aceite');
  }
- const src=(await read('api/midi-score.js')).replace("import { convertMidi, validateMidi } from '../server/musescore.mjs';","const convertMidi=()=>{throw Error('must not run')};const validateMidi=()=>1;");
+ const src=(await read('api/midi-score.js')).replace("import { convertMidi, validateMidi, configurationForMuseScore } from '../server/musescore.mjs';","const convertMidi=()=>{throw Error('must not run')};const validateMidi=()=>1;");
  const api=await import('data:text/javascript;base64,'+Buffer.from(src).toString('base64'));
  const r=await api.POST(new Request('https://luwipi.vercel.app/api/midi-score',{method:'POST',headers:{'content-type':'audio/midi'},body:valid}));
  assert(r.status===401,'conversor aberto sem sessão');

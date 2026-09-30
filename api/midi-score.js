@@ -1,7 +1,11 @@
-import { convertMidi, validateMidi } from '../server/musescore.mjs';
+import { convertMidi, validateMidi, configurationForMuseScore } from '../server/musescore.mjs';
 
 const busy=new Set();
 const json=(body,status=200)=>Response.json(body,{status,headers:{'cache-control':'private, no-store'}});
+export async function GET(request){
+  try{const config=await configurationForMuseScore();return json({ready:Boolean(config.snapshotId&&config.verified),engine:'MuseScore',version:config.version,verified:config.verified||false,...(new URL(request.url).searchParams.get('example')==='1'?{exampleMusicXML:config.exampleMusicXML}: {})})}
+  catch{return json({ready:false,engine:'MuseScore'},503)}
+}
 export async function POST(request){
   const origin=request.headers.get('origin');if(origin&&origin!==new URL(request.url).origin)return json({error:'forbidden_origin'},403);
   const authorization=request.headers.get('authorization')||'';
