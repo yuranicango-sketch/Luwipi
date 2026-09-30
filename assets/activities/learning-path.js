@@ -1,7 +1,8 @@
 (()=>{
   'use strict';
   const view=document.getElementById('courseView'),modal=document.getElementById('courseOnboarding');
-  if(!view||!modal)return;
+  // Preserve the course for a later curriculum release; the current product opens activities directly.
+  if(!view||!modal||window.LUWIPI_ENABLE_LEARNING_PATH!==true)return;
   const KEY='luwipi:learning-path:v1';
   const ageNames={'5-8':'5–8 anos','9-12':'9–12 anos','13-17':'13–17 anos','18+':'Adulto'};
   const tracks={

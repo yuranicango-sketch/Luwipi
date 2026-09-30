@@ -1,14 +1,5 @@
 /* Activity-first surfaces: one clear action, readable controls, one piano. */
 .hidden,[hidden]{display:none!important}
-.home-duration-link{display:none!important}
-.premium-home{justify-content:center}
-.home-feature.is-learn{background:linear-gradient(145deg,#244bd4,#4568ff 62%,#7291ff);box-shadow:0 18px 48px rgba(44,80,194,.2)}
-.home-feature small{font-size:12px;color:#e5ebff}
-.home-feature strong{max-width:12ch}
-.home-tool-list{margin-top:22px}
-.home-tool-list button{min-height:76px}
-.home-tool-list strong{font-size:17px}
-
 #gamesView .section-title{margin-bottom:24px}
 #gamesView .tiny-section{padding:0;border:0;background:transparent;box-shadow:none}
 #gamesView .tiny-head,#gamesView .game-group-title{margin-bottom:12px}
@@ -68,9 +59,6 @@ body.piano-open:has(#exerciseView.active),body.piano-open:has(#songView.active),
 #liveModeView .live-import-button{min-height:50px}
 
 @media(max-width:700px){
-  .home-heading h1{font-size:clamp(46px,13vw,66px)}
-  .home-feature{min-height:175px;padding:22px}
-  .home-feature strong{font-size:clamp(29px,8vw,40px)}
   #gamesView .tiny-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
   #gamesView .tiny-card{min-height:175px;display:flex;flex-direction:column;gap:9px}
   #gamesView .tiny-card .tiny-thumb{width:100%;height:88px}
@@ -89,15 +77,8 @@ body.piano-open:has(#exerciseView.active),body.piano-open:has(#songView.active),
   #readingView .exercise-row,#readingView .song-card{padding:13px}
   #readingView .song-actions{grid-column:1/-1}
 }
-@media(prefers-reduced-motion:reduce){.home-feature,.game-card,.tiny-card{transition:none!important}}
+@media(prefers-reduced-motion:reduce){.game-card,.tiny-card{transition:none!important}}
 
-.home-paths{width:min(100%,760px);margin:0 auto 20px;padding:18px;border:1px solid #e2e7f5;border-radius:20px;background:#fff;box-shadow:0 12px 30px rgba(24,26,34,.06)}
-.home-paths>p{margin:0 0 14px;font-weight:800;font-size:16px}
-.home-path-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
-.home-path-grid button{display:flex;flex-direction:column;align-items:flex-start;gap:7px;min-height:152px;padding:15px;text-align:left;border:1px solid #e2e7f5;border-radius:15px;background:#f8faff;color:#17191f;cursor:pointer}
-.home-path-grid button:hover,.home-path-grid button:focus-visible{border-color:#4568ff;box-shadow:0 6px 20px rgba(69,104,255,.13)}
-.home-path-grid button span{font-size:25px;color:#4568ff}.home-path-grid button strong{font-size:15px}.home-path-grid button small{font-size:12px;line-height:1.4;color:#555e73}
-#homeResume{margin-top:12px;padding:10px 2px;border:0;background:transparent;color:#244bd4;font-weight:800;cursor:pointer}
 .measure-hint{margin:8px 0 12px;color:#566075;font-size:13px}
 #songSvg .song-measure{cursor:pointer;outline:none}
 #songSvg .measure-surface{fill:transparent;stroke:transparent;stroke-width:3}

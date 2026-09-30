@@ -439,10 +439,10 @@ await test("Activity-first: sem aulas, piano reativo e formatos musicais",async(
   const app=await read("app.html"),live=await read("assets/live/live-mode.js"),engine=await read("assets/music/score-engine.js"),practice=await read("assets/activities/interactive-practice.js");
   const journey=await read("assets/reading/immersive-journey.js"),layout=await read("assets/reading/immersive-journey.css");
   assert(!app.includes('id="videosView"')&&!app.includes('id="plannerView"'),"lesson/video views should be removed");
-  assert(app.includes("Continuar a jornada")&&app.includes('id="homeStart"'),"activity-first home missing");
+  assert(app.includes('Atividades musicais')&&app.includes('id="homePaths"')&&!app.includes('id="homeStart"'),"home still promotes the paused course");
   for(const path of ["reading","rhythm","games","live"])assert(app.includes('data-home-path="'+path+'"'),"learner path missing: "+path);
   assert(app.includes('id="gamesPathGrid"')&&journey.includes('gameGrid.appendChild(card)')&&layout.includes('#gamesView:not(.library-open) .games-library'),"games still expose a competing legacy index");
-  assert(layout.includes('body[data-mode="aprenda"] #homeView .home-tool-list{display:none}'),"duplicate learner navigation remains");
+  assert(!app.includes('class="home-tool-list"')&&!app.includes('id="homeResume"'),"duplicate learner navigation remains");
   assert(practice.includes("activity-piano-key")&&practice.includes("LuwipiAudioBridge"),"reactive piano preview missing");
   assert(live.includes(".abc")&&live.includes(".kar")&&live.includes(".json"),"extended score formats missing");
   assert(engine.includes("function parseABC"),"ABC parser missing");
@@ -487,7 +487,7 @@ await test("Refinamento: pauta completa e espaços responsivos azuis",async()=>{
 
 await test("Trilha inicial: onboarding por idade, progresso e tarefas em todas as superfícies",async()=>{
   const app=await read("app.html"),path=await read("assets/activities/learning-path.js"),tasks=await read("assets/activities/universal-tasks.js"),library=await read("assets/reading/reading-library.js"),live=await read("assets/live/live-mode.js");
-  assert(app.includes('id="courseView"')&&app.includes('id="courseOnboarding"')&&app.includes('data-menu-course'),"path is not reachable from home and menu");
+  assert(!app.includes('id="courseView"')&&!app.includes('learning-path.js')&&!app.includes('data-menu-course')&&path.includes('const tracks='),"course was deleted or remains mounted before the curriculum is ready");
   for(const age of ["5-8","9-12","13-17","18+"])assert(path.includes(`'${age}':[`)&&path.includes(`ageNames[profile.age]`),"age-specific activities missing: "+age);
   assert(path.includes("localStorage.setItem(KEY")&&path.includes("exerciseAttempt==='done'")&&path.includes("courseFinish"),"completion is not saved or linked to the next step");
   assert(path.includes("startingPoint")&&path.includes("profile.goal==='reading'"),"onboarding choices do not alter the journey");
@@ -505,6 +505,15 @@ await test('Aulas interativas: demonstração, compreensão e prática por idade
   assert(path.includes('function openLesson(index)')&&path.includes('function launchPractice(index)')&&path.includes('lessonState.answered=true'),'atividade abre sem demonstrar e verificar compreensão');
   assert(path.includes("item.kind==='exercise')coachDone.hidden=true")&&path.includes("exerciseAttempt==='done'"),'exercício pode ser dado como concluído sem execução');
   assert(css.includes('.course-lesson.active')&&css.includes('max-height:500px')&&css.includes('orientation:landscape'),'aula não cabe em ecrãs curtos');
+});
+
+await test('Área de atividades: navegação única e estilos sem duplicação antiga',async()=>{
+  const app=await read('app.html'),tasks=await read('assets/activities/universal-tasks.js'),css=await read('assets/activities/activity-workspace.css'),build=await read('scripts/build-static.sh');
+  assert(app.includes('activity-workspace.css')&&app.includes('Atividades musicais')&&app.includes('data-karaoke-open'),'entrada de atividades incompleta');
+  assert(!app.includes('home-feature')&&!app.includes('home-tool-list')&&!app.includes('data-menu-course'),'chamadas da interface antiga permanecem');
+  assert(!tasks.includes("task('course')")&&!tasks.includes('teacher-task-action')&&tasks.includes("task('reading')"),'partilha usa percurso inativo ou ação duplicada');
+  assert(css.includes('repeat(5,minmax(0,1fr))')&&css.includes('max-width:650px')&&css.includes('orientation:landscape'),'grelha não se adapta aos dispositivos');
+  assert(!build.includes('public/app.html')&&build.includes('rm -f public/assets/activities/learning-path.js'),'build publica código antigo ou uma entrada duplicada');
 });
 
 await test('Entrada única, menu, tema e karaokê MIDI',async()=>{

@@ -53,18 +53,17 @@
       if(!document.getElementById('livePdfWrap')?.classList.contains('hidden')){alert('Este PDF ainda não tem notas estruturadas para enviar como tarefa. Usa MIDI ou MusicXML, ou envia a partitura já adicionada à Leitura.');return}
       modal(task('live'));return;
     }
-    if(id==='courseView'){modal(task('course'));return}
     if(id==='gameView'&&last?.type==='game'){modal(task('game',{id:last.id}));return}
     if(last&&['rhythmReadView','pulseView','attackView','completeView','rhythmSongView','durationView','animalPianoView','soundBubblesView'].includes(id)){
       modal(task(last.type,{id:last.id}));return;
     }
     if(id==='noteFlowView'){modal(task('flow'));return}
-    if(id==='readingView'){modal(task('course'));return}
-    const nav={'gamesView':'games','rhythmView':'rhythm','homeView':'course'}[id];
+    if(id==='readingView'){modal(task('reading'));return}
+    if(id==='homeView'){alert('Abre primeiro a atividade que queres enviar como tarefa.');return}
+    const nav={'gamesView':'games','rhythmView':'rhythm'}[id];
     if(nav)modal(task(nav));
   }
   document.getElementById('experienceMenuTask')?.addEventListener('click',()=>void share());
-  const teacherShare=document.createElement('button');teacherShare.type='button';teacherShare.className='teacher-task-action';teacherShare.textContent='↗ Enviar tarefa';teacherShare.addEventListener('click',()=>void share());document.body.append(teacherShare);
   async function openTask(){
     if(query.get('parent')!=='1')return;
     const type=query.get('type'),id=query.get('id');
@@ -74,13 +73,13 @@
       try{const value=location.hash.match(/^#score=([A-Za-z0-9_-]+)$/)?.[1];if(value)window.LuwipiReadingLibrary?.openShared(await decodeScore(value))}catch(error){console.error('Tarefa inválida',error)}
       return;
     }
-    if(type==='course'){window.LuwipiLearningPath?.show();return}
+    if(type==='course')selector='[data-nav="reading"]'; // Existing shared links open a usable activity hub.
     if(type==='game'&&/^[a-zA-Z0-9_-]{1,40}$/.test(id||''))selector=`[data-game="${id}"]`;
     if(type==='rhythm'&&/^[0-9]$/.test(id||''))selector=`#rhythmView .rhythm-menu-card:nth-child(${Number(id)+1})`;
     if(type==='rhythm-song'&&/^[a-zA-Z0-9_-]{1,40}$/.test(id||''))selector=`[data-rhythm-song="${id}"]`;
     if(type==='button'&&['soundBubblesCard','animalPianoCard'].includes(id))selector='#'+id;
     if(type==='flow')selector='#readingView .reading-flow-entry';
-    if(['games','rhythm','live'].includes(type))selector=`[data-nav="${type}"]`;
+    if(['reading','games','rhythm','live'].includes(type))selector=`[data-nav="${type}"]`;
     const target=selector&&document.querySelector(selector);
     if(target){target.click();document.body.classList.add('parent-mode')}
   }

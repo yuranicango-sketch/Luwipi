@@ -7,7 +7,6 @@ rm -rf public
 mkdir -p public/auth public/assets
 
 cp app.html public/index.html
-cp app.html public/app.html
 cp super-paw-paw.html public/super-paw-paw.html
 cp paw-paw-notas.html public/paw-paw-notas.html
 cp pintar-teclas.html public/pintar-teclas.html
@@ -21,5 +20,6 @@ cp sitemap.xml public/sitemap.xml
 cp site.webmanifest public/site.webmanifest
 cp auth/callback.html public/auth/callback.html
 cp -R assets/. public/assets/
+rm -f public/assets/activities/learning-path.js public/assets/activities/learning-path.css
 
 echo "Static frontend prepared in public/"

@@ -25,19 +25,6 @@ body[data-mode="aprenda"] #gamesView .games-library{display:none!important}
 #experienceCatalogItems{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;display:block;padding:2px 3px 12px 0;scrollbar-color:#acc1e5 transparent}
 .experience-catalog-item{display:flex;width:100%;min-height:47px;flex-direction:column;align-items:flex-start;justify-content:center;gap:2px;margin-bottom:6px;padding:9px 11px;border:1px solid #d2def1;border-radius:11px;background:#fff;color:#1b3870;text-align:left;cursor:pointer}
 .experience-catalog-item strong{font-size:12px;line-height:1.2}.experience-catalog-item small{font-size:10px;line-height:1.2;color:#60759b}
-/* Home: one useful starting action and four compact choices. */
-body[data-mode="aprenda"] #homeView .premium-home{justify-content:center;gap:clamp(8px,1.5dvh,16px);padding-top:max(54px,env(safe-area-inset-top))!important}
-body[data-mode="aprenda"] #homeView .home-heading{flex:none;margin:0!important;padding:0!important}
-body[data-mode="aprenda"] #homeView .home-heading h1{font-size:clamp(36px,6dvh,66px);line-height:1;margin:3px 0!important}
-body[data-mode="aprenda"] #homeView .home-feature{flex:0 1 auto;width:min(100%,900px);min-height:clamp(105px,20dvh,190px);margin:0 auto!important;padding:clamp(16px,3vw,28px)}
-body[data-mode="aprenda"] #homeView .home-feature strong{font-size:clamp(24px,5vw,39px)}
-body[data-mode="aprenda"] #homeView .home-paths{flex:0 1 auto;width:min(100%,900px);margin:0 auto!important;padding:clamp(10px,2vw,18px)}
-body[data-mode="aprenda"] #homeView .home-paths>p{margin:0 0 9px;font-size:13px}
-body[data-mode="aprenda"] #homeView .home-path-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:7px}
-body[data-mode="aprenda"] #homeView .home-path-grid button{min-height:clamp(65px,11dvh,116px);padding:clamp(8px,1.5vw,13px)}
-body[data-mode="aprenda"] #homeView .home-path-grid button small{font-size:10px;line-height:1.2}
-body[data-mode="aprenda"] #homeView #homeResume{display:none!important}
-body[data-mode="aprenda"] #homeView .home-tool-list{display:none!important}
 /* The next exercise is the entire reading screen, not a preface to a long index. */
 body[data-mode="aprenda"] #readingView .page{padding-top:max(56px,env(safe-area-inset-top))}
 body[data-mode="aprenda"] #readingView .journey-stage{display:grid;grid-template-rows:auto auto auto minmax(100px,1fr) auto auto;align-content:stretch;flex:1;min-height:0;width:100%;max-width:1100px;margin:0 auto!important;padding:clamp(13px,2dvh,28px) clamp(13px,3vw,35px);gap:clamp(5px,1dvh,13px)}
@@ -62,9 +49,6 @@ body[data-mode="aprenda"] #rhythmView .rhythm-song-section{display:none}
 /* Other activity canvases share the same viewport shell without page scrolling. */
 body[data-mode="aprenda"] :is(#readingImportedView,#rhythmReadView,#pulseView,#attackView,#completeView,#rhythmSongView,#gameView,#durationView,#animalPianoView,#soundBubblesView,#liveModeView).active>.page> :is(.reader,.rhythm-activity,.game-stage,.duration-demo,.ap-shell,.sb-shell,.live-layout){flex:1;min-height:0;overflow:hidden;margin:0}
 @media(max-width:700px){
- body[data-mode="aprenda"] #homeView .home-path-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
- body[data-mode="aprenda"] #homeView .home-path-grid button{min-height:clamp(58px,10dvh,88px)}
- body[data-mode="aprenda"] #homeView .home-path-grid button small{display:none}
  body[data-mode="aprenda"] #gamesView .games-path-grid{grid-template-columns:1fr}
  body[data-mode="aprenda"] #gamesView .games-path-grid .game-card{display:grid;grid-template-columns:80px 1fr;min-height:0;align-items:center}
  body[data-mode="aprenda"] #gamesView .games-path-grid .game-card img{width:80px;max-height:65px}
@@ -75,9 +59,6 @@ body[data-mode="aprenda"] :is(#readingImportedView,#rhythmReadView,#pulseView,#a
  .experience-menu-panel{gap:10px}
 }
 @media(max-height:590px){
- body[data-mode="aprenda"] #homeView .home-heading h1{font-size:34px}
- body[data-mode="aprenda"] #homeView .home-feature{min-height:95px}
- body[data-mode="aprenda"] #homeView .home-path-grid button{min-height:52px}
  body[data-mode="aprenda"] #readingView .journey-stage{grid-template-rows:auto auto minmax(0,1fr) auto auto;gap:4px}
  body[data-mode="aprenda"] #readingView .journey-sub{display:none}
  body[data-mode="aprenda"] #readingView .journey-keyboard{height:55px}
