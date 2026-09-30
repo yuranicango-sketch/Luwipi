@@ -5,7 +5,7 @@
   controls.style.cssText='position:fixed;z-index:99;right:max(10px,env(safe-area-inset-right));top:max(9px,env(safe-area-inset-top));display:flex;gap:6px;max-width:calc(100vw - 20px)';
   if(course!==null&&/^\d+$/.test(course)){
     const done=document.createElement('button');done.type='button';done.textContent='✓ Concluir etapa';
-    done.addEventListener('click',()=>location.assign('/aprenda/?courseDone='+course));controls.append(done);
+    done.addEventListener('click',()=>location.assign('/?courseDone='+course));controls.append(done);
   }
   if(params.get('parent')!=='1'){
     const share=document.createElement('button');share.type='button';share.textContent='↗ Tarefa';

@@ -4,16 +4,14 @@ set -eu
 node scripts/reliability-check.mjs
 
 rm -rf public
-mkdir -p public/auth public/assets public/ensine public/aprenda
+mkdir -p public/auth public/assets
 
-cp index.html public/index.html
+cp app.html public/index.html
 cp app.html public/app.html
 cp super-paw-paw.html public/super-paw-paw.html
 cp paw-paw-notas.html public/paw-paw-notas.html
 cp pintar-teclas.html public/pintar-teclas.html
 cp atelie-musical.html public/atelie-musical.html
-cp app.html public/ensine/index.html
-cp app.html public/aprenda/index.html
 cp admin.html public/admin.html
 cp privacidade.html public/privacidade.html
 cp termos.html public/termos.html

@@ -496,5 +496,18 @@ await test("Trilha inicial: onboarding por idade, progresso e tarefas em todas a
   for(const file of ["atelie-musical.html","pintar-teclas.html","paw-paw-notas.html","super-paw-paw.html"])assert((await read(file)).includes("/assets/tasks/standalone-task.js"),"standalone game has no task link: "+file);
 });
 
+await test('Entrada única, menu, tema e karaokê MIDI',async()=>{
+  const app=await read('app.html'),config=JSON.parse(await read('vercel.json'));
+  const core=decodeCore(app);
+  assert(core.includes("const initialMode='aprenda'"),'a entrada ainda escolhe duas experiências');
+  assert(core.includes('product=in.(aprenda,ensine)'),'acessos antigos não são considerados');
+  assert(app.includes('id="experienceMenuButton"')&&app.includes('id="experienceMenuTheme"')&&app.includes('id="karaokeBack"'),'menu, tema ou voltar ausente');
+  assert(app.includes('id="karaokeFiles"')&&app.includes('multiple'),'importação de vários MIDI ausente');
+  assert(config.redirects.some(x=>x.source==='/ensine'&&x.destination==='/')&&config.redirects.some(x=>x.source==='/aprenda'&&x.destination==='/'),'rotas antigas não convergem');
+  const karaoke=await read('assets/karaoke/karaoke.js');
+  assert(karaoke.includes('E.parseMIDI')&&karaoke.includes('E.performanceEvents')&&karaoke.includes('backing=events.filter(e=>keyOf(e)!==leadKey)'),'separação de melodia não está ligada aos eventos MIDI');
+  assert(karaoke.includes('LuwipiLiveInput.connectMIDI')&&karaoke.includes('LuwipiLiveInput.connectMicrophone'),'entrada instrumental ausente');
+});
+
 console.log("\nLuwipi reliability gate: "+passed+" checks passed");
 for(const line of notes)console.log(line);

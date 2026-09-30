@@ -390,7 +390,7 @@ function parseMIDI(arrayBuffer){
       confidence:transcription.confidence,
       meanQuantizationError:transcription.meanQuantizationError,
       notesPreserved:rawEvents.length,
-      programs
+      programs,trackNames
     }
   });
 }

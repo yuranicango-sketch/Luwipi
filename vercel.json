@@ -1,6 +1,33 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "cleanUrls": true,
+  "redirects": [
+    {
+      "source": "/ensine",
+      "destination": "/",
+      "permanent": false
+    },
+    {
+      "source": "/ensine/",
+      "destination": "/",
+      "permanent": false
+    },
+    {
+      "source": "/aprenda",
+      "destination": "/",
+      "permanent": false
+    },
+    {
+      "source": "/aprenda/",
+      "destination": "/",
+      "permanent": false
+    },
+    {
+      "source": "/app",
+      "destination": "/",
+      "permanent": false
+    }
+  ],
   "rewrites": [
     {
       "source": "/api/video-download",
@@ -17,14 +44,6 @@
     {
       "source": "/api/admin-backup",
       "destination": "/api/honeypot?trap=admin-backup"
-    },
-    {
-      "source": "/ensine",
-      "destination": "/app.html?mode=ensine"
-    },
-    {
-      "source": "/aprenda",
-      "destination": "/app.html?mode=aprenda"
     },
     {
       "source": "/auth/callback",

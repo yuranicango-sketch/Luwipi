@@ -3,7 +3,7 @@
   const query=new URLSearchParams(location.search);
   let last=null,genericTaskUrl='';
   const active=()=>document.querySelector('.view.active');
-  const base=()=>new URL('/aprenda/',location.origin);
+  const base=()=>new URL('/',location.origin);
   const task=(type,data={})=>{const url=base();url.searchParams.set('parent','1');url.searchParams.set('type',type);Object.entries(data).forEach(([key,value])=>url.searchParams.set(key,value));return url};
   document.addEventListener('click',event=>{
     const trigger=event.target.closest('[data-game],[data-rhythm-song],#soundBubblesCard,#animalPianoCard,.rhythm-menu-card,[data-reading-id]');

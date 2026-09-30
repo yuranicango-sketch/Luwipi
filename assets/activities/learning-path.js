@@ -129,6 +129,7 @@
       if(!launching&&document.body.classList.contains('course-in-activity')){activeIndex=-1;document.body.classList.remove('course-in-activity')}
     }
   },true);
+  document.getElementById('courseBack')?.addEventListener('click',()=>document.querySelector('[data-nav="home"]')?.click());
   document.getElementById('courseContinue')?.addEventListener('click',()=>launch(current()));
   document.getElementById('courseExplore')?.addEventListener('click',()=>document.querySelector('#readingView .journey-stage')&&document.querySelector('[data-nav="reading"]')?.click());
   const settings=document.createElement('button');settings.type='button';settings.textContent='Ajustar trilha';settings.addEventListener('click',()=>{answers={age:profile?.age,experience:profile?.experience,goal:profile?.goal};onboard(0)});
