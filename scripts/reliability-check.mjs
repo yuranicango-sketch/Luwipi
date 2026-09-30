@@ -449,5 +449,33 @@ await test("Activity-first: sem aulas, piano reativo e formatos musicais",async(
   assert(engine.includes("function parseABC"),"ABC parser missing");
 });
 
+await test("Interação infantil: sem menu de contexto nem seleção, com edição preservada",async()=>{
+  const code=await read("assets/activities/interaction-guard.js");
+  const css=await read("assets/activities/interaction-guard.css");
+  const handlers={};
+  class MockElement{constructor(isEditable){this.isEditable=isEditable}closest(){return this.isEditable?this:null}}
+  new Function("document","Element",code)({addEventListener:(name,handler)=>handlers[name]=handler},MockElement);
+  for(const name of ["contextmenu","selectstart","dragstart"]){
+    assert(typeof handlers[name]==="function",name+" is not blocked");
+    let blocked=false;handlers[name]({target:new MockElement(false),preventDefault:()=>blocked=true});
+    assert(blocked,name+" remains enabled on an activity");
+    blocked=false;handlers[name]({target:new MockElement(true),preventDefault:()=>blocked=true});
+    assert(!blocked,name+" breaks editable fields");
+  }
+  assert(css.includes("-webkit-touch-callout:none")&&css.includes("user-select:none"),"long press still opens mobile callouts");
+  for(const file of ["app.html","pintar-teclas.html","super-paw-paw.html","paw-paw-notas.html","atelie-musical.html"]){
+    const page=await read(file);
+    assert(page.includes("interaction-guard.css")&&page.includes("interaction-guard.js"),file+" lacks the guard");
+  }
+});
+
+await test("Refinamento: pauta completa e espaços responsivos azuis",async()=>{
+  const html=await read("app.html"),css=await read("assets/activities/interface-refinement.css");
+  assert(html.includes('id="exerciseSvg" viewBox="0 30 900 245"'),"exercise score retains excess blank space");
+  assert(html.includes("interface-refinement.css")&&css.includes("transform:none!important"),"score may crop the clef");
+  assert(css.includes("max-width:700px")&&css.includes("max-height:620px")&&css.includes("min-width:701px"),"phone, tablet and short landscape layouts are incomplete");
+  assert(css.includes("#songView .reader:fullscreen")&&css.includes("background:#dce8ff"),"legacy grey fullscreen remains");
+});
+
 console.log("\nLuwipi reliability gate: "+passed+" checks passed");
 for(const line of notes)console.log(line);
