@@ -516,6 +516,22 @@ await test('Área de atividades: navegação única e estilos sem duplicação a
   assert(!build.includes('public/app.html')&&build.includes('rm -f public/assets/activities/learning-path.js'),'build publica código antigo ou uma entrada duplicada');
 });
 
+await test('Karaokê preserva MIDI original e ataques do solo',async()=>{
+ const karaoke=await read('assets/karaoke/karaoke.js'),player=await read('assets/karaoke/midi-player.js');
+ assert(karaoke.includes('score,binary')&&player.includes('binary:binary.slice(0)'),'MIDI original não chega ao sequenciador');
+ assert(!karaoke.includes('E.playNote(n.midi')&&player.includes('WorkletSynthesizer'),'acompanhamento ainda usa apenas piano');
+ assert(player.includes('currentHighResolutionTime')&&karaoke.includes('currentBeat()'),'pauta desligada do relógio do áudio');
+ assert(karaoke.includes('version:2')&&karaoke.includes('data.midi'),'tarefas perdem os instrumentos originais');
+ const begin=karaoke.indexOf('function simplify('),end=karaoke.indexOf('function setSong',begin);
+ const select=new Function(karaoke.slice(begin,end)+';return simplify')();
+ const events=[0,.125,.25,.375].map((startBeat,i)=>({id:String(i),midi:i<2?60:62+i,startBeat,durationBeat:.125}));
+ const notes=select(events);
+ assert(notes.length===4&&notes.every((n,i)=>n.startBeat===events[i].startBeat),'notas rápidas ou repetidas eliminadas');
+ assert(karaoke.includes('e.channel!==9'),'bateria pode ser escolhida como solo');
+ const config=JSON.parse(await read('vercel.json')),csp=config.headers[0].headers.find(x=>x.key==='Content-Security-Policy').value;
+ assert(csp.includes('connect-src')&&csp.includes('https://spessasus.github.io'),'banco de instrumentos bloqueado por CSP');
+});
+
 await test('Entrada única, menu, tema e karaokê MIDI',async()=>{
   const app=await read('app.html'),config=JSON.parse(await read('vercel.json'));
   const core=decodeCore(app);
