@@ -8,7 +8,7 @@ const name='luwipi-musescore3-v1';
 let sandbox,snapshotId,stage='snapshot-list';
 try{
   const previous=await Snapshot.list({name,limit:1});
-  for await(const snapshot of previous){if(snapshot.status==='created'){snapshotId=snapshot.snapshotId;break}}
+  for await(const snapshot of previous){if(snapshot.status==='created'){snapshotId=snapshot.snapshotId||snapshot.id;break}}
   stage='create';
   sandbox=await Sandbox.create(snapshotId?{source:{type:'snapshot',snapshotId},region:'iad1',timeout:300000}:{name,image:'vercel/sandbox/ubuntu',region:'iad1',resources:{vcpus:2},timeout:300000});
   if(!snapshotId){
