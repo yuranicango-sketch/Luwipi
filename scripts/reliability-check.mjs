@@ -603,7 +603,7 @@ await test('Entrada única, menu, tema e karaokê MIDI',async()=>{
   assert(core.includes("const initialMode='aprenda'"),'a entrada ainda escolhe duas experiências');
   assert(core.includes('product=in.(aprenda,ensine)'),'acessos antigos não são considerados');
   assert(app.includes('id="experienceMenuButton"')&&app.includes('id="experienceMenuTheme"')&&app.includes('id="karaokeBack"'),'menu, tema ou voltar ausente');
-  assert(app.includes('.parent-mode #experienceMenuButton')&&app.includes('.parent-mode #karaokeBack'),'modo tarefa ainda expõe navegação do produto');
+  const canonicalCss=await read('assets/app.css');assert(canonicalCss.includes('.parent-mode #experienceMenuButton')&&canonicalCss.includes('.parent-mode #karaokeBack'),'modo tarefa ainda expõe navegação do produto');
   assert(app.includes('id="karaokeFiles"')&&app.includes('multiple'),'importação de vários MIDI ausente');
   assert(config.redirects.some(x=>x.source==='/ensine'&&x.destination==='/app')&&config.redirects.some(x=>x.source==='/aprenda'&&x.destination==='/app')&&!config.redirects.some(x=>x.source==='/app'),'rotas antigas ou /app estão incorretas');
   const karaoke=await read('assets/karaoke/karaoke.js');
