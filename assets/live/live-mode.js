@@ -605,21 +605,15 @@ sourceMidi.addEventListener("click",()=>selectSource("midi"));
 sourceMic.addEventListener("click",()=>selectSource("microphone"));
 
 unsubscribe=Input.subscribe(onInput);
-const onVirtualPiano=event=>{
- if(!view.classList.contains('active'))return;
- const detail=event.detail||{},midi=Number(detail.midi);
- if(!Number.isInteger(midi)||midi<0||midi>127)return;
- if(inputMode!=='virtual'){
-  inputMode='virtual';
-  setInputState('Piano virtual ativo.');
- }
- onInput({type:detail.phase==='off'?'noteoff':'noteon',midi,source:'virtual',at:performance.now()});
+const onWorkspacePiano=event=>{
+  if(!view.classList.contains('active')||!Number.isInteger(event.detail?.midi))return;
+  if(inputMode!=='virtual'){inputMode='virtual';setInputState('Piano virtual ativo.')}
+  onInput({type:event.detail.phase==='off'?'noteoff':'noteon',source:'virtual',midi:event.detail.midi,at:performance.now()});
 };
-window.addEventListener('luwipi:piano-note',onVirtualPiano);
-
+window.addEventListener('luwipi:piano-note',onWorkspacePiano);
 const observer=new MutationObserver(cleanupWhenHidden);
 observer.observe(view,{attributes:true,attributeFilter:["class"]});
-window.addEventListener("pagehide",()=>{stopPlayback();Input.disconnect();if(unsubscribe)unsubscribe();window.removeEventListener('luwipi:piano-note',onVirtualPiano)});
+window.addEventListener("pagehide",()=>{stopPlayback();Input.disconnect();if(unsubscribe)unsubscribe();window.removeEventListener('luwipi:piano-note',onWorkspacePiano)});
 
 toggle(guideToggle,guideOn);toggle(rhythmToggle,rhythmOn);
 window.LuwipiLiveTaskSource=Object.freeze({score:()=>score?{title:score.title||structuredFileName||"Partitura",kind:"music",score}:null});
