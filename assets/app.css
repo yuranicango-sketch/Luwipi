@@ -3121,3 +3121,8 @@ body.luwipi-dark .workspace-path-copy{background:#1e3556;border-color:#486caa;co
 .workspace-path-due-action{display:block;width:100%;margin-top:7px;padding:8px 10px;border:1px solid #b2c8ea;border-radius:9px;background:#fff;color:#224a87;text-align:left;font-size:11px;line-height:1.45;font-weight:750}
 .workspace-path-due-action:hover,.workspace-path-due-action:focus-visible{background:#e5efff;outline:2px solid transparent;border-color:#416fc1}
 body.luwipi-dark .workspace-path-due-action{background:#1e3556;color:#e6f0ff;border-color:#486caa}
+
+/* Seven available levels fit in one selector without taking space from score and piano. */
+.workspace-path-level-select{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:8px 3px;padding:7px 9px;border:1px solid var(--workspace-border,#dae3f1);border-radius:10px;font-size:12px;font-weight:700;line-height:1.35}
+.workspace-path-level-select select{flex:1 1 135px;min-width:0;max-width:100%;padding:7px 9px;font:inherit;font-weight:700;border:1px solid #b4c9e8;border-radius:8px;background:#fff;color:#263e64}
+body.luwipi-dark .workspace-path-level-select select{background:#1b3153;color:#e6f0ff;border-color:#60799e}

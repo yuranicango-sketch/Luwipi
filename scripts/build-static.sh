@@ -13,6 +13,7 @@ node scripts/n3-specialized-check.mjs
 node scripts/n4-specialized-check.mjs
 node scripts/spaced-review-check.mjs
 node scripts/abc-accidental-fidelity-check.mjs
+node scripts/final-curriculum-check.mjs
 
 if [ "${VERCEL:-0}" = "1" ]; then
   node scripts/prepare-musescore.mjs

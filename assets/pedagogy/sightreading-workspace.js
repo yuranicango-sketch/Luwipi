@@ -1,6 +1,6 @@
 (()=>{
 'use strict';
-const P=window.LuwipiPedagogyV1,E=window.LuwipiScoreEngine,S=window.LuwipiSpecializedStudies,S2=window.LuwipiSpecializedN2,S3=window.LuwipiSpecializedN3,S4=window.LuwipiSpecializedN4,host=document.getElementById('workspaceCanvas');
+const P=window.LuwipiPedagogyV1,E=window.LuwipiScoreEngine,S=window.LuwipiSpecializedStudies,S2=window.LuwipiSpecializedN2,S3=window.LuwipiSpecializedN3,S4=window.LuwipiSpecializedN4,S5=window.LuwipiSpecializedN5,S6=window.LuwipiSpecializedN6,S7=window.LuwipiSpecializedN7,host=document.getElementById('workspaceCanvas');
 if(!P||!E||!host)return;
 const KEY='luwipi:pedagogy:device-draft:v1',STEPS=[
  ['Aquecimento rítmico','2 min · Conta, bate e toca um padrão com metrónomo.'],
@@ -56,7 +56,7 @@ function todayLocal(){const d=new Date();return d.getFullYear()+'-'+String(d.get
 function currentStudyLevel(track){
  const formal=profile.levels?.[track]?.level||0;
  if(track!==selected||explorationLevel===null||explorationLevel<=formal)return formal;
- const study=S?.get(track,explorationLevel)||S2?.get(track,explorationLevel)||S3?.get(track,explorationLevel)||S4?.get(track,explorationLevel);
+ const study=S?.get(track,explorationLevel)||S2?.get(track,explorationLevel)||S3?.get(track,explorationLevel)||S4?.get(track,explorationLevel)||S5?.get(track,explorationLevel)||S6?.get(track,explorationLevel)||S7?.get(track,explorationLevel);
  return study?explorationLevel:formal;
 }
 const trackName=t=>P.tracks[t].name;
@@ -128,7 +128,7 @@ function render(){
   card.append(head,el('p','',mod.objective));
   const candidate=profile.placement?.[t]?.status;
   if(candidate&&candidate!=='não avaliado')card.append(el('small','', 'Diagnóstico: '+candidate));
-  if(S?.get(t,l.level||0)||S2?.get(t,l.level||0)||S3?.get(t,l.level||0)||S4?.get(t,l.level||0))card.append(el('small','', 'Estudo musical específico disponível'));
+  if(S?.get(t,l.level||0)||S2?.get(t,l.level||0)||S3?.get(t,l.level||0)||S4?.get(t,l.level||0)||S5?.get(t,l.level||0)||S6?.get(t,l.level||0)||S7?.get(t,l.level||0))card.append(el('small','', 'Estudo musical específico disponível'));
   const launch=el('button','',selected===t?'Selecionado · organizar sessão':'Preparar sessão');
   launch.type='button';launch.onclick=()=>{selected=t;stage=3;exercise=null;explorationLevel=null;reviewTask=null;render()};
   card.append(launch);map.append(card);
@@ -163,19 +163,32 @@ function render(){
   (formalLevel>=2||profile.seen.includes(S2?.get(selected,2)?.id||'unavailable'));
  const canExploreN4=formalLevel<4&&Boolean(S4?.get(selected,4))&&
   (formalLevel>=3||profile.seen.includes(S3?.get(selected,3,0)?.id||'unavailable'));
- for(const target of [1,2,3,4]){
-  if(target===1&&!canExploreN1||target===2&&!canExploreN2||target===3&&!canExploreN3||target===4&&!canExploreN4)continue;
-  const active=explorationLevel===target;
-  const button=el('button','',active?'Regressar ao N'+formalLevel:'Explorar estudo N'+target+' (sem avançar)');
-  button.type='button';button.className='workspace-path-explore';
-  button.setAttribute('aria-pressed',String(active));
-  button.addEventListener('click',()=>{explorationLevel=active?null:target;stage=3;exercise=null;render()});
-  workout.append(button);
+ const canExploreN5=formalLevel<5&&Boolean(S5?.get(selected,5))&&
+  (formalLevel>=4||profile.seen.includes(S4?.get(selected,4,0)?.id||'unavailable'));
+ const canExploreN6=formalLevel<6&&Boolean(S6?.get(selected,6))&&
+  (formalLevel>=5||profile.seen.includes(S5?.get(selected,5,0)?.id||'unavailable'));
+ const canExploreN7=formalLevel<7&&Boolean(S7?.get(selected,7))&&
+  (formalLevel>=6||profile.seen.includes(S6?.get(selected,6,0)?.id||'unavailable'));
+ const available=[canExploreN1,canExploreN2,canExploreN3,canExploreN4,canExploreN5,canExploreN6,canExploreN7];
+ if(available.some(Boolean)){
+  // A single compact selector replaces seven stacked buttons; score and piano keep the space.
+  const levelLabel=el('label','workspace-path-level-select','Nível de exploração · sem certificação');
+  const selector=el('select');selector.setAttribute('aria-label','Escolher nível de treino');
+  const home=el('option','', 'O meu nível · N'+formalLevel);home.value='';selector.append(home);
+  available.forEach((allowed,i)=>{
+   if(!allowed)return;
+   const option=el('option','', 'Explorar estudo N'+(i+1));option.value=String(i+1);selector.append(option);
+  });
+  selector.value=available[(explorationLevel||0)-1]?String(explorationLevel):'';
+  selector.addEventListener('change',()=>{explorationLevel=selector.value?Number(selector.value):null;stage=3;exercise=null;render()});
+  levelLabel.append(selector);workout.append(levelLabel);
  }
  if(explorationLevel!==null&&explorationLevel>formalLevel)
-  workout.append(el('div','workspace-path-banner','Exploração do N'+explorationLevel+' sem certificação. O teu nível confirmado permanece N'+formalLevel+'.'));
- if(level===4&&S4?.get(selected,4)?.partialCoverage)
-  workout.append(el('div','workspace-path-banner','Competência N4 parcialmente treinada: '+S4.get(selected,4).limitations));
+  workout.append(el('div','workspace-path-banner','Exploração N'+explorationLevel+': o nível confirmado continua N'+formalLevel+'. Os estudos avançados não atribuem certificados.'));
+ const activeAdvanced=level===5?S5:level===6?S6:level===7?S7:null;
+ const partial=level===4?S4?.get(selected,4,0):activeAdvanced?.get(selected,level,0);
+ if(partial?.partialCoverage)
+  workout.append(el('div','workspace-path-banner','Competência N'+level+' parcialmente coberta: '+partial.limitations));
 
  const stages=el('label','','Etapa da sessão');
  const sel=el('select');STEPS.forEach(([name,desc],i)=>{const op=el('option','',String(i+1)+'. '+name);op.value=String(i);sel.append(op)});
@@ -183,7 +196,7 @@ function render(){
  stages.append(sel);workout.append(stages,el('p','',STEPS[stage][1]));
  const actions=el('div','workout-actions');
  if(stage===1){
-  const q=QUIZ[selected];workout.append(el('p','',q[0]));
+  const q=(level>=5?window.LuwipiAdvancedQuestions?.get(selected,level,profile.seen.length):null)||QUIZ[selected];workout.append(el('p','',q[0]));
   let msg=el('p','workout-result','');const answers=el('div','workout-actions');
   q[1].forEach((label,i)=>{const b=el('button','',label);b.onclick=()=>{answers.querySelectorAll('button').forEach(x=>x.disabled=true);msg.textContent=(i===q[2]?'Correto. ':'Ainda não. ')+q[3];};answers.append(b)});
   workout.append(answers,msg);
@@ -232,6 +245,32 @@ function splitABC(seed){
  const result=E.normalizeScore({title:seed.title,source:'pedagogy',tempoBpm:seed.meter==="6/8"?base.tempoBpm*1.5:base.tempoBpm,
  pulseUnit:seed.meter==="6/8"?"dotted-quarter":"quarter",meter:base.meter,keyFifths:base.keyFifths,
  events,rests:rh.rests.concat(rh2.rests,lh.rests,lh2.rests),keyMinor:base.keyMinor});
+ if(seed.expression==='melody-foreground'){
+  result.events.forEach(e=>{
+   if(e.id.startsWith('RH-')){e.velocity=96;e.dynamic='f'}
+   else if(e.id.startsWith('RH2-')){e.velocity=48;e.dynamic=' '}
+   else if(e.clef==='bass'){e.velocity=45;e.dynamic='p'}
+  });
+ }
+ if(seed.expression==='pedal-syncopated'){
+  const marked=new Set();
+  result.events.filter(e=>e.id.startsWith('LH-')).forEach(e=>{
+   const measure=Math.floor(e.startBeat/result.beatsPerMeasure);
+   const target=measure*result.beatsPerMeasure+(measure===0?0:.5);
+   if(!marked.has(measure)&&Math.abs(e.startBeat-target)<.001){
+    marked.add(measure);e.pedal=true;e.pedalAction=measure===0?'start':'change';
+   }
+  });
+ }
+ if(seed.expression==='contemporary-dynamics'){
+  const velocities=[45,62,85,110,115,80,52,38],symbols=['p','mp','f','ff','ff','f','mp','p'];
+  result.events.forEach(e=>{
+   const measure=Math.floor(e.startBeat/result.beatsPerMeasure)%8;
+   if(e.id.startsWith('RH-')){e.velocity=velocities[measure];e.dynamic=symbols[measure]}
+   else if(e.id.startsWith('RH2-')){e.velocity=45;e.dynamic=' '}
+   else if(e.clef==='bass'){e.velocity=48;e.dynamic='p'}
+  });
+ }
  if(seed.expression){
   result.events.forEach(e=>{
    if(e.clef==='treble'){
@@ -252,8 +291,10 @@ function splitABC(seed){
 }
 // A pure selection rule shared by training and first-sight attempts.
 function chooseSeed(track,level,which,seen){
+ const advanced=level===5?S5:level===6?S6:level===7?S7:null;
  const secondary=level===3&&S3?Array.from({length:S3.count(track)},(_,index)=>S3.get(track,level,index)).filter(Boolean)
-  :level===4&&S4?Array.from({length:S4.count(track)},(_,index)=>S4.get(track,level,index)).filter(Boolean):[];
+  :level===4&&S4?Array.from({length:S4.count(track)},(_,index)=>S4.get(track,level,index)).filter(Boolean)
+  :advanced?Array.from({length:advanced.count(track)},(_,index)=>advanced.get(track,level,index)).filter(Boolean):[];
  const special=S?.get(track,level)||S2?.get(track,level)||secondary[0]||null,
   variants=P.availableVariants(track,level);
  if(which!==3&&special)return special;
@@ -266,13 +307,14 @@ function chooseSeed(track,level,which,seen){
   :(seen.length+which)%variants;
  return variant===undefined?null:P.makeSeed(track,level,variant);
 }
+
 function launch(which){
  if(typeof window.LuwipiLiveLoadPedagogy!=='function'){workout.append(el('p','workout-result','A Prática ainda não está pronta. Atualiza a aplicação.'));return}
  const currentLevel=profile.levels[selected]?.level||0,assigned=which===2?reviewTask:null;
  const track=assigned?.track||(which===0?'F':selected);
  const level=assigned?.level??(which===0?0:currentStudyLevel(selected));
  const seed=chooseSeed(track,level,assigned?3:which,profile.seen)||
-  (assigned?(S?.get(track,level)||S2?.get(track,level)||S3?.get(track,level,0)||P.makeSeed(track,level,0)):null);
+  (assigned?(S?.get(track,level)||S2?.get(track,level)||S3?.get(track,level,0)||S4?.get(track,level,0)||S5?.get(track,level,0)||S6?.get(track,level,0)||S7?.get(track,level,0)||P.makeSeed(track,level,0)):null);
  if(!seed){workout.append(el('p','workout-result','O material inédito terminou. É necessário acrescentar novas partituras.'));return}
  let score;
  try{score=splitABC(seed)}catch(error){workout.append(el('p','workout-result','Partitura não disponível: '+error.message));return}
@@ -288,7 +330,7 @@ function launch(which){
   firstSight:which===3,exerciseId:seed.id,transposeSemitones:seed.transposeSemitones||0,
   instruction:seed.pedalEveryBar?'Troca o pedal nos símbolos Ped., a cada mudança de harmonia. A qualidade da pedalação exige observação.':
    seed.crossingMeasures?'Cruza a esquerda por cima da direita nos compassos '+seed.crossingMeasures.map(n=>n+1).join(' e ')+'.':
-   seed.intent
+   [seed.intent,seed.rhythmFeel?'Interpreta colcheias escritas com swing 2:1; a avaliação automática não mede o swing.':'',...(seed.staffHints||[])].filter(Boolean).join(' · ')
  });
  if(opened){
   // A warm-up or short pattern exposes musical content too: never re-label it
