@@ -64,9 +64,10 @@ const scopeHelp=document.getElementById("livePublishScopeHelp");
 let score=null,groups=[],pdfUrl="",pdfFileName="",structuredFileName="",activeView="interactive";
 let tempo=120,guideOn=true,rhythmOn=true,practice=false,practiceIndex=0,practiceAnchor=0,practiceFirstBeat=0;
 let correctCount=0,attempts=0,timingSamples=[],chordSeen=new Set(),noteOnTimes=new Map(),playTimers=[],playing=false;
-let inputMode="none",unsubscribe=null,lastDetected="-",pedagogyNovel=false,pedagogyExerciseId="",pedagogyTranspose=0,preReadTimer=null,preReadSession=0;
+let inputMode="none",unsubscribe=null,lastDetected="-",pedagogyNovel=false,pedagogyExerciseId="",pedagogyTranspose=0,pedagogyFlow=false,preReadTimer=null,preReadSession=0;
 function cancelPreRead(){
  preReadSession++;if(preReadTimer!==null){clearTimeout(preReadTimer);preReadTimer=null;}
+ if(practiceButton)practiceButton.disabled=false;
 }
 function startPreRead(seconds){
  cancelPreRead();
@@ -86,6 +87,10 @@ function startPreRead(seconds){
 }
 let fidelityReport=null,publishKind="music",publishScope="personal",publishOpener=null;
 
+function tempoText(value,which=score){
+ const bpm=Math.round(Number(value)||0);
+ return which?.pulseUnit==="dotted-quarter"?"♩. = "+Math.round(bpm*2/3)+" BPM":"♩ = "+bpm+" BPM";
+}
 const PT={C:"Dó","C#":"Dó♯",D:"Ré","D#":"Ré♯",E:"Mi",F:"Fá","F#":"Fá♯",G:"Sol","G#":"Sol♯",A:"Lá","A#":"Lá♯",B:"Si"};
 
 function ptNote(midi){
@@ -152,9 +157,9 @@ function renderScore(){
     return;
   }
   svgWrap.classList.remove("hidden");empty.classList.add("hidden");
-  const current=practice&&guideOn?practiceIndex:-1;
+  const current=practice&&guideOn&&!pedagogyFlow?practiceIndex:-1;
   Engine.render(svg,score,{currentGroupIndex:current});
-  if(practice&&guideOn){
+  if(practice&&guideOn&&!pedagogyFlow){
     const currentEl=svg.querySelector('[data-live-group="'+practiceIndex+'"]');
     if(currentEl)window.LuwipiScoreFollower?.follow(currentEl,svgWrap);
   }
@@ -211,14 +216,14 @@ function updateFileState(){
     const fidelity=score.source==="midi"&&trans
       ?" · MIDI preservado: "+perfCount+" eventos · notação automática "+(trans.gridBeat?("grade "+String(trans.gridBeat.toFixed(3)).replace(/0+$/,"").replace(/\.$/,"")+" tempo"):"")
       :"";
-    fileMeta.textContent=Math.round(score.tempoBpm)+" BPM · "+score.meter[0]+"/"+score.meter[1]+" · "+score.events.length+" eventos notados · "+score.keyName+fidelity;
+    fileMeta.textContent=tempoText(score.tempoBpm,score)+" · "+score.meter[0]+"/"+score.meter[1]+" · "+score.events.length+" eventos notados · "+score.keyName+fidelity;
   }else if(pdfFileName){
     fileMeta.textContent="PDF preservado como original · associa MIDI/MusicXML para Play, Guia e avaliação";
   }else{
     fileMeta.textContent="MIDI e MusicXML estruturam a partitura; PDF é mantido como documento visual.";
   }
   tempo=score?Math.round(score.tempoBpm):tempo;
-  tempoLabel.textContent=tempo+" BPM";
+  tempoLabel.textContent=tempoText(tempo);
   playButton.disabled=!score;
   practiceButton.disabled=!score;
   hearButton.disabled=!score;
@@ -245,12 +250,14 @@ function updateMetrics(){
   timingMetric.innerHTML="<b>"+(timingSamples.length?mean+" ms":"—")+"</b> ritmo";
 }
 function setScore(next,name){
-  cancelPreRead();pedagogyNovel=false;pedagogyExerciseId="";pedagogyTranspose=0;
+  cancelPreRead();pedagogyNovel=false;pedagogyExerciseId="";pedagogyTranspose=0;pedagogyFlow=false;
+  guideToggle.disabled=false;playButton.disabled=false;hearButton.disabled=false;
   score=Engine.normalizeScore(next);groups=Engine.groupEvents(score);structuredFileName=name||score.title;
   tempo=Math.round(score.tempoBpm);activeView="interactive";
   resetPractice();updateFileState();renderScore();
 }
 function clearAll(){
+  cancelPreRead();pedagogyFlow=false;guideToggle.disabled=false;
   stopPlayback();resetPractice();
   score=null;groups=[];structuredFileName="";pdfFileName="";
   if(pdfUrl)URL.revokeObjectURL(pdfUrl);pdfUrl="";
@@ -451,20 +458,18 @@ function startPractice(){
   if(inputMode==="none"){
     setFeedback("Liga o piano virtual, um teclado MIDI ou o microfone.","bad");return;
   }
-  if(pedagogyNovel){
-   pedagogyNovel=false;
-   if(!pedagogyTranspose){playButton.disabled=false;hearButton.disabled=false;}
-  }
+  if(pedagogyNovel)pedagogyNovel=false;
   stopPlayback();practice=true;practiceIndex=0;practiceAnchor=0;practiceFirstBeat=groups[0].startBeat;
   correctCount=0;attempts=0;timingSamples=[];chordSeen.clear();noteOnTimes.clear();
   practiceButton.textContent="Parar treino";
   setSession(true,"A ouvir");
-  setFeedback(guideOn?"Toca a nota destacada.":"Começa pela primeira nota da partitura.","");
+  setFeedback(pedagogyFlow?"Lê em frente sem parar nem corrigir notas passadas.":guideOn?"Toca a nota destacada.":"Começa pela primeira nota da partitura.","");
   updateMetrics();renderScore();
-  const next=groups[practiceIndex];if(practice&&next)emitPianoLight(next.events.map(e=>e.note),900);
+  const next=groups[practiceIndex];if(practice&&next&&!pedagogyFlow)emitPianoLight(next.events.map(e=>e.note),900);
 }
 function stopPractice(){
   practice=false;chordSeen.clear();noteOnTimes.clear();practiceButton.textContent="Começar treino";
+  if(pedagogyFlow){pedagogyFlow=false;guideToggle.disabled=false;if(!pedagogyTranspose){playButton.disabled=false;hearButton.disabled=false;}}
   emitPianoLight([]);setSession(false,"Pausado");renderScore();
 }
 function expectedGroup(){return groups[practiceIndex]||null}
@@ -472,8 +477,9 @@ function directionText(diff){
   if(Math.abs(diff)<35)return"no tempo";
   return diff<0?Math.abs(Math.round(diff))+" ms cedo":Math.abs(Math.round(diff))+" ms tarde";
 }
-function advancePractice(tone,message){
-  correctCount++;practiceIndex++;chordSeen.clear();
+function advancePractice(tone,message,correct=true){
+  if(correct)correctCount++;
+  practiceIndex++;chordSeen.clear();
   if(practiceIndex>=groups.length){
     practice=false;practiceButton.textContent="Repetir treino";setSession(false,"Concluído");
     setFeedback("Terminaste a partitura. Revê a precisão de notas e o ritmo abaixo.","good");
@@ -481,17 +487,19 @@ function advancePractice(tone,message){
        const tolerance=(60000/Math.max(1,tempo))*.22;
        const within=timingSamples.filter(x=>Math.abs(x)<=tolerance).length;
        window.dispatchEvent(new CustomEvent('luwipi:pedagogy-measured',{detail:{
-         exerciseId:pedagogyExerciseId,bpm:tempo,input:inputMode,observedClient:true,
+         exerciseId:pedagogyExerciseId,bpm:score?.pulseUnit==="dotted-quarter"?Math.round(tempo*2/3):tempo,
+         pulseUnit:score?.pulseUnit||"quarter",input:inputMode,observedClient:true,
          correctGroups:correctCount,attemptedGroups:attempts,
          rhythmWithinTolerance:within,rhythmSamples:timingSamples.length
        }}));
      }
     emitPianoLight([]);
+    if(pedagogyFlow){pedagogyFlow=false;guideToggle.disabled=false;if(!pedagogyTranspose){playButton.disabled=false;hearButton.disabled=false;}}
   }else{
     setFeedback(message||"Certo. Continua.",tone||"good");
   }
   updateMetrics();renderScore();
-  const next=groups[practiceIndex];if(practice&&next)emitPianoLight(next.events.map(e=>e.note),900);
+  const next=groups[practiceIndex];if(practice&&next&&!pedagogyFlow)emitPianoLight(next.events.map(e=>e.note),900);
 }
 function handleNoteOn(detail){
   lastDetected=ptNote(detail.midi);detected.textContent=lastDetected;
@@ -504,6 +512,11 @@ function handleNoteOn(detail){
   }
   if(!group.pitches.includes(detail.midi)){
     attempts++;
+    if(pedagogyFlow){
+      if(!practiceAnchor)practiceAnchor=detail.at;
+      advancePractice("near","Nota diferente: segue para o próximo grupo sem voltar atrás.",false);
+      return;
+    }
     setFeedback("Nota diferente. Esperava "+group.pitches.map(ptNote).join(" + ")+".","bad");
     updateMetrics();return;
   }
@@ -529,6 +542,7 @@ function handleNoteOn(detail){
     timingSamples.push(diff);
     const beats=Math.abs(diff)/Math.max(1,localBeatMs);
     if(beats>.46){
+      if(pedagogyFlow){advancePractice("near","Ataque fora do pulso: continua sem repetir.");return}
       chordSeen.clear();
       setFeedback("Quase — "+directionText(diff)+". Ouve o trecho e repete antes de avançar.","near");
       updateMetrics();renderScore();return;
@@ -677,8 +691,8 @@ publishName?.addEventListener("keydown",event=>{if(event.key==="Enter"){event.pr
 publishModal?.addEventListener("click",event=>{if(event.target===publishModal)closePublishPreview()});
 document.addEventListener("keydown",event=>{if(event.key==="Escape"&&!publishModal?.classList.contains("hidden"))closePublishPreview()});
 practiceButton.addEventListener("click",()=>practice?stopPractice():startPractice());
-tempoDown.addEventListener("click",()=>{tempo=Math.max(30,tempo-4);tempoLabel.textContent=tempo+" BPM";if(practice)resetPractice()});
-tempoUp.addEventListener("click",()=>{tempo=Math.min(240,tempo+4);tempoLabel.textContent=tempo+" BPM";if(practice)resetPractice()});
+tempoDown.addEventListener("click",()=>{tempo=Math.max(30,tempo-4);tempoLabel.textContent=tempoText(tempo);if(practice)resetPractice()});
+tempoUp.addEventListener("click",()=>{tempo=Math.min(240,tempo+4);tempoLabel.textContent=tempoText(tempo);if(practice)resetPractice()});
 guideToggle.addEventListener("click",()=>{guideOn=!guideOn;toggle(guideToggle,guideOn);renderScore()});
 rhythmToggle.addEventListener("click",()=>{rhythmOn=!rhythmOn;toggle(rhythmToggle,rhythmOn);if(practice)resetPractice()});
 sourceMidi.addEventListener("click",()=>selectSource("midi"));
@@ -693,7 +707,7 @@ const onWorkspacePiano=event=>{
 window.addEventListener('luwipi:piano-note',onWorkspacePiano);
 const observer=new MutationObserver(cleanupWhenHidden);
 observer.observe(view,{attributes:true,attributeFilter:["class"]});
-window.addEventListener("pagehide",()=>{stopPlayback();Input.disconnect();if(unsubscribe)unsubscribe();window.removeEventListener('luwipi:piano-note',onWorkspacePiano)});
+window.addEventListener("pagehide",()=>{cancelPreRead();stopPlayback();Input.disconnect();if(unsubscribe)unsubscribe();window.removeEventListener('luwipi:piano-note',onWorkspacePiano)});
 
 toggle(guideToggle,guideOn);toggle(rhythmToggle,rhythmOn);
 window.LuwipiLiveTaskSource=Object.freeze({score:()=>score?{title:score.title||structuredFileName||"Partitura",kind:"music",score}:null});
@@ -704,6 +718,8 @@ window.LuwipiLiveTaskSource=Object.freeze({score:()=>score?{title:score.title||s
    if(window.LuwipiWorkspaceRouter)window.LuwipiWorkspaceRouter.go('practice');
    setScore(exercise,title||exercise.title||'Leitura');
    pedagogyNovel=Boolean(options.firstSight);
+   pedagogyFlow=pedagogyNovel;
+   guideToggle.disabled=pedagogyFlow;
    pedagogyExerciseId=String(options.exerciseId||'');
    pedagogyTranspose=Number(options.transposeSemitones)===2?2:0;
    if(pedagogyTranspose){
