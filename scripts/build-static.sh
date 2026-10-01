@@ -8,6 +8,7 @@ node scripts/specialized-pedagogy-check.mjs
 node scripts/progress-sync-check.mjs
 node scripts/diagnostic-mapping-check.mjs
 node scripts/reading-integrity-check.mjs
+node scripts/n2-specialized-check.mjs
 
 if [ "${VERCEL:-0}" = "1" ]; then
   node scripts/prepare-musescore.mjs
