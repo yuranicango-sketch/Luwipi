@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import {chromium} from "playwright";
-const browser=await chromium.launch({headless:true,args:['--no-sandbox']});
+const browser=await chromium.launch({channel:'chrome',headless:true,args:['--no-sandbox']});
 const screenshots=[];
 try{
  for(const device of [{name:'desktop',viewport:{width:1440,height:900}},{name:'mobile',viewport:{width:390,height:844}}]){
@@ -29,6 +29,10 @@ try{
      keys:document.querySelectorAll('#workspacePiano #karaokeKeys .karaoke-key').length,
      piano:!!piano&&!piano.hidden&&piano.getBoundingClientRect().height>60,
      start:document.getElementById('readingLessonStart')?.textContent?.trim(),
+     startVisible:(()=>{
+      const b=document.getElementById('readingLessonStart'),r=b?.getBoundingClientRect();
+      return !!r&&r.width>50&&r.height>20&&r.top>=0&&r.bottom<=innerHeight;
+     })(),
      status:document.getElementById('readingLessonStatus')?.textContent?.trim(),
      importerActive:document.getElementById('liveModeView')?.classList.contains('active')
     };
@@ -38,7 +42,7 @@ try{
    assert.equal(result.importerActive,false,'curriculum must not open the Prática importer');
    assert.ok(result.scoreChildren>50&&result.scoreWidth>300,'partitura must be visible');
    assert.ok(result.keys>15&&result.piano,'shared piano must be usable and visible');
-   assert.ok(result.start&&result.status,'the exercise must have a start button and directions');
+   assert.ok(result.start&&result.status&&result.startVisible,'the exercise start must be visibly accessible without scrolling');
    if(level===0)await page.screenshot({path:'/tmp/learning-'+device.name+'.png'});
   }
   await page.reload({waitUntil:'domcontentloaded'});

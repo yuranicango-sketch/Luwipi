@@ -2,7 +2,6 @@ name: Learning Studio Browser Test
 on:
   push:
     branches: [fix/learning-studio-not-importer]
-  pull_request:
   workflow_dispatch:
 permissions:
   contents: read
@@ -17,7 +16,6 @@ jobs:
           node-version: "24"
       - run: sh scripts/build-static.sh
       - run: npm install --no-save playwright@1.55.1
-      - run: npx playwright install --with-deps chromium
       - name: Serve static app
         run: python3 -m http.server 4173 --directory public > /tmp/luwipi-static.log 2>&1 &
       - name: Verify N0–N7 in the Leitura workspace
