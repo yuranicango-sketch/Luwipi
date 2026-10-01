@@ -334,8 +334,8 @@ await test("Pinta o Piano: pincel e três teclados publicados",async()=>{
 });
 
 await test("Jogos: miniaturas e visual Luwipi consistentes",async()=>{
-  const app=await read("app.html"),cards=await read("assets/games/game-cards.css"),shell=await read("assets/games/luwipi-game-shell.css");
-  assert(app.includes('/assets/games/game-cards.css')&&cards.includes('.game-thumb-card')&&cards.includes('.paint-piano-entry'),"illustrated cards are not styled");
+  const app=await read("app.html"),cards=await read("assets/app.css"),shell=await read("assets/games/luwipi-game-shell.css");
+  assert(app.includes('/assets/app.css')&&cards.includes('.game-thumb-card')&&cards.includes('.paint-piano-entry'),"illustrated cards are not styled");
   for(const [game,thumb] of [["super-paw-paw","super-paw-paw"],["paw-paw-notas","paw-paw-notas"],["pintar-teclas","pinta-o-piano"]]){
     const html=await read(game+".html"),svg=await read("assets/images/games/"+thumb+"-thumb.svg");
     assert(html.includes('/assets/games/luwipi-game-shell.css')&&html.includes('class="site-brand"')||html.includes('class="head site-brand"'),game+" lacks Luwipi framing");
@@ -381,7 +381,7 @@ await test("Acesso: observador espera pela sessão e há recuperação local",as
 
 await test("Leitura: jornada imersiva, peças tradicionais e alturas certas",async()=>{
   const app=await read("app.html"),core=decodeCore(app),guide=await read("assets/reading/guide.js"),css=await read("assets/reading/guide.css");
-  const journey=await read("assets/reading/immersive-journey.js"),layout=await read("assets/reading/immersive-journey.css");
+  const journey=await read("assets/reading/immersive-journey.js"),layout=await read("assets/app.css");
   assert(app.includes('id="readingStage"')&&app.includes('data-journey-start')&&app.includes('data-library-toggle'),"visual journey is missing");
   assert(journey.includes("journey-note")&&journey.includes("LuwipiAudioBridge")&&layout.includes("#songView .transport"),"score, piano and immersive reader are disconnected");
   assert(core.includes("window.LuwipiJourneyExercises=exercises.right")&&journey.includes("exercise.notes.slice()")&&journey.includes('view.querySelector(`[data-ex="${next}"]`)?.click()'),"stage preview and next exercise use different notes");
@@ -405,7 +405,7 @@ await test("Leitura: jornada imersiva, peças tradicionais e alturas certas",asy
 });
 
 await test("Leitor de uma e duas claves: pauta deslizante e controlos no topo",async()=>{
-  const core=decodeCore(await read("app.html")),css=await read("assets/reading/score-experience.css"),ui=await read("assets/reading/score-experience.js");
+  const core=decodeCore(await read("app.html")),css=await read("assets/app.css"),ui=await read("assets/reading/score-experience.js");
   assert(core.includes("songFullScore")&&core.includes("songScoreWrap.addEventListener('scroll'")&&core.includes("for(let bi=start;bi<end;bi++)"),"song is still paginated into four bars");
   assert(core.includes("event.code!=='Space'")&&core.includes("playBtn.click()"),"spacebar does not control playback");
   assert(css.includes("overflow-x:auto!important")&&css.includes(".score-wrap.whole-score")&&css.includes(".pager,\nbody[data-mode=\"aprenda\"] #songView .secondary-actions"),"score canvas still has controls below the piano");
@@ -425,7 +425,7 @@ await test("Minueto de Petzold: Sol maior na partitura e no áudio",async()=>{
 });
 
 await test("Repertório: 40 peças em oito níveis sem prometer partituras ausentes",async()=>{
-  const app=await read("app.html"),roadmap=await read("assets/reading/repertoire-roadmap.js"),css=await read("assets/reading/immersive-journey.css");
+  const app=await read("app.html"),roadmap=await read("assets/reading/repertoire-roadmap.js"),css=await read("assets/app.css");
   const start=roadmap.indexOf("const works=["),end=roadmap.indexOf("const names=",start);
   assert(start>=0&&end>start,"repertoire data missing");
   const works=new Function(roadmap.slice(start,end)+";return works")();
@@ -440,7 +440,7 @@ await test("Repertório: 40 peças em oito níveis sem prometer partituras ausen
 
 await test("Activity-first: sem aulas, piano reativo e formatos musicais",async()=>{
   const app=await read("app.html"),live=await read("assets/live/live-mode.js"),engine=await read("assets/music/score-engine.js"),practice=await read("assets/activities/interactive-practice.js");
-  const journey=await read("assets/reading/immersive-journey.js"),layout=await read("assets/reading/immersive-journey.css");
+  const journey=await read("assets/reading/immersive-journey.js"),layout=await read("assets/app.css");
   assert(!app.includes('id="videosView"')&&!app.includes('id="plannerView"'),"lesson/video views should be removed");
   assert(app.includes('Atividades musicais')&&app.includes('id="homePaths"')&&!app.includes('id="homeStart"'),"home still promotes the paused course");
   for(const path of ["reading","rhythm","games","live"])assert(app.includes('data-home-path="'+path+'"'),"learner path missing: "+path);
@@ -465,14 +465,16 @@ await test("Interação infantil: sem menu de contexto nem seleção, com ediç�
     assert(!blocked,name+" breaks editable fields");
   }
   assert(css.includes("-webkit-touch-callout:none")&&css.includes("user-select:none"),"long press still opens mobile callouts");
-  for(const file of ["app.html","pintar-teclas.html","super-paw-paw.html","paw-paw-notas.html","atelie-musical.html"]){
+  const appPage=await read("app.html"),appCss=await read("assets/app.css");
+  assert(appPage.includes('/assets/app.css')&&appCss.includes("-webkit-touch-callout:none"),"app canonical CSS lost the interaction guard");
+  for(const file of ["pintar-teclas.html","super-paw-paw.html","paw-paw-notas.html","atelie-musical.html"]){
     const page=await read(file);
     assert(page.includes("interaction-guard.css")&&page.includes("interaction-guard.js"),file+" lacks the guard");
   }
 });
 
 await test("Música a duas claves: partitura legível e piano opcional",async()=>{
-  const html=await read("app.html"),core=decodeCore(html),css=await read("assets/activities/interface-refinement.css");
+  const html=await read("app.html"),core=decodeCore(html),css=await read("assets/app.css");
   assert(html.includes('id="songPianoToggle"')&&html.includes('aria-controls="pianoDock"'),"hide piano control is missing");
   assert(core.includes("const W=full?920:left+count*mw+35")&&core.includes("const x=left+(full?bi-start:bi)*mw"),"two clefs are not laid out as a continuous horizontal score");
   assert(core.includes("if(name==='song'&&!songPianoVisible)closePianoDock();else openPiano()"),"song navigation reopens a hidden piano");
@@ -481,9 +483,9 @@ await test("Música a duas claves: partitura legível e piano opcional",async()=
 });
 
 await test("Refinamento: pauta completa e espaços responsivos azuis",async()=>{
-  const html=await read("app.html"),css=await read("assets/activities/interface-refinement.css");
+  const html=await read("app.html"),css=await read("assets/app.css");
   assert(html.includes('id="exerciseSvg" viewBox="0 30 900 245"'),"exercise score retains excess blank space");
-  assert(html.includes("interface-refinement.css")&&css.includes("transform:none!important"),"score may crop the clef");
+  assert(html.includes("/assets/app.css")&&css.includes("transform:none!important"),"score may crop the clef");
   assert(css.includes("max-width:700px")&&css.includes("max-height:620px")&&css.includes("min-width:701px"),"phone, tablet and short landscape layouts are incomplete");
   assert(css.includes("#songView .reader:fullscreen")&&css.includes("background:#dce8ff"),"legacy grey fullscreen remains");
 });
@@ -511,8 +513,8 @@ await test('Aulas interativas: demonstração, compreensão e prática por idade
 });
 
 await test('Área de atividades: navegação única e estilos sem duplicação antiga',async()=>{
-  const app=await read('app.html'),tasks=await read('assets/activities/universal-tasks.js'),css=await read('assets/activities/activity-workspace.css'),build=await read('scripts/build-static.sh');
-  assert(app.includes('activity-workspace.css')&&app.includes('Atividades musicais')&&app.includes('data-karaoke-open'),'entrada de atividades incompleta');
+  const app=await read('app.html'),tasks=await read('assets/activities/universal-tasks.js'),css=await read('assets/app.css'),build=await read('scripts/build-static.sh');
+  assert(app.includes('/assets/app.css')&&app.includes('Atividades musicais')&&app.includes('data-karaoke-open'),'entrada de atividades incompleta');
   assert(!app.includes('home-feature')&&!app.includes('home-tool-list')&&!app.includes('data-menu-course'),'chamadas da interface antiga permanecem');
   assert(!tasks.includes("task('course')")&&!tasks.includes('teacher-task-action')&&tasks.includes("task('reading')"),'partilha usa percurso inativo ou ação duplicada');
   assert(css.includes('repeat(5,minmax(0,1fr))')&&css.includes('max-width:650px')&&css.includes('orientation:landscape'),'grelha não se adapta aos dispositivos');
@@ -608,7 +610,7 @@ await test('Entrada única, menu, tema e karaokê MIDI',async()=>{
   assert(karaoke.includes('E.parseMIDI')&&karaoke.includes('E.performanceEvents')&&karaoke.includes('backing=events.filter(e=>keyOf(e)!==selected)'),'separação de melodia não está ligada aos eventos MIDI');
   assert(karaoke.includes('LuwipiLiveInput.connectMIDI')&&karaoke.includes('LuwipiLiveInput.connectMicrophone'),'entrada instrumental ausente');
   assert(app.includes('id="karaokeTaskSheet"')&&karaoke.includes('CompressionStream')&&karaoke.includes('DecompressionStream'),'partilha MIDI não apresenta link ou não o consegue reabrir');
-  const css=await read('assets/karaoke/karaoke.css');assert(css.includes('max-height:540px')&&css.includes('orientation:landscape')&&css.includes('max-width:650px')&&css.includes('minmax(0,1.6fr)'),'karaokê sem adaptação vertical e horizontal');
+  const css=await read('assets/app.css');assert(css.includes('max-height:540px')&&css.includes('orientation:landscape')&&css.includes('max-width:650px')&&css.includes('minmax(0,1.6fr)'),'karaokê sem adaptação vertical e horizontal');
   const E=await engine(),name=bytes=>[...bytes];
   const t1=[0,255,3,6,...name(Buffer.from('Melody')),0,192,73,0,144,60,100,131,96,128,60,0,0,255,47,0];
   const t2=[0,255,3,5,...name(Buffer.from('Piano')),0,193,0,0,145,48,70,131,96,129,48,0,0,255,47,0];
@@ -627,10 +629,15 @@ await test('Entrada pública, app autenticada e tarefas isoladas',async()=>{
   assert(!config.redirects.some(x=>x.source==='/app'),'Vercel ainda desvia /app para a landing');
 });
 
-await test('Layout final: catálogo estável e retorno dos jogos',async()=>{
-  const app=await read('app.html'),css=await read('assets/activities/release-layout.css'),route=await read('assets/activities/release-routing.js'),standalone=await read('assets/tasks/standalone-task.js');
-  assert(app.includes('/assets/activities/release-layout.css')&&app.includes('/assets/activities/release-routing.js'),'final layout layer is not mounted');
+await test('CSS canónico: sem camadas antigas de layout',async()=>{
+  const app=await read('app.html'),css=await read('assets/app.css'),route=await read('assets/activities/release-routing.js'),standalone=await read('assets/tasks/standalone-task.js');
+  const localCss=[...app.matchAll(/<link[^>]+href="([^"]+\.css)"/g)].map(match=>match[1]);
+  assert(localCss.length===1&&localCss[0]==='/assets/app.css','app still loads multiple CSS layers');
+  assert(!/<style\b/i.test(app),'inline style layers remain in app.html');
+  for(const old of ['ux-overhaul.css','immersive-journey.css','interface-refinement.css','viewport-canvas.css','activity-workspace.css','release-layout.css'])assert(!app.includes(old),'legacy stylesheet still mounted: '+old);
   assert(css.includes('.curated-game-grid')&&css.includes('@media(max-width:560px)')&&css.includes('#liveModeView .live-layout'),'desktop/mobile layout contract missing');
+  assert(css.includes('#songView .song-piano-toggle')&&css.includes('#songView.song-piano-hidden .score-wrap'),'reading/song layout missing from canonical CSS');
+  assert(css.includes('.rhythm-menu')&&css.includes('#rhythmView'),'rhythm layout missing from canonical CSS');
   assert(route.includes("q.get('open')!=='games'")&&route.includes("target.classList.add('active')"),'return-to-games route missing');
   assert(standalone.includes("link.href='/app?open=games'"),'standalone games still return to public landing');
 });
