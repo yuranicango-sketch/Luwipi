@@ -660,6 +660,18 @@ await test('Score Doctor API: privada, estruturada e fixa em GPT-6 Luna',async()
   const info=await (await api.GET()).json();assert(info.model==='gpt-6-luna','diagnóstico do Score Doctor não confirma Luna');
 });
 
+
+await test('Workspace único e biblioteca MIDI pessoal',async()=>{
+ const app=await read('app.html'),css=await read('assets/app.css'),shell=await read('assets/activities/workspace-shell.js'),karaoke=await read('assets/karaoke/karaoke.js'),api=await read('api/midi-library.js'),config=JSON.parse(await read('vercel.json'));
+ assert(app.includes('id="workspaceSidebar"')&&app.includes('data-workspace-nav="reading"')&&app.includes('id="readingView" class="view active"'),'workspace único não abre em Leitura');
+ assert(app.includes('id="karaokeSaveMidi"')&&app.includes('id="karaokeSavedMidi"'),'biblioteca MIDI não está integrada no canvas');
+ assert(css.includes('.workspace-sidebar')&&css.includes('@media(max-width:980px){.workspace-sidebar{display:none!important}}'),'sidebar desktop/mobile incompleta');
+ assert(shell.includes("target==='karaoke'")&&shell.includes("open('reading')"),'navegação do canvas não está centralizada');
+ assert(karaoke.includes("fetch('/api/midi-library'")&&karaoke.includes('saveCurrentMidi')&&karaoke.includes('loadSavedMidi'),'guardar/reabrir MIDI não está ligado');
+ assert(karaoke.includes('ai_review')||karaoke.includes('aiReview:item.ai')||karaoke.includes('aiReview:current.ai'),'revisão IA não é preservada no MIDI guardado');
+ assert(api.includes('midi_library_items')&&api.includes('storage/v1/')&&api.includes('fingerprint'),'API não persiste ficheiro e metadados');
+ assert(config.functions?.['api/midi-library.js']?.maxDuration===30,'função da biblioteca MIDI não está configurada');
+});
 await test('Entrada pública, app autenticada e tarefas isoladas',async()=>{
   const landing=await read('index.html'),build=await read('scripts/build-static.sh'),app=await read('app.html'),tasks=await read('assets/activities/universal-tasks.js'),karaoke=await read('assets/karaoke/karaoke.js'),standalone=await read('assets/tasks/standalone-task.js'),config=JSON.parse(await read('vercel.json'));
   assert(landing.includes('Atividades musicais')&&landing.includes('href="/app"')&&!landing.includes('id="accessOverlay"'),'landing pública ainda abre paywall ou não encaminha para o app');
