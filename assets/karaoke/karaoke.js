@@ -210,8 +210,8 @@ function drawKeys(){
   button.type='button';button.className='karaoke-key'+(black?' black':'');button.dataset.midi=String(midi);button.setAttribute('aria-label',E.ptSolfege(midi));
   if(black){button.style.left=(100*(oct*7+blackBoundary[pc])/whiteCount-blackWidth/2)+'%';button.style.width=blackWidth+'%'}
   else{button.style.left=(100*(oct*7+whites[pc])/whiteCount)+'%';button.style.width=whiteWidth+'%';button.textContent=noteName(midi)}
-  button.addEventListener('pointerdown',event=>{event.preventDefault();E.playNote(midi,1,500,80);input({type:'noteon',midi});button.classList.add('pressed');button.setPointerCapture?.(event.pointerId)});
-  const up=()=>button.classList.remove('pressed');button.addEventListener('pointerup',up);button.addEventListener('pointercancel',up);
+  button.addEventListener('pointerdown',event=>{event.preventDefault();E.playNote(midi,1,500,80);input({type:'noteon',midi});button.classList.add('pressed');window.LuwipiWorkspacePiano?.emit(midi,'on');button.setPointerCapture?.(event.pointerId)});
+  const up=()=>{button.classList.remove('pressed');window.LuwipiWorkspacePiano?.emit(midi,'off')};button.addEventListener('pointerup',up);button.addEventListener('pointercancel',up);
   keys.append(button);
  }
  $('karaokeOctaveLabel').textContent=E.midiToName(keyboardBase)+'–'+E.midiToName(keyboardBase+23);

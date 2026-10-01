@@ -6,7 +6,7 @@
   const sequence=[0,1,2,3,5,4,6,7,8,9,10,11,12,13];
   const svg=stage.querySelector("svg"),keyboard=stage.querySelector(".journey-keyboard"),status=stage.querySelector(".journey-sub");
   let notes=[],next=0,timers=[],playing=false;
-  const clear=()=>{timers.forEach(clearTimeout);timers=[];playing=false;stage.querySelectorAll(".lit").forEach(el=>el.classList.remove("lit"));stage.querySelector("[data-journey-listen]").textContent="▶ Ouvir e ver"};
+  const clear=()=>{timers.forEach(clearTimeout);timers=[];playing=false;stage.querySelectorAll(".lit").forEach(el=>el.classList.remove("lit"));keyboard.querySelectorAll(".lit").forEach(el=>el.classList.remove("lit"));stage.querySelector("[data-journey-listen]").textContent="▶ Ouvir e ver"};
   function progress(){try{return JSON.parse(localStorage.getItem("luwipi:reading-progress:v1")||"{}")||{}}catch{return {}}}
   function draw(){
     const lines=[67,88,109,130,151].map(y=>`<line x1="35" y1="${y}" x2="865" y2="${y}" stroke="#b9c8df" stroke-width="2"/>`).join("");
@@ -44,7 +44,7 @@
     notes.forEach((n,i)=>timers.push(setTimeout(()=>{light(n,i);sound(n)},i*560)));
     timers.push(setTimeout(()=>{clear();status.textContent="Agora toca tu"},notes.length*560+180));
   });
-  keyboard.addEventListener("click",event=>{const key=event.target.closest("[data-note]");if(!key)return;light(key.dataset.note);sound(key.dataset.note)});
+  keyboard.addEventListener("click",event=>{const key=event.target.closest("[data-note]");if(!key)return;light(key.dataset.note);sound(key.dataset.note);window.LuwipiWorkspacePiano?.emit(window.LuwipiScoreEngine?.nameToMidi(key.dataset.note),"on")});
   stage.querySelector("[data-journey-start]").addEventListener("click",()=>{
     refresh();clear();const level=next<4||next===5?"sounds":next<11?"phrases":"fluency";
     view.querySelector(`[data-reading-level="${level}"]`)?.click();

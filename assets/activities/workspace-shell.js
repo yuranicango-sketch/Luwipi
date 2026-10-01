@@ -9,7 +9,9 @@ const canvas=document.createElement('main');canvas.id='workspaceCanvas';canvas.c
 const bar=document.createElement('div');bar.className='workspace-canvas-bar';
 bar.innerHTML='<button type="button" class="workspace-canvas-back" aria-label="Voltar">←</button><div class="workspace-canvas-heading"><small>LUWIPI</small><strong id="workspaceCanvasTitle">Leitura</strong><span id="workspaceCanvasContext">Ouve. Vê. Toca.</span></div><div class="workspace-canvas-actions"><button id="workspaceCanvasPrimary" type="button" hidden></button></div>';
 const viewport=document.createElement('div');viewport.className='workspace-canvas-viewport';
-canvas.append(bar,viewport);sidebar.after(canvas);views.forEach(view=>viewport.append(view));
+const pianoArea=document.createElement('section');pianoArea.id='workspacePiano';pianoArea.className='workspace-piano';pianoArea.setAttribute('aria-label','Piano partilhado');
+pianoArea.innerHTML='<div class="workspace-piano-edge"><button id="workspacePianoToggle" type="button" aria-label="Recolher piano" title="Recolher piano" aria-expanded="true" aria-controls="workspacePianoBody">⌄</button></div><div id="workspacePianoBody" class="workspace-piano-body"></div>';
+canvas.append(bar,viewport,pianoArea);sidebar.after(canvas);views.forEach(view=>viewport.append(view));
 
 const barBack=bar.querySelector('.workspace-canvas-back'),barTitle=bar.querySelector('#workspaceCanvasTitle'),barContext=bar.querySelector('#workspaceCanvasContext'),barPrimary=bar.querySelector('#workspaceCanvasPrimary');
 const roots=new Set(['readingView','karaokeView','liveModeView','gamesView','rhythmView']);

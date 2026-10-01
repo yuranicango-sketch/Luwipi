@@ -661,6 +661,33 @@ await test('Score Doctor API: privada, estruturada e fixa em GPT-6 Luna',async()
 });
 
 
+await test('Piano partilhado: seta discreta, espaço reservado e controlos existentes',async()=>{
+ const app=await read('app.html'),shell=await read('assets/activities/workspace-shell.js');
+ const piano=await read('assets/activities/workspace-piano.js'),journey=await read('assets/reading/immersive-journey.js');
+ const midi=await read('assets/karaoke/karaoke.js'),css=await read('assets/app.css');
+ assert(shell.includes("pianoArea.id='workspacePiano'")&&shell.includes('canvas.append(bar,viewport,pianoArea)'),'piano não tem uma linha permanente no canvas');
+ assert(shell.includes('id="workspacePianoToggle"')&&shell.includes('aria-controls="workspacePianoBody"'),'falta a seta de recolher acessível');
+ assert(app.includes('/assets/activities/workspace-piano.js')&&app.includes('/assets/activities/score-follow.js'),'módulos de piano e partitura não são carregados');
+ assert(piano.includes("if(view.id==='karaokeView')return midi")&&piano.includes("return journey"),'MIDI e Leitura não partilham o mesmo espaço para o piano');
+ assert(piano.includes("legacy.classList.contains('hidden')")&&piano.includes("body.replaceChildren(wanted)"),'piano legado não funciona no espaço comum');
+ assert(piano.includes("sessionStorage.setItem('luwipi:workspace-piano-collapsed'"),'preferência de recolher o piano não é conservada');
+ assert(piano.includes('window.LuwipiWorkspacePiano=Object.freeze')&&piano.includes("subscribe(fn)"),'jogos futuros não conseguem reutilizar o piano partilhado');
+ assert(journey.includes('keyboard.querySelectorAll(".lit")'),'pré-visualização não limpa as luzes quando o teclado está fora do componente original');
+ assert(midi.includes("window.LuwipiWorkspacePiano?.emit(midi,'on')"),'piano MIDI não publica eventos reutilizáveis');
+ assert(css.includes('.workspace-piano.collapsed')&&css.includes('.workspace-piano #pianoDock')&&css.includes('.workspace-piano .karaoke-keys'),'a partitura ou teclados ainda podem sobrepor-se');
+ assert(css.includes('body.workspace-shell-enabled #songView .song-piano-toggle{display:none!important}'),'botão antigo ainda pode bloquear a partitura');
+ assert(css.includes('.workspace-canvas{display:grid!important;width:100%;height:100dvh'),'piano partilhado não tem linha reservada no mobile');
+});
+await test('Seguimento automático horizontal e vertical sem obstruir a pauta',async()=>{
+ const midi=await read('assets/karaoke/notation-display.js'),reading=await read('assets/activities/score-follow.js'),css=await read('assets/app.css');
+ assert(midi.includes("renderSingleHorizontalStaffline:direction==='horizontal'"),'o motor não alterna entre pauta horizontal e vertical');
+ assert(midi.includes("stage.scrollLeft=")&&midi.includes("stage.scrollTop="),'cursor não acompanha nas duas direções');
+ assert(midi.includes("button.id='karaokeScoreDirection'")&&midi.includes("button.setAttribute('aria-label'"),'controlo MIDI não é compacto e acessível');
+ assert(reading.includes('area.scrollLeft=')&&reading.includes('area.scrollTop='),'Leitura não acompanha a nota horizontal e verticalmente');
+ assert(reading.includes("['songSvg'")&&reading.includes("['liveScoreSvg'"),'seguimento não cobre as partituras de Leitura e Prática');
+ assert(css.includes('#karaokeView #karaokeStaff[data-direction="vertical"]')&&css.includes('overflow-y:auto!important'),'partitura vertical não tem viewport dedicado');
+ assert(css.includes('body.workspace-shell-enabled #songScoreMode::after'),'direção da partitura ainda ocupa espaço textual excessivo');
+});
 await test('Workspace único: canvas real, sidebar desktop e biblioteca MIDI',async()=>{
  const app=await read('app.html'),css=await read('assets/app.css'),shell=await read('assets/activities/workspace-shell.js'),karaoke=await read('assets/karaoke/karaoke.js'),api=await read('api/midi-library.js'),config=JSON.parse(await read('vercel.json'));
  assert(app.includes('id="workspaceSidebar"')&&app.includes('data-workspace-nav="reading"')&&app.includes('id="readingView" class="view active"'),'workspace não abre diretamente em Leitura');
