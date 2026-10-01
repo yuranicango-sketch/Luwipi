@@ -161,14 +161,14 @@ function splitABC(seed){
   // parseABC currently handles one staff per file; parse both separately to retain simultaneous onsets.
   const body=line.replace(/^\[V:[A-Z]+\]\s*/,'').replace(/\s*\|\]\s*$/,'').replace(/![^!]+!/g,'').replace(/"[^"]*"/g,'');
   const result=E.parseABC(headers.join('\n')+'\n'+body);
-  return{events:result.events.map((x,i)=>({...x,id:hand+'-'+i,clef})),rests:result.rests||[]};
+  return{events:result.events.map((x,i)=>({...x,id:hand+'-'+i,clef})),rests:(result.rests||[]).map((x,i)=>({...x,id:hand+'-rest-'+i,clef}))};
  }
  const rh=read('RH','treble'),lh=read('LH','bass');
  const base=E.parseABC(headers.join('\n')+'\nC2 C2 C2 C2 | C2 C2 C2 C2 |');
  const events=rh.events.concat(lh.events);
  if(!events.length)throw Error('Exercício vazio');
  const result=E.normalizeScore({title:seed.title,source:'pedagogy',tempoBpm:seed.meter==="6/8"?base.tempoBpm*1.5:base.tempoBpm,meter:base.meter,keyFifths:base.keyFifths,
- events,rests:rh.rests,keyMinor:base.keyMinor});
+ events,rests:rh.rests.concat(lh.rests),keyMinor:base.keyMinor});
  if(seed.expression){
   result.events.forEach(e=>{
    if(e.clef==='treble'){
