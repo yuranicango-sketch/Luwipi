@@ -159,7 +159,7 @@ function render(){
  backToSkills.hidden=!viewing;
  map.hidden=viewing;copyCard.hidden=viewing;syncState.hidden=viewing;
  pathTitle.textContent=viewing?selected+' · '+trackName(selected):'Aprender partitura';
- pathIntro.textContent=viewing?'Escolhe uma etapa e começa a tocar. A partitura e o piano abrem na Prática.':'Escolhe uma habilidade e começa a treinar. Cada nível tem exercícios próprios.';
+ pathIntro.textContent=viewing?'Escolhe uma etapa. Os exercícios abrem diretamente na Leitura, com a partitura e o piano.':'Escolhe uma habilidade e começa a treinar. Cada nível tem exercícios próprios.';
  map.replaceChildren();
  if(!viewing){
   const due=P.dueReviews(profile,todayLocal());
@@ -217,7 +217,11 @@ function render(){
    const option=el('option','', 'Treinar N'+(i+1));option.value=String(i+1);selector.append(option);
   });
   selector.value=available[(explorationLevel||0)-1]?String(explorationLevel):'';
-  selector.addEventListener('change',()=>{explorationLevel=selector.value?Number(selector.value):null;stage=3;exercise=null;render()});
+  selector.addEventListener('change',()=>{
+    explorationLevel=selector.value?Number(selector.value):null;stage=3;exercise=null;render();
+    // Choosing a new level is enough to open its score; no second hidden Start step.
+    if(explorationLevel!==null)launch(3);
+   });
   levelLabel.append(selector);workout.append(levelLabel);
  }
  if(explorationLevel!==null&&explorationLevel>formalLevel)
@@ -416,7 +420,7 @@ function chooseSeed(track,level,which,seen){
 }
 
 function launch(which){
- if(typeof window.LuwipiLiveLoadPedagogy!=='function'){workout.append(el('p','workout-result','A Prática ainda não está pronta. Atualiza a aplicação.'));return}
+ if(typeof window.LuwipiReadingLibrary?.openLesson!=='function'){workout.append(el('p','workout-result','A Leitura ainda não está pronta. Atualiza a aplicação.'));return}
  const currentLevel=profile.levels[selected]?.level||0,assigned=which===2?reviewTask:null;
  const track=assigned?.track||selected;
  const level=assigned?.level??currentStudyLevel(selected);
@@ -434,8 +438,12 @@ function launch(which){
   reviewTask:assigned?{...assigned}:null,
   kind:which===3?'first_sight':'practice',stage:which,sessionId:String(Date.now())+'-'+seed.id};
  let opened=false;
- try{opened=window.LuwipiLiveLoadPedagogy(score,score.title,{
-  firstSight:which===3,exerciseId:seed.id,transposeSemitones:seed.transposeSemitones||0,transposeByVoice:seed.transposeByVoice||null,
+ try{
+   // Imported-file Prática is independent; curriculum scores use the existing Leitura stage.
+   try{sessionStorage.removeItem('luwipi:practice:pedagogy:v1')}catch{}
+   opened=window.LuwipiReadingLibrary.openLesson(score,{
+  firstSight:which===3,exerciseId:seed.id,track,level,
+  transposeSemitones:seed.transposeSemitones||0,transposeByVoice:seed.transposeByVoice||null,
   instruction:seed.pedalEveryBar?'Troca o pedal nos símbolos Ped., a cada mudança de harmonia. A qualidade da pedalação exige observação.':
    seed.crossingMeasures?'Cruza a esquerda por cima da direita nos compassos '+seed.crossingMeasures.map(n=>n+1).join(' e ')+'.':
    [seed.intent,seed.rhythmFeel?'Interpreta colcheias escritas com swing 2:1; a avaliação automática não mede o swing.':'',...(seed.staffHints||[])].filter(Boolean).join(' · ')

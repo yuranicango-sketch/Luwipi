@@ -65,6 +65,14 @@ function navigate(sectionName,push=true,library=false){
  const s={section:sectionName,...(library?{library:true}:{})};persist(s,push?"push":"replace");last=roots[sectionName];restoring=false;
  document.querySelector("#experienceMenu:not(.hidden) [data-experience-close]")?.click();window.dispatchEvent(new CustomEvent("luwipi:workspace-route",{detail:{...state}}));window.scrollTo(0,0);
 }
+function openLesson(id){
+ if(!id||typeof id!=='string')return;
+ remember();restoring=true;clearLibrary();activate('readingImportedView');
+ const next={section:'reading',activity:'readingImportedView',readingId:id};
+ persist(next,'push');last='readingImportedView';restoring=false;
+ window.dispatchEvent(new CustomEvent('luwipi:workspace-route',{detail:{...next}}));
+ window.scrollTo(0,0);
+}
 function select(selector){const node=document.querySelector(selector);if(!node)return false;node.click();return true}
 let pendingReadingId="";
 function restoreReadingItem(id){
@@ -184,7 +192,7 @@ document.addEventListener("click",event=>{
  }
 },true);
 window.addEventListener("popstate",()=>restore(parse(null),false));
-window.LuwipiWorkspaceRouter=Object.freeze({go:navigate,back:previous,current:()=>({...state}),setMidi(id){if(id&&typeof id==="string"){state.midi=id;if(section(active()?.id)==="midi")persist(state)}},clearMidi(){delete state.midi;if(section(active()?.id)==="midi")persist(state)}});
+window.LuwipiWorkspaceRouter=Object.freeze({go:navigate,openLesson,back:previous,current:()=>({...state}),setMidi(id){if(id&&typeof id==="string"){state.midi=id;if(section(active()?.id)==="midi")persist(state)}},clearMidi(){delete state.midi;if(section(active()?.id)==="midi")persist(state)}});
 function start(){if(booted)return;booted=true;restore(query.has("section")||query.has("open")?parse(null):readStored()||{section:"reading",library:true});schedule()}
 if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",start,{once:true});else start();
 window.addEventListener("luwipi:core-ready",()=>{

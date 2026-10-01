@@ -3197,3 +3197,15 @@ body.luwipi-dark .workspace-path-step-help{color:#c0d0e9}
  body.workspace-shell-enabled .workspace-canvas-actions .workspace-canvas-path{display:none!important}
  body.workspace-shell-enabled .workspace-canvas-actions .workspace-canvas-piano{display:inline-flex!important}
 }
+
+/* A curriculum exercise uses the existing large Leitura score; Prática stays an importer. */
+.reading-lesson-panel{box-sizing:border-box;display:flex;flex:1 1 100%;align-items:center;flex-wrap:wrap;gap:7px;
+ padding:6px 9px;border:1px solid #b6ceec;border-radius:10px;background:#f5f9ff;color:#274a79}
+.reading-lesson-panel[hidden]{display:none!important}
+.reading-lesson-panel #readingLessonStart{background:#244f98;color:#fff;border:0;border-radius:9px;min-height:37px;padding:7px 13px;font-weight:800}
+.reading-lesson-panel #readingLessonStart:disabled{opacity:.65;cursor:default}
+.reading-lesson-panel #readingLessonStatus{flex:1 1 170px;font-size:11px;line-height:1.35;font-weight:700}
+.reading-lesson-panel #readingLessonMidi{border:1px solid #bbd0ea;border-radius:8px;background:#fff;color:#26518a;font-size:11px;padding:7px 10px}
+#readingImportedView .reading-imported-transport:has(.reading-lesson-panel:not([hidden])){align-items:center;flex-wrap:wrap}
+#readingImportedView .reader-top:has(+ .score-wrap + .reading-imported-transport .reading-lesson-panel:not([hidden])){padding-bottom:3px}
+@media(max-width:620px){.reading-lesson-panel{padding:6px;gap:5px}.reading-lesson-panel #readingLessonStatus{order:3;flex-basis:100%}}

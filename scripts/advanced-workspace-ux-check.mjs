@@ -1,11 +1,11 @@
 import assert from "node:assert/strict";
 import {readFile} from "node:fs/promises";
 const read=path=>readFile(new URL("../"+path,import.meta.url),"utf8");
-const [html,css,shell,router,piano,ui,input,live,equivalence]=await Promise.all([
+const [html,css,shell,router,piano,ui,input,live,equivalence,library]=await Promise.all([
  "app.html","assets/app.css","assets/activities/workspace-shell.js",
  "assets/activities/workspace-router.js","assets/activities/workspace-piano.js",
  "assets/pedagogy/sightreading-workspace.js","assets/music/live-input.js",
- "assets/live/live-mode.js","assets/pedagogy/score-equivalence.js"
+ "assets/live/live-mode.js","assets/pedagogy/score-equivalence.js","assets/reading/reading-library.js"
 ].map(read));
 const start=router.indexOf("function canonical(input){"),end=router.indexOf("function parse(fallback)",start);
 assert.ok(start>=0&&end>start,"Canonical route helper is missing");
@@ -54,21 +54,22 @@ assert.deepEqual(observed.filter(x=>x.type==="sustain").map(x=>x.down),[true,fal
 unbind();browser.LuwipiLiveInput.disconnect();
 assert.ok(live.includes("transposeByVoice")&&live.includes('detail.type==="sustain"')&&
  live.includes("pedalObservations"),"Per-staff transposition and pedal capture need to reach the practice UI");
-// A level may never route into an empty Prática: score + SVG must exist first.
-// Unlike an imported file, a curriculum session also survives refresh in the same tab.
-const loader=live.slice(live.indexOf("window.LuwipiLiveLoadPedagogy="));
-assert.ok(loader.includes("setScore(exercise,")&&
- loader.indexOf("setScore(exercise,")<loader.indexOf("window.LuwipiWorkspaceRouter.go('practice')")&&
- loader.includes("!svg.childElementCount")&&loader.includes("window.LuwipiWorkspacePiano?.show()"),
- "Level-to-Prática must render a score and show the keyboard before routing");
-assert.ok(live.includes("function restorePedagogyLesson()")&&
- live.includes("luwipi:practice:pedagogy:v1")&&
- live.includes("!score&&!restorePedagogyLesson()")&&
- live.includes("clearPedagogyLesson();")&&
- ui.includes("try{opened=window.LuwipiLiveLoadPedagogy"),
- "An active level must survive refresh and report loading errors in its original journey");
-assert.doesNotThrow(()=>new Function(live),"Practice script must remain syntactically valid");
-console.log("UX: single music catalogue, refresh-safe routes, compact two-screen learning journey and a hideable piano.");
-console.log("First sight: "+Object.keys(eq).length+" equivalent material IDs blocked across tracks and levels.");
-console.log("Input: MIDI notes and both sustain CC64 transitions pass the browserless interaction smoke.");
-console.log("Limit: this is a deterministic code/DOM contract audit, not an authenticated visual browser session.");
+// A level uses the existing Leitura renderer. The imported-file Prática keeps its own purpose.
+assert.ok(ui.includes("LuwipiReadingLibrary.openLesson(score,")&&
+ !ui.includes("window.LuwipiLiveLoadPedagogy(score,")&&
+ ui.includes("if(explorationLevel!==null)launch(3)"),
+ "Choosing a level must start an actual Leitura exercise rather than opening the Prática importer");
+assert.ok(library.includes("function openLesson(rawScore,options={},restoring=false)")&&
+ library.includes("Engine.render(svg,current.score")&&
+ library.includes("window.LuwipiWorkspacePiano?.show()")&&
+ library.includes("lessonNote(e.detail.midi)")&&
+ library.includes("const LESSON_STORAGE='luwipi:reading:lesson:v1'"),
+ "The large Leitura score, shared piano, active exercise and reload recovery must share one workspace");
+assert.ok(router.includes("function openLesson(id)")&&
+ router.includes("activity:'readingImportedView',readingId:id")&&
+ router.includes("window.LuwipiWorkspaceRouter=Object.freeze({go:navigate,openLesson"),
+ "Reading lessons require a canonical, refresh-safe Leitura route");
+assert.ok(css.includes(".reading-lesson-panel")&&css.includes(".reading-lesson-panel[hidden]"),
+ "A real Start control and clear exercise status must be visible above the score");
+for(const source of [live,ui,library,router])assert.doesNotThrow(()=>new Function(source));
+console.log("Reading lesson route: N0–N7 open in the existing score-and-piano Leitura view, never in the importer.");

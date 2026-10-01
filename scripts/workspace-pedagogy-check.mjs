@@ -40,7 +40,9 @@ assert.ok(shell.includes("let sidebarOpen=false")&&shell.includes("sidebar.inert
 assert.ok(shell.includes("data-workspace-action")&&shell.includes("function togglePath()"),'Path menu action missing');
 assert.ok(roadmap.includes('library.after(root)')&&!roadmap.includes('library.hidden=expanded'),'Repertoire hides older playable songs');
 assert.ok(app.includes('/assets/pedagogy/sightreading-foundation-v1.js')&&app.includes('/assets/pedagogy/sightreading-workspace.js'),'Pedagogic modules are not mounted');
-assert.ok(live.includes('window.LuwipiLiveLoadPedagogy'),'Learning drills do not open in existing practice');
+const library=await read('assets/reading/reading-library.js');
+assert.ok(ui.includes('LuwipiReadingLibrary.openLesson(score,')&&library.includes('function openLesson(rawScore,options={},restoring=false)'),
+ 'Learning drills must open in Leitura, not in imported-file Prática');
 for(const code of [shell,roadmap,live,ui])assert.doesNotThrow(()=>new Function(code));
 console.log('Workspace pedagogy gate: '+total+' parsed original two-hand ABC variants in 80 independent modules.');
 console.log('Routing UI, repertoire display, compound-meter tempo, navigation toggle and code syntax: OK.');
