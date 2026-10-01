@@ -261,7 +261,7 @@ function launch(which){
  const track=assigned?.track||(which===0?'F':selected);
  const level=assigned?.level??(which===0?0:currentStudyLevel(selected));
  const seed=chooseSeed(track,level,assigned?3:which,profile.seen)||
-  (assigned?(S?.get(track,level)||S2?.get(track,level)||S3?.get(track,level,0)||null):null);
+  (assigned?(S?.get(track,level)||S2?.get(track,level)||S3?.get(track,level,0)||P.makeSeed(track,level,0)):null);
  if(!seed){workout.append(el('p','workout-result','O material inédito terminou. É necessário acrescentar novas partituras.'));return}
  let score;
  try{score=splitABC(seed)}catch(error){workout.append(el('p','workout-result','Partitura não disponível: '+error.message));return}
