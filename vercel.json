@@ -223,6 +223,9 @@
     },
     "api/score-doctor.js": {
       "maxDuration": 90
+    },
+    "api/midi-library.js": {
+      "maxDuration": 30
     }
   }
 }
