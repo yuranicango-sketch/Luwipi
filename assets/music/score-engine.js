@@ -193,6 +193,7 @@ function normalizeScore(raw){
       track:Number(event.track)||0,
       channel:Number(event.channel)||0,
       articulations:Array.isArray(event.articulations)?event.articulations.slice(0,8):[],
+      voiceDirection:["up","down"].includes(event.voiceDirection)?event.voiceDirection:null,
       tieStart:Boolean(event.tieStart),
       tieStop:Boolean(event.tieStop),
       pedal:Boolean(event.pedal)
@@ -738,7 +739,7 @@ function drawNote(svg,event,x,bottom,groupIndex,current){
   const head=svgEl("ellipse",{cx:x,cy:y,rx:10.8,ry:7.1,fill:kind.open?"#fff":"#292d34",stroke:"#292d34","stroke-width":kind.open?2.2:1.1,transform:"rotate(-20 "+x+" "+y+")","data-live-group":groupIndex});
   svg.appendChild(head);
   if(kind.stem){
-    const stemUp=stepValue<5;
+    const stemUp=event.voiceDirection==="up"?true:event.voiceDirection==="down"?false:stepValue<5;
     const sx=stemUp?x+9.1:x-9.1,stemStart=stemUp?y-1:y+1,sy2=stemUp?y-45:y+45;
     addLine(svg,sx,stemStart,sx,sy2,{stroke:"#292d34","stroke-width":2.45,"stroke-linecap":"round"});
     for(let flag=0;flag<kind.flags;flag++){
@@ -804,7 +805,7 @@ function render(svg,rawScore,options){
       if(measureIndex<score.measures)addText(svg,left+slot*measureWidth+6,baseY+13,String(measureIndex+1),{"font-size":9,fill:"#a0a3aa"});
     }
   }
-  let lastDynamic="";
+  const lastDynamicByClef={treble:"",bass:""};
   (score.rests||[]).forEach((rest)=>{
     const measureIndex=Math.floor(rest.startBeat/measureBeats);
     const system=Math.floor(measureIndex/measuresPerSystem),slot=measureIndex%measuresPerSystem;
@@ -824,9 +825,10 @@ function render(svg,rawScore,options){
       event.noteName=null;
       event.showName=showNoteNames;
       drawNote(svg,event,x,event.clef==="bass"?bassBottom:trebleBottom,groupIndex,groupIndex===currentGroup);
-      if(eventIndex===0&&event.dynamic&&event.dynamic!==lastDynamic){
+      const firstForClef=!group.events.slice(0,eventIndex).some(other=>other.clef===event.clef);
+      if(firstForClef&&event.dynamic&&event.dynamic!==lastDynamicByClef[event.clef]){
         addText(svg,x,(event.clef==="bass"?bassBottom:trebleBottom)+38,event.dynamic,{"font-size":15,fill:"#353940","font-family":"serif","font-style":"italic","font-weight":700,"text-anchor":"middle"});
-        lastDynamic=event.dynamic;
+        lastDynamicByClef[event.clef]=event.dynamic;
       }
     });
   });
