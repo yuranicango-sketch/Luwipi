@@ -41,12 +41,17 @@ function merge(remote,local){
   if(!older||String(m.lastSeen)>=String(older.lastSeen))unique.set(k,m);
  }
  result.mistakes=[...unique.values()].slice(-150);
+ const explored=new Map();
+ for(const x of [...(remote.exploration||[]),...(local.exploration||[])]){
+  if(x?.sessionId)explored.set(x.sessionId,x);
+ }
+ result.exploration=[...explored.values()].slice(-120);
  result.placement=remote.placement||local.placement;
  result.serverVerified=false;
  return result;
 }
 function hasProgress(p){
- return p?.seen?.length>0||p?.mistakes?.length>0||
+ return p?.seen?.length>0||p?.mistakes?.length>0||p?.exploration?.length>0||
   Object.values(p?.levels||{}).some(v=>(v.sessions||[]).length>0||v.level>0);
 }
 async function load(localProfile){
