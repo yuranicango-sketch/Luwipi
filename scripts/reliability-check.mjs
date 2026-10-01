@@ -547,7 +547,7 @@ await test('Karaokê preserva MIDI original e ataques do solo',async()=>{
  assert(!karaoke.includes('E.playNote(n.midi')&&player.includes('WorkletSynthesizer'),'acompanhamento ainda usa apenas piano');
  assert(player.includes('currentHighResolutionTime')&&karaoke.includes('currentBeat()'),'pauta desligada do relógio do áudio');
  assert(karaoke.includes('version:3')&&karaoke.includes('data.midi'),'tarefas perdem os instrumentos originais ou a revisão IA');
- const begin=karaoke.indexOf('function simplify('),end=karaoke.indexOf('function setSong',begin);
+ const begin=karaoke.indexOf('function simplify('),end=karaoke.indexOf('function localBest',begin);
  const select=new Function(karaoke.slice(begin,end)+';return simplify')();
  const events=[0,.125,.25,.375].map((startBeat,i)=>({id:String(i),midi:i<2?60:62+i,startBeat,durationBeat:.125}));
  const notes=select(events);
