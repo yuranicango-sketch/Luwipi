@@ -1,7 +1,10 @@
 (()=>{
 "use strict";
 const BASE="/api/sightreading-progress";
-let revision=null,active=false,queue=Promise.resolve(),syncText="Neste dispositivo";
+let revision=null,active=false,activeUser=null,loadTicket=0,queue=Promise.resolve(),syncText="Neste dispositivo";
+function subject(jwt){
+ try{const part=String(jwt).split(".")[1]||"";const data=part.replace(/-/g,"+").replace(/_/g,"/");return JSON.parse(atob(data+"=".repeat((4-data.length%4)%4))).sub||null}catch{return null}
+}
 const setStatus=t=>{syncText=t;window.dispatchEvent(new CustomEvent("luwipi:progress-sync",{detail:{status:t}}))};
 function tokenSource(){try{return typeof LuwipiProductionAccess!=="undefined"?LuwipiProductionAccess:null}catch{return null}}
 async function token(){
@@ -11,6 +14,7 @@ async function token(){
 async function api(method,body){
  const t=await token();
  if(!t)return null;
+ if(method==="PUT"&&(!activeUser||subject(t)!==activeUser))throw Error("session_changed");
  const response=await fetch(BASE,{method,headers:{"authorization":"Bearer "+t,...(body?{"content-type":"application/json"}:{})},body:body?JSON.stringify(body):undefined,cache:"no-store"});
  const data=await response.json().catch(()=>({}));
  if(!response.ok){const e=new Error(data.error||"sync_unavailable");e.status=response.status;e.conflict=data;throw e}
@@ -46,9 +50,13 @@ function hasProgress(p){
   Object.values(p?.levels||{}).some(v=>(v.sessions||[]).length>0||v.level>0);
 }
 async function load(localProfile){
+ const ticket=++loadTicket;active=false;activeUser=null;
  let r;
  try{r=await api("GET");}catch{active=false;setStatus("Offline · guardado neste dispositivo");return null}
+ if(ticket!==loadTicket)return null;
  if(!r){active=false;setStatus("Sem conta · guardado nesta sessão");return null}
+ activeUser=String(r.userId||"");
+ if(!activeUser){setStatus("Identidade da conta indisponível");return null}
  active=true;revision=r.updatedAt||null;
  const merged=merge(r.draft,localProfile);
  if(!r.draft&&hasProgress(localProfile)){
@@ -63,9 +71,9 @@ async function load(localProfile){
  setStatus("Progresso sincronizado");return r.draft||merged;
 }
 function save(draft){
- const snapshot=clone(draft);
+ const snapshot=clone(draft),ownerAtSave=activeUser;
  queue=queue.catch(()=>{}).then(async()=>{
-  if(!active)return;
+  if(!active||!ownerAtSave||ownerAtSave!==activeUser)return;
   try{
    let saved;
    try{saved=await api("PUT",{draft:snapshot,updatedAt:revision});}
