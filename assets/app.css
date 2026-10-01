@@ -3245,3 +3245,7 @@ body.luwipi-dark .workspace-path-step-help{color:#c0d0e9}
   box-sizing:border-box;background:#183665;border-radius:6px;padding:2px 7px
  }
 }
+
+/* No empty playback/tempo row during an unseen first-sight challenge.
+   The score itself already displays the written tempo. */
+#readingImportedView.reading-curriculum-lesson .reading-imported-transport:has(#readingImportedPlay[hidden]) .tempo{display:none!important}

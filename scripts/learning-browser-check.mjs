@@ -55,6 +55,36 @@ try{
   const restored=await page.evaluate(()=>({route:window.LuwipiWorkspaceRouter.current(),text:document.getElementById('readingLessonStatus').textContent}));
   console.log(device.name+' reload: '+JSON.stringify(restored));
   assert.equal(restored.route.section,'reading');
+
+  // An exercise is not complete merely because its route and SVG exist:
+  // start a warm-up and press an actual shared virtual-piano key.
+  if(device.name==='desktop')await page.locator('.workspace-canvas-path').click();
+  else{
+   await page.locator('#experienceMenuButton').click();
+   await page.locator('#experienceMenu [data-workspace-action="path"]').click();
+  }
+  if(await page.locator('.workspace-path-skill:visible').count())
+   await page.locator('.workspace-path-skill:visible').first().click();
+  await page.locator('.workspace-path-extras summary').click();
+  await page.locator('.workspace-path-extras select').selectOption('0');
+  await page.locator('.workspace-path-start').click();
+  await page.waitForFunction(()=>window.LuwipiWorkspaceRouter?.current()?.activity==='readingImportedView');
+  const start=page.locator('#readingLessonStart');
+  assert.equal(await start.isEnabled(),true,'warmup start should be actionable immediately');
+  await start.click();
+  const before=await page.locator('#readingLessonStatus').textContent();
+  assert.match(before,/Toca a partitura/,'start must activate the exercise rather than only navigate');
+  const firstPitch=await page.evaluate(()=>{
+   const item=JSON.parse(sessionStorage.getItem('luwipi:reading:lesson:v1'));
+   return window.LuwipiScoreEngine.groupEvents(item.score)[0].pitches
+    .find(midi=>document.querySelector('#workspacePiano .karaoke-key[data-midi="'+midi+'"]'));
+  });
+  assert.ok(Number.isInteger(firstPitch),'the first exercise must have an available virtual-piano note');
+  await page.locator('#workspacePiano .karaoke-key[data-midi="'+firstPitch+'"]').click();
+  const after=await page.locator('#readingLessonStatus').textContent();
+  console.log(device.name+' interaction: '+JSON.stringify({before,after,pitch:firstPitch}));
+  assert.notEqual(after,before,'pressing a piano key must change exercise feedback');
+
   // Other asynchronous account calls can be unavailable in this local, unauthenticated smoke.
   console.log(device.name+' unrelated browser errors: '+pageErrors.filter(e=>/reading|lesson/i.test(e)).join('; '));
   await page.close();
