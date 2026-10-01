@@ -34,7 +34,9 @@ try{
       return !!r&&r.width>50&&r.height>20&&r.top>=0&&r.bottom<=innerHeight;
      })(),
      status:document.getElementById('readingLessonStatus')?.textContent?.trim(),
-     importerActive:document.getElementById('liveModeView')?.classList.contains('active')
+     importerActive:document.getElementById('liveModeView')?.classList.contains('active'),
+     forbiddenPreview:document.getElementById('readingImportedPlay')?.getClientRects().length>0,
+     pianoScrollable:document.querySelector('#workspacePianoBody')?.scrollWidth>document.querySelector('#workspacePianoBody')?.clientWidth+30
     };
    });
    console.log(device.name+' N'+level+': '+JSON.stringify(result));
@@ -43,6 +45,8 @@ try{
    assert.ok(result.scoreChildren>50&&result.scoreWidth>300,'partitura must be visible');
    assert.ok(result.keys>15&&result.piano,'shared piano must be usable and visible');
    assert.ok(result.start&&result.status&&result.startVisible,'the exercise start must be visibly accessible without scrolling');
+   assert.equal(result.forbiddenPreview,false,'first-sight preview must not distract the learner');
+   if(device.name==='mobile')assert.ok(result.pianoScrollable,'mobile lesson keyboard needs comfortably sized scrollable keys');
    if(level===0)await page.screenshot({path:'/tmp/learning-'+device.name+'.png'});
   }
   await page.reload({waitUntil:'domcontentloaded'});

@@ -38,7 +38,9 @@ function lessonStopTimer(){if(lessonTimer!==null){clearInterval(lessonTimer);les
 function resetLesson(){
  view?.classList.remove('reading-curriculum-lesson');
  lessonStopTimer();lessonMidiOff?.();lessonMidiOff=null;lesson=null;lessonPanel.hidden=true;
- playBtn.disabled=false;guideBtn.disabled=false;pianoBtn.hidden=false;
+ playBtn.disabled=false;playBtn.hidden=false;guideBtn.disabled=false;pianoBtn.hidden=false;
+ const pianoHint=document.getElementById('karaokePianoHint');
+ if(pianoHint)pianoHint.textContent='A próxima nota acende aqui.';
  if(hint)hint.textContent='Adicionada a partir da Prática.';
  if(category)category.textContent='Biblioteca pessoal';
 }
@@ -302,6 +304,9 @@ function openLesson(rawScore,options={},restoring=false){
   guideBtn.setAttribute('aria-pressed','false');guideBtn.querySelector('.reading-guide-label').textContent='Guia · OFF';
   guideBtn.disabled=firstSight||!!transposed||!!byVoice;
   playBtn.disabled=firstSight||!!transposed||!!byVoice;
+  playBtn.hidden=firstSight||!!transposed||!!byVoice;
+  const pianoHint=document.getElementById('karaokePianoHint');
+  if(pianoHint)pianoHint.textContent='Toca as notas da partitura aqui.';
   pianoBtn.hidden=true;view.dataset.taskId=current.id;
   render();if(!svg?.childElementCount)throw Error('Partitura vazia');
   if(firstSight)lessonTimer=setInterval(()=>{
