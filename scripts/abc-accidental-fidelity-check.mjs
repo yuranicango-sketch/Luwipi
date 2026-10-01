@@ -10,7 +10,7 @@ class SvgStub {
 }
 const fakeDocument={createElementNS:(_ns,name)=>new SvgStub(name)},win={};
 new Function("window","document",await load("assets/music/score-engine.js"))(win,fakeDocument);
-for(const path of ["assets/pedagogy/sightreading-foundation-v1.js","assets/pedagogy/specialized-n0-n1.js","assets/pedagogy/specialized-n2.js","assets/pedagogy/specialized-n3.js"]){
+for(const path of ["assets/pedagogy/sightreading-foundation-v1.js","assets/pedagogy/specialized-n0-n1.js","assets/pedagogy/specialized-n2.js","assets/pedagogy/specialized-n3.js","assets/pedagogy/specialized-n4.js"]){
  new Function("globalThis",await load(path))(win);
 }
 const E=win.LuwipiScoreEngine,P=win.LuwipiPedagogyV1;
@@ -50,7 +50,8 @@ for(const track of P.trackIds){
  const studies=[
   ...[0,1].map(level=>win.LuwipiSpecializedStudies.get(track,level)),
   win.LuwipiSpecializedN2.get(track,2),
-  ...Array.from({length:win.LuwipiSpecializedN3.count(track)},(_,i)=>win.LuwipiSpecializedN3.get(track,3,i))
+  ...Array.from({length:win.LuwipiSpecializedN3.count(track)},(_,i)=>win.LuwipiSpecializedN3.get(track,3,i)),
+  ...Array.from({length:win.LuwipiSpecializedN4.count(track)},(_,i)=>win.LuwipiSpecializedN4.get(track,4,i))
  ];
  for(const study of studies){
   assert.ok(study?.certification===false,study?.id+" not an examination");
@@ -61,6 +62,6 @@ for(const track of P.trackIds){
  }
 }
 assert.equal(total,1344);
-assert.equal(specialized,44);
+assert.equal(specialized,55);
 console.log("ABC fidelity: 4 accidental, pitch, chord and octave cases passed; written naturals and key-only sharps engraved correctly.");
 console.log("Regressions: "+total+" generated two-hand studies and "+specialized+" specialized two-hand studies parse to eight measured bars.");
