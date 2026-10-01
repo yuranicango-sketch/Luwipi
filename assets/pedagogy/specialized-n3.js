@@ -24,7 +24,7 @@ const DATA={
    lh:"B,,4 F,4|E,4 B,,4|F,4 C,4|B,,8|G,4 D,4|E,4 B,,4|F,4 C,4|B,,8",
    limitations:"A alteração da armadura é constante; 6–7 acidentes em tonalidades distantes precisam de estudos adicionais."},
   {focus:"Ler Lá menor melódica: Fá# e Sol# na subida, forma natural na descida.",key:"Am",bpm:60,
-   rh:"A2 B2 c2 d2|e2 ^f2 ^g2 a2|a2 g2 f2 e2|d2 c2 B2 A2|A2 c2 e2 ^f2|^g2 a2 g2 f2|e2 d2 c2 B2|A4 z4",
+   rh:"A2 B2 c2 d2|e2 ^f2 ^g2 a2|a2 g2 f2 e2|d2 c2 B2 A2|A2 c2 e2 ^f2|^g2 a2 =g2 =f2|e2 d2 c2 B2|A4 z4",
    lh:"A,4 E,4|D,4 A,,4|E,4 B,,4|A,8|F,4 C,4|D,4 A,,4|E,4 B,,4|A,8",
    limitations:"Os acidentes devem ser confirmados visualmente; não há mudança automática de armadura a meio do compasso."}
  ],
