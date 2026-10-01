@@ -61,7 +61,7 @@ for(const track of TRACKS){
 }
 assert.equal(count,10);
 const live=await read("assets/live/live-mode.js");
-assert.ok(live.includes("startPreRead(30)")&&live.includes("practiceButton.disabled=true")&&live.includes("pedagogyTranspose=Number(options.transposeSemitones)===2?2:0"),"Sight-reading preparation or transposition contract missing");
+assert.ok(live.includes("startPreRead(30)")&&live.includes("practiceButton.disabled=true")&&live.includes("pedagogyTranspose=[2,5,7].includes(interval)?interval:0"),"Sight-reading preparation or transposition contract missing");
 assert.ok(live.includes("if(!score||!groups.length||practiceButton.disabled)return"),"Pre-reading start is not gated");
 assert.ok(live.includes("if(pedagogyNovel||pedagogyTranspose){playButton.disabled=true;hearButton.disabled=true;}"),"Preview bypass during first sight or transposition");
 assert.ok(ui.includes("S2?.get(track,level)")&&ui.includes("transposeSemitones:seed.transposeSemitones||0"),"N2 did not wire into one workspace");
