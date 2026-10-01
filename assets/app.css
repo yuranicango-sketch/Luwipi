@@ -2858,6 +2858,8 @@ body.luwipi-dark .workspace-canvas-back,body.luwipi-dark .workspace-canvas-actio
 .workspace-piano #pianoBoard{height:100%!important;min-height:0!important}
 .workspace-piano .piano-white{height:calc(100% - 2px)!important}
 .workspace-piano .piano-black{height:62%!important}
+/* The legacy reader may briefly reinsert its keyboard; never let it overlay the score. */
+body.workspace-shell-enabled .workspace-canvas-viewport .piano-dock{display:none!important;position:static!important}
 body.workspace-shell-enabled.piano-open{padding-bottom:0!important}
 body.workspace-shell-enabled #songPianoToggle{display:none!important}
 #karaokeView .karaoke-score-head{min-width:0;flex-wrap:wrap}

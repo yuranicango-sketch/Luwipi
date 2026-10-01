@@ -675,6 +675,7 @@ await test('Piano partilhado: seta discreta, espaço reservado e controlos exist
  assert(journey.includes('keyboard.querySelectorAll(".lit")'),'pré-visualização não limpa as luzes quando o teclado está fora do componente original');
  assert(midi.includes("window.LuwipiWorkspacePiano?.emit(midi,'on')"),'piano MIDI não publica eventos reutilizáveis');
  assert(css.includes('.workspace-piano.collapsed')&&css.includes('.workspace-piano #pianoDock')&&css.includes('.workspace-piano .karaoke-keys'),'a partitura ou teclados ainda podem sobrepor-se');
+ assert(css.includes('.workspace-canvas-viewport .piano-dock{display:none!important;position:static!important}'),'teclado legado pode momentaneamente cobrir a partitura');
  assert(css.includes('body.workspace-shell-enabled #songView .song-piano-toggle{display:none!important}'),'botão antigo ainda pode bloquear a partitura');
  assert(css.includes('.workspace-canvas{display:grid!important;width:100%;height:100dvh'),'piano partilhado não tem linha reservada no mobile');
 });
