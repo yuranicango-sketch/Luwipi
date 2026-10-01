@@ -135,7 +135,7 @@ function renderScore(){
   Engine.render(svg,score,{currentGroupIndex:current});
   if(practice&&guideOn){
     const currentEl=svg.querySelector('[data-live-group="'+practiceIndex+'"]');
-    if(currentEl&&currentEl.scrollIntoView)currentEl.scrollIntoView({block:"nearest",inline:"center",behavior:"smooth"});
+    if(currentEl)window.LuwipiScoreFollower?.follow(currentEl,svgWrap);
   }
 }
 function updateTabs(){
@@ -461,7 +461,7 @@ function handleNoteOn(detail){
   advancePractice("good","Certo · "+directionText(diff)+".");
 }
 function handleNoteOff(detail){
-  if(!rhythmOn||detail.source!=="midi")return;
+  if(!rhythmOn||!["midi","virtual"].includes(detail.source))return;
   const started=noteOnTimes.get(detail.midi);
   if(!started)return;
   noteOnTimes.delete(detail.midi);

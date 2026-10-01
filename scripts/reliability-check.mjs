@@ -679,6 +679,11 @@ await test('Piano partilhado: seta discreta, espaço reservado e controlos exist
  assert(css.includes('body.workspace-shell-enabled #songView .song-piano-toggle{display:none!important}'),'botão antigo ainda pode bloquear a partitura');
  assert(css.includes('.workspace-canvas{display:grid!important;width:100%;height:100dvh'),'piano partilhado não tem linha reservada no mobile');
 });
+await test('Prática: seguir dentro da pauta e avaliar piano partilhado',async()=>{
+ const practice=await read('assets/live/live-mode.js');
+ assert(practice.includes('window.LuwipiScoreFollower?.follow(currentEl,svgWrap)')&&!practice.includes('scrollIntoView'),'o guia de Prática move a página inteira');
+ assert(practice.includes('["midi","virtual"].includes(detail.source)'),'as durações tocadas no piano comum não são avaliadas');
+});
 await test('Seguimento automático horizontal e vertical sem obstruir a pauta',async()=>{
  const midi=await read('assets/karaoke/notation-display.js'),reading=await read('assets/activities/score-follow.js'),css=await read('assets/app.css');
  assert(midi.includes("renderSingleHorizontalStaffline:direction==='horizontal'"),'o motor não alterna entre pauta horizontal e vertical');
