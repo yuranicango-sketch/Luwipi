@@ -129,7 +129,7 @@ for(const track of tracks){
    if(track==="G"&&level===7)assert.ok(sc.events.some(e=>e.dynamic==="ff")&&sc.events.some(e=>e.dynamic==="p"),"Contemporary dynamics missing");
    if(track==="I"&&level===7)assert.equal(sc.measures,16,"Professional long reading needs 16 bars");
    if(track==="J"&&level===7)assert.equal(sc.measures,16,"Stage rehearsal needs 16 bars");
-   if(track==="C"&&level===6)assert.ok(sc.events.some(e=>e.note.startsWith("Db"))&&sc.events.some(e=>e.note.startsWith("C#")),"Written enharmonics lost");
+   if(track==="C"&&level===6)assert.ok(sc.events.some(e=>sc.events.some(f=>e!==f&&e.midi===f.midi&&e.note[0]!==f.note[0])),"Written enharmonics lost");
    advanced++;
   }
   const fallback=choose(track,level,3,seen);
