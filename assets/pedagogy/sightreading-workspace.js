@@ -433,12 +433,13 @@ function launch(which){
  exercise={...seed,id:seed.id,track,level,exploratory:track===selected&&level!==currentLevel,
   reviewTask:assigned?{...assigned}:null,
   kind:which===3?'first_sight':'practice',stage:which,sessionId:String(Date.now())+'-'+seed.id};
- const opened=window.LuwipiLiveLoadPedagogy(score,score.title,{
+ let opened=false;
+ try{opened=window.LuwipiLiveLoadPedagogy(score,score.title,{
   firstSight:which===3,exerciseId:seed.id,transposeSemitones:seed.transposeSemitones||0,transposeByVoice:seed.transposeByVoice||null,
   instruction:seed.pedalEveryBar?'Troca o pedal nos símbolos Ped., a cada mudança de harmonia. A qualidade da pedalação exige observação.':
    seed.crossingMeasures?'Cruza a esquerda por cima da direita nos compassos '+seed.crossingMeasures.map(n=>n+1).join(' e ')+'.':
    [seed.intent,seed.rhythmFeel?'Interpreta colcheias escritas com swing 2:1; a avaliação automática não mede o swing.':'',...(seed.staffHints||[])].filter(Boolean).join(' · ')
- });
+ })}catch(error){workout.append(el('p','workout-result','Não foi possível preparar este exercício: '+(error?.message||'erro desconhecido')));return}
  if(opened){
   // A warm-up or short pattern exposes musical content too: never re-label it
   // as an unseen first-sight exercise, even when only two bars were previewed.

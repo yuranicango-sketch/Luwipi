@@ -54,6 +54,20 @@ assert.deepEqual(observed.filter(x=>x.type==="sustain").map(x=>x.down),[true,fal
 unbind();browser.LuwipiLiveInput.disconnect();
 assert.ok(live.includes("transposeByVoice")&&live.includes('detail.type==="sustain"')&&
  live.includes("pedalObservations"),"Per-staff transposition and pedal capture need to reach the practice UI");
+// A level may never route into an empty Prática: score + SVG must exist first.
+// Unlike an imported file, a curriculum session also survives refresh in the same tab.
+const loader=live.slice(live.indexOf("window.LuwipiLiveLoadPedagogy="));
+assert.ok(loader.includes("setScore(exercise,")&&
+ loader.indexOf("setScore(exercise,")<loader.indexOf("window.LuwipiWorkspaceRouter.go('practice')")&&
+ loader.includes("!svg.childElementCount")&&loader.includes("window.LuwipiWorkspacePiano?.show()"),
+ "Level-to-Prática must render a score and show the keyboard before routing");
+assert.ok(live.includes("function restorePedagogyLesson()")&&
+ live.includes("luwipi:practice:pedagogy:v1")&&
+ live.includes("!score&&!restorePedagogyLesson()")&&
+ live.includes("clearPedagogyLesson();")&&
+ ui.includes("try{opened=window.LuwipiLiveLoadPedagogy"),
+ "An active level must survive refresh and report loading errors in its original journey");
+assert.doesNotThrow(()=>new Function(live),"Practice script must remain syntactically valid");
 console.log("UX: single music catalogue, refresh-safe routes, compact two-screen learning journey and a hideable piano.");
 console.log("First sight: "+Object.keys(eq).length+" equivalent material IDs blocked across tracks and levels.");
 console.log("Input: MIDI notes and both sustain CC64 transitions pass the browserless interaction smoke.");
