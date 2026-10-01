@@ -5,6 +5,7 @@ let revision=null,active=false,queue=Promise.resolve(),syncText="Neste dispositi
 const setStatus=t=>{syncText=t;window.dispatchEvent(new CustomEvent("luwipi:progress-sync",{detail:{status:t}}))};
 function tokenSource(){try{return typeof LuwipiProductionAccess!=="undefined"?LuwipiProductionAccess:null}catch{return null}}
 async function token(){
+ if(typeof window.LuwipiGetAccessToken==="function")return await window.LuwipiGetAccessToken();
  const gate=tokenSource();return gate?.getAccessToken?await gate.getAccessToken():null;
 }
 async function api(method,body){
