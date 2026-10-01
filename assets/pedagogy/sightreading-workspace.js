@@ -157,8 +157,9 @@ function splitABC(seed){
  if(seed.expression){
   result.events.forEach(e=>{
    if(e.clef==='treble'){
-    e.articulations=seed.expression==='staccato'?['staccato']:['accent'];
-    if(seed.expression==='accent')e.dynamic=e.startBeat<16?'p':'f';
+    const measure=Math.floor(e.startBeat/(seed.meter==='3/4'?3:4));
+    e.articulations=seed.expression==='staccato-tenuto'?(measure%2===0?['staccato']:['tenuto']):(measure%2===0?['accent']:[]);
+    if(seed.expression==='accent')e.dynamic=measure<4?'p':'f';
    }
   });
  }
