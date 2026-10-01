@@ -3116,3 +3116,8 @@ body.luwipi-dark .workspace-path-track p,body.luwipi-dark .workspace-path-sub{co
 .diagnostic-stage .diagnostic-second-question{margin-top:20px;padding-top:17px;border-top:1px solid #d9e5f6}
 body.luwipi-dark .workspace-path-sync{color:#b8d3f7}
 body.luwipi-dark .workspace-path-copy{background:#1e3556;border-color:#486caa;color:#e6f0ff}
+
+/* Scheduled review cards remain in the compact learning drawer, never above the piano. */
+.workspace-path-due-action{display:block;width:100%;margin-top:7px;padding:8px 10px;border:1px solid #b2c8ea;border-radius:9px;background:#fff;color:#224a87;text-align:left;font-size:11px;line-height:1.45;font-weight:750}
+.workspace-path-due-action:hover,.workspace-path-due-action:focus-visible{background:#e5efff;outline:2px solid transparent;border-color:#416fc1}
+body.luwipi-dark .workspace-path-due-action{background:#1e3556;color:#e6f0ff;border-color:#486caa}
