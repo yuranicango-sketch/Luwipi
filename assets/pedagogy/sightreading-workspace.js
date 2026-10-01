@@ -182,7 +182,7 @@ function splitABC(seed){
   const line=seed.abc.split('\n').find(x=>x.startsWith('[V:'+hand+'] '));
   if(!line)throw Error('Voz em falta: '+hand);
   // parseABC currently handles one staff per file; parse both separately to retain simultaneous onsets.
-  const body=line.replace(/^\[V:[A-Z]+\]\s*/,'').replace(/\s*\|\]\s*$/,'').replace(/![^!]+!/g,'').replace(/"[^"]*"/g,'');
+  const body=line.replace(/^\[V:[A-Z0-9]+\]\s*/,'').replace(/\s*\|\]\s*$/,'').replace(/![^!]+!/g,'').replace(/"[^"]*"/g,'');
   const result=E.parseABC(headers.join('\n')+'\n'+body);
   return{events:result.events.map((x,i)=>({...x,id:hand+'-'+i,clef})),rests:(result.rests||[]).map((x,i)=>({...x,id:hand+'-rest-'+i,clef}))};
  }
@@ -195,7 +195,8 @@ function splitABC(seed){
  const base=E.parseABC(headers.join('\n')+'\nC2 C2 C2 C2 | C2 C2 C2 C2 |');
  const events=rh.events.concat(rh2.events,lh.events);
  if(!events.length)throw Error('Exercício vazio');
- const result=E.normalizeScore({title:seed.title,source:'pedagogy',tempoBpm:seed.meter==="6/8"?base.tempoBpm*1.5:base.tempoBpm,meter:base.meter,keyFifths:base.keyFifths,
+ const result=E.normalizeScore({title:seed.title,source:'pedagogy',tempoBpm:seed.meter==="6/8"?base.tempoBpm*1.5:base.tempoBpm,
+ pulseUnit:seed.meter==="6/8"?"dotted-quarter":"quarter",meter:base.meter,keyFifths:base.keyFifths,
  events,rests:rh.rests.concat(rh2.rests,lh.rests),keyMinor:base.keyMinor});
  if(seed.expression){
   result.events.forEach(e=>{
