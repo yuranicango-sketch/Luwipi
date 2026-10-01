@@ -28,6 +28,7 @@ function access(){
   try{return typeof LuwipiProductionAccess!=="undefined"?LuwipiProductionAccess:null}catch{return null}
 }
 async function token(){
+  if(typeof window.LuwipiGetAccessToken==="function")return await window.LuwipiGetAccessToken();
   const gate=access();
   return gate&&typeof gate.getAccessToken==="function"?await gate.getAccessToken():null;
 }
