@@ -46,12 +46,19 @@ function sanitize(raw){
   return [{track:m.track,level:integer(m.level,0,7),pattern:bounded(m.pattern,140),lastSeen:date,
    due:(Array.isArray(m.due)?m.due:[]).slice(0,4).map(isoDate).filter(Boolean)}];
  });
+ const exploration=(Array.isArray(raw.exploration)?raw.exploration:[]).slice(-120).flatMap(x=>{
+  if(!TRACKS.includes(x?.track)||!bounded(x.sessionId,90)||!isoDate(x.date))return [];
+  return [{track:x.track,level:integer(x.level,0,7),sessionId:bounded(x.sessionId,90),
+   exerciseId:bounded(x.exerciseId,90),date:x.date,bpm:integer(x.bpm,0,300),
+   notes:decimal(x.notes),rhythm:decimal(x.rhythm),stops:integer(x.stops,0,99),
+   error:bounded(x.error,120),verified:false,certified:false,kind:"exploration"}];
+ });
  const placement={};
  for(const track of TRACKS){
   const s=bounded(raw.placement?.[track]?.status,85);
   placement[track]={level:0,candidate:0,status:["reconhecimento elementar observado","necessita reforço inicial"].includes(s)?s:"não avaliado"};
  }
- return {version:1,levels,seen,mistakes,placement,lastGeneralReview:isoDate(raw.lastGeneralReview),serverVerified:false};
+ return {version:1,levels,seen,mistakes,exploration,placement,lastGeneralReview:isoDate(raw.lastGeneralReview),serverVerified:false};
 }
 async function load(auth){
  const filter="sightreading_progress_v1?user_id=eq."+encodeURIComponent(auth.id)+"&select=draft,updated_at&limit=1";

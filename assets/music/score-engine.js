@@ -204,6 +204,7 @@ function normalizeScore(raw){
       startBeat:roundBeat(Math.max(0,Number(r.startBeat)||0)),
       durationBeat:roundBeat(Math.max(.03125,Number(r.durationBeat)||1)),
       voice:Number(r.voice)||1, track:Number(r.track)||0,
+      clef:r.clef==='bass'?'bass':'treble',
       dotted:Boolean(r.dotted), type:String(r.type||durationKind(r.durationBeat).name)
     })).sort((a,b)=>a.startBeat-b.startBeat);
   const perf=(Array.isArray(score.performanceEvents)?score.performanceEvents:[]).map((e,i)=>normalizeEvent(e,i,"perf")).sort((a,b)=>a.startBeat-b.startBeat||a.midi-b.midi);
@@ -809,9 +810,9 @@ function render(svg,rawScore,options){
     const system=Math.floor(measureIndex/measuresPerSystem),slot=measureIndex%measuresPerSystem;
     if(system>=systems)return;
     const beatInMeasure=rest.startBeat-measureIndex*measureBeats;
-    const baseY=50+system*systemHeight,trebleBottom=baseY+73;
+    const baseY=50+system*systemHeight,trebleBottom=baseY+73,bassBottom=baseY+160;
     const x=left+slot*measureWidth+42+(beatInMeasure/measureBeats)*(measureWidth-50);
-    drawRest(svg,rest,x,trebleBottom,false);
+    drawRest(svg,rest,x,rest.clef==='bass'?bassBottom:trebleBottom,false);
   });
   groups.forEach((group,groupIndex)=>{
     group.events.forEach((event,eventIndex)=>{
