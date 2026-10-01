@@ -15,7 +15,9 @@ try{
     await page.locator('#experienceMenuButton').click();
     await page.locator('#experienceMenu [data-workspace-action="path"]').click();
    }
-   await page.locator('.workspace-path-skill').first().click();
+   // Reopening Aprender intentionally preserves the last selected skill.
+   if(await page.locator('.workspace-path-skill:visible').count())
+    await page.locator('.workspace-path-skill:visible').first().click();
    if(level)await page.locator('.workspace-path-level-select select').selectOption(String(level));
    else await page.locator('.workspace-path-start').click();
    await page.waitForFunction(()=>window.LuwipiWorkspaceRouter?.current()?.activity==='readingImportedView',{timeout:10000});

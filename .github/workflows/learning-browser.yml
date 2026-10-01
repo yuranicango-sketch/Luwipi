@@ -22,3 +22,10 @@ jobs:
         run: python3 -m http.server 4173 --directory public > /tmp/luwipi-static.log 2>&1 &
       - name: Verify N0–N7 in the Leitura workspace
         run: node scripts/learning-browser-check.mjs
+      - name: Upload actual desktop and mobile screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: reading-browser-captures
+          path: /tmp/learning-*.png
+          if-no-files-found: ignore
