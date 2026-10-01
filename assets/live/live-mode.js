@@ -65,6 +65,24 @@ let score=null,groups=[],pdfUrl="",pdfFileName="",structuredFileName="",activeVi
 let tempo=120,guideOn=true,rhythmOn=true,practice=false,practiceIndex=0,practiceAnchor=0,practiceFirstBeat=0;
 let correctCount=0,attempts=0,timingSamples=[],chordSeen=new Set(),noteOnTimes=new Map(),playTimers=[],playing=false;
 let inputMode="none",unsubscribe=null,lastDetected="-",pedagogyNovel=false,pedagogyExerciseId="",pedagogyTranspose=0,pedagogyByVoice=null,pedalObservations=[],pedagogyInstruction='',pedagogyFlow=false,preReadTimer=null,preReadSession=0;
+// An authored level is a real Practice session, not just a navigation to the importer.
+// Keep only the student's current exercise in this tab so a refresh can reload it.
+const PEDAGOGY_LESSON='luwipi:practice:pedagogy:v1',PEDAGOGY_LESSON_TTL=24*60*60*1000;
+function clearPedagogyLesson(){try{sessionStorage.removeItem(PEDAGOGY_LESSON)}catch{}}
+function savePedagogyLesson(exercise,title,options){
+ try{sessionStorage.setItem(PEDAGOGY_LESSON,JSON.stringify({version:1,at:Date.now(),exercise,title,options}))}catch{}
+}
+function restorePedagogyLesson(){
+ if(score)return false;
+ let saved;try{saved=JSON.parse(sessionStorage.getItem(PEDAGOGY_LESSON)||'null')}catch{clearPedagogyLesson();return false}
+ if(!saved)return false;
+ if(saved.version!==1||!saved.exercise?.events?.length||!Number.isFinite(saved.at)||Date.now()-saved.at>PEDAGOGY_LESSON_TTL){
+  clearPedagogyLesson();return false;
+ }
+ const restored=window.LuwipiLiveLoadPedagogy?.(saved.exercise,saved.title,saved.options||{},true)===true;
+ if(!restored)clearPedagogyLesson();
+ return restored;
+}
 function cancelPreRead(){
  preReadSession++;if(preReadTimer!==null){clearTimeout(preReadTimer);preReadTimer=null;}
  if(practiceButton)practiceButton.disabled=false;
@@ -256,6 +274,7 @@ function setScore(next,name){
   score=Engine.normalizeScore(next);groups=Engine.groupEvents(score);structuredFileName=name||score.title;
   tempo=Math.round(score.tempoBpm);activeView="interactive";
   resetPractice();updateFileState();renderScore();
+  clearPedagogyLesson(); // Importing another score replaces, rather than resurrects, the old lesson.
 }
 function clearAll(){
   cancelPreRead();pedagogyFlow=false;guideToggle.disabled=false;
@@ -264,6 +283,7 @@ function clearAll(){
   if(pdfUrl)URL.revokeObjectURL(pdfUrl);pdfUrl="";
   if(pdfFrame)pdfFrame.removeAttribute("src");pdfFallback.replaceChildren();
   activeView="interactive";updateFileState();renderScore();
+  clearPedagogyLesson();
   void draftStore("delete");draftRestoreRequested=false;storePracticeView('interactive');
 }
 function readableError(code){
@@ -330,7 +350,7 @@ async function restorePracticeDraft(){
  }
 }
 window.addEventListener('luwipi:workspace-route',event=>{
- if(event.detail?.section==='practice')void restorePracticeDraft();
+ if(event.detail?.section==='practice'&&!score&&!restorePedagogyLesson())void restorePracticeDraft();
 });
 async function importFile(file,restoring=false){
   if(!file)return;
@@ -723,36 +743,49 @@ window.addEventListener("pagehide",()=>{cancelPreRead();stopPlayback();Input.dis
 toggle(guideToggle,guideOn);toggle(rhythmToggle,rhythmOn);
 window.LuwipiLiveTaskSource=Object.freeze({score:()=>score?{title:score.title||structuredFileName||"Partitura",kind:"music",score}:null});
  // The learning pathway hands exercises to this existing renderer and virtual/MIDI piano.
- window.LuwipiLiveLoadPedagogy=(exercise,title,options={})=>{
+ window.LuwipiLiveLoadPedagogy=(exercise,title,options={},restoring=false)=>{
    if(!exercise||!Array.isArray(exercise.events)||!exercise.events.length)return false;
-   stopPlayback();stopPractice();
-   if(window.LuwipiWorkspaceRouter)window.LuwipiWorkspaceRouter.go('practice');
-   setScore(exercise,title||exercise.title||'Leitura');
-   pedagogyNovel=Boolean(options.firstSight);
-   pedagogyFlow=pedagogyNovel;
-   guideToggle.disabled=pedagogyFlow;
-   pedagogyExerciseId=String(options.exerciseId||'');
-   const interval=Number(options.transposeSemitones);
-   pedagogyTranspose=[2,5,7].includes(interval)?interval:0;
-   pedagogyByVoice=options.transposeByVoice&&typeof options.transposeByVoice==="object"
-    ?Object.fromEntries(Object.entries(options.transposeByVoice).filter(([voice,shift])=>
-      /^(RH2?|LH2?)$/.test(voice)&&Number.isInteger(shift)&&Math.abs(shift)<=24))
-    :null;
-   if(pedagogyByVoice&&!Object.keys(pedagogyByVoice).length)pedagogyByVoice=null;
-   pedagogyInstruction=String(options.instruction||'').slice(0,240);
-   if(pedagogyTranspose||pedagogyByVoice){
-    const altered=Engine.normalizeScore({...score,events:score.events.map(event=>{
-     const voice=String(event.id).split("-")[0];
-     const shift=pedagogyByVoice&&Object.hasOwn(pedagogyByVoice,voice)?pedagogyByVoice[voice]:pedagogyTranspose;
-     const midi=Math.max(0,Math.min(127,event.midi+shift));
-     return {...event,midi}; // The written score stays unchanged for mental transposition.
-    })});
-    groups=Engine.groupEvents(altered);updateMetrics();
+   try{
+    stopPlayback();stopPractice();
+    // Never navigate to an empty importer. Build and render the exercise FIRST.
+    setScore(exercise,title||exercise.title||'Leitura');
+    chooseView('interactive');
+    if(!score||!groups.length||!svg.childElementCount)throw Error('Não foi possível desenhar a partitura.');
+    pedagogyNovel=Boolean(options.firstSight);
+    pedagogyFlow=pedagogyNovel;
+    guideToggle.disabled=pedagogyFlow;
+    pedagogyExerciseId=String(options.exerciseId||'');
+    const interval=Number(options.transposeSemitones);
+    pedagogyTranspose=[2,5,7].includes(interval)?interval:0;
+    pedagogyByVoice=options.transposeByVoice&&typeof options.transposeByVoice==="object"
+     ?Object.fromEntries(Object.entries(options.transposeByVoice).filter(([voice,shift])=>
+       /^(RH2?|LH2?)$/.test(voice)&&Number.isInteger(shift)&&Math.abs(shift)<=24))
+     :null;
+    if(pedagogyByVoice&&!Object.keys(pedagogyByVoice).length)pedagogyByVoice=null;
+    pedagogyInstruction=String(options.instruction||'').slice(0,240);
+    if(pedagogyTranspose||pedagogyByVoice){
+     const altered=Engine.normalizeScore({...score,events:score.events.map(event=>{
+      const voice=String(event.id).split("-")[0];
+      const shift=pedagogyByVoice&&Object.hasOwn(pedagogyByVoice,voice)?pedagogyByVoice[voice]:pedagogyTranspose;
+      const midi=Math.max(0,Math.min(127,event.midi+shift));
+      return {...event,midi}; // The written score stays unchanged for mental transposition.
+     })});
+     groups=Engine.groupEvents(altered);updateMetrics();
+    }
+    if(pedagogyNovel||pedagogyTranspose||pedagogyByVoice){playButton.disabled=true;hearButton.disabled=true;}
+    if(pedagogyNovel)startPreRead(30);
+    else setFeedback((pedagogyTranspose||pedagogyByVoice)?'Transpõe '+intervalLabel()+'. A pauta mantém-se como foi escrita e a demonstração fica desativada.':'Treino: '+(pedagogyInstruction||'reconhece o desenho antes de tocar.'),'near');
+    savePedagogyLesson(exercise,title||exercise.title||'Leitura',options);
+    if(!restoring&&window.LuwipiWorkspaceRouter)window.LuwipiWorkspaceRouter.go('practice');
+    // A lesson must expose the keyboard even if the learner collapsed it earlier.
+    window.LuwipiWorkspacePiano?.show();
+    return true;
+   }catch(error){
+    cancelPreRead();
+    setFeedback('Não foi possível abrir o exercício: '+(error?.message||'erro ao preparar a partitura'),'bad');
+    console.error('Falha ao carregar o exercício de leitura',error);
+    return false;
    }
-   if(pedagogyNovel||pedagogyTranspose||pedagogyByVoice){playButton.disabled=true;hearButton.disabled=true;}
-   if(pedagogyNovel)startPreRead(30);
-   else setFeedback((pedagogyTranspose||pedagogyByVoice)?'Transpõe '+intervalLabel()+'. A pauta mantém-se como foi escrita e a demonstração fica desativada.':'Treino: '+(pedagogyInstruction||'reconhece o desenho antes de tocar.'),'near');
-   return true;
  };
  window.addEventListener('luwipi:pedagogy-cues',event=>{
    if(!view.classList.contains('active'))return;
