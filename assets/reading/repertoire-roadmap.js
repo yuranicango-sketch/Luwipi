@@ -49,6 +49,11 @@
   const escape=value=>String(value).replace(/[&<>"']/g,char=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"})[char]);
   root.innerHTML=`<button class="repertoire-open" type="button" aria-expanded="false" aria-controls="repertoireLevels"><span><strong>40 peças por dificuldade</strong><small>8 níveis · clássico e popular</small></span><b aria-hidden="true">⌄</b></button><div id="repertoireLevels" hidden><p class="repertoire-rule">Clássicos: partitura original de piano, quando existe. Canções: melodia com acompanhamento simples. A dificuldade muda com o arranjo; dentro do nível, a ordem é uma sugestão de progressão.</p>${names.map((name,level)=>`<details class="repertoire-level" ${level===0?"open":""}><summary><span>Nível ${level+1} <strong>${name}</strong></span><small>${level*5+1}–${level*5+5} / 40</small></summary><ol start="${level*5+1}">${works.slice(level*5,level*5+5).map(([title,kind,focus,songId,rights])=>`<li><div class="repertoire-item"><span class="repertoire-kind" aria-label="${kind==="C"?"Clássico":"Popular"}">${kind}</span><div><strong>${escape(title)}</strong><small>${escape(focus)}</small><em>${songId?"Trecho disponível":rights==="protected"?"Referência · partitura não incluída":"Referência · partitura ainda não incluída"}</em></div>${songId?`<button type="button" data-repertoire-song="${songId}">Tocar trecho</button>`:""}</div></li>`).join("")}</ol></details>`).join("")}</div>`;
   const open=root.querySelector(".repertoire-open"),levels=root.querySelector("#repertoireLevels"),library=root.nextElementSibling;
-  open.addEventListener("click",()=>{const expanded=open.getAttribute("aria-expanded")!=="true";open.setAttribute("aria-expanded",String(expanded));levels.hidden=!expanded;if(library?.classList.contains("song-list"))library.hidden=expanded});
+  // Keep every existing playable song visible: the optional 40-piece roadmap must not replace the catalogue.
+  if(library?.classList.contains("song-list")){
+    library.hidden=false;library.removeAttribute("hidden");
+    library.after(root); // The playable pieces appear first, followed by the optional study references.
+  }
+  open.addEventListener("click",()=>{const expanded=open.getAttribute("aria-expanded")!=="true";open.setAttribute("aria-expanded",String(expanded));levels.hidden=!expanded});
   root.addEventListener("click",event=>{const button=event.target.closest("[data-repertoire-song]");if(!button)return;document.querySelector(`.song-list [data-song="${button.dataset.repertoireSong}"][data-version="right"]`)?.click()});
 })();

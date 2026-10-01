@@ -7,7 +7,7 @@ document.body.classList.toggle('workspace-task-mode',isTask);
 const views=[...document.body.children].filter(node=>node.classList?.contains('view'));
 const canvas=document.createElement('main');canvas.id='workspaceCanvas';canvas.className='workspace-canvas';
 const bar=document.createElement('div');bar.className='workspace-canvas-bar';
-bar.innerHTML='<button type="button" class="workspace-canvas-back" aria-label="Voltar">←</button><div class="workspace-canvas-heading"><small>LUWIPI</small><strong id="workspaceCanvasTitle">Leitura</strong><span id="workspaceCanvasContext">Ouve. Vê. Toca.</span></div><div class="workspace-canvas-actions"><button id="workspaceCanvasPrimary" type="button" hidden></button></div>';
+bar.innerHTML='<button id="workspaceSidebarToggle" type="button" class="workspace-canvas-menu" aria-label="Abrir menu lateral" aria-controls="workspaceSidebar" aria-expanded="false" title="Abrir menu">☰</button><button type="button" class="workspace-canvas-back" aria-label="Voltar">←</button><div class="workspace-canvas-heading"><small>LUWIPI</small><strong id="workspaceCanvasTitle">Leitura</strong><span id="workspaceCanvasContext">Ouve. Vê. Toca.</span></div><div class="workspace-canvas-actions"><button type="button" class="workspace-canvas-path" data-workspace-action="path" aria-label="Abrir o meu percurso" title="Meu percurso">◎ <span>Percurso</span></button><button id="workspaceCanvasPrimary" type="button" hidden></button></div>';
 const viewport=document.createElement('div');viewport.className='workspace-canvas-viewport';
 const pianoArea=document.createElement('section');pianoArea.id='workspacePiano';pianoArea.className='workspace-piano';pianoArea.setAttribute('aria-label','Piano partilhado');
 pianoArea.innerHTML='<div class="workspace-piano-edge"><button id="workspacePianoToggle" type="button" aria-label="Recolher piano" title="Recolher piano" aria-expanded="true" aria-controls="workspacePianoBody">⌄</button></div><div id="workspacePianoBody" class="workspace-piano-body"></div>';
@@ -15,6 +15,43 @@ canvas.append(bar,viewport,pianoArea);sidebar.after(canvas);views.forEach(view=>
 
 const barBack=bar.querySelector('.workspace-canvas-back'),barTitle=bar.querySelector('#workspaceCanvasTitle'),barContext=bar.querySelector('#workspaceCanvasContext'),barPrimary=bar.querySelector('#workspaceCanvasPrimary');
 const roots=new Set(['readingView','karaokeView','liveModeView','gamesView','rhythmView']);
+const toggle=bar.querySelector('#workspaceSidebarToggle');
+const closeButton=document.createElement('button');
+closeButton.type='button';closeButton.className='workspace-sidebar-close';closeButton.setAttribute('aria-label','Fechar menu lateral');closeButton.title='Fechar menu';closeButton.textContent='×';
+sidebar.querySelector('.workspace-brand')?.append(closeButton);
+const pathButton=document.createElement('button');
+pathButton.type='button';pathButton.dataset.workspaceAction='path';pathButton.innerHTML='<span>◎</span><b>Meu percurso</b>';
+sidebar.querySelector('.workspace-nav')?.insertBefore(pathButton,sidebar.querySelector('[data-workspace-nav="karaoke"]'));
+const pathMobile=document.createElement('button');pathMobile.type='button';pathMobile.dataset.workspaceAction='path';pathMobile.innerHTML='<span>◎</span><b>Meu percurso</b>';
+document.querySelector('.experience-menu-nav')?.append(pathMobile);
+const MENU_KEY='luwipi:sidebar-open:v1';
+let sidebarOpen=false;
+try{sidebarOpen=localStorage.getItem(MENU_KEY)==='true'}catch{}
+function setSidebarOpen(open){
+ sidebarOpen=!!open&&!isTask;
+ document.body.classList.toggle('workspace-sidebar-closed',!sidebarOpen);
+ sidebar.inert=!sidebarOpen;
+ sidebar.setAttribute('aria-hidden',String(!sidebarOpen));
+ toggle.setAttribute('aria-expanded',String(sidebarOpen));
+ toggle.setAttribute('aria-label',sidebarOpen?'Fechar menu lateral':'Abrir menu lateral');
+ toggle.title=sidebarOpen?'Fechar menu':'Abrir menu';
+ try{localStorage.setItem(MENU_KEY,String(sidebarOpen))}catch{}
+ if(!sidebarOpen&&document.activeElement&&sidebar.contains(document.activeElement))toggle.focus();
+}
+setSidebarOpen(sidebarOpen);
+toggle.addEventListener('click',()=>setSidebarOpen(!sidebarOpen));
+closeButton.addEventListener('click',()=>setSidebarOpen(false));
+document.addEventListener('keydown',event=>{if(event.key==='Escape'&&sidebarOpen)setSidebarOpen(false)});
+window.LuwipiWorkspaceSidebar=Object.freeze({open:()=>setSidebarOpen(true),close:()=>setSidebarOpen(false),isOpen:()=>sidebarOpen});
+function togglePath(){
+ document.querySelector('#experienceMenu:not(.hidden) [data-experience-close]')?.click();
+ window.dispatchEvent(new CustomEvent('luwipi:path-toggle'));
+ if(sidebarOpen)setSidebarOpen(false);
+}
+sidebar.querySelector('[data-workspace-action="path"]')?.addEventListener('click',togglePath);
+bar.querySelector('[data-workspace-action="path"]')?.addEventListener('click',togglePath);
+pathMobile.addEventListener('click',togglePath);
+
 let libraryOpen=false;
 function activeView(){return viewport.querySelector('.view.active')}
 function modeOf(view){
@@ -88,8 +125,8 @@ function sync(){
  const primary=primaryFor(mode);barPrimary.hidden=!primary||isTask;
  if(primary){barPrimary.textContent=primary.label;barPrimary.onclick=primary.run}else barPrimary.onclick=null;
 }
-sidebar.querySelectorAll('[data-workspace-nav]').forEach(button=>button.addEventListener('click',()=>open(button.dataset.workspaceNav)));
-sidebar.querySelector('[data-workspace-action="library"]')?.addEventListener('click',()=>libraryOpen?goBack():openReadingLibrary());
+sidebar.querySelectorAll('[data-workspace-nav]').forEach(button=>button.addEventListener('click',()=>{open(button.dataset.workspaceNav);setSidebarOpen(false)}));
+sidebar.querySelector('[data-workspace-action="library"]')?.addEventListener('click',()=>{libraryOpen?goBack():openReadingLibrary();setSidebarOpen(false)});
 sidebar.querySelector('[data-workspace-action="back"]')?.addEventListener('click',goBack);
 sidebar.querySelector('[data-workspace-action="guide"]')?.addEventListener('click',()=>{const view=activeView(),button=view?.querySelector('.reading-guide-toggle,[data-reading-guide-toggle]');if(button)button.click();else document.getElementById('experienceMenuGuide')?.click()});
 sidebar.querySelector('[data-workspace-action="task"]')?.addEventListener('click',()=>document.getElementById('experienceMenuTask')?.click());

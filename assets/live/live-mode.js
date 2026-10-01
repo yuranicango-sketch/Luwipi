@@ -662,5 +662,14 @@ window.addEventListener("pagehide",()=>{stopPlayback();Input.disconnect();if(uns
 
 toggle(guideToggle,guideOn);toggle(rhythmToggle,rhythmOn);
 window.LuwipiLiveTaskSource=Object.freeze({score:()=>score?{title:score.title||structuredFileName||"Partitura",kind:"music",score}:null});
+ // The learning pathway hands exercises to this existing renderer and virtual/MIDI piano.
+ window.LuwipiLiveLoadPedagogy=(exercise,title)=>{
+   if(!exercise||!Array.isArray(exercise.events)||!exercise.events.length)return false;
+   stopPlayback();stopPractice();
+   if(window.LuwipiWorkspaceRouter)window.LuwipiWorkspaceRouter.go('practice');
+   setScore(exercise,title||exercise.title||'Leitura');
+   setFeedback('Exercício preparado. Usa o metrónomo; numa leitura inédita, não ouças a demonstração antes da primeira tentativa.','near');
+   return true;
+ };
 updateFileState();resetPractice();
 })();

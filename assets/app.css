@@ -3052,3 +3052,60 @@ body.luwipi-dark .diagnostic-score{background:#fff}
 #readingView .journey-diagnostic-link{appearance:none;min-width:0;display:inline-flex;align-items:center;justify-content:center;gap:5px;min-height:30px;padding:4px 9px;border:1px solid #b0c2e6;border-radius:9px;background:#f8fbff;color:#244c9f;font:850 10px/1.1 system-ui;white-space:nowrap;cursor:pointer}
 #readingView .journey-diagnostic-link:focus-visible{outline:2px solid #3d71cc;outline-offset:2px}
 @media(max-width:620px){#readingView .journey-diagnostic-link{font-size:9px;min-height:28px;padding:3px 7px}#readingView .journey-stage-top{gap:6px}}
+
+/* Sight-reading workspace: canonical catalog, collapsible navigation and compact pathway overlay. */
+body[data-mode="aprenda"] #readingView.workspace-library-open .reading-library,
+body[data-mode="ensine"] #readingView.workspace-library-open .reading-library,
+body.workspace-shell-enabled #readingView.workspace-library-open .reading-library{
+ display:block!important;min-height:0!important;flex:1!important;overflow-y:auto!important;overflow-x:hidden!important
+}
+#readingView.workspace-library-open .song-list:not([hidden]){display:grid!important;visibility:visible!important}
+#readingView.workspace-library-open #repertoireRoadmap{display:block!important}
+@media(min-width:981px){
+ body.workspace-shell-enabled.workspace-sidebar-closed{padding-left:0!important}
+ body.workspace-shell-enabled .workspace-sidebar{transition:transform .18s ease,visibility .18s ease}
+ body.workspace-shell-enabled.workspace-sidebar-closed .workspace-sidebar{transform:translateX(-101%);visibility:hidden;pointer-events:none}
+ body.workspace-shell-enabled .workspace-canvas-bar .workspace-canvas-menu{display:inline-flex!important;align-items:center;justify-content:center;flex:0 0 35px;width:35px;height:35px;padding:0;border:1px solid #b9c9e6;border-radius:10px;background:#f6f9ff;color:#173366;font-size:18px}
+ body.workspace-shell-enabled .workspace-sidebar .workspace-brand{padding-right:30px;position:relative}
+ body.workspace-shell-enabled .workspace-sidebar .workspace-sidebar-close{display:grid!important;position:absolute;right:0;top:1px;width:30px;min-height:30px;padding:0;place-items:center;font-size:23px;border:1px solid #c7d6ef;background:#fff}
+}
+@media(max-width:980px){
+ body.workspace-shell-enabled .workspace-canvas-menu{display:none!important}
+ body.workspace-shell-enabled .workspace-canvas-actions .workspace-canvas-path{display:none!important}
+}
+.workspace-canvas{position:relative}
+.workspace-canvas-actions .workspace-canvas-path{display:inline-flex;align-items:center;gap:5px}
+.workspace-canvas-actions .workspace-canvas-path span{white-space:nowrap}
+.workspace-path-panel{
+ box-sizing:border-box;position:absolute;z-index:106;top:52px;right:0;bottom:0;
+ width:min(395px,95vw);display:flex;flex-direction:column;min-height:0;
+ padding:13px;background:#f7faff;box-shadow:-9px 0 35px #172f5c2b;
+ border-left:1px solid #c7d6ef;color:#1c396c
+}
+.workspace-path-panel[hidden]{display:none!important}
+.workspace-path-head{display:flex;align-items:center;gap:8px;justify-content:space-between;padding:2px 2px 10px;border-bottom:1px solid #d3dff0}
+.workspace-path-head h2{font:850 20px/1.1 "Bricolage Grotesque",system-ui;margin:0}
+.workspace-path-head button{border:1px solid #cad9ef;border-radius:9px;background:#fff;font-size:21px;color:#294e88;min-width:34px;min-height:34px}
+.workspace-path-sub{font-size:11px;line-height:1.5;color:#567093;padding:10px 3px}
+.workspace-path-map{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;display:grid;align-content:start;gap:7px;padding:0 3px 18px}
+.workspace-path-track{border:1px solid #cfddf1;border-radius:12px;background:#fff;padding:10px}
+.workspace-path-track header{display:flex;justify-content:space-between;gap:9px}
+.workspace-path-track strong{font-size:12px}
+.workspace-path-track small{font-size:10px;color:#607baa}
+.workspace-path-track p{font-size:11px;line-height:1.35;color:#536d8e;margin:5px 0}
+.workspace-path-track button,.workspace-path-workout button{border:1px solid #aac4ef;border-radius:9px;background:#eff5ff;color:#26539b;padding:8px 10px;font-size:11px;font-weight:800}
+.workspace-path-track button{min-height:34px}
+.workspace-path-workout{display:grid;gap:9px;max-height:min(270px,39dvh);overflow-y:auto;border-top:1px solid #d5e0f1;padding:10px 2px 0}
+.workspace-path-workout[hidden]{display:none!important}
+.workspace-path-workout h3{font-size:12px;margin:0}
+.workspace-path-workout label{font-size:11px;display:grid;gap:4px}
+.workspace-path-workout select{min-height:34px;border:1px solid #bfceed;border-radius:8px;background:#fff;color:#204275;padding:5px;font-size:12px}
+.workspace-path-workout .workout-actions{display:flex;gap:7px;flex-wrap:wrap}
+.workspace-path-workout .workout-actions button:first-child{background:#2f64c4;color:white}
+.workspace-path-banner{font-size:10px;color:#665b36;border:1px solid #f0dda8;background:#fff7df;border-radius:8px;padding:7px;line-height:1.4}
+.workspace-path-workout .workout-result{font-size:11px;font-weight:750}
+body.luwipi-dark .workspace-path-panel{background:#132440;color:#eef4ff;border-color:#456394}
+body.luwipi-dark .workspace-path-track{background:#1e3556;border-color:#48678f}
+body.luwipi-dark .workspace-path-track p,body.luwipi-dark .workspace-path-sub{color:#b9cee9}
+@media(max-width:980px){.workspace-path-panel{position:fixed;top:0;right:0;bottom:0;max-width:100%;z-index:200;padding-top:max(12px,env(safe-area-inset-top))}}
+@media(max-height:590px) and (min-width:981px){.workspace-path-panel{top:44px}}

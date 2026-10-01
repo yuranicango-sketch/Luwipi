@@ -2,6 +2,8 @@
 set -eu
 
 node scripts/reliability-check.mjs
+node scripts/pedagogy-check.mjs
+node scripts/workspace-pedagogy-check.mjs
 
 if [ "${VERCEL:-0}" = "1" ]; then
   node scripts/prepare-musescore.mjs
