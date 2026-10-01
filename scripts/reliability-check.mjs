@@ -92,6 +92,7 @@ await test("Golden fixture: Jingle Bells mantém partitura limpa e pistas separa
   for(const name of ["Melody","Piano","Bass","Drums"])assert(names.includes(name),"golden MIDI track missing: "+name);
   const melody=score.performanceEvents.filter(e=>e.track===0);
   assert(melody.length===51&&melody.every(e=>e.durationBeat>=.5),"golden melody lost notes or introduced tiny gates");
+  assert(Array.isArray(score.percussionEvents)&&score.percussionEvents.length>100&&score.percussionEvents.every(e=>e.channel===9),"golden drum context is not preserved separately");
   assert(score.transcription.gridBeat===.5&&score.transcription.confidence===1,"golden MIDI no longer quantizes exactly to eighth notes");
   assert(!melody.some(e=>E.durationKind(e.durationBeat).name==="sixteenth"),"golden melody generated false sixteenth notes");
   assert(!audit.blocked&&audit.notePreservation===1,"golden MIDI fails fidelity audit");
@@ -545,7 +546,7 @@ await test('Karaokê preserva MIDI original e ataques do solo',async()=>{
  assert(karaoke.includes('score,binary')&&player.includes('binary:binary.slice(0)'),'MIDI original não chega ao sequenciador');
  assert(!karaoke.includes('E.playNote(n.midi')&&player.includes('WorkletSynthesizer'),'acompanhamento ainda usa apenas piano');
  assert(player.includes('currentHighResolutionTime')&&karaoke.includes('currentBeat()'),'pauta desligada do relógio do áudio');
- assert(karaoke.includes('version:2')&&karaoke.includes('data.midi'),'tarefas perdem os instrumentos originais');
+ assert(karaoke.includes('version:3')&&karaoke.includes('data.midi'),'tarefas perdem os instrumentos originais ou a revisão IA');
  const begin=karaoke.indexOf('function simplify('),end=karaoke.indexOf('function setSong',begin);
  const select=new Function(karaoke.slice(begin,end)+';return simplify')();
  const events=[0,.125,.25,.375].map((startBeat,i)=>({id:String(i),midi:i<2?60:62+i,startBeat,durationBeat:.125}));
@@ -565,6 +566,9 @@ await test('MusicXML: acordes, vozes, durações e isolamento de pista',async()=
  {id:'e',midi:72,startBeat:3,durationBeat:2}],{meter:[4,4],keyFifths:0},'A & B');
  assert(result.sourceNotes===5&&result.voices===2&&result.bars===2,'acordes ou vozes perdidos');
  assert(result.xml.includes('<chord/>')&&result.xml.includes('<backup>')&&result.xml.includes('<tied type="start"/>')&&result.xml.includes('A &amp; B'),'MusicXML incompleto');
+ const ai=N=>N; // marker for readability in this test
+ const reviewed=w.LuwipiMidiNotation.convert([{id:'ai-1',midi:61,startBeat:0,durationBeat:.37,notationSpelling:'Db4'}],{meter:[4,4],keyFifths:0},'AI',{grid:.5,articulation:false});
+ assert(reviewed.gridBeat===.5&&reviewed.xml.includes('<step>D</step><alter>-1</alter>')&&reviewed.notes[0].duration===480,'grid ou spelling da IA não chegou à partitura');
  const input=midiBuffer([0,0xc0,24,0,0xc1,40,0,0x90,60,100,0,0x91,64,100,0x83,0x60,0x80,60,0,0,0x81,64,0,0,0xff,0x2f,0]);
  const isolated=w.LuwipiMidiNotation.isolate(input,'0:1'),score=w.LuwipiScoreEngine.parseMIDI(isolated),events=w.LuwipiScoreEngine.performanceEvents(score);
  assert(events.length===1&&events[0].midi===64&&events[0].channel===1&&events[0].durationBeat===1,'audição de pista altera notas ou tempo');
@@ -616,25 +620,44 @@ await test('MuseScore: MIDI inválido recusado e conversão autenticada',async()
  assert((await read('app.html')).includes('/assets/karaoke/musescore-client.js'),'cliente MuseScore não carregado');
 });
 
-await test('Entrada única, menu, tema e karaokê MIDI',async()=>{
-  const app=await read('app.html'),config=JSON.parse(await read('vercel.json'));
+await test('Karaokê Studio: IA Luna, layout e interação completos',async()=>{
+  const app=await read('app.html'),css=await read('assets/app.css'),karaoke=await read('assets/karaoke/karaoke.js'),notation=await read('assets/karaoke/midi-notation.js'),display=await read('assets/karaoke/notation-display.js'),config=JSON.parse(await read('vercel.json'));
   const core=decodeCore(app);
-  assert(core.includes("const initialMode='aprenda'"),'a entrada ainda escolhe duas experiências');
-  assert(core.includes('product=in.(aprenda,ensine)'),'acessos antigos não são considerados');
-  assert(app.includes('id="experienceMenuButton"')&&app.includes('id="experienceMenuTheme"')&&app.includes('id="karaokeBack"'),'menu, tema ou voltar ausente');
-  const canonicalCss=await read('assets/app.css');assert(canonicalCss.includes('.parent-mode #experienceMenuButton')&&canonicalCss.includes('.parent-mode #karaokeBack'),'modo tarefa ainda expõe navegação do produto');
-  assert(app.includes('id="karaokeFiles"')&&app.includes('multiple'),'importação de vários MIDI ausente');
-  assert(config.redirects.some(x=>x.source==='/ensine'&&x.destination==='/app')&&config.redirects.some(x=>x.source==='/aprenda'&&x.destination==='/app')&&!config.redirects.some(x=>x.source==='/app'),'rotas antigas ou /app estão incorretas');
-  const karaoke=await read('assets/karaoke/karaoke.js');
-  assert(karaoke.includes('E.parseMIDI')&&karaoke.includes('E.performanceEvents')&&karaoke.includes('backing=events.filter(e=>keyOf(e)!==selected)'),'separação de melodia não está ligada aos eventos MIDI');
-  assert(karaoke.includes('LuwipiLiveInput.connectMIDI')&&karaoke.includes('LuwipiLiveInput.connectMicrophone'),'entrada instrumental ausente');
-  assert(app.includes('id="karaokeTaskSheet"')&&karaoke.includes('CompressionStream')&&karaoke.includes('DecompressionStream'),'partilha MIDI não apresenta link ou não o consegue reabrir');
-  const css=await read('assets/app.css');assert(css.includes('max-height:540px')&&css.includes('orientation:landscape')&&css.includes('max-width:650px')&&css.includes('minmax(0,1.6fr)'),'karaokê sem adaptação vertical e horizontal');
+  assert(core.includes("const initialMode='aprenda'")&&core.includes('product=in.(aprenda,ensine)'),'entrada única regrediu');
+  assert(app.includes('id="karaokeDropzone"')&&app.includes('id="karaokeAiButton"')&&app.includes('id="karaokeAiMode"')&&app.includes('id="karaokeCueNow"'),'novo estúdio MIDI incompleto');
+  assert(app.includes('id="karaokeFiles"')&&app.includes('multiple')&&app.includes('id="karaokeTaskSheet"'),'importação ou tarefa desapareceu');
+  assert(karaoke.includes("fetch('/api/score-doctor'")&&karaoke.includes("scoreMode='ai'")&&karaoke.includes('function applyAiCorrections'),'Score Doctor não está ligado à experiência');
+  const payloadStart=karaoke.indexOf('function scoreDoctorPayload'),payloadEnd=karaoke.indexOf('function reviewKey',payloadStart),payload=karaoke.slice(payloadStart,payloadEnd);
+  assert(payload.includes('E.performanceEvents(score)')&&payload.includes('events')&&!payload.includes('.slice('),'a IA não recebe a música inteira');
+  assert(karaoke.includes('for(let i=0;i<24;i++)')&&karaoke.includes("classList.toggle('target'"),'piano de duas oitavas ou guia da próxima nota ausente');
+  assert(karaoke.includes('LuwipiLiveInput.connectMIDI')&&karaoke.includes('LuwipiLiveInput.connectMicrophone'),'entradas de execução ausentes');
+  assert(karaoke.includes('CompressionStream')&&karaoke.includes('DecompressionStream')&&karaoke.includes('ai:current.ai||null'),'tarefa não preserva a revisão IA');
+  assert(css.includes('.karaoke-workspace')&&css.includes('grid-template-columns:292px minmax(0,1fr)')&&css.includes('.karaoke-rail{order:1;display:flex;flex-direction:row'),'layout desktop/mobile do estúdio está incompleto');
+  assert(css.includes('.karaoke-ai-panel')&&css.includes('.karaoke-cue')&&css.includes('.karaoke-piano-shell'),'hierarquia visual nova incompleta');
+  assert(notation.includes('Number(options.grid)>0')&&notation.includes('notationSpelling'),'revisão IA não chega ao MusicXML');
+  assert(display.includes("document.getElementById('karaokeStaff')"),'cursor não acompanha o novo viewport da partitura');
+  assert(config.functions?.['api/score-doctor.js']?.maxDuration===90,'função Score Doctor não tem janela de execução adequada');
+  assert(config.redirects.some(x=>x.source==='/ensine'&&x.destination==='/app')&&config.redirects.some(x=>x.source==='/aprenda'&&x.destination==='/app')&&!config.redirects.some(x=>x.source==='/app'),'rotas do app regrediram');
   const E=await engine(),name=bytes=>[...bytes];
   const t1=[0,255,3,6,...name(Buffer.from('Melody')),0,192,73,0,144,60,100,131,96,128,60,0,0,255,47,0];
   const t2=[0,255,3,5,...name(Buffer.from('Piano')),0,193,0,0,145,48,70,131,96,129,48,0,0,255,47,0];
   const fixture=new Uint8Array([77,84,104,100,0,0,0,6,0,1,0,2,1,224,77,84,114,107,...u32(t1.length),...t1,77,84,114,107,...u32(t2.length),...t2]);
   const score=E.parseMIDI(fixture.buffer);assert(score.transcription.trackNames.some(x=>x.title==='Melody')&&score.transcription.programs.some(x=>x.program===73)&&E.performanceEvents(score).some(x=>x.track===1),'pistas MIDI independentes não foram preservadas');
+});
+
+await test('Score Doctor API: privada, estruturada e fixa em GPT-6 Luna',async()=>{
+  const src=await read('api/score-doctor.js');
+  assert(src.includes('const MODEL="gpt-6-luna"')&&src.includes('https://api.openai.com/v1/responses'),'modelo ou endpoint OpenAI incorreto');
+  assert(src.includes('store:false')&&src.includes('type:"json_schema"')&&src.includes('strict:true'),'Structured Outputs ou privacidade da resposta ausente');
+  assert(!src.includes('maxLength'),'schema estrito usa uma restrição não suportada pelo contrato atual');
+  assert(src.includes('userFor(request)')&&src.includes('sameOrigin(request)')&&src.includes('body.events.length>30000'),'autenticação, origem ou limite de payload ausente');
+  assert(src.includes('Never change pitch identity')&&src.includes('Operations are SPARSE notation edits only'),'contrato de preservação musical ausente');
+  const api=await import('data:text/javascript;base64,'+Buffer.from(src).toString('base64')+'#'+Date.now());
+  const foreign=await api.POST(new Request('https://luwipi.vercel.app/api/score-doctor',{method:'POST',headers:{origin:'https://other.example','content-type':'application/json'},body:'{}'}));
+  assert(foreign.status===403,'Score Doctor aceita origem externa');
+  const unauth=await api.POST(new Request('https://luwipi.vercel.app/api/score-doctor',{method:'POST',headers:{'content-type':'application/json'},body:'{}'}));
+  assert(unauth.status===401,'Score Doctor está aberto sem sessão');
+  const info=await (await api.GET()).json();assert(info.model==='gpt-6-luna','diagnóstico do Score Doctor não confirma Luna');
 });
 
 await test('Entrada pública, app autenticada e tarefas isoladas',async()=>{

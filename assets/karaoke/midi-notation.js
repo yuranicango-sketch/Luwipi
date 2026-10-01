@@ -27,7 +27,7 @@ function prepareNotation(events,options={}){
   i=end;
  }
  const prepared=ordered.map(n=>({...n,durationBeat:n.notationDurationBeat??n.durationBeat}));
- let grid=window.LuwipiScoreEngine.inferNotationGrid(prepared);
+ let grid=Number(options.grid)>0?Number(options.grid):window.LuwipiScoreEngine.inferNotationGrid(prepared);
  // Never collapse two distinct note attacks into one chord.
  while(grid>1/960&&attacks.some((a,i)=>i&&Math.round(a.beat/grid)===Math.round(attacks[i-1].beat/grid)))grid/=2;
  return {events:prepared,grid,articulationNotes};
@@ -44,7 +44,7 @@ function convert(events,score,title,options={}){
  const total=Math.max(...notes.map(n=>n.start+n.duration),Math.round((score.durationBeats||0)*D)),meters=(score.meterMap||[]).slice().sort((a,b)=>a.beat-b.beat),keys=(score.keyMap||[]).slice().sort((a,b)=>a.beat-b.beat);
  const bars=[];let start=0;while(start<total){const meter=meters.filter(m=>m.beat*D<=start).at(-1)?.meter||score.meter||[4,4],length=Math.round(meter[0]*4/meter[1]*D);const change=meters.find(m=>m.beat*D>start&&m.beat*D<start+length);const end=change?Math.round(change.beat*D):start+length;bars.push({start,end,meter,key:keys.filter(k=>k.beat*D<=start).at(-1)?.fifths??score.keyFifths??0});start=end;if(bars.length>4000)throw Error('Esta partitura é demasiado longa.')}
  const pitches=notes.map(n=>n.midi).sort((a,b)=>a-b),bass=pitches[Math.floor(pitches.length/2)]<60;
- function pitch(n,key){const name=E.midiToSpelledName(n.midi,key),m=/^([A-G])([#b]?)(-?\d+)$/.exec(name);return '<pitch><step>'+m[1]+'</step>'+(m[2]?'<alter>'+(m[2]==='#'?1:-1)+'</alter>':'')+'<octave>'+m[3]+'</octave></pitch>'}
+ function pitch(n,key){const candidate=typeof n.notationSpelling==='string'&&/^[A-G](?:#|b)?-?\d+$/.test(n.notationSpelling)?n.notationSpelling:E.midiToSpelledName(n.midi,key),m=/^([A-G])([#b]?)(-?\d+)$/.exec(candidate);return '<pitch><step>'+m[1]+'</step>'+(m[2]?'<alter>'+(m[2]==='#'?1:-1)+'</alter>':'')+'<octave>'+m[3]+'</octave></pitch>'}
  function noteXML(n,f,voice,chord,tieStart,tieStop,key){return '<note>'+(chord?'<chord/>':'')+pitch(n,key)+'<duration>'+f.ticks+'</duration>'+(tieStop?'<tie type="stop"/>':'')+(tieStart?'<tie type="start"/>':'')+'<voice>'+voice+'</voice><type>'+f.type+'</type>'+(f.dot?'<dot/>':'')+(f.triplet?'<time-modification><actual-notes>3</actual-notes><normal-notes>2</normal-notes></time-modification>':'')+'<notations>'+(tieStop?'<tied type="stop"/>':'')+(tieStart?'<tied type="start"/>':'')+(n.staccato&&!tieStop?'<articulations><staccato/></articulations>':'')+'</notations></note>'}
  function restXML(at,dur,voice){return figureParts(at,dur).map(f=>'<note><rest/><duration>'+f.ticks+'</duration><voice>'+voice+'</voice><type>'+f.type+'</type>'+(f.dot?'<dot/>':'')+(f.triplet?'<time-modification><actual-notes>3</actual-notes><normal-notes>2</normal-notes></time-modification>':'')+'</note>').join('')}
  const measures=bars.map((bar,index)=>{

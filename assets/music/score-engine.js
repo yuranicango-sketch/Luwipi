@@ -207,6 +207,7 @@ function normalizeScore(raw){
       dotted:Boolean(r.dotted), type:String(r.type||durationKind(r.durationBeat).name)
     })).sort((a,b)=>a.startBeat-b.startBeat);
   const perf=(Array.isArray(score.performanceEvents)?score.performanceEvents:[]).map((e,i)=>normalizeEvent(e,i,"perf")).sort((a,b)=>a.startBeat-b.startBeat||a.midi-b.midi);
+  const percussion=(Array.isArray(score.percussionEvents)?score.percussionEvents:[]).map((e,i)=>normalizeEvent(e,i,"drum")).sort((a,b)=>a.startBeat-b.startBeat||a.midi-b.midi);
   const tempoBpm=clamp(Number(score.tempoBpm)||120,20,300);
   const beatsPerMeasure=meter[0]*(4/meter[1]);
   const endBeat=Math.max(events.reduce((max,e)=>Math.max(max,e.startBeat+e.durationBeat),0),rests.reduce((max,r)=>Math.max(max,r.startBeat+r.durationBeat),0));
@@ -225,6 +226,7 @@ function normalizeScore(raw){
     events,
     rests,
     performanceEvents:perf.length?perf:events,
+    percussionEvents:percussion,
     transcription:score.transcription&&typeof score.transcription==="object"?Object.assign({},score.transcription):null,
     beatsPerMeasure,
     durationBeats:endBeat,
@@ -274,7 +276,7 @@ function parseMIDI(arrayBuffer){
   if(format>1)throw new Error("midi_format_unsupported");
   if(division&0x8000)throw new Error("midi_smpte_unsupported");
   let pos=8+headerLength;
-  const rawEvents=[],tempos=[],meters=[],keys=[],trackNames=[],programs=[];
+  const rawEvents=[],percussionEvents=[],tempos=[],meters=[],keys=[],trackNames=[],programs=[];
   for(let track=0;track<tracksCount;track++){
     if(pos+8>bytes.length||bytesText(bytes,pos,4)!=="MTrk")throw new Error("midi_track_invalid");
     const len=readU32(view,pos+4),end=Math.min(bytes.length,pos+8+len);
@@ -285,8 +287,9 @@ function parseMIDI(arrayBuffer){
       const key=channel+":"+note,stack=active.get(key);
       if(!stack||!stack.length)return;
       const on=stack.shift();
-      rawEvents.push({
-        id:"midi-"+track+"-"+rawEvents.length,
+      const target=channel===9?percussionEvents:rawEvents;
+      target.push({
+        id:"midi-"+track+"-"+(channel===9?"drum-":"")+target.length,
         midi:note,
         startBeat:on.tick/division,
         durationBeat:Math.max(.03125,(releaseTick-on.tick)/division),
@@ -345,10 +348,10 @@ function parseMIDI(arrayBuffer){
         if(was&&!now)releaseSustain(channel,tick);
         continue;
       }
-      if(hi===0x90&&b>0&&channel!==9){
+      if(hi===0x90&&b>0){
         const key=channel+":"+a,stack=active.get(key)||[];
         stack.push({tick,velocity:b});active.set(key,stack);
-      }else if((hi===0x80||(hi===0x90&&b===0))&&channel!==9){
+      }else if(hi===0x80||(hi===0x90&&b===0)){
         if(pedalDown.get(channel)){
           const pending=sustained.get(channel)||[];
           pending.push({note:a});sustained.set(channel,pending);
@@ -384,6 +387,7 @@ function parseMIDI(arrayBuffer){
     ppq:division,
     events:transcription.events,
     performanceEvents:rawEvents,
+    percussionEvents,
     transcription:{
       mode:"automatic-midi",
       gridBeat:transcription.gridBeat,
