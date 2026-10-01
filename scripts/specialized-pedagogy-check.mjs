@@ -17,7 +17,7 @@ for(const track of S.trackIds){
   const score=parse(item);
   assert.ok(score.events.some(e=>e.clef==="bass")&&score.events.some(e=>e.clef==="treble"),item.id+" must include both hands");
   const end=Math.max(...score.events.map(e=>e.startBeat+e.durationBeat));
-  assert.equal(end,track==="F"&&level===1?12:16,item.id+" must have eight measured bars");
+  assert.equal(end,track==="F"&&level===1?24:32,item.id+" must have eight measured bars");
   if(track==="G")assert.ok(score.events.some(e=>e.articulations.includes(level?"accent":"staccato")),item.id+" lost articulation");
   if(track==="J")assert.equal(item.cues.length,8,item.id+" lacks beat-aligned harmony labels");
   total++;
