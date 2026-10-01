@@ -21,12 +21,12 @@ const KEY='luwipi:pedagogy:device-draft:v1',STEPS=[
  J:['Num lead sheet em Dó, o símbolo G7 costuma indicar…',['acorde de Sol com sétima','tom de Sol com 7 sustenidos','nota Sol durante 7 compassos','7 oitavas'],0,'A cifra resume uma estrutura harmónica: Sol–Si–Ré–Fá.']
 };
 const panel=document.createElement('section');
-panel.id='workspacePathPanel';panel.className='workspace-path-panel';panel.setAttribute('role','dialog');panel.setAttribute('aria-label','O meu percurso de leitura');panel.hidden=true;
+panel.id='workspacePathPanel';panel.className='workspace-path-panel';panel.setAttribute('role','dialog');panel.setAttribute('aria-label','O meu percurso de leitura');panel.setAttribute('aria-modal','true');panel.hidden=true;
 panel.innerHTML='<div class="workspace-path-head"><div class="workspace-path-head-title"><button type="button" id="pathBack" hidden aria-label="Escolher outra habilidade">← Habilidades</button><h2 id="pathTitle">Aprender partitura</h2></div><button type="button" id="pathClose" aria-label="Fechar a jornada">×</button></div><p class="workspace-path-sub" id="pathIntro">Escolhe o que queres treinar. Um exercício de cada vez.</p><div class="workspace-path-map" id="pathMap"></div><section class="workspace-path-workout" id="pathWorkout" hidden></section>';
 host.append(panel);
 const map=panel.querySelector('#pathMap'),workout=panel.querySelector('#pathWorkout');
 const backToSkills=panel.querySelector('#pathBack'),pathTitle=panel.querySelector('#pathTitle'),pathIntro=panel.querySelector('#pathIntro');
-const UI_KEY='luwipi:learning-journey:selected:v1';
+const UI_KEY='luwipi:learning-journey:selected:v1',OPEN_KEY='luwipi:learning-journey:open:v1';
 const syncState=document.createElement('p');syncState.className='workspace-path-sync';
 syncState.setAttribute('role','status');
 syncState.textContent='Progresso provisório · neste dispositivo';
@@ -49,7 +49,7 @@ copyCard.addEventListener('click',async()=>{
  'Rever: '+(errors[0]||'exercício inédito da trilha atual'),
  'Próxima sessão: 2 min aquecimento, 4 min reconhecimento, 4 min padrões, 8 min leitura nova e 2 min revisão.',
  'Estado: desempenho provisório neste dispositivo; o sistema não certifica por autorrelato.'].join('\n');
- try{await navigator.clipboard.writeText(card);copyCard.textContent='Cartão copiado ✓';setTimeout(()=>copyCard.textContent='Copiar cartão de progresso',1800)}
+ try{await navigator.clipboard.writeText(card);copyCard.textContent='Cartão copiado ✓';setTimeout(()=>copyCard.textContent='Copiar o meu progresso',1800)}
  catch{copyCard.textContent='Não foi possível copiar neste navegador'}
 });
 let profile=P.newProfile(),selected='',exercise=null,stage=3,verified=false,store=window.sessionStorage;
@@ -112,13 +112,35 @@ function save(){
  if(signedIn&&window.LuwipiProgressSync)void window.LuwipiProgressSync.save(profile);
 }
 function el(tag,cl,text){const x=document.createElement(tag);if(cl)x.className=cl;if(text!==undefined)x.textContent=text;return x}
-function open(){panel.hidden=false;render();panel.querySelector(selected?'#pathBack':'#pathClose').focus()}
-function close(){panel.hidden=true}
+let panelOpener=null;
+function open(fromRestore=false){
+ if(!fromRestore)panelOpener=document.activeElement;
+ panel.hidden=false;render();
+ try{sessionStorage.setItem(OPEN_KEY,'1')}catch{}
+ (selected?backToSkills:map.querySelector('button'))?.focus();
+}
+function close(returnFocus=true){
+ if(panel.hidden)return;
+ panel.hidden=true;
+ try{sessionStorage.removeItem(OPEN_KEY)}catch{}
+ if(returnFocus&&panelOpener?.isConnected&&!panelOpener.closest('[hidden]'))panelOpener.focus();
+ panelOpener=null;
+}
 window.addEventListener('luwipi:path-toggle',()=>panel.hidden?open():close());
 panel.querySelector('#pathClose').addEventListener('click',close);
 backToSkills.addEventListener('click',()=>{selected='';exercise=null;explorationLevel=null;reviewTask=null;stage=3;try{sessionStorage.removeItem(UI_KEY)}catch{}render();map.querySelector('button')?.focus()});
-document.addEventListener('keydown',event=>{if(event.key==='Escape'&&!panel.hidden)close()});
-window.addEventListener('luwipi:workspace-route',()=>{if(!panel.hidden)close()});
+document.addEventListener('keydown',event=>{
+ if(panel.hidden)return;
+ if(event.key==='Escape'){event.preventDefault();close();return}
+ if(event.key!=='Tab')return;
+ const focusable=[...panel.querySelectorAll('button:not([hidden]):not(:disabled),select:not([hidden]):not(:disabled),a[href]')]
+  .filter(node=>!node.closest('[hidden]')&&node.getClientRects().length);
+ if(!focusable.length){event.preventDefault();return}
+ const first=focusable[0],last=focusable.at(-1);
+ if(event.shiftKey&&(document.activeElement===first||!panel.contains(document.activeElement))){event.preventDefault();last.focus()}
+ else if(!event.shiftKey&&(document.activeElement===last||!panel.contains(document.activeElement))){event.preventDefault();first.focus()}
+});
+window.addEventListener('luwipi:workspace-route',()=>{if(!panel.hidden)close(false)});
 window.addEventListener('luwipi:access-ready',loadProfile);
 window.addEventListener('luwipi:access-signed-out',()=>{
  syncRevision++;localEdits++;signedIn=false;selected='';exercise=null;explorationLevel=null;reviewTask=null;
@@ -522,6 +544,11 @@ function buildReview(container,actions){
  };
  actions.append(submit);container.append(actions,result);
 }
+try{if(sessionStorage.getItem(OPEN_KEY)==='1'){
+ // Restore the same selected skill after refresh without losing the working context.
+ if(document.readyState!=='complete')document.addEventListener('DOMContentLoaded',()=>open(true),{once:true});
+ else open(true);
+}}catch{}
 window.LuwipiPedagogyWorkspace=Object.freeze({splitABC,open,close,getProfile:()=>JSON.parse(JSON.stringify(profile))});
 loadProfile();
 })();

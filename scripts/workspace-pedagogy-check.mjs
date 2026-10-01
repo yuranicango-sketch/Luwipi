@@ -36,7 +36,7 @@ const roadmap=await read('assets/reading/repertoire-roadmap.js');
 const live=await read('assets/live/live-mode.js');
 assert.ok(css.includes('body[data-mode="aprenda"] #readingView.workspace-library-open .reading-library'),'Reading library is still hidden by old mode CSS');
 assert.ok(css.includes('body.workspace-shell-enabled.workspace-sidebar-closed{padding-left:0!important}'),'Closed sidebar still reserves canvas space');
-assert.ok(shell.includes("localStorage.getItem(MENU_KEY)")==true&&shell.includes("sidebar.inert=!sidebarOpen"),'Navigation does not preserve or expose toggle accessibility');
+assert.ok(shell.includes("let sidebarOpen=false")&&shell.includes("sidebar.inert=!sidebarOpen")&&shell.includes("toggle.setAttribute(\'aria-expanded\',String(sidebarOpen))")&&!shell.includes("localStorage.getItem(MENU_KEY)"),"Navigation must start collapsed and expose the current state accessibly");
 assert.ok(shell.includes("data-workspace-action")&&shell.includes("function togglePath()"),'Path menu action missing');
 assert.ok(roadmap.includes('library.after(root)')&&!roadmap.includes('library.hidden=expanded'),'Repertoire hides older playable songs');
 assert.ok(app.includes('/assets/pedagogy/sightreading-foundation-v1.js')&&app.includes('/assets/pedagogy/sightreading-workspace.js'),'Pedagogic modules are not mounted');

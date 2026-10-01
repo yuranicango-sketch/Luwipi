@@ -24,6 +24,11 @@ assert.ok(shell.includes('id="workspacePianoToggle"')&&
 assert.ok(shell.includes("function primaryFor(){")&&shell.includes("return null;"),"Duplicate import buttons were reintroduced into the top bar");
 assert.ok(shell.includes("setSidebarOpen(sidebarOpen)")&&shell.includes("let sidebarOpen=false"),"The navigation should not be stuck open");
 assert.ok(shell.includes("Aprender partitura")&&html.includes("Músicas e atividades"),"The two canonical destinations need explicit labels");
+assert.ok(ui.includes("OPEN_KEY='luwipi:learning-journey:open:v1'")&&
+ ui.includes("document.addEventListener('keydown'")&&
+ ui.includes("event.key!=='Tab'")&&
+ ui.includes("open(true)")&&
+ ui.includes("panel.setAttribute('aria-modal','true')"),"Learning dialog must restore after refresh, trap keyboard focus and expose modal semantics");
 assert.ok(ui.includes("backToSkills.hidden=!viewing")&&ui.includes("map.hidden=viewing")&&
  ui.includes("workspace-path-active")&&ui.includes("Outras atividades")&&
  ui.includes("stage=3")&&ui.includes("const track=assigned?.track||selected"),"The learning journey does not have a simple skill → level → exercise sequence");
