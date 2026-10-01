@@ -3197,3 +3197,55 @@ body.luwipi-dark .workspace-path-step-help{color:#c0d0e9}
  body.workspace-shell-enabled .workspace-canvas-actions .workspace-canvas-path{display:none!important}
  body.workspace-shell-enabled .workspace-canvas-actions .workspace-canvas-piano{display:inline-flex!important}
 }
+
+/* A curriculum exercise uses the existing large Leitura score; Prática stays an importer. */
+.reading-lesson-panel{box-sizing:border-box;display:flex;flex:1 1 100%;align-items:center;flex-wrap:wrap;gap:7px;
+ padding:6px 9px;border:1px solid #b6ceec;border-radius:10px;background:#f5f9ff;color:#274a79}
+.reading-lesson-panel[hidden]{display:none!important}
+.reading-lesson-panel #readingLessonStart{background:#244f98;color:#fff;border:0;border-radius:9px;min-height:37px;padding:7px 13px;font-weight:800}
+.reading-lesson-panel #readingLessonStart:disabled{opacity:.65;cursor:default}
+.reading-lesson-panel #readingLessonStatus{flex:1 1 170px;font-size:11px;line-height:1.35;font-weight:700}
+.reading-lesson-panel #readingLessonMidi{border:1px solid #bbd0ea;border-radius:8px;background:#fff;color:#26518a;font-size:11px;padding:7px 10px}
+#readingImportedView .reading-imported-transport:has(.reading-lesson-panel:not([hidden])){align-items:center;flex-wrap:wrap}
+#readingImportedView .reader-top:has(+ .score-wrap + .reading-imported-transport .reading-lesson-panel:not([hidden])){padding-bottom:3px}
+@media(max-width:620px){.reading-lesson-panel{padding:6px;gap:5px}.reading-lesson-panel #readingLessonStatus{order:3;flex-basis:100%}}
+
+/* Keep exercise actions in view even when advanced pieces need several staves/systems.
+   The score itself scrolls; the full page and shared piano never get pushed away. */
+#readingImportedView .reading-imported-reader{
+ box-sizing:border-box;display:flex!important;flex-direction:column!important;
+ flex:1 1 auto;min-height:0!important;height:100%!important;max-height:100%!important;
+ overflow:hidden!important;gap:5px!important;padding:clamp(5px,.9dvh,12px)!important
+}
+#readingImportedView .reading-imported-reader .reader-top{flex:0 0 auto;min-height:0!important}
+#readingImportedView .reading-imported-score-wrap{
+ flex:1 1 auto!important;min-height:0!important;height:auto!important;max-height:none!important;
+ overflow:auto!important;overscroll-behavior:contain;margin:0!important
+}
+#readingImportedView .reading-imported-transport{
+ flex:0 0 auto!important;min-height:0!important;max-height:min(145px,27dvh);
+ overflow-y:auto;overflow-x:hidden;flex-wrap:wrap;margin:0!important;padding:5px!important
+}
+#readingImportedView.reading-curriculum-lesson .secondary-actions{display:none!important}
+
+/* Curriculum reading keeps only the meaningful controls visible. */
+#readingImportedView.reading-curriculum-lesson #readingImportedPlay[hidden]{display:none!important}
+@media(max-width:620px){
+ #readingImportedView.reading-curriculum-lesson .reader-top h2{
+  font-size:clamp(18px,5.4vw,23px)!important;line-height:1.12!important;margin:2px 0!important
+ }
+ #workspaceCanvas:has(#readingImportedView.reading-curriculum-lesson.active) #workspacePianoBody{
+  min-width:0!important;overflow-x:auto!important;overflow-y:hidden!important;
+  touch-action:pan-x;scrollbar-width:thin
+ }
+ #workspaceCanvas:has(#readingImportedView.reading-curriculum-lesson.active) #workspacePiano .karaoke-piano-shell{
+  box-sizing:border-box;min-width:610px!important;width:610px!important;max-width:none!important
+ }
+ #workspaceCanvas:has(#readingImportedView.reading-curriculum-lesson.active) #workspacePiano .karaoke-piano-head{
+  box-sizing:border-box;background:#183665;border-radius:6px;padding:2px 7px
+ }
+}
+
+/* No empty playback/tempo row during an unseen first-sight challenge.
+   The score itself already displays the written tempo. */
+#readingImportedView.reading-curriculum-lesson .reading-imported-transport:has(#readingImportedPlay[hidden]) .tempo{display:none!important}

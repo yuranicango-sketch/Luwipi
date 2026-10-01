@@ -117,7 +117,8 @@ function sync(){
  canvas.dataset.mode=mode;canvas.dataset.view=view?.id||'';
  sidebar.querySelectorAll('[data-workspace-nav]').forEach(b=>b.classList.toggle('active',b.dataset.workspaceNav===mode));
  const library=sidebar.querySelector('[data-workspace-action="library"]');if(library)library.classList.toggle('active',libraryOpen);
- barTitle.textContent=labelOf(mode);barContext.textContent=localContext(view,mode);
+ barTitle.textContent=view?.id==='readingImportedView'&&view.classList.contains('reading-curriculum-lesson')?'Leitura':labelOf(mode);
+ barContext.textContent=localContext(view,mode);
  barBack.hidden=root||isTask;
  const sideBack=sidebar.querySelector('[data-workspace-action="back"]');if(sideBack)sideBack.disabled=root||isTask;
  const guide=sidebar.querySelector('[data-workspace-action="guide"]');if(guide)guide.hidden=mode!=='reading'||libraryOpen;

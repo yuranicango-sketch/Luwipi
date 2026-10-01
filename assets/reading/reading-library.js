@@ -20,6 +20,30 @@ const removeBtn=document.getElementById("readingImportedRemove");
 const tempoDown=document.getElementById("readingImportedTempoDown");
 const tempoUp=document.getElementById("readingImportedTempoUp");
 const tempoEl=document.getElementById("readingImportedTempo");
+const reader=view?.querySelector('.reader-top'),hint=document.getElementById('readingImportedHint');
+const category=reader?.querySelector('small');
+const lessonPanel=document.createElement('div');lessonPanel.className='reading-lesson-panel';lessonPanel.hidden=true;
+const lessonStart=document.createElement('button');lessonStart.type='button';lessonStart.id='readingLessonStart';lessonStart.textContent='Começar exercício';
+const lessonStatus=document.createElement('span');lessonStatus.id='readingLessonStatus';lessonStatus.setAttribute('role','status');
+const lessonMidi=document.createElement('button');lessonMidi.type='button';lessonMidi.id='readingLessonMidi';lessonMidi.textContent='Ligar MIDI';
+lessonPanel.append(lessonStart,lessonStatus,lessonMidi);
+view?.querySelector('.reading-imported-transport')?.prepend(lessonPanel);
+const LESSON_STORAGE='luwipi:reading:lesson:v1';
+let lesson=null,lessonTimer=null,lessonMidiOff=null;
+function lessonSave(){
+ if(!lesson)return;
+ try{sessionStorage.setItem(LESSON_STORAGE,JSON.stringify({version:1,at:Date.now(),score:current.score,options:lesson.options,index:lesson.index,attempts:lesson.attempts,correct:lesson.correct}))}catch{}
+}
+function lessonStopTimer(){if(lessonTimer!==null){clearInterval(lessonTimer);lessonTimer=null}}
+function resetLesson(){
+ view?.classList.remove('reading-curriculum-lesson');
+ lessonStopTimer();lessonMidiOff?.();lessonMidiOff=null;lesson=null;lessonPanel.hidden=true;
+ playBtn.disabled=false;playBtn.hidden=false;guideBtn.disabled=false;pianoBtn.hidden=false;
+ const pianoHint=document.getElementById('karaokePianoHint');
+ if(pianoHint)pianoHint.textContent='A próxima nota acende aqui.';
+ if(hint)hint.textContent='Adicionada a partir da Prática.';
+ if(category)category.textContent='Biblioteca pessoal';
+}
 
 let current=null,groups=[],guide=false,currentGroup=0,tempo=120,timers=[],playing=false,pianoSeen=new Set();
 let remoteCache=[],permissionCache=null,lastRemoteError="";
@@ -193,6 +217,7 @@ function render(){
     removeBtn.classList.toggle("hidden",!current.editable);
     removeBtn.textContent=current.visibility==="global"?"Remover da plataforma":"Remover da Leitura";
   }
+  if(lesson)lessonStatus.textContent=lesson.status;
   syncPianoTarget();
 }
 function syncPianoTarget(){
@@ -202,8 +227,114 @@ function syncPianoTarget(){
   groups[currentGroup].pitches.forEach(midi=>{const note=Engine.midiToName(midi),key=board.querySelector('[data-piano-note="'+note+'"]');if(key)key.classList.add("reading-library-target")});
 }
 function openPiano(){const dock=document.getElementById("pianoDock");if(!dock)return;dock.classList.remove("hidden");document.body.classList.add("piano-open","reading-imported-open");syncPianoTarget()}
-function closeImported(){clearTimers();document.body.classList.remove("reading-imported-open");current=null;groups=[];currentGroup=0;pianoSeen.clear()}
+function closeImported(){
+ clearTimers();resetLesson();document.body.classList.remove("reading-imported-open");
+ current=null;groups=[];currentGroup=0;pianoSeen.clear();
+}
+function lessonMessage(text){if(lesson){lesson.status=text;lessonStatus.textContent=text}}
+function beginLesson(){
+ if(!lesson||lesson.remaining>0)return;
+ clearTimers();lesson.started=true;lesson.done=false;lesson.index=0;lesson.attempts=0;lesson.correct=0;
+ lesson.pressed.clear();lessonStart.disabled=true;lessonStart.textContent='Em curso';
+ currentGroup=0;
+ lessonMessage('Toca a partitura no piano. '+(lesson.options.firstSight?'Continua mesmo que te enganes.':'Segue as notas, uma de cada vez.'));
+ lessonSave();render();
+}
+function lessonNote(midi){
+ if(!lesson?.started||lesson.done||!view.classList.contains('active')||!Number.isInteger(midi))return;
+ const group=lesson.expected[lesson.index];if(!group)return;
+ if(!group.pitches.includes(midi)){
+  lesson.attempts++;
+  lessonMessage(lesson.options.firstSight?'Nota diferente. Continua a leitura sem voltares atrás.':'Nota diferente. Experimenta novamente.');
+  if(lesson.options.firstSight){lesson.index++;lesson.pressed.clear();currentGroup=lesson.index}
+ }else{
+  lesson.pressed.add(midi);
+  if(group.pitches.every(p=>lesson.pressed.has(p))){
+   lesson.correct++;lesson.attempts++;lesson.index++;lesson.pressed.clear();currentGroup=lesson.index;
+   lessonMessage('Correto · '+Math.min(lesson.index,lesson.expected.length)+' / '+lesson.expected.length+' grupos.');
+  }else lessonMessage('Continua o acorde.');
+ }
+ if(lesson.index>=lesson.expected.length){
+  lesson.started=false;lesson.done=true;lessonStart.disabled=false;lessonStart.textContent='Repetir exercício';
+  lessonMessage('Exercício concluído · '+lesson.correct+' / '+lesson.attempts+' respostas corretas. Podes rever o resultado em Aprender partitura.');
+  window.dispatchEvent(new CustomEvent('luwipi:pedagogy-measured',{detail:{
+   exerciseId:lesson.options.exerciseId,bpm:tempo,input:lesson.input||'virtual',
+   observedClient:true,correctGroups:lesson.correct,attemptedGroups:lesson.attempts,
+   rhythmWithinTolerance:0,rhythmSamples:0
+  }}));
+ }
+ lessonSave();if(guide&&!lesson.options.firstSight)render();
+}
+lessonStart.addEventListener('click',beginLesson);
+lessonMidi.addEventListener('click',async()=>{
+ if(!lesson||!window.LuwipiLiveInput)return;
+ try{
+  const result=await window.LuwipiLiveInput.connectMIDI();
+  lessonMidiOff?.();lessonMidiOff=window.LuwipiLiveInput.subscribe(data=>{
+   if(data?.type==='noteon'){if(lesson)lesson.input='midi';lessonNote(data.midi)}
+  });
+  lessonMessage(result.count?'MIDI ligado · '+result.count+' teclado(s).':'Nenhum teclado MIDI encontrado.');
+ }catch{lessonMessage('Não foi possível ligar o teclado MIDI. Podes usar o piano no ecrã.')}
+});
+window.addEventListener('luwipi:piano-note',e=>{if(e.detail?.phase==='on')lessonNote(e.detail.midi)});
+function openLesson(rawScore,options={},restoring=false){
+ if(!rawScore?.events?.length||!options.exerciseId)return false;
+ try{
+  const score=Engine.normalizeScore(rawScore),next=Engine.groupEvents(score);
+  if(!next.length)return false;
+  clearTimers();resetLesson();
+  current={id:'lesson:'+options.exerciseId,title:score.title,kind:'exercise',score,editable:false,visibility:'curriculum'};
+  groups=next;currentGroup=0;tempo=Math.round(score.tempoBpm||120);guide=false;pianoSeen.clear();
+  const firstSight=Boolean(options.firstSight),transposed=Number(options.transposeSemitones)||0;
+  const byVoice=options.transposeByVoice&&typeof options.transposeByVoice==='object'?options.transposeByVoice:null;
+  const expectedScore=transposed||byVoice?Engine.normalizeScore({...score,events:score.events.map(e=>{
+   const voice=String(e.id).split('-')[0];
+   const shift=byVoice&&Object.hasOwn(byVoice,voice)?Number(byVoice[voice]):transposed;
+   return {...e,midi:Math.max(0,Math.min(127,e.midi+(Number.isFinite(shift)?shift:0)))}
+  })}):score;
+  const expected=Engine.groupEvents(expectedScore);
+  lesson={options:{...options,firstSight},expected,pressed:new Set(),
+   remaining:firstSight?30:0,index:0,attempts:0,correct:0,started:false,done:false,
+   input:'virtual',status:firstSight?'Observa a partitura: 30 segundos antes de começar.':'A partitura está pronta. Carrega em Começar exercício.'};
+  view.classList.add('reading-curriculum-lesson');
+  lessonPanel.hidden=false;lessonStart.disabled=firstSight;
+  lessonStart.textContent=firstSight?'Preparação · 30 s':'Começar exercício';
+  if(category)category.textContent='Aprender partitura · N'+(options.level??0);
+  if(hint)hint.textContent=options.instruction||'Lê e toca no piano. A partitura é a atividade.';
+  guideBtn.setAttribute('aria-pressed','false');guideBtn.querySelector('.reading-guide-label').textContent='Guia · OFF';
+  guideBtn.disabled=firstSight||!!transposed||!!byVoice;
+  playBtn.disabled=firstSight||!!transposed||!!byVoice;
+  playBtn.hidden=firstSight||!!transposed||!!byVoice;
+  const pianoHint=document.getElementById('karaokePianoHint');
+  if(pianoHint)pianoHint.textContent='Toca as notas da partitura aqui.';
+  pianoBtn.hidden=true;view.dataset.taskId=current.id;
+  render();if(!svg?.childElementCount)throw Error('Partitura vazia');
+  if(firstSight)lessonTimer=setInterval(()=>{
+   if(!lesson)return;lesson.remaining=Math.max(0,lesson.remaining-1);
+   if(lesson.remaining){lessonStart.textContent='Preparação · '+lesson.remaining+' s';lessonMessage('Observa a clave, o compasso e os padrões: '+lesson.remaining+' s.')}
+   else{lessonStopTimer();lessonStart.disabled=false;lessonStart.textContent='Começar leitura';lessonMessage('Preparação concluída. Começa a ler sem ouvir primeiro.')}
+  },1000);
+  if(restoring){
+   // Route restore already selected the Leitura view, so never push another history entry.
+   document.querySelectorAll('.workspace-canvas-viewport>.view.active').forEach(v=>v.classList.remove('active'));
+   view.classList.add('active');
+  }else if(window.LuwipiWorkspaceRouter?.openLesson)window.LuwipiWorkspaceRouter.openLesson(current.id);
+  else{document.querySelectorAll('.workspace-canvas-viewport>.view.active').forEach(v=>v.classList.remove('active'));view.classList.add('active')}
+  document.body.classList.add('reading-imported-open');
+  window.LuwipiWorkspacePiano?.show();
+  lessonSave();return true;
+ }catch(error){
+  console.error('Não foi possível abrir a Leitura do nível',error);
+  resetLesson();return false;
+ }
+}
 async function open(id){
+  if(String(id).startsWith('lesson:')){
+   let saved;try{saved=JSON.parse(sessionStorage.getItem(LESSON_STORAGE)||'null')}catch{return false}
+   if(saved?.version!==1||'lesson:'+saved.options?.exerciseId!==id||Date.now()-saved.at>86400000)return false;
+   return openLesson(saved.score,saved.options,true);
+  }
+  resetLesson();
   const item=await get(id);if(!item?.score)return;
   view.dataset.taskId=id;
   current=item;current.score=Engine.normalizeScore(item.score);groups=Engine.groupEvents(current.score);currentGroup=0;tempo=Math.round(current.score.tempoBpm||120);guide=false;pianoSeen.clear();
@@ -253,11 +384,12 @@ setTimeout(renderList,1800);
 setTimeout(renderList,5000);
 function openShared(item){
   if(!item?.score)return;
+  resetLesson();
   current={...item,id:"shared-task",editable:false,localOnly:false,visibility:"task"};
   current.score=Engine.normalizeScore(current.score);groups=Engine.groupEvents(current.score);currentGroup=0;tempo=Math.round(current.score.tempoBpm||120);guide=false;pianoSeen.clear();
   guideBtn.setAttribute("aria-pressed","false");guideBtn.querySelector(".reading-guide-label").textContent="Guia · OFF";
   document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));view.classList.add("active");document.body.classList.add("reading-imported-open","parent-mode");render();scrollTo(0,0);
 }
-window.LuwipiReadingLibrary=Object.freeze({add,publish,permissions,list:all,get,remove,render:renderList,open,openShared,lastRemoteError:()=>lastRemoteError});
+window.LuwipiReadingLibrary=Object.freeze({add,publish,permissions,list:all,get,remove,render:renderList,open,openLesson,openShared,lastRemoteError:()=>lastRemoteError});
 renderList();
 })();
