@@ -26,11 +26,11 @@ try{
    const notes=[
     ["RH","treble","C7",96,0],["LH","bass","C1",24,1],
     ["RH","treble","C3",48,2],["LH","bass","C5",72,3],
-    ["RH","treble","C7",96,4],["LH","bass","C1",24,5],
-    ["RH","treble","C3",48,6],["LH","bass","C5",72,7]
+    ["RH","treble","C7",96,16],["LH","bass","C1",24,17],
+    ["RH","treble","C3",48,18],["LH","bass","C5",72,19]
    ];
    const score=E.normalizeScore({...original,title:"Linhas suplementares — teste",
-    meter:[4,4],meterMap:[],tempoMap:[],keyMap:[],clefMap:[],octaveMarks:[],durationBeats:8,
+    meter:[4,4],meterMap:[],tempoMap:[],keyMap:[],clefMap:[],octaveMarks:[],durationBeats:20,
     staffLayout:[{id:"RH",clef:"treble"},{id:"LH",clef:"bass"}],
     rests:[],notationLegend:[],
     events:notes.map(([voice,clef,note,midi,startBeat],i)=>({
