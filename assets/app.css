@@ -3126,3 +3126,74 @@ body.luwipi-dark .workspace-path-due-action{background:#1e3556;color:#e6f0ff;bor
 .workspace-path-level-select{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:8px 3px;padding:7px 9px;border:1px solid var(--workspace-border,#dae3f1);border-radius:10px;font-size:12px;font-weight:700;line-height:1.35}
 .workspace-path-level-select select{flex:1 1 135px;min-width:0;max-width:100%;padding:7px 9px;font:inherit;font-weight:700;border:1px solid #b4c9e8;border-radius:8px;background:#fff;color:#263e64}
 body.luwipi-dark .workspace-path-level-select select{background:#1b3153;color:#e6f0ff;border-color:#60799e}
+
+/* UX 2026: activity library is canonical; old blue piano journey is never the destination. */
+body.workspace-shell-enabled:not(.workspace-task-mode) #readingView .journey-stage{display:none!important}
+body.workspace-shell-enabled #readingView.workspace-library-open .reading-library{display:block!important;visibility:visible!important;flex:1!important;min-height:0;overflow:auto!important}
+body.workspace-shell-enabled #readingView.workspace-library-open .journey-library-toggle{display:none!important}
+body.workspace-shell-enabled #readingView.workspace-library-open>.page{padding:8px 12px 11px!important;gap:5px}
+body.workspace-shell-enabled .workspace-sidebar [data-workspace-action="library"]{display:none!important}
+body.workspace-shell-enabled #workspacePiano[hidden]{display:none!important}
+body.workspace-shell-enabled .workspace-piano{--piano-height:clamp(112px,19dvh,180px);grid-template-rows:minmax(0,1fr)!important;background:#fcfdff!important;border:0!important;border-top:1px solid #e2e7ef!important;box-shadow:none!important}
+body.workspace-shell-enabled .workspace-piano-body{height:var(--piano-height);padding:4px 6px 6px;background:#fcfdff!important}
+body.workspace-shell-enabled .workspace-piano #pianoDock,
+body.workspace-shell-enabled .workspace-piano #pianoBoard,
+body.workspace-shell-enabled .workspace-piano .karaoke-piano-shell,
+body.workspace-shell-enabled .workspace-piano .journey-keyboard{border:0!important;outline:0!important;box-shadow:none!important;background:transparent!important}
+body.workspace-shell-enabled .workspace-canvas-actions .workspace-canvas-piano{display:inline-flex!important;align-items:center;justify-content:center;gap:5px;white-space:nowrap}
+body.workspace-shell-enabled .workspace-canvas-actions .workspace-canvas-piano[hidden]{display:none!important}
+body.workspace-shell-enabled .workspace-canvas-actions .workspace-canvas-piano span{font-size:inherit}
+.workspace-path-panel{width:min(430px,96vw);background:#fafcff}
+.workspace-path-head-title{display:flex;align-items:center;gap:10px;min-width:0}
+.workspace-path-head-title h2{font-size:18px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.workspace-path-head-title #pathBack{white-space:nowrap;border:0!important;border-radius:8px;padding:7px 9px;background:#e7f0ff;color:#25509e;font-size:11px;font-weight:800;cursor:pointer}
+.workspace-path-head-title #pathBack[hidden]{display:none!important}
+.workspace-path-sub{flex:none;margin:9px 0 12px;font-size:11px;line-height:1.5}
+.workspace-path-map[hidden]{display:none!important}
+.workspace-path-skill{position:relative;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:3px 8px;align-items:center;width:100%;min-height:63px;text-align:left;color:#243e6b;cursor:pointer}
+.workspace-path-skill:focus-visible{outline:2px solid #3977df;outline-offset:2px}
+.workspace-path-skill:hover{border-color:#77a1e3;background:#f1f6ff}
+.workspace-path-skill-name{grid-column:1;font-size:12px;font-weight:850}
+.workspace-path-skill-level{grid-column:2;grid-row:1;font-size:10px;color:#526f9d}
+.workspace-path-skill-summary{grid-column:1/3;color:#596d88;font-size:10px;line-height:1.4;padding-right:22px;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden}
+.workspace-path-skill-arrow{position:absolute;right:10px;bottom:9px;color:#315d9f;font-weight:900}
+.workspace-path-panel.workspace-path-active .workspace-path-workout{flex:1;min-height:0;max-height:none!important;overflow-y:auto;border-top:0;padding:2px 4px 17px;align-content:start}
+.workspace-path-current{font-size:13px;font-weight:800;line-height:1.4;color:#18385f;border-radius:11px;padding:10px;background:#eef4ff}
+.workspace-path-stage-label{font-weight:800}
+.workspace-path-exploration{font-size:11px;line-height:1.4;color:#576b86;padding:3px 2px}
+.workspace-path-due-list{display:grid;gap:5px;font-size:12px;padding:10px;border-radius:12px;background:#edf4ff}
+body.luwipi-dark .workspace-path-skill{background:#1e3556;color:#edf4ff;border-color:#48678f}
+body.luwipi-dark .workspace-path-skill-summary,body.luwipi-dark .workspace-path-exploration{color:#c0d0e9}
+body.luwipi-dark .workspace-path-current{background:#1e3556;color:#f0f5ff}
+body.luwipi-dark .workspace-path-head-title #pathBack{background:#25476e;color:#e3f0ff}
+@media(max-width:980px){
+ .experience-menu-catalog-actions{display:none!important} /* Duplicate of the six real destinations. */
+ body.workspace-shell-enabled .workspace-canvas-actions .workspace-canvas-piano{padding:0 6px!important}
+ body.workspace-shell-enabled .workspace-canvas-actions .workspace-canvas-piano span{font-size:9px}
+ body.workspace-shell-enabled #readingView.workspace-library-open>.page{padding:6px!important}
+ .workspace-path-panel{width:100%!important;max-width:430px;left:auto;right:0}
+}
+@media(max-width:460px){
+ body.workspace-shell-enabled .workspace-canvas-heading strong{max-width:130px;overflow:hidden;text-overflow:ellipsis}
+ .workspace-canvas-actions .workspace-canvas-piano span{display:none}
+ .workspace-path-head-title h2{font-size:16px}
+}
+
+/* One obvious first action; secondary exercise modes stay discoverable. */
+.workspace-path-extras{border:1px solid #d3e0f1;background:#fff;border-radius:10px;padding:7px 10px;font-size:11px}
+.workspace-path-extras summary{cursor:pointer;font-weight:750;color:#426699;line-height:1.4}
+.workspace-path-extras .workspace-path-stage-label{margin:8px 0 3px}
+.workspace-path-step-help{margin:0;font-size:11px;line-height:1.5;color:#577091}
+.workspace-path-workout .workout-actions .workspace-path-start{
+ min-height:42px;padding:9px 13px;background:#2e65c5;color:#fff;
+ font-size:12px;font-weight:850;max-width:100%;width:100%;
+}
+.workspace-path-workout .workout-actions .workspace-path-start:hover{background:#2051a8}
+body.workspace-shell-enabled .workspace-nav [data-workspace-action="back"]:disabled{display:none!important}
+body.luwipi-dark .workspace-path-extras{background:#1d3556;border-color:#4c6b94}
+body.luwipi-dark .workspace-path-extras summary{color:#bfd9ff}
+body.luwipi-dark .workspace-path-step-help{color:#c0d0e9}
+@media(max-width:980px){
+ body.workspace-shell-enabled .workspace-canvas-actions .workspace-canvas-path{display:none!important}
+ body.workspace-shell-enabled .workspace-canvas-actions .workspace-canvas-piano{display:inline-flex!important}
+}

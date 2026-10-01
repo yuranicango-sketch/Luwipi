@@ -29,7 +29,7 @@ function diatonicIndexFromName(name){
 }
 function staffStep(midi,clef,noteName){
   const note=noteName||midiToName(midi);
-  const base=clef==="bass"?"G2":"E4";
+  const base=clef==="bass"?"G2":clef==="alto"?"F3":clef==="tenor"?"D3":"E4";
   return diatonicIndexFromName(note)-diatonicIndexFromName(base);
 }
 function staffY(midi,clef,bottom,noteName){
@@ -168,6 +168,28 @@ function durationKind(beats){
   ];
   return candidates.reduce((best,item)=>Math.abs(item.beats-n)<Math.abs(best.beats-n)?item:best,candidates[0]);
 }
+function measureTimeline(initial,maps,endBeat){
+  const changes=(Array.isArray(maps)?maps:[])
+    .filter(m=>m&&Number.isFinite(Number(m.beat))&&Array.isArray(m.meter)&&m.meter[0]>0&&m.meter[1]>0)
+    .map(m=>({beat:roundBeat(Number(m.beat)),meter:m.meter.map(Number)})).sort((a,b)=>a.beat-b.beat);
+  let beat=0,meter=initial.slice(),next=0;const result=[];
+  // Anchor all changes at a barline. A score editor may represent compound
+  // and asymmetric measures without asking the renderer to guess a beat grid.
+  while(beat<endBeat-1e-5||!result.length){
+    while(next<changes.length&&changes[next].beat<=beat+1e-5){meter=changes[next++].meter.slice()}
+    const dur=meter[0]*4/meter[1];
+    if(!Number.isFinite(dur)||dur<=0||result.length>=2048)throw Error("score_meter_map_invalid");
+    // Imported scores may contain an incomplete bar immediately before a
+    // time-signature change. Preserve it rather than rejecting the file.
+    if(next<changes.length&&changes[next].beat>beat+1e-5&&changes[next].beat<beat+dur-1e-5){
+      result.push({index:result.length,startBeat:roundBeat(beat),durationBeat:roundBeat(changes[next].beat-beat),meter:meter.slice(),pickup:true});
+      beat=changes[next].beat;continue;
+    }
+    result.push({index:result.length,startBeat:roundBeat(beat),durationBeat:roundBeat(dur),meter:meter.slice()});
+    beat=roundBeat(beat+dur);
+  }
+  return result;
+}
 function normalizeScore(raw){
   const score=raw&&typeof raw==="object"?raw:{};
   const meter=Array.isArray(score.meter)&&score.meter.length===2?[Number(score.meter[0])||4,Number(score.meter[1])||4]:[4,4];
@@ -193,6 +215,8 @@ function normalizeScore(raw){
       track:Number(event.track)||0,
       channel:Number(event.channel)||0,
       articulations:Array.isArray(event.articulations)?event.articulations.slice(0,8):[],
+      ornament:event.ornament&&["mordent","appoggiatura","trill"].includes(event.ornament.type)
+       ?{type:event.ornament.type,neighbor:Number(event.ornament.neighbor)||1}:null,
       accidental:Object.prototype.hasOwnProperty.call(event,"accidental")?event.accidental:undefined,
       voiceDirection:["up","down"].includes(event.voiceDirection)?event.voiceDirection:null,
       tieStart:Boolean(event.tieStart),
@@ -227,6 +251,10 @@ function normalizeScore(raw){
     keyMinor:Boolean(score.keyMinor),
     keyName:score.keyName||keyName(keyFifths,score.keyMinor),
     keyMap:Array.isArray(score.keyMap)?score.keyMap.map(x=>({beat:roundBeat(Number(x.beat)||0),fifths:clamp(Math.round(Number(x.fifths)||0),-7,7),minor:Boolean(x.minor)})):[],
+    staffLayout:Array.isArray(score.staffLayout)?score.staffLayout.slice(0,5).filter(x=>x&&/^(RH2?|LH2?)$/.test(x.id)&&["treble","bass","alto","tenor"].includes(x.clef)).map(x=>({id:x.id,clef:x.clef,label:String(x.label||"").slice(0,24),fifths:Number.isInteger(x.fifths)&&Math.abs(x.fifths)<=7?x.fifths:null})):[],
+    clefMap:Array.isArray(score.clefMap)?score.clefMap.filter(x=>Number.isFinite(Number(x.beat))&&/^(RH2?|LH2?)$/.test(x.staff)&&["treble","bass","alto","tenor"].includes(x.clef)).map(x=>({beat:roundBeat(Number(x.beat)),staff:x.staff,clef:x.clef})):[],
+    octaveMarks:Array.isArray(score.octaveMarks)?score.octaveMarks.filter(x=>Number.isInteger(x.bar)&&Number.isInteger(x.count)&&x.count>=1&&[12,24,-12,-24].includes(x.shift)&&/^(RH2?|LH2?)$/.test(x.staff)).map(x=>({bar:x.bar,count:x.count,shift:x.shift,staff:x.staff})):[],
+    notationLegend:Array.isArray(score.notationLegend)?score.notationLegend.slice(0,3).map(x=>String(x).slice(0,140)):[],
     ppq:Number(score.ppq)||480,
     events,
     rests,
@@ -235,7 +263,7 @@ function normalizeScore(raw){
     transcription:score.transcription&&typeof score.transcription==="object"?Object.assign({},score.transcription):null,
     beatsPerMeasure,
     durationBeats:endBeat,
-    measures:Math.max(1,Math.ceil(endBeat/beatsPerMeasure))
+    measures:measureTimeline(meter,score.meterMap,endBeat).length
   };
 }
 function groupEvents(score){
@@ -737,6 +765,17 @@ function drawRest(svg,rest,x,bottom,current){
 function drawNote(svg,event,x,bottom,groupIndex,current){
   const y=staffY(event.midi,event.clef,bottom,event.note),stepValue=staffStep(event.midi,event.clef,event.note),kind=durationKind(event.durationBeat);
   drawLedger(svg,x,bottom,stepValue);
+  if(event.ornament){
+    if(event.ornament.type==="mordent")
+     svg.appendChild(svgEl("path",{d:"M "+(x-14)+" "+(y-24)+" l 7 -8 l 7 8 l 7 -8 l 7 8",
+      fill:"none",stroke:"#292d34","stroke-width":2.4,"stroke-linejoin":"miter","stroke-linecap":"square"}));
+    if(event.ornament.type==="trill")addText(svg,x-9,y-23,"tr",{"font-size":16,fill:"#292d34","font-family":"serif","font-style":"italic"});
+    if(event.ornament.type==="appoggiatura"){
+      svg.appendChild(svgEl("ellipse",{cx:x-17,cy:y-22,rx:5,ry:3.4,fill:"#292d34",stroke:"#292d34",
+        transform:"rotate(-20 "+(x-17)+" "+(y-22)+")"}));
+      addLine(svg,x-13,y-23,x-12,y-43,{stroke:"#292d34","stroke-width":1.6});
+    }
+  }
   const accidental=accidentalForEvent(event);
   if(accidental)addText(svg,x-23,y+7,accidental,{"font-size":20,fill:"#292d34","font-family":"serif"});
   if(current){
@@ -774,76 +813,135 @@ function drawNote(svg,event,x,bottom,groupIndex,current){
 }
 function render(svg,rawScore,options){
   if(!svg)throw new Error("score_svg_missing");
-  const score=rawScore&&rawScore.events?normalizeScore(rawScore):normalizeScore(rawScore);
-  const opts=options||{},groups=groupEvents(score),currentGroup=Number.isInteger(opts.currentGroupIndex)?opts.currentGroupIndex:-1,showNoteNames=opts.showNoteNames===true;
+  const score=normalizeScore(rawScore),opts=options||{},groups=groupEvents(score),
+    currentGroup=Number.isInteger(opts.currentGroupIndex)?opts.currentGroupIndex:-1,
+    showNoteNames=opts.showNoteNames===true;
   while(svg.firstChild)svg.removeChild(svg.firstChild);
-  const width=1120,measuresPerSystem=4,systemHeight=220,systems=Math.max(1,Math.ceil(score.measures/measuresPerSystem));
-  const height=50+systems*systemHeight;
+  const measures=measureTimeline(score.meter,score.meterMap,score.durationBeats);
+  const defaultStaves=[{id:"RH",clef:"treble"},{id:"LH",clef:"bass"}];
+  const staves=score.staffLayout?.length?score.staffLayout:defaultStaves;
+  const staffCount=staves.length,staffGap=87,systemHeight=staffCount*87+46,
+    width=1120,measuresPerSystem=4,systems=Math.max(1,Math.ceil(measures.length/measuresPerSystem)),height=50+systems*systemHeight;
   svg.setAttribute("viewBox","0 0 "+width+" "+height);
   svg.setAttribute("role","img");
   svg.setAttribute("aria-label",score.title+" — partitura");
-  const bg=svgEl("rect",{x:0,y:0,width,height,rx:18,fill:"#fff"});svg.appendChild(bg);
+  svg.appendChild(svgEl("rect",{x:0,y:0,width,height,rx:18,fill:"#fff"}));
   addText(svg,36,29,score.title,{"font-size":17,"font-weight":700,fill:"#17181d"});
-  addText(svg,width-36,29,(score.pulseUnit==="dotted-quarter"?"♩. = "+Math.round(score.tempoBpm*2/3):"♩ = "+Math.round(score.tempoBpm))+" · "+score.meter[0]+"/"+score.meter[1]+" · "+score.keyName,{"font-size":11,"font-weight":700,fill:"#777c85","text-anchor":"end"});
-  const left=105,right=1080,usable=right-left,measureWidth=usable/measuresPerSystem;
-  const measureBeats=score.beatsPerMeasure;
-  for(let system=0;system<systems;system++){
-    const baseY=50+system*systemHeight,trebleTop=baseY+25,bassTop=baseY+112;
-    drawStaff(svg,left,right,trebleTop);drawStaff(svg,left,right,bassTop);
-    addText(svg,42,trebleTop+52,"𝄞",{"font-size":68,fill:"#34373d","font-family":"serif"});
-    addText(svg,48,bassTop+45,"𝄢",{"font-size":57,fill:"#34373d","font-family":"serif"});
-    const ksT=drawKeySignature(svg,score.keyFifths,"treble",79,trebleTop);
-    drawKeySignature(svg,score.keyFifths,"bass",79,bassTop);
-    if(system===0){
-      const tsx=79+Math.max(ksT,0)+9;
-      addText(svg,tsx,trebleTop+20,String(score.meter[0]),{"font-size":18,"font-weight":800,fill:"#292d34"});
-      addText(svg,tsx,trebleTop+43,String(score.meter[1]),{"font-size":18,"font-weight":800,fill:"#292d34"});
-      addText(svg,tsx,bassTop+20,String(score.meter[0]),{"font-size":18,"font-weight":800,fill:"#292d34"});
-      addText(svg,tsx,bassTop+43,String(score.meter[1]),{"font-size":18,"font-weight":800,fill:"#292d34"});
+  addText(svg,width-36,29,(score.pulseUnit==="dotted-quarter"?"♩. = "+Math.round(score.tempoBpm*2/3):"♩ = "+Math.round(score.tempoBpm))+" · "+score.keyName,{"font-size":11,"font-weight":700,fill:"#777c85","text-anchor":"end"});
+  const left=105,right=1080,measureWidth=(right-left)/measuresPerSystem;
+  const keyAt=(beat,staff)=>{
+    if(staff&&staff.fifths!==null&&staff.fifths!==undefined)return staff.fifths;
+    let current=score.keyFifths;
+    for(const change of score.keyMap||[]){if(change.beat<=beat+1e-5)current=change.fifths;else break}
+    return current;
+  };
+  const clefAt=(staff,beat)=>{
+    let current=staff.clef;
+    for(const change of score.clefMap||[]){if(change.staff===staff.id&&change.beat<=beat+1e-5)current=change.clef}
+    return current;
+  };
+  function locate(beat){
+    let lo=0,hi=measures.length-1;
+    while(lo<hi){const mid=Math.floor((lo+hi+1)/2);if(measures[mid].startBeat<=beat+1e-5)lo=mid;else hi=mid-1}
+    return measures[lo];
+  }
+  const topFor=(system,index)=>50+system*systemHeight+25+index*staffGap;
+  const clefGlyph={treble:"𝄞",bass:"𝄢",alto:"𝄡",tenor:"𝄡"};
+  function staffOf(event){
+    const voice=String(event.id||"").split("-")[0];
+    if(score.staffLayout?.length){
+      const byVoice=staves.findIndex(s=>s.id===voice);
+      if(byVoice>=0)return byVoice;
     }
-    for(let slot=0;slot<=measuresPerSystem;slot++){
-      const measureIndex=system*measuresPerSystem+slot;
-      if(slot===measuresPerSystem||measureIndex<=score.measures){
-        const x=left+slot*measureWidth;
-        addLine(svg,x,trebleTop,x,bassTop+48,{stroke:"#5b5f67","stroke-width":slot===0?1.4:1.2});
+    return event.clef==="bass"?Math.max(0,staves.findIndex(s=>s.clef==="bass")):0;
+  }
+  for(let system=0;system<systems;system++){
+    const first=measures[system*measuresPerSystem],baseY=50+system*systemHeight;
+    for(let i=0;i<staffCount;i++){
+      const staff=staves[i],top=topFor(system,i),clef=clefAt(staff,first.startBeat);
+      drawStaff(svg,left,right,top);
+      addText(svg,42,top+(clef==="treble"?52:45),clefGlyph[clef]||"C",{"font-size":clef==="treble"?68:56,fill:"#34373d","font-family":"serif"});
+      if(staff.label)addText(svg,23,top+75,staff.label,{"font-size":10,fill:"#525867","font-weight":700});
+      const ks=drawKeySignature(svg,keyAt(first.startBeat,staff),clef,79,top);
+      if(system===0||system>0&&measures[system*4-1]?.meter.join("/")!==first.meter.join("/")){
+        const tsx=79+ks+9;
+        addText(svg,tsx,top+20,String(first.meter[0]),{"font-size":18,"font-weight":800,fill:"#292d34"});
+        addText(svg,tsx,top+43,String(first.meter[1]),{"font-size":18,"font-weight":800,fill:"#292d34"});
       }
     }
+    for(let slot=0;slot<=measuresPerSystem;slot++){
+      const global=system*measuresPerSystem+slot,x=left+slot*measureWidth;
+      if(slot===measuresPerSystem||global<=measures.length)
+        addLine(svg,x,topFor(system,0),x,topFor(system,staffCount-1)+48,{stroke:"#5b5f67","stroke-width":slot===0?1.4:1.2});
+    }
     for(let slot=0;slot<measuresPerSystem;slot++){
-      const measureIndex=system*measuresPerSystem+slot;
-      if(measureIndex<score.measures)addText(svg,left+slot*measureWidth+6,baseY+13,String(measureIndex+1),{"font-size":9,fill:"#a0a3aa"});
+      const measure=measures[system*measuresPerSystem+slot];if(!measure)continue;
+      const x=left+slot*measureWidth;
+      addText(svg,x+6,baseY+13,String(measure.index+1),{"font-size":9,fill:"#a0a3aa"});
+      const tempoChange=(score.tempoMap||[]).find(t=>Math.abs(t.beat-measure.startBeat)<1e-4&&measure.index>0);
+      if(tempoChange)addText(svg,x+16,baseY+4,"♩ = "+Math.round(tempoChange.bpm),{"font-size":10,"font-weight":800,fill:"#315d9f"});
+      const prev=measures[measure.index-1];
+      if(prev&&prev.meter.join("/")!==measure.meter.join("/")){
+        staves.forEach((staff,i)=>{
+          const top=topFor(system,i);
+          addText(svg,x+10,top+20,String(measure.meter[0]),{"font-size":17,"font-weight":800,fill:"#292d34"});
+          addText(svg,x+10,top+42,String(measure.meter[1]),{"font-size":17,"font-weight":800,fill:"#292d34"});
+        });
+      }
+      staves.forEach((staff,i)=>{
+        const prevKey=prev?keyAt(prev.startBeat,staff):keyAt(0,staff),nowKey=keyAt(measure.startBeat,staff);
+        if(!prev||prevKey===nowKey)return;
+        const top=topFor(system,i),clef=clefAt(staff,measure.startBeat);
+        if(prevKey)addText(svg,x+20,top+44,"♮",{"font-size":21,fill:"#34373d"});
+        drawKeySignature(svg,nowKey,clef,x+(prevKey?40:20),top);
+      });
+      staves.forEach((staff,i)=>{
+        const last=prev?clefAt(staff,prev.startBeat):clefAt(staff,0),
+          now=clefAt(staff,measure.startBeat);
+        if(prev&&last!==now)addText(svg,x+17,topFor(system,i)+44,clefGlyph[now]||"C",{"font-size":37,fill:"#34373d","font-family":"serif"});
+      });
+      for(const oct of score.octaveMarks||[]){
+        if(oct.bar!==measure.index)continue;
+        const index=staves.findIndex(s=>s.id===oct.staff);if(index<0)continue;
+        const top=topFor(system,index),endSlot=Math.min(measuresPerSystem,slot+oct.count);
+        const y=oct.shift>0?top-10:top+62,label=Math.abs(oct.shift)===24?"15":"8";
+        addText(svg,x+33,y, label+(oct.shift>0?"ma":"vb"),{"font-size":14,"font-weight":800,fill:"#315d9f"});
+        addLine(svg,x+65,y-4,left+endSlot*measureWidth-7,y-4,{stroke:"#315d9f","stroke-width":1.2,"stroke-dasharray":"5 4"});
+      }
     }
   }
-  const lastDynamicByClef={treble:"",bass:""};
-  (score.rests||[]).forEach((rest)=>{
-    const measureIndex=Math.floor(rest.startBeat/measureBeats);
-    const system=Math.floor(measureIndex/measuresPerSystem),slot=measureIndex%measuresPerSystem;
-    if(system>=systems)return;
-    const beatInMeasure=rest.startBeat-measureIndex*measureBeats;
-    const baseY=50+system*systemHeight,trebleBottom=baseY+73,bassBottom=baseY+160;
-    const x=left+slot*measureWidth+42+(beatInMeasure/measureBeats)*(measureWidth-50);
-    drawRest(svg,rest,x,rest.clef==='bass'?bassBottom:trebleBottom,false);
-  });
-  groups.forEach((group,groupIndex)=>{
+  const dynamics=new Map();
+  for(const rest of score.rests||[]){
+    const measure=locate(rest.startBeat),system=Math.floor(measure.index/4),slot=measure.index%4,index=staffOf(rest),
+      bottom=topFor(system,index)+48,beatIn=rest.startBeat-measure.startBeat,
+      x=left+slot*measureWidth+42+(beatIn/measure.durationBeat)*(measureWidth-50);
+    drawRest(svg,rest,x,bottom,false);
+  }
+  groups.forEach((group,g)=>{
     group.events.forEach((event,eventIndex)=>{
-      const measureIndex=Math.floor(event.startBeat/measureBeats);
-      const system=Math.floor(measureIndex/measuresPerSystem),slot=measureIndex%measuresPerSystem;
-      const beatInMeasure=event.startBeat-measureIndex*measureBeats;
-      const baseY=50+system*systemHeight,trebleBottom=baseY+73,bassBottom=baseY+160;
-      const x=left+slot*measureWidth+42+(beatInMeasure/measureBeats)*(measureWidth-50);
-      event.noteName=null;
-      event.showName=showNoteNames;
-      drawNote(svg,event,x,event.clef==="bass"?bassBottom:trebleBottom,groupIndex,groupIndex===currentGroup);
-      const firstForClef=!group.events.slice(0,eventIndex).some(other=>other.clef===event.clef);
-      if(firstForClef&&event.dynamic&&event.dynamic!==lastDynamicByClef[event.clef]){
-        addText(svg,x,(event.clef==="bass"?bassBottom:trebleBottom)+38,event.dynamic,{"font-size":15,fill:"#353940","font-family":"serif","font-style":"italic","font-weight":700,"text-anchor":"middle"});
-        lastDynamicByClef[event.clef]=event.dynamic;
+      const measure=locate(event.startBeat),system=Math.floor(measure.index/4),slot=measure.index%4,
+        index=staffOf(event),staff=staves[index]||staves[0],
+        bottom=topFor(system,index)+48,beatIn=event.startBeat-measure.startBeat,
+        x=left+slot*measureWidth+42+(beatIn/measure.durationBeat)*(measureWidth-50),
+        clef=clefAt(staff,event.startBeat);
+      const visual={...event,clef,showName:showNoteNames,noteName:null};
+      drawNote(svg,visual,x,bottom,g,g===currentGroup);
+      const voice=score.staffLayout?.length?staff.id:clef;
+      const first=!group.events.slice(0,eventIndex).some(other=>
+        (score.staffLayout?.length?staves[staffOf(other)]?.id:other.clef)===voice);
+      if(first&&event.dynamic&&event.dynamic!==" "&&dynamics.get(voice)!==event.dynamic){
+        addText(svg,x,bottom+38,event.dynamic,{"font-size":15,fill:"#353940","font-family":"serif","font-style":"italic","font-weight":700,"text-anchor":"middle"});
+        dynamics.set(voice,event.dynamic);
       }
     });
   });
-  return{score,groups,width,height};
+  if(score.notationLegend?.length){
+    // The legend is textual and noninteractive: unfamiliar contemporary symbols
+    // are never guessed by the learner.
+    score.notationLegend.forEach((legend,index)=>addText(svg,36,height-9-index*12,legend,{"font-size":9,fill:"#51627d"}));
+  }
+  return{score,groups,width,height,measureTimeline:measures,staves};
 }
-
-
 function parseABC(text){
   const raw=String(text||"").replace(/\r/g,"");
   if(!raw.trim())throw new Error("abc_empty");
@@ -925,6 +1023,7 @@ window.LuwipiScoreEngine=Object.freeze({
   nameToMidi,
   staffStep,
   staffY,
+  measureTimeline,
   durationKind,
   dynamicFromVelocity,
   keyName,

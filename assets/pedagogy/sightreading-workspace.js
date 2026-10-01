@@ -22,9 +22,11 @@ const KEY='luwipi:pedagogy:device-draft:v1',STEPS=[
 };
 const panel=document.createElement('section');
 panel.id='workspacePathPanel';panel.className='workspace-path-panel';panel.setAttribute('role','dialog');panel.setAttribute('aria-label','O meu percurso de leitura');panel.hidden=true;
-panel.innerHTML='<div class="workspace-path-head"><h2>Meu percurso</h2><button type="button" id="pathClose" aria-label="Fechar o meu percurso">×</button></div><div class="workspace-path-sub">10 trilhas independentes · níveis N0–N7. A pauta e o piano continuam no espaço de trabalho.</div><div class="workspace-path-map" id="pathMap"></div><section class="workspace-path-workout" id="pathWorkout" hidden></section>';
+panel.innerHTML='<div class="workspace-path-head"><div class="workspace-path-head-title"><button type="button" id="pathBack" hidden aria-label="Escolher outra habilidade">← Habilidades</button><h2 id="pathTitle">Aprender partitura</h2></div><button type="button" id="pathClose" aria-label="Fechar a jornada">×</button></div><p class="workspace-path-sub" id="pathIntro">Escolhe o que queres treinar. Um exercício de cada vez.</p><div class="workspace-path-map" id="pathMap"></div><section class="workspace-path-workout" id="pathWorkout" hidden></section>';
 host.append(panel);
 const map=panel.querySelector('#pathMap'),workout=panel.querySelector('#pathWorkout');
+const backToSkills=panel.querySelector('#pathBack'),pathTitle=panel.querySelector('#pathTitle'),pathIntro=panel.querySelector('#pathIntro');
+const UI_KEY='luwipi:learning-journey:selected:v1';
 const syncState=document.createElement('p');syncState.className='workspace-path-sync';
 syncState.setAttribute('role','status');
 syncState.textContent='Progresso provisório · neste dispositivo';
@@ -34,7 +36,7 @@ window.addEventListener('luwipi:progress-merged',event=>{
  if(event.detail?.draft){profile=event.detail.draft;persistLocal();render()}
 });
 const copyCard=document.createElement('button');
-copyCard.type='button';copyCard.className='workspace-path-copy';copyCard.textContent='Copiar cartão de progresso';
+copyCard.type='button';copyCard.className='workspace-path-copy';copyCard.textContent='Copiar o meu progresso';
 panel.insertBefore(copyCard,workout);
 copyCard.addEventListener('click',async()=>{
  const levels=P.trackIds.map(t=>{
@@ -51,6 +53,7 @@ copyCard.addEventListener('click',async()=>{
  catch{copyCard.textContent='Não foi possível copiar neste navegador'}
 });
 let profile=P.newProfile(),selected='',exercise=null,stage=3,verified=false,store=window.sessionStorage;
+try{const previous=window.sessionStorage.getItem(UI_KEY);if(P.trackIds.includes(previous))selected=previous}catch{}
 let syncRevision=0,signedIn=false,localEdits=0,explorationLevel=null,reviewTask=null;
 function todayLocal(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
 function currentStudyLevel(track){
@@ -75,6 +78,7 @@ function loadProfile(){
  const stored=safeRead(store,key);
  profile=stored?.version===1&&stored?.levels&&stored?.seen?stored:P.newProfile();
  loadProfile.key=key;
+ if(expandSeen())persistLocal();
  try{
   const diag=JSON.parse(localStorage.getItem('luwipi:sightreading:diagnostic:v1')||'null');
   if(diag&&!profile.placement){profile.placement=P.placementFromDiagnostic({tests:[0,1,2,3,4].map(i=>diag.tests?.[i]),extra:Object.fromEntries(['C','G','H','I','J'].map(t=>[t,diag.tests?.[t]]))})}
@@ -88,11 +92,18 @@ function loadProfile(){
    // Merge, never overwrite, notes and sight-read pieces recorded in that interval.
    const edited=localEdits!==editsAtLoad;
    profile=edited?sync.mergeDrafts(draft,profile):draft;
-   persistLocal();render();
+   expandSeen();persistLocal();render();
    if(edited)void sync.save(profile);
   }).catch(()=>{syncState.textContent='Sem ligação · progresso local mantido'});
 
  }
+}
+function expandSeen(){
+ const ids=new Set(profile.seen||[]);
+ for(const id of [...ids])for(const sibling of window.LuwipiScoreEquivalence?.[id]||[])ids.add(sibling);
+ const updated=ids.size!==(profile.seen||[]).length;
+ profile.seen=[...ids];
+ return updated;
 }
 function persistLocal(){try{store.setItem(loadProfile.key,JSON.stringify(profile))}catch{}}
 function save(){
@@ -101,15 +112,17 @@ function save(){
  if(signedIn&&window.LuwipiProgressSync)void window.LuwipiProgressSync.save(profile);
 }
 function el(tag,cl,text){const x=document.createElement(tag);if(cl)x.className=cl;if(text!==undefined)x.textContent=text;return x}
-function open(){panel.hidden=false;render();panel.querySelector('#pathClose').focus()}
+function open(){panel.hidden=false;render();panel.querySelector(selected?'#pathBack':'#pathClose').focus()}
 function close(){panel.hidden=true}
 window.addEventListener('luwipi:path-toggle',()=>panel.hidden?open():close());
 panel.querySelector('#pathClose').addEventListener('click',close);
+backToSkills.addEventListener('click',()=>{selected='';exercise=null;explorationLevel=null;reviewTask=null;stage=3;try{sessionStorage.removeItem(UI_KEY)}catch{}render();map.querySelector('button')?.focus()});
 document.addEventListener('keydown',event=>{if(event.key==='Escape'&&!panel.hidden)close()});
 window.addEventListener('luwipi:workspace-route',()=>{if(!panel.hidden)close()});
 window.addEventListener('luwipi:access-ready',loadProfile);
 window.addEventListener('luwipi:access-signed-out',()=>{
  syncRevision++;localEdits++;signedIn=false;selected='';exercise=null;explorationLevel=null;reviewTask=null;
+ try{sessionStorage.removeItem(UI_KEY)}catch{}
  profile=P.newProfile();store=window.sessionStorage;loadProfile.key=KEY+':guest';
  try{store.removeItem(loadProfile.key)}catch{}
  window.LuwipiProgressSync?.reset();
@@ -119,81 +132,86 @@ window.addEventListener('luwipi:pedagogy-measured',event=>{
  if(exercise?.id===event.detail?.exerciseId)exercise.measured=event.detail;
 });
 function render(){
+ const viewing=Boolean(selected);
+ panel.classList.toggle('workspace-path-active',viewing);
+ backToSkills.hidden=!viewing;
+ map.hidden=viewing;copyCard.hidden=viewing;syncState.hidden=viewing;
+ pathTitle.textContent=viewing?selected+' · '+trackName(selected):'Aprender partitura';
+ pathIntro.textContent=viewing?'Escolhe uma etapa e começa a tocar. A partitura e o piano abrem na Prática.':'Escolhe uma habilidade e começa a treinar. Cada nível tem exercícios próprios.';
  map.replaceChildren();
- for(const t of P.trackIds){
-  const l=profile.levels?.[t]||{level:0},mod=P.moduleFor(t,l.level||0);
-  const card=el('article','workspace-path-track');
-  const head=el('header'),title=el('strong','',t+' · '+trackName(t)),status=el('small','', 'N'+(l.level||0)+(l.certified?' · certificado':' · em formação'));
-  head.append(title,status);
-  card.append(head,el('p','',mod.objective));
-  const candidate=profile.placement?.[t]?.status;
-  if(candidate&&candidate!=='não avaliado')card.append(el('small','', 'Diagnóstico: '+candidate));
-  if(S?.get(t,l.level||0)||S2?.get(t,l.level||0)||S3?.get(t,l.level||0)||S4?.get(t,l.level||0)||S5?.get(t,l.level||0)||S6?.get(t,l.level||0)||S7?.get(t,l.level||0))card.append(el('small','', 'Estudo musical específico disponível'));
-  const launch=el('button','',selected===t?'Selecionado · organizar sessão':'Preparar sessão');
-  launch.type='button';launch.onclick=()=>{selected=t;stage=3;exercise=null;explorationLevel=null;reviewTask=null;render()};
-  card.append(launch);map.append(card);
- }
- const due=P.dueReviews(profile,todayLocal());
- if(due.length){
-  const hint=el('div','workspace-path-banner',due.length+' revisão(ões) de padrão disponíveis:');
-  due.slice(0,4).forEach(task=>{
-   const button=el('button','workspace-path-due-action',
-    task.track+' · N'+task.level+' · '+task.pattern+' · '+task.nextDue);
+ if(!viewing){
+  const due=P.dueReviews(profile,todayLocal());
+  if(due.length){
+   const hint=el('section','workspace-path-due-list');
+   hint.append(el('strong','','Revisões para hoje · '+due.length));
+   due.slice(0,3).forEach(task=>{
+    const b=el('button','workspace-path-due-action',task.track+' · '+task.pattern);
+    b.type='button';b.addEventListener('click',()=>{
+     selected=task.track;stage=2;exercise=null;explorationLevel=null;reviewTask={...task};
+     try{sessionStorage.setItem(UI_KEY,selected)}catch{}render();
+    });hint.append(b);
+   });map.append(hint);
+  }
+  for(const t of P.trackIds){
+   const l=profile.levels?.[t]||{level:0},mod=P.moduleFor(t,l.level||0);
+   const button=el('button','workspace-path-track workspace-path-skill');
    button.type='button';
+   button.setAttribute('aria-label','Treinar '+trackName(t)+', nível N'+(l.level||0));
+   const head=el('span','workspace-path-skill-name',t+' · '+trackName(t));
+   const state=el('small','workspace-path-skill-level','N'+(l.level||0)+' · '+(l.certified?'validado':'em treino'));
+   const objective=el('span','workspace-path-skill-summary',mod.objective);
+   const arrow=el('span','workspace-path-skill-arrow','→');arrow.setAttribute('aria-hidden','true');
+   button.append(head,state,objective,arrow);
    button.addEventListener('click',()=>{
-    selected=task.track;stage=2;exercise=null;explorationLevel=null;reviewTask={...task};render();
-   });
-   hint.append(button);
-  });
-  map.prepend(hint);
+    selected=t;stage=3;exercise=null;explorationLevel=null;reviewTask=null;
+    try{sessionStorage.setItem(UI_KEY,selected)}catch{}render();
+   });map.append(button);
+  }
  }
  workout.hidden=!selected;if(!selected)return;
  workout.replaceChildren();
  const formalLevel=profile.levels?.[selected]?.level||0;
  const level=currentStudyLevel(selected),mod=P.moduleFor(selected,level);
- workout.append(el('h3','',selected+' · N'+level+' · '+mod.objective));
+ workout.append(el('div','workspace-path-current','N'+level+' · '+mod.objective));
  if(reviewTask&&reviewTask.track===selected){
   workout.append(el('div','workspace-path-banner',
     'Revisão vencida: '+reviewTask.pattern+'. Escolhe o treino de padrões. Confirma no fim se este excerto trabalhou o erro pretendido. A revisão não certifica níveis.'));
  }
  const canExploreN1=formalLevel===0&&Boolean(S?.get(selected,1));
- const canExploreN2=formalLevel<2&&Boolean(S2?.get(selected,2))&&
-  (formalLevel>=1||profile.seen.includes(S?.get(selected,1)?.id||'unavailable'));
- const canExploreN3=formalLevel<3&&Boolean(S3?.get(selected,3))&&
-  (formalLevel>=2||profile.seen.includes(S2?.get(selected,2)?.id||'unavailable'));
- const canExploreN4=formalLevel<4&&Boolean(S4?.get(selected,4))&&
-  (formalLevel>=3||profile.seen.includes(S3?.get(selected,3,0)?.id||'unavailable'));
- const canExploreN5=formalLevel<5&&Boolean(S5?.get(selected,5))&&
-  (formalLevel>=4||profile.seen.includes(S4?.get(selected,4,0)?.id||'unavailable'));
- const canExploreN6=formalLevel<6&&Boolean(S6?.get(selected,6))&&
-  (formalLevel>=5||profile.seen.includes(S5?.get(selected,5,0)?.id||'unavailable'));
- const canExploreN7=formalLevel<7&&Boolean(S7?.get(selected,7))&&
-  (formalLevel>=6||profile.seen.includes(S6?.get(selected,6,0)?.id||'unavailable'));
+ const canExploreN2=formalLevel<2&&Boolean(S2?.get(selected,2));
+ const canExploreN3=formalLevel<3&&Boolean(S3?.get(selected,3));
+ const canExploreN4=formalLevel<4&&Boolean(S4?.get(selected,4));
+ const canExploreN5=formalLevel<5&&Boolean(S5?.get(selected,5));
+ const canExploreN6=formalLevel<6&&Boolean(S6?.get(selected,6));
+ const canExploreN7=formalLevel<7&&Boolean(S7?.get(selected,7));
  const available=[canExploreN1,canExploreN2,canExploreN3,canExploreN4,canExploreN5,canExploreN6,canExploreN7];
  if(available.some(Boolean)){
   // A single compact selector replaces seven stacked buttons; score and piano keep the space.
-  const levelLabel=el('label','workspace-path-level-select','Nível de exploração · sem certificação');
+  const levelLabel=el('label','workspace-path-level-select','Escolher nível');
   const selector=el('select');selector.setAttribute('aria-label','Escolher nível de treino');
-  const home=el('option','', 'O meu nível · N'+formalLevel);home.value='';selector.append(home);
+  const home=el('option','', 'Nível atual · N'+formalLevel);home.value='';selector.append(home);
   available.forEach((allowed,i)=>{
    if(!allowed)return;
-   const option=el('option','', 'Explorar estudo N'+(i+1));option.value=String(i+1);selector.append(option);
+   const option=el('option','', 'Treinar N'+(i+1));option.value=String(i+1);selector.append(option);
   });
   selector.value=available[(explorationLevel||0)-1]?String(explorationLevel):'';
   selector.addEventListener('change',()=>{explorationLevel=selector.value?Number(selector.value):null;stage=3;exercise=null;render()});
   levelLabel.append(selector);workout.append(levelLabel);
  }
  if(explorationLevel!==null&&explorationLevel>formalLevel)
-  workout.append(el('div','workspace-path-banner','Exploração N'+explorationLevel+': o nível confirmado continua N'+formalLevel+'. Os estudos avançados não atribuem certificados.'));
+  workout.append(el('p','workspace-path-exploration','Treino livre de N'+explorationLevel+'. Não altera o teu nível atual N'+formalLevel+'.'));
  const activeAdvanced=level===5?S5:level===6?S6:level===7?S7:null;
  const partial=level===4?S4?.get(selected,4,0):activeAdvanced?.get(selected,level,0);
  if(partial?.partialCoverage)
   workout.append(el('div','workspace-path-banner','Competência N'+level+' parcialmente coberta: '+partial.limitations));
 
- const stages=el('label','','Etapa da sessão');
+ const extra=el('details','workspace-path-extras');
+ if(stage!==3)extra.open=true;
+ extra.append(el('summary','','Outras atividades · aquecimento, perguntas e revisão'));
+ const stages=el('label','workspace-path-stage-label','Escolhe uma etapa');
  const sel=el('select');STEPS.forEach(([name,desc],i)=>{const op=el('option','',String(i+1)+'. '+name);op.value=String(i);sel.append(op)});
  sel.value=String(stage);sel.addEventListener('change',()=>{stage=Number(sel.value);render()});
- stages.append(sel);workout.append(stages,el('p','',STEPS[stage][1]));
+ stages.append(sel);extra.append(stages);workout.append(extra);workout.append(el('p','workspace-path-step-help',STEPS[stage][1]));
  const actions=el('div','workout-actions');
  if(stage===1){
   const q=(level>=5?window.LuwipiAdvancedQuestions?.get(selected,level,profile.seen.length):null)||QUIZ[selected];workout.append(el('p','',q[0]));
@@ -203,21 +221,42 @@ function render(){
  }else if(stage===4){
   buildReview(workout,actions);
  }else{
-  const button=el('button','',stage===0?'Abrir aquecimento':stage===2?'Tocar padrão curto':'Abrir leitura nova');
+  const button=el('button','workspace-path-start',stage===0?'Começar aquecimento':stage===2?'Treinar padrão curto':'Começar leitura');
   button.addEventListener('click',()=>launch(stage));actions.append(button);
-  if(stage===3)workout.append(el('div','workspace-path-banner','Leitura de treino: ouvir previamente torna a tentativa repetição, não primeira vista. A passagem de nível continua bloqueada sem provas específicas verificadas.'));
+  if(stage===3)workout.append(el('p','workspace-path-exploration','A leitura nova começa com 30 segundos para observar a partitura, sem ouvir primeiro.'));
  }
  if(stage!==4)workout.append(actions);
 }
 function splitABC(seed){
  const headers=seed.abc.split('\n').filter(l=>/^(?:X|T|M|L|Q|K):/.test(l));
+ const firstKey=seed.staffKeys?.RH||seed.keySequence?.[0]||seed.key;
+ const headerFor=(key)=>headers.map(h=>h.startsWith('K:')?'K:'+(key||firstKey):h).join('\n');
+ const meters=Array.isArray(seed.meterSequence)?seed.meterSequence:null;
+ const barCount=seed.bars||8,barStarts=[0];let elapsed=0;
+ for(let i=0;i<barCount;i++){
+  const current=(meters?.[i]||seed.meter||'4/4').split('/').map(Number);
+  elapsed+=current[0]*(4/current[1]);
+  barStarts.push(Math.round(elapsed*1e6)/1e6);
+ }
  function read(hand,clef){
   const line=seed.abc.split('\n').find(x=>x.startsWith('[V:'+hand+'] '));
   if(!line)throw Error('Voz em falta: '+hand);
   // parseABC currently handles one staff per file; parse both separately to retain simultaneous onsets.
   const body=line.replace(/^\[V:[A-Z0-9]+\]\s*/,'').replace(/\s*\|\]\s*$/,'').replace(/![^!]+!/g,'').replace(/"[^"]*"/g,'');
-  const result=E.parseABC(headers.join('\n')+'\n'+body);
-  return{events:result.events.map((x,i)=>({...x,id:hand+'-'+i,clef})),rests:(result.rests||[]).map((x,i)=>({...x,id:hand+'-rest-'+i,clef}))};
+  if(!seed.keySequence&&!seed.staffKeys){
+   const result=E.parseABC(headers.join('\n')+'\n'+body);
+   return{events:result.events.map((x,i)=>({...x,id:hand+'-'+i,clef})),rests:(result.rests||[]).map((x,i)=>({...x,id:hand+'-rest-'+i,clef}))};
+  }
+  const events=[],rests=[],pieces=body.split(/\s*\|\s*/);
+  if(pieces.length!==barCount)throw Error('Número de compassos incompatível com o mapa tonal: '+hand);
+  pieces.forEach((bar,i)=>{
+   const key=seed.staffKeys?.[hand]||seed.keySequence?.[i]||firstKey;
+   const parsed=E.parseABC(headerFor(key)+'\n'+bar+' |');
+   const offset=barStarts[i];
+   for(const event of parsed.events)events.push({...event,id:hand+'-'+events.length,startBeat:Math.round((event.startBeat+offset)*1e6)/1e6,clef});
+   for(const rest of parsed.rests)rests.push({...rest,id:hand+'-rest-'+rests.length,startBeat:Math.round((rest.startBeat+offset)*1e6)/1e6,clef});
+  });
+  return{events,rests};
  }
  const rh=read('RH','treble'),lh=read('LH','bass');
  const rh2=seed.secondTrebleVoice?read('RH2','treble'):{events:[],rests:[]};
@@ -239,12 +278,58 @@ function splitABC(seed){
   lh.events.forEach(e=>e.voiceDirection='up');
   lh2.events.forEach(e=>e.voiceDirection='down');
  }
- const base=E.parseABC(headers.join('\n')+'\nC2 C2 C2 C2 | C2 C2 C2 C2 |');
+ const base=E.parseABC(headerFor(firstKey)+'\nC2 C2 C2 C2 | C2 C2 C2 C2 |');
  const events=rh.events.concat(rh2.events,lh.events,lh2.events);
  if(!events.length)throw Error('Exercício vazio');
  const result=E.normalizeScore({title:seed.title,source:'pedagogy',tempoBpm:seed.meter==="6/8"?base.tempoBpm*1.5:base.tempoBpm,
  pulseUnit:seed.meter==="6/8"?"dotted-quarter":"quarter",meter:base.meter,keyFifths:base.keyFifths,
- events,rests:rh.rests.concat(rh2.rests,lh.rests,lh2.rests),keyMinor:base.keyMinor});
+ events,rests:rh.rests.concat(rh2.rests,lh.rests,lh2.rests),keyMinor:base.keyMinor,
+ meterMap:meters?meters.map((m,i)=>({beat:barStarts[i],meter:m.split('/').map(Number)})):[],
+ keyMap:seed.keySequence?seed.keySequence.map((k,i)=>({beat:barStarts[i],fifths:E.parseABC(headerFor(k)+'\nC4 |').keyFifths})):[],
+ staffLayout:seed.staffLayout||[],
+ clefMap:Array.isArray(seed.clefChanges)?seed.clefChanges.map(x=>({beat:barStarts[x.bar],staff:x.staff,clef:x.clef})):[],
+ octaveMarks:seed.octaveMarks||[],
+ notationLegend:[...(seed.notationLegend||[]),...(seed.rhythmFeel==='swing-2:1'?['Swing: duas colcheias executadas na relação longa–curta (aprox. 2:1).']:[])],
+ tempoMap:seed.tempoSequence?seed.tempoSequence.map((bpm,i)=>({beat:barStarts[i],bpm})):[]});
+ for(const mark of seed.octaveMarks||[]){
+  const first=barStarts[mark.bar],last=barStarts[Math.min(barCount,mark.bar+mark.count)];
+  if(!Number.isFinite(first)||!Number.isFinite(last))continue;
+  for(const event of result.events){
+   if(!event.id.startsWith(mark.staff+'-')||event.startBeat<first-1e-5||event.startBeat>=last-1e-5)continue;
+   const midi=event.midi+mark.shift;
+   if(midi<0||midi>127)throw Error('Indicação de oitava fora do registo MIDI');
+   event.midi=midi; // event.note stays as the written, untransposed staff pitch.
+  }
+ }
+ if(Array.isArray(seed.ornaments)){
+  for(const ornament of seed.ornaments){
+   const first=barStarts[ornament.bar];
+   const event=result.events.find(e=>e.id.startsWith(ornament.staff+'-')&&Math.abs(e.startBeat-first)<1e-5);
+   if(!event)throw Error('Ornamento sem nota principal na pauta');
+   event.ornament={type:ornament.type,neighbor:ornament.neighbor};
+  }
+  result.performanceEvents=result.events.flatMap(e=>{
+   if(!e.ornament)return [{...e}];
+   const type=e.ornament.type,offset=Number(e.ornament.neighbor)||1,d=e.durationBeat;
+   let shifts=type==='appoggiatura'?[offset,0]:type==='trill'?[0,offset,0,offset]:[0,offset,0];
+   let weights=type==='appoggiatura'?[.25,.75]:type==='trill'?[.25,.25,.25,.25]:[.25,.25,.5];
+   let cursor=e.startBeat;
+   return shifts.map((shift,i)=>{const duration=d*weights[i];
+    const entry={...e,id:e.id+'-orn'+i,midi:e.midi+shift,
+      note:E.midiToName(e.midi+shift),startBeat:cursor,durationBeat:duration,ornament:null};
+    cursor+=duration;return entry;
+   });
+  });
+ }
+ if(seed.rhythmFeel==='swing-2:1'){
+  result.performanceEvents=result.events.map(event=>{
+   if(Math.abs(event.durationBeat-.5)>.001)return{...event};
+   const fraction=((event.startBeat%1)+1)%1;
+   if(fraction<.002||fraction>.998)return{...event,durationBeat:2/3};
+   if(Math.abs(fraction-.5)<.002)return{...event,startBeat:event.startBeat+1/6,durationBeat:1/3};
+   return{...event};
+  });
+ }
  if(seed.expression==='melody-foreground'){
   result.events.forEach(e=>{
    if(e.id.startsWith('RH-')){e.velocity=96;e.dynamic='f'}
@@ -311,8 +396,8 @@ function chooseSeed(track,level,which,seen){
 function launch(which){
  if(typeof window.LuwipiLiveLoadPedagogy!=='function'){workout.append(el('p','workout-result','A Prática ainda não está pronta. Atualiza a aplicação.'));return}
  const currentLevel=profile.levels[selected]?.level||0,assigned=which===2?reviewTask:null;
- const track=assigned?.track||(which===0?'F':selected);
- const level=assigned?.level??(which===0?0:currentStudyLevel(selected));
+ const track=assigned?.track||selected;
+ const level=assigned?.level??currentStudyLevel(selected);
  const seed=chooseSeed(track,level,assigned?3:which,profile.seen)||
   (assigned?(S?.get(track,level)||S2?.get(track,level)||S3?.get(track,level,0)||S4?.get(track,level,0)||S5?.get(track,level,0)||S6?.get(track,level,0)||S7?.get(track,level,0)||P.makeSeed(track,level,0)):null);
  if(!seed){workout.append(el('p','workout-result','O material inédito terminou. É necessário acrescentar novas partituras.'));return}
@@ -327,7 +412,7 @@ function launch(which){
   reviewTask:assigned?{...assigned}:null,
   kind:which===3?'first_sight':'practice',stage:which,sessionId:String(Date.now())+'-'+seed.id};
  const opened=window.LuwipiLiveLoadPedagogy(score,score.title,{
-  firstSight:which===3,exerciseId:seed.id,transposeSemitones:seed.transposeSemitones||0,
+  firstSight:which===3,exerciseId:seed.id,transposeSemitones:seed.transposeSemitones||0,transposeByVoice:seed.transposeByVoice||null,
   instruction:seed.pedalEveryBar?'Troca o pedal nos símbolos Ped., a cada mudança de harmonia. A qualidade da pedalação exige observação.':
    seed.crossingMeasures?'Cruza a esquerda por cima da direita nos compassos '+seed.crossingMeasures.map(n=>n+1).join(' e ')+'.':
    [seed.intent,seed.rhythmFeel?'Interpreta colcheias escritas com swing 2:1; a avaliação automática não mede o swing.':'',...(seed.staffHints||[])].filter(Boolean).join(' · ')
@@ -335,7 +420,10 @@ function launch(which){
  if(opened){
   // A warm-up or short pattern exposes musical content too: never re-label it
   // as an unseen first-sight exercise, even when only two bars were previewed.
-  if(!profile.seen.includes(seed.id)){profile.seen.push(seed.id);save()}
+  const exposed=[seed.id,...(window.LuwipiScoreEquivalence?.[seed.id]||[])];
+  let changed=false;
+  for(const id of exposed)if(!profile.seen.includes(id)){profile.seen.push(id);changed=true}
+  if(changed)save()
   if(seed.cues)window.dispatchEvent(new CustomEvent('luwipi:pedagogy-cues',{detail:{cues:seed.cues,track:seed.track}}));
   close();
  }else{workout.append(el('p','workout-result','Não foi possível iniciar o exercício.'))}

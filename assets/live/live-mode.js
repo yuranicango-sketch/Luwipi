@@ -64,12 +64,12 @@ const scopeHelp=document.getElementById("livePublishScopeHelp");
 let score=null,groups=[],pdfUrl="",pdfFileName="",structuredFileName="",activeView="interactive";
 let tempo=120,guideOn=true,rhythmOn=true,practice=false,practiceIndex=0,practiceAnchor=0,practiceFirstBeat=0;
 let correctCount=0,attempts=0,timingSamples=[],chordSeen=new Set(),noteOnTimes=new Map(),playTimers=[],playing=false;
-let inputMode="none",unsubscribe=null,lastDetected="-",pedagogyNovel=false,pedagogyExerciseId="",pedagogyTranspose=0,pedagogyInstruction='',pedagogyFlow=false,preReadTimer=null,preReadSession=0;
+let inputMode="none",unsubscribe=null,lastDetected="-",pedagogyNovel=false,pedagogyExerciseId="",pedagogyTranspose=0,pedagogyByVoice=null,pedalObservations=[],pedagogyInstruction='',pedagogyFlow=false,preReadTimer=null,preReadSession=0;
 function cancelPreRead(){
  preReadSession++;if(preReadTimer!==null){clearTimeout(preReadTimer);preReadTimer=null;}
  if(practiceButton)practiceButton.disabled=false;
 }
-function intervalLabel(){return ({2:'um tom',5:'uma quarta justa',7:'uma quinta justa'})[pedagogyTranspose]||'o intervalo indicado'}
+function intervalLabel(){return pedagogyByVoice?'os intervalos diferentes indicados para cada pauta':({2:'um tom',5:'uma quarta justa',7:'uma quinta justa'})[pedagogyTranspose]||'o intervalo indicado'}
 function startPreRead(seconds){
  cancelPreRead();
  let remaining=seconds,session=preReadSession;
@@ -236,7 +236,7 @@ function updateFileState(){
 }
 function resetPractice(){
   practice=false;practiceIndex=0;practiceAnchor=0;practiceFirstBeat=groups[0]?groups[0].startBeat:0;
-  correctCount=0;attempts=0;timingSamples=[];chordSeen.clear();noteOnTimes.clear();
+  correctCount=0;attempts=0;timingSamples=[];pedalObservations=[];chordSeen.clear();noteOnTimes.clear();
   practiceButton.textContent="Começar treino";
   setSession(false,"Pronto");
   setFeedback(score?"Liga um piano MIDI ou o microfone e começa quando estiveres pronto.":"Importa uma partitura estruturada para começar.","");
@@ -461,7 +461,7 @@ function startPractice(){
   }
   if(pedagogyNovel)pedagogyNovel=false;
   stopPlayback();practice=true;practiceIndex=0;practiceAnchor=0;practiceFirstBeat=groups[0].startBeat;
-  correctCount=0;attempts=0;timingSamples=[];chordSeen.clear();noteOnTimes.clear();
+  correctCount=0;attempts=0;timingSamples=[];pedalObservations=[];chordSeen.clear();noteOnTimes.clear();
   practiceButton.textContent="Parar treino";
   setSession(true,"A ouvir");
   setFeedback(pedagogyFlow?"Segue em frente sem parar nem corrigir notas anteriores.":guideOn?"Toca a nota destacada.":"Começa pela primeira nota da partitura.","");
@@ -470,7 +470,7 @@ function startPractice(){
 }
 function stopPractice(){
   practice=false;chordSeen.clear();noteOnTimes.clear();practiceButton.textContent="Começar treino";
-  if(pedagogyFlow){pedagogyFlow=false;guideToggle.disabled=false;if(!pedagogyTranspose){playButton.disabled=false;hearButton.disabled=false;}}
+  if(pedagogyFlow){pedagogyFlow=false;guideToggle.disabled=false;if(!pedagogyTranspose&&!pedagogyByVoice){playButton.disabled=false;hearButton.disabled=false;}}
   emitPianoLight([]);setSession(false,"Pausado");renderScore();
 }
 function expectedGroup(){return groups[practiceIndex]||null}
@@ -491,11 +491,17 @@ function advancePractice(tone,message,correct=true){
          exerciseId:pedagogyExerciseId,bpm:score?.pulseUnit==="dotted-quarter"?Math.round(tempo*2/3):tempo,
          pulseUnit:score?.pulseUnit||"quarter",input:inputMode,observedClient:true,
          correctGroups:correctCount,attemptedGroups:attempts,
-         rhythmWithinTolerance:within,rhythmSamples:timingSamples.length
+         rhythmWithinTolerance:within,rhythmSamples:timingSamples.length,
+         pedal:score?.events?.some(e=>e.pedal)?{
+          expected:score.events.filter(e=>e.pedal).length,
+          observedDown:pedalObservations.filter(e=>e.down).length,
+          observedUp:pedalObservations.filter(e=>!e.down).length,
+          capturedByMIDI:inputMode==="midi"
+         }:null
        }}));
      }
     emitPianoLight([]);
-    if(pedagogyFlow){pedagogyFlow=false;guideToggle.disabled=false;if(!pedagogyTranspose){playButton.disabled=false;hearButton.disabled=false;}}
+    if(pedagogyFlow){pedagogyFlow=false;guideToggle.disabled=false;if(!pedagogyTranspose&&!pedagogyByVoice){playButton.disabled=false;hearButton.disabled=false;}}
   }else{
     setFeedback(message||"Certo. Continua.",tone||"good");
   }
@@ -569,6 +575,10 @@ function onInput(detail){
   if(!detail)return;
   if(detail.type==="noteon")handleNoteOn(detail);
   else if(detail.type==="noteoff")handleNoteOff(detail);
+  else if(detail.type==="sustain"&&practice&&inputMode==="midi"&&score?.events?.some(e=>e.pedal)){
+   pedalObservations.push({at:detail.at,down:Boolean(detail.down)});
+   setInputState("Pedal MIDI: "+(detail.down?"premido":"levantado")+".");
+  }
 }
 function toggle(button,next){
   button.setAttribute("aria-pressed",String(next));
@@ -724,17 +734,24 @@ window.LuwipiLiveTaskSource=Object.freeze({score:()=>score?{title:score.title||s
    pedagogyExerciseId=String(options.exerciseId||'');
    const interval=Number(options.transposeSemitones);
    pedagogyTranspose=[2,5,7].includes(interval)?interval:0;
+   pedagogyByVoice=options.transposeByVoice&&typeof options.transposeByVoice==="object"
+    ?Object.fromEntries(Object.entries(options.transposeByVoice).filter(([voice,shift])=>
+      /^(RH2?|LH2?)$/.test(voice)&&Number.isInteger(shift)&&Math.abs(shift)<=24))
+    :null;
+   if(pedagogyByVoice&&!Object.keys(pedagogyByVoice).length)pedagogyByVoice=null;
    pedagogyInstruction=String(options.instruction||'').slice(0,240);
-   if(pedagogyTranspose){
+   if(pedagogyTranspose||pedagogyByVoice){
     const altered=Engine.normalizeScore({...score,events:score.events.map(event=>{
-     const midi=Math.min(127,event.midi+pedagogyTranspose),note=Engine.midiToName(midi);
-     return {...event,midi,note,noteName:note};
+     const voice=String(event.id).split("-")[0];
+     const shift=pedagogyByVoice&&Object.hasOwn(pedagogyByVoice,voice)?pedagogyByVoice[voice]:pedagogyTranspose;
+     const midi=Math.max(0,Math.min(127,event.midi+shift));
+     return {...event,midi}; // The written score stays unchanged for mental transposition.
     })});
     groups=Engine.groupEvents(altered);updateMetrics();
    }
-   if(pedagogyNovel||pedagogyTranspose){playButton.disabled=true;hearButton.disabled=true;}
+   if(pedagogyNovel||pedagogyTranspose||pedagogyByVoice){playButton.disabled=true;hearButton.disabled=true;}
    if(pedagogyNovel)startPreRead(30);
-   else setFeedback(pedagogyTranspose?'Transpõe '+intervalLabel()+' acima. A pauta mantém-se na tonalidade original e a demonstração fica desativada.':'Treino: '+(pedagogyInstruction||'reconhece o desenho antes de tocar.'),'near');
+   else setFeedback((pedagogyTranspose||pedagogyByVoice)?'Transpõe '+intervalLabel()+'. A pauta mantém-se como foi escrita e a demonstração fica desativada.':'Treino: '+(pedagogyInstruction||'reconhece o desenho antes de tocar.'),'near');
    return true;
  };
  window.addEventListener('luwipi:pedagogy-cues',event=>{

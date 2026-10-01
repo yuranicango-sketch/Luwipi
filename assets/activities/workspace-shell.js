@@ -7,10 +7,10 @@ document.body.classList.toggle('workspace-task-mode',isTask);
 const views=[...document.body.children].filter(node=>node.classList?.contains('view'));
 const canvas=document.createElement('main');canvas.id='workspaceCanvas';canvas.className='workspace-canvas';
 const bar=document.createElement('div');bar.className='workspace-canvas-bar';
-bar.innerHTML='<button id="workspaceSidebarToggle" type="button" class="workspace-canvas-menu" aria-label="Abrir menu lateral" aria-controls="workspaceSidebar" aria-expanded="false" title="Abrir menu">☰</button><button type="button" class="workspace-canvas-back" aria-label="Voltar">←</button><div class="workspace-canvas-heading"><small>LUWIPI</small><strong id="workspaceCanvasTitle">Leitura</strong><span id="workspaceCanvasContext">Ouve. Vê. Toca.</span></div><div class="workspace-canvas-actions"><button type="button" class="workspace-canvas-path" data-workspace-action="path" aria-label="Abrir o meu percurso" title="Meu percurso">◎ <span>Percurso</span></button><button id="workspaceCanvasPrimary" type="button" hidden></button></div>';
+bar.innerHTML='<button id="workspaceSidebarToggle" type="button" class="workspace-canvas-menu" aria-label="Abrir menu lateral" aria-controls="workspaceSidebar" aria-expanded="false" title="Abrir menu">☰</button><button type="button" class="workspace-canvas-back" aria-label="Voltar">←</button><div class="workspace-canvas-heading"><small>LUWIPI</small><strong id="workspaceCanvasTitle">Leitura</strong><span id="workspaceCanvasContext">Ouve. Vê. Toca.</span></div><div class="workspace-canvas-actions"><button id="workspacePianoToggle" type="button" class="workspace-canvas-piano" aria-label="Esconder piano" aria-expanded="true" aria-controls="workspacePianoBody" hidden>🎹 <span>Esconder piano</span></button><button type="button" class="workspace-canvas-path" data-workspace-action="path" aria-label="Aprender partitura" title="Aprender partitura">𝄞 <span>Aprender</span></button><button id="workspaceCanvasPrimary" type="button" hidden></button></div>';
 const viewport=document.createElement('div');viewport.className='workspace-canvas-viewport';
 const pianoArea=document.createElement('section');pianoArea.id='workspacePiano';pianoArea.className='workspace-piano';pianoArea.setAttribute('aria-label','Piano partilhado');
-pianoArea.innerHTML='<div class="workspace-piano-edge"><button id="workspacePianoToggle" type="button" aria-label="Recolher piano" title="Recolher piano" aria-expanded="true" aria-controls="workspacePianoBody">⌄</button></div><div id="workspacePianoBody" class="workspace-piano-body"></div>';
+pianoArea.innerHTML='<div id="workspacePianoBody" class="workspace-piano-body"></div>';
 canvas.append(bar,viewport,pianoArea);sidebar.after(canvas);views.forEach(view=>viewport.append(view));
 
 const barBack=bar.querySelector('.workspace-canvas-back'),barTitle=bar.querySelector('#workspaceCanvasTitle'),barContext=bar.querySelector('#workspaceCanvasContext'),barPrimary=bar.querySelector('#workspaceCanvasPrimary');
@@ -20,13 +20,13 @@ const closeButton=document.createElement('button');
 closeButton.type='button';closeButton.className='workspace-sidebar-close';closeButton.setAttribute('aria-label','Fechar menu lateral');closeButton.title='Fechar menu';closeButton.textContent='×';
 sidebar.querySelector('.workspace-brand')?.append(closeButton);
 const pathButton=document.createElement('button');
-pathButton.type='button';pathButton.dataset.workspaceAction='path';pathButton.innerHTML='<span>◎</span><b>Meu percurso</b>';
+pathButton.type='button';pathButton.dataset.workspaceAction='path';pathButton.innerHTML='<span>𝄞</span><b>Aprender partitura</b>';
 sidebar.querySelector('.workspace-nav')?.insertBefore(pathButton,sidebar.querySelector('[data-workspace-nav="karaoke"]'));
-const pathMobile=document.createElement('button');pathMobile.type='button';pathMobile.dataset.workspaceAction='path';pathMobile.innerHTML='<span>◎</span><b>Meu percurso</b>';
-document.querySelector('.experience-menu-nav')?.append(pathMobile);
+const pathMobile=document.createElement('button');pathMobile.type='button';pathMobile.dataset.workspaceAction='path';pathMobile.innerHTML='<span>𝄞</span><b>Aprender partitura</b>';
+document.querySelector('.experience-menu-nav')?.prepend(pathMobile);
 const MENU_KEY='luwipi:sidebar-open:v1';
 let sidebarOpen=false;
-try{sidebarOpen=localStorage.getItem(MENU_KEY)==='true'}catch{}
+// The menu opens on request; never consume the score/piano area on refresh.
 function setSidebarOpen(open){
  sidebarOpen=!!open&&!isTask;
  document.body.classList.toggle('workspace-sidebar-closed',!sidebarOpen);
@@ -35,7 +35,7 @@ function setSidebarOpen(open){
  toggle.setAttribute('aria-expanded',String(sidebarOpen));
  toggle.setAttribute('aria-label',sidebarOpen?'Fechar menu lateral':'Abrir menu lateral');
  toggle.title=sidebarOpen?'Fechar menu':'Abrir menu';
- try{localStorage.setItem(MENU_KEY,String(sidebarOpen))}catch{}
+ // Sidebar visibility is deliberately not persisted.
  if(!sidebarOpen&&document.activeElement&&sidebar.contains(document.activeElement))toggle.focus();
 }
 setSidebarOpen(sidebarOpen);
@@ -62,7 +62,7 @@ function modeOf(view){
  if(id==='rhythmView'||/rhythm|pulse|attack|complete|duration/i.test(id))return'rhythm';
  return'reading';
 }
-function labelOf(mode){return mode==='diagnostic'?'Diagnóstico':mode==='karaoke'?'MIDI':mode==='live'?'Prática':mode==='games'?'Jogos':mode==='rhythm'?'Ritmo':'Leitura'}
+function labelOf(mode){return mode==='diagnostic'?'Diagnóstico':mode==='karaoke'?'MIDI':mode==='live'?'Prática':mode==='games'?'Jogos':mode==='rhythm'?'Ritmo':'Músicas e atividades'}
 function clearLibrary(){
  libraryOpen=false;canvas.dataset.library='';
  document.getElementById('readingView')?.classList.remove('workspace-library-open');
@@ -105,9 +105,9 @@ function goBack(){
  }
  if(modeOf(view)!=='reading')open('reading');
 }
-function primaryFor(mode){
- if(mode==='karaoke')return{label:'＋ Importar MIDI',run:()=>document.getElementById('karaokeFiles')?.click()};
- if(mode==='live')return{label:'＋ Importar ficheiro',run:()=>document.getElementById('liveScoreFile')?.click()};
+function primaryFor(){
+ // Both MIDI and Prática have their own clear import controls. Avoid an
+ // additional action in the compact top bar that duplicates them.
  return null;
 }
 function sync(){
@@ -126,7 +126,7 @@ function sync(){
  if(primary){barPrimary.textContent=primary.label;barPrimary.onclick=primary.run}else barPrimary.onclick=null;
 }
 sidebar.querySelectorAll('[data-workspace-nav]').forEach(button=>button.addEventListener('click',()=>{open(button.dataset.workspaceNav);setSidebarOpen(false)}));
-sidebar.querySelector('[data-workspace-action="library"]')?.addEventListener('click',()=>{libraryOpen?goBack():openReadingLibrary();setSidebarOpen(false)});
+sidebar.querySelector('[data-workspace-action="library"]')?.addEventListener('click',()=>{openReadingLibrary();setSidebarOpen(false)});
 sidebar.querySelector('[data-workspace-action="back"]')?.addEventListener('click',goBack);
 sidebar.querySelector('[data-workspace-action="guide"]')?.addEventListener('click',()=>{const view=activeView(),button=view?.querySelector('.reading-guide-toggle,[data-reading-guide-toggle]');if(button)button.click();else document.getElementById('experienceMenuGuide')?.click()});
 sidebar.querySelector('[data-workspace-action="task"]')?.addEventListener('click',()=>document.getElementById('experienceMenuTask')?.click());

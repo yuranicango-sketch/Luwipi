@@ -1,3 +1,5 @@
+> **Histórico (V3):** a referência atual de UX e currículo é [READING-PROGRESSION-V4.md](READING-PROGRESSION-V4.md). Os totais desta revisão foram superados.
+
 # Luwipi · Auditoria do percurso de leitura N0–N7 (versão consolidada)
 
 ## Âmbito e estado

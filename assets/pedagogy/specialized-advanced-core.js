@@ -54,7 +54,11 @@ function make(track,level,def,index){
   parts[name]=transform?grouping.map(i=>upOne(original[i])):original;
  }
  const meter=def.meter||"4/4",unit=def.unit||"1/8",bpm=(def.bpm||60)+(index?3:0),
-  title=track+" · N"+level+" · Estudo "+String(index+1),
+  meters=Array.isArray(def.meterSequence)?def.meterSequence:null,
+  keys=Array.isArray(def.keySequence)?def.keySequence:null;
+ if(meters&&(meters.length!==count||meters[0]!==meter))throw Error("Invalid per-bar meter plan");
+ if(keys&&(keys.length!==count||keys[0]!==def.key))throw Error("Invalid per-bar key plan");
+ const title=track+" · N"+level+" · Estudo "+String(index+1),
   abc=["X:1","T:"+title,"M:"+meter,"L:"+unit,"Q:1/4="+bpm,"K:"+(def.key||"C"),
    "%%score { RH"+(parts.rh2?" RH2":"")+" LH"+(parts.lh2?" LH2":"")+" }",
    "V:RH clef=treble","V:LH clef=bass"];
@@ -68,8 +72,16 @@ function make(track,level,def,index){
   meter,key:def.key||"C",bpm,unit,bars:count,hands:["direita","esquerda"],
   specialized:true,certification:false,partialCoverage:partial,limitations:limit,
   secondTrebleVoice:Boolean(parts.rh2),secondBassVoice:Boolean(parts.lh2),
-  transposeSemitones:def.transposeSemitones||0,expression:def.expression||null,
-  rhythmFeel:def.rhythmFeel||null,cues:def.cues||null,staffHints:def.staffHints||null});
+  transposeSemitones:def.transposeSemitones||0,transposeByVoice:def.transposeByVoice||null,expression:def.expression||null,
+  rhythmFeel:def.rhythmFeel||null,cues:def.cues||null,staffHints:def.staffHints||null,
+  meterSequence:meters?meters.slice():null,keySequence:keys?keys.slice():null,
+  staffLayout:Array.isArray(def.staffLayout)?def.staffLayout.map(x=>({...x})):null,
+  clefChanges:Array.isArray(def.clefChanges)?def.clefChanges.map(x=>({...x})):null,
+  octaveMarks:Array.isArray(def.octaveMarks)?def.octaveMarks.map(x=>({...x})):null,
+  notationLegend:Array.isArray(def.notationLegend)?def.notationLegend.slice():null,
+  staffKeys:def.staffKeys||null,
+  ornaments:Array.isArray(def.ornaments)?def.ornaments.map(x=>({...x})):null,
+  tempoSequence:Array.isArray(def.tempoSequence)?def.tempoSequence.slice():null});
 }
 function install(name,level,data){
  if(!/^[A-Z][A-Z0-9]*$/.test(name)||![5,6,7].includes(level))throw Error("invalid study group");

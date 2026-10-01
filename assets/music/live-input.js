@@ -20,6 +20,8 @@ function handleMidiMessage(event){
   const data=event.data||[],status=data[0]||0,hi=status&0xF0,channel=status&15,note=data[1],velocity=data[2]||0;
   if(hi===0x90&&velocity>0){
     emit({type:"noteon",source:"midi",midi:note,note:midiName(note),velocity,channel});
+  }else if(hi===0xB0&&note===64){
+    emit({type:"sustain",source:"midi",channel,down:velocity>=64,value:velocity});
   }else if(hi===0x80||(hi===0x90&&velocity===0)){
     emit({type:"noteoff",source:"midi",midi:note,note:midiName(note),velocity:0,channel});
   }

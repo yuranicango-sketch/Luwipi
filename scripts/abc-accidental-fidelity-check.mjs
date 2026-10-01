@@ -62,6 +62,6 @@ for(const track of P.trackIds){
  }
 }
 assert.equal(total,1344);
-assert.equal(specialized,55);
+assert.equal(specialized,57);
 console.log("ABC fidelity: 4 accidental, pitch, chord and octave cases passed; written naturals and key-only sharps engraved correctly.");
 console.log("Regressions: "+total+" generated two-hand studies and "+specialized+" specialized two-hand studies parse to eight measured bars.");

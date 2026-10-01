@@ -24,9 +24,10 @@ function update(){
  const view=active(),wanted=select(view);
  if(view?.id!==lastViewId){light([]);lastViewId=view?.id||''}
  if(!wanted){
-  host.hidden=true;host.dataset.source='none';return;
+  host.hidden=true;toggle.hidden=true;host.dataset.source='none';return;
  }
- host.hidden=false;
+ toggle.hidden=false;
+ host.hidden=collapsed;
  const source=wanted===midi?'midi':wanted===legacy?'legacy':'journey';
  if(current!==wanted||wanted.parentElement!==body){
   body.replaceChildren(wanted);
@@ -35,17 +36,18 @@ function update(){
  host.dataset.source=source;
  host.classList.toggle('collapsed',collapsed);
  body.hidden=collapsed;
- toggle.textContent=collapsed?'⌃':'⌄';
- toggle.setAttribute('aria-label',collapsed?'Mostrar piano':'Recolher piano');
- toggle.setAttribute('title',collapsed?'Mostrar piano':'Recolher piano');
+ toggle.innerHTML=collapsed?'🎹 <span>Mostrar piano</span>':'🎹 <span>Esconder piano</span>';
+ toggle.setAttribute('aria-label',collapsed?'Mostrar piano':'Esconder piano');
+ toggle.setAttribute('title',collapsed?'Mostrar piano':'Esconder piano');
  toggle.setAttribute('aria-expanded',String(!collapsed));
 }
 function schedule(){if(scheduled)return;scheduled=true;requestAnimationFrame(update)}
-toggle.addEventListener('click',()=>{
- collapsed=!collapsed;
+function setCollapsed(next){
+ collapsed=Boolean(next);
  try{sessionStorage.setItem('luwipi:workspace-piano-collapsed',collapsed?'1':'0')}catch{}
  schedule();window.dispatchEvent(new CustomEvent('luwipi:piano-visibility',{detail:{collapsed}}));
-});
+}
+toggle.addEventListener('click',()=>setCollapsed(!collapsed));
 const lights=new Map();
 function light(notes=[],duration=560){
  for(const timer of lights.values())clearTimeout(timer);lights.clear();
@@ -73,8 +75,8 @@ window.LuwipiWorkspacePiano=Object.freeze({
   adapters.set(name,{element,views});schedule();
   return()=>{adapters.delete(name);schedule()};
  },
- show(){collapsed=false;schedule()},
- hide(){collapsed=true;schedule()},
+ show(){setCollapsed(false)},
+ hide(){setCollapsed(true)},
  toggle(){toggle.click()},
  refresh:schedule,
  subscribe(fn){if(typeof fn!=='function')return()=>{};const listener=e=>fn(e.detail);window.addEventListener('luwipi:piano-note',listener);return()=>window.removeEventListener('luwipi:piano-note',listener)},

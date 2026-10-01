@@ -6,7 +6,7 @@ const query=new URLSearchParams(location.search);
 if(query.get("parent")==="1"||["karaoke","exercise","song"].includes(query.get("type")))return;
 const roots={reading:"readingView",diagnostic:"diagnosticView",midi:"karaokeView",practice:"liveModeView",games:"gamesView",rhythm:"rhythmView"};
 const child={exerciseView:"reading",songView:"reading",noteFlowView:"reading",readingImportedView:"reading",rhythmReadView:"rhythm",rhythmSongView:"rhythm",pulseView:"rhythm",attackView:"rhythm",durationView:"rhythm",gameView:"games"};
-const storage="luwipi:workspace:route:v2",scrollKey="luwipi:workspace:scroll:v1",active=()=>viewport.querySelector(".view.active");
+const storage="luwipi:workspace:route:v3",previousStorage="luwipi:workspace:route:v2",scrollKey="luwipi:workspace:scroll:v1",active=()=>viewport.querySelector(".view.active");
 const scrollSelectors=[".page",".reading-library",".karaoke-rail","#karaokeStaff",".live-sidebar",".score-wrap",".live-svg-wrap",".rhythm-menu"];
 const scrollName=s=>[s.section||"reading",s.activity||"",s.library?"library":"normal"].join("|");
 function scrollNodes(){const view=active();return view?[view,...scrollSelectors.map(sel=>view.querySelector(sel)).filter(Boolean)]:[]}
@@ -33,13 +33,14 @@ viewport.addEventListener("scroll",()=>{if(!booted||restoring)return;clearTimeou
 window.addEventListener("pagehide",remember);
 let state={section:"reading"},restoring=true,booted=false,last="",intent="",queued=false;
 function section(id){if(id==="homeView")return null;return Object.keys(roots).find(k=>roots[k]===id)||child[id]||null}
-function readStored(){try{const s=JSON.parse(sessionStorage.getItem(storage)||"null");return roots[s?.section]?s:null}catch{return null}}
+function readStored(){try{const s=JSON.parse(sessionStorage.getItem(storage)||sessionStorage.getItem(previousStorage)||"null");return roots[s?.section]?canonical(s):null}catch{return null}}
+function canonical(input){const s={...input};if(s.section==="reading"&&!s.activity)s.library=true;return s}
 function parse(fallback){
  const q=new URLSearchParams(location.search),section=roots[q.get("section")]?q.get("section"):q.get("open")==="games"?"games":fallback?.section||"reading";
  const s={section};for(const k of ["activity","song","version","ex","hand","level","game","rhythmSong","readingId","midi"]){const v=q.get(k)||(q.has("section")?null:fallback?.[k]);if(v&&v.length<80)s[k]=v}
  if(q.get("library")==="1"||(!q.has("section")&&fallback?.library))s.library=true;
  if(s.activity&&child[s.activity]!==section)delete s.activity;
- return s;
+ return canonical(s);
 }
 function path(s){
  const u=new URL(location.href);for(const k of ["open","section","activity","song","version","ex","hand","level","game","rhythmSong","readingId","midi","library"])u.searchParams.delete(k);
@@ -57,6 +58,8 @@ function activate(id){const wanted=document.getElementById(id);if(!wanted)return
 function clearLibrary(){canvas.dataset.library="";document.getElementById("readingView")?.classList.remove("workspace-library-open")}
 function navigate(sectionName,push=true,library=false){
  if(!roots[sectionName])return;
+ // Every link to music and activities has ONE destination: the canonical library.
+ library=sectionName==="reading"?true:false;
  remember();restoring=true;clearLibrary();activate(roots[sectionName]);
  if(library&&sectionName==="reading"){canvas.dataset.library="reading";document.getElementById("readingView")?.classList.add("workspace-library-open")}
  const s={section:sectionName,...(library?{library:true}:{})};persist(s,push?"push":"replace");last=roots[sectionName];restoring=false;
@@ -93,6 +96,7 @@ function replay(s){
 }
 function restore(s,normalize=true){
  if(!roots[s.section])s={section:"reading"};
+ s=canonical(s);
  restoring=true;clearLibrary();activate(roots[s.section]);
  if(s.section==="reading"&&s.library){canvas.dataset.library="reading";document.getElementById("readingView")?.classList.add("workspace-library-open")}
  else if(s.activity)replay(s);
@@ -114,6 +118,7 @@ function sync(){
   if(state.activity===v.id||intent==="detail")for(const k of ["song","version","ex","hand","level","game","rhythmSong","readingId"])if(state[k])next[k]=state[k];
  }
  if(mode==="midi"&&state.midi)next.midi=state.midi;
+ if(mode==="reading"&&!next.activity)next.library=true;
  persist(next,["push","detail"].includes(intent)?"push":"replace");last=v.id;intent="";window.dispatchEvent(new CustomEvent("luwipi:workspace-route",{detail:{...state}}));
 }
 function schedule(){if(!queued){queued=true;requestAnimationFrame(sync)}}
@@ -124,7 +129,7 @@ const navAliases={home:"reading",live:"practice",karaoke:"midi",reading:"reading
 function previous(){
  if(active()?.id==="diagnosticView"){navigate("reading",true,true);return}
  if(state.activity){navigate(state.section,true,state.section==="reading");return}
- if(state.library){navigate("reading");return}
+ if(state.library){navigate("reading",true,true);return}
  navigate("reading");
 }
 document.addEventListener("click",event=>{
@@ -156,7 +161,7 @@ document.addEventListener("click",event=>{
  }
  if(button.closest('[data-library-toggle]')){
   event.preventDefault();event.stopImmediatePropagation();
-  navigate("reading",true,canvas.dataset.library!=="reading");
+  navigate("reading",true,true);
   return;
  }
  if(button.closest('[data-workspace-action="library"]')){
@@ -180,7 +185,7 @@ document.addEventListener("click",event=>{
 },true);
 window.addEventListener("popstate",()=>restore(parse(null),false));
 window.LuwipiWorkspaceRouter=Object.freeze({go:navigate,back:previous,current:()=>({...state}),setMidi(id){if(id&&typeof id==="string"){state.midi=id;if(section(active()?.id)==="midi")persist(state)}},clearMidi(){delete state.midi;if(section(active()?.id)==="midi")persist(state)}});
-function start(){if(booted)return;booted=true;restore(query.has("section")||query.has("open")?parse(null):readStored()||{section:"reading"});schedule()}
+function start(){if(booted)return;booted=true;restore(query.has("section")||query.has("open")?parse(null):readStored()||{section:"reading",library:true});schedule()}
 if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",start,{once:true});else start();
 window.addEventListener("luwipi:core-ready",()=>{
  if(!booted)return;

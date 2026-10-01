@@ -50,15 +50,16 @@ function audit(seed,{strict=false}={}){
    byVoice.get(voice).set(event.startBeat+"|"+event.durationBeat,event);
   }
   assert.deepEqual([...byVoice.keys()].sort(),expected.sort(),seed.id+" independent voices");
+  const timeline=E.measureTimeline(sc.meter,sc.meterMap,sc.durationBeats);
   for(const voice of expected){
    const sums=Array(bars).fill(0);
    for(const e of byVoice.get(voice).values()){
-    const bar=Math.floor((e.startBeat+.00001)/sc.beatsPerMeasure);
+    const bar=timeline.findIndex(m=>e.startBeat>=m.startBeat-.00001&&e.startBeat<m.startBeat+m.durationBeat-.00001);
     assert.ok(bar>=0&&bar<bars,seed.id+" voice beyond score");
-    assert.ok(e.startBeat+e.durationBeat<=(bar+1)*sc.beatsPerMeasure+.002,seed.id+" crosses a barline");
+    assert.ok(e.startBeat+e.durationBeat<=timeline[bar].startBeat+timeline[bar].durationBeat+.002,seed.id+" crosses a barline");
     sums[bar]+=e.durationBeat;
    }
-   sums.forEach((sum,i)=>assert.ok(Math.abs(sum-sc.beatsPerMeasure)<.004,seed.id+" "+voice+" bar "+(i+1)+" = "+sum));
+   sums.forEach((sum,i)=>assert.ok(Math.abs(sum-timeline[i].durationBeat)<.004,seed.id+" "+voice+" bar "+(i+1)+" = "+sum));
    lanes++;
   }
   // Reject silent typos which a tolerant ABC tokenizer would otherwise skip.
@@ -127,6 +128,12 @@ for(const track of tracks){
    }
    if(track==="G"&&level===6)assert.ok(sc.events.filter(e=>e.pedalAction==="change").length>=6,"Syncopated pedal cues missing");
    if(track==="G"&&level===7)assert.ok(sc.events.some(e=>e.dynamic==="ff")&&sc.events.some(e=>e.dynamic==="p"),"Contemporary dynamics missing");
+   if(track==="A"&&(level===5||level===7))assert.ok(sc.octaveMarks.length>=1,study.id+" must display actual octave notation");
+   if(track==="A"&&level===6)assert.ok(sc.clefMap.length>=2&&sc.staffLayout.length===3,study.id+" needs dynamic C clefs");
+   if(track==="C"&&level===7)assert.ok(sc.staffLayout[0].fifths===-5&&sc.staffLayout[1].fifths===4,study.id+" must use two concurrent key signatures");
+   if(track==="F"&&level===7&&i===2)assert.deepEqual(sc.meterMap.map(m=>m.meter[0]),[5,7,5,7,5,7,5,7],"N7 mixed meter must alternate visibly");
+   if(track==="G"&&level===6)assert.equal(sc.tempoMap.length,8,"N6 written rubato needs tempo changes");
+   if(track==="J"&&level===6)assert.ok(study.transposeByVoice?.RH===5&&study.transposeByVoice?.RH2===2,"N6 orchestral transposition must differ per staff");
    if(track==="I"&&level===7)assert.equal(sc.measures,16,"Professional long reading needs 16 bars");
    if(track==="J"&&level===7)assert.equal(sc.measures,16,"Stage rehearsal needs 16 bars");
    if(track==="C"&&level===6)assert.ok(sc.events.some(e=>sc.events.some(f=>e!==f&&e.midi===f.midi&&e.note[0]!==f.note[0])),"Written enharmonics lost");
@@ -136,8 +143,8 @@ for(const track of tracks){
   assert.ok(!fallback||!seen.includes(fallback.id),"Recycled authored first-sight exercise");
  }
 }
-assert.deepEqual([generated,older,advanced,questions],[1344,55,61,60]);
-assert.equal(fingerprints.size,61);
+assert.deepEqual([generated,older,advanced,questions],[1344,57,62,60]);
+assert.equal(fingerprints.size,62);
 assert.ok(partials>0,"Advanced limits must be disclosed");
 function textTree(node){return [node.name==="text"?node.textContent:"",...node.children.flatMap(textTree)].filter(Boolean)}
 const svg=new SvgStub("svg");
@@ -153,6 +160,7 @@ for(const path of ["specialized-advanced-core.js","specialized-n5.js","specializ
 assert.ok(app.indexOf("specialized-advanced-core.js")<app.indexOf("specialized-n5.js"));
 assert.ok(app.indexOf("advanced-questions.js")<app.indexOf("sightreading-workspace.js"));
 assert.ok(app.includes("Jingle Bells")&&app.includes("Mary Had a Little Lamb"),"Original songs missing");
+assert.ok(app.includes("score-equivalence.js")&&app.indexOf("score-equivalence.js")<app.indexOf("sightreading-workspace.js"),"First-sight equivalent-score exclusion is not mounted");
 assert.ok(ui.includes("canExploreN5")&&ui.includes("canExploreN6")&&ui.includes("canExploreN7")&&ui.includes("workspace-path-level-select"));
 assert.ok(css.includes("workspace-path-level-select")&&build.includes("final-curriculum-check.mjs"));
 const originalAccidental=E.parseABC("X:1\nM:4/4\nL:1/4\nK:G\n=F F ^F F | F |").events;

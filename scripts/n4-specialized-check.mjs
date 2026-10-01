@@ -32,17 +32,19 @@ for(const track of P.trackIds){
    if(!laneGroups.has(lane))laneGroups.set(lane,new Map());
    laneGroups.get(lane).set(event.startBeat+"|"+event.durationBeat,event);
   }
-  const expected=track==="H"?["RH","RH2","LH","LH2"]:["RH","LH"];
+  const expected=track==="H"?["RH","RH2","LH","LH2"]:track==="J"?["RH","RH2","LH"]:["RH","LH"];
   assert.deepEqual([...laneGroups.keys()].sort(),expected.slice().sort(),"Independent voices lost "+scoreDef.id);
   for(const lane of expected){
    const bars=Array(8).fill(0);
    for(const event of laneGroups.get(lane).values()){
-    const bar=Math.floor((event.startBeat+.000001)/4);
+    const timeline=E.measureTimeline(score.meter,score.meterMap,score.durationBeats);
+    const bar=timeline.findIndex(m=>event.startBeat>=m.startBeat-.000001&&event.startBeat<m.startBeat+m.durationBeat-.000001);
     assert.ok(bar>=0&&bar<8,scoreDef.id+" "+lane+" exceeds 8 bars");
-    assert.ok(event.startBeat+event.durationBeat<=(bar+1)*4+.001,scoreDef.id+" "+lane+" crosses bar "+(bar+1));
+    assert.ok(event.startBeat+event.durationBeat<=timeline[bar].startBeat+timeline[bar].durationBeat+.001,scoreDef.id+" "+lane+" crosses bar "+(bar+1));
     bars[bar]+=event.durationBeat;
    }
-   bars.forEach((total,i)=>assert.ok(Math.abs(total-4)<.002,scoreDef.id+" "+lane+" bar "+(i+1)+" is "+total));
+   const timeline=E.measureTimeline(score.meter,score.meterMap,score.durationBeats);
+   bars.forEach((total,i)=>assert.ok(Math.abs(total-timeline[i].durationBeat)<.002,scoreDef.id+" "+lane+" bar "+(i+1)+" is "+total));
    lanesTotal++;
   }
   if(track==="A")assert.ok(score.events.some(e=>e.clef==="treble"&&e.midi>=94),"Upper extreme register absent");
@@ -54,24 +56,26 @@ for(const track of P.trackIds){
   if(track==="D")assert.ok(score.events.filter(e=>e.id.startsWith("RH-")&&e.startBeat===0).length===5,"Ninth chord omitted");
   if(track==="E"&&index===0)assert.ok(score.events.filter(e=>e.id.startsWith("LH-")&&e.startBeat<4).length===4,"Broken bass octave must have four attacks");
   if(track==="E"&&index===1)assert.ok(score.rests.filter(e=>e.clef==="bass").length>=12,"Syncopated accompaniment needs real rests");
-  if(track==="F")assert.ok(score.events.filter(e=>Math.abs(e.durationBeat-1/3)<.001).length>=18,"Triplet rhythm must be real, not three straight eighths");
-  if(track==="G")assert.ok(score.events.some(e=>e.id.startsWith("RH-")&&e.durationBeat===.25),"Written-out mordent needs fast neighbor notes");
+  if(track==="F"&&index===0)assert.ok(score.events.filter(e=>Math.abs(e.durationBeat-1/3)<.001).length>=18,"Triplet rhythm must be real, not three straight eighths");
+  if(track==="F"&&index===1)assert.equal(score.meterMap.length,8,"N4 mixed meter must really alternate");
+  if(track==="G"&&index===0)assert.ok(score.events.some(e=>e.id.startsWith("RH-")&&e.durationBeat===.25),"Written-out mordent needs fast neighbor notes");
+  if(track==="G"&&index===1){assert.equal(score.events.filter(e=>e.ornament).length,3,"Missing ornament signs");assert.ok(score.performanceEvents.length>score.events.length,"Ornament audio must expand")};
   if(track==="H"){
    assert.ok(score.events.some(e=>e.id.startsWith("RH2-")&&e.voiceDirection==="down"),"Alto independent stems missing");
    assert.ok(score.events.some(e=>e.id.startsWith("LH2-")&&e.voiceDirection==="down"),"Bass independent stems missing");
   }
   if(track==="I")assert.ok(score.events.some(e=>e.clef==="treble"&&e.durationBeat===.5),"Scanning-ahead subdivisions missing");
-  if(track==="J")assert.ok(scoreDef.partialCoverage&&scoreDef.limitations.includes("claves de Dó"),"Never represent absent C clefs as a complete N4 course");
+  if(track==="J")assert.ok(score.staffLayout.some(x=>x.clef==="alto"),"N4 should draw a C clef");
   studies++;
  }
  const fallback=choose(track,4,3,used);
  assert.ok(fallback&&!used.includes(fallback.id),"Once authored pieces are seen, choose an unseen generated score or stop");
 }
-assert.equal(studies,11);
-assert.equal(partials,5,"Incomplete advanced competencies must be visibly acknowledged");
+assert.equal(studies,13);
+assert.equal(partials,0,"N4 music notation must be implemented");
 const html=await read("app.html");
 assert.ok(html.includes('specialized-n4.js')&&html.indexOf('specialized-n4.js')<html.indexOf('sightreading-workspace.js'),"N4 must load before the existing activity workspace");
 assert.ok(ui.includes("canExploreN4")&&ui.includes("S4?.get(track,explorationLevel)"),"N4 exploratory session is inaccessible");
 console.log("N4: "+studies+" authored two-hand studies, "+lanesTotal+" complete independent rhythmic voices, 8 bars each.");
 console.log("Covered octave/ninth leaps, applied dominant, 9th chords, broken octave, syncopated bossa, authentic triplets, written ornament, SATB and timed pre-reading.");
-console.log("Five partial modules visibly disclosed; no automatic certification or new dashboard.");
+console.log("N4 musical notation support verified; certification still needs independently verified performance.");
