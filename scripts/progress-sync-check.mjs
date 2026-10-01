@@ -54,7 +54,7 @@ try{
  assert.equal(res.status,200);assert.equal((await res.json()).draft.mistakes[0].pattern,"2.ª descendente");
  res=await api.PUT(new Request(url,{method:"PUT",headers:auth,body:JSON.stringify({draft,updatedAt:null})}));
  assert.equal(res.status,409);assert.equal(writes,1);
- const value=(await api.GET(new Request(url,{headers:auth})).json());
+ const value=await (await api.GET(new Request(url,{headers:auth}))).json();
  res=await api.PUT(new Request(url,{method:"PUT",headers:auth,body:JSON.stringify({draft,updatedAt:value.updatedAt})}));
  assert.equal(res.status,200);assert.equal(writes,2);
  console.log("Progress sync: unauthorized and foreign origins blocked; server sanitizes client claims; stale revisions rejected; authorized draft read/write passed.");
