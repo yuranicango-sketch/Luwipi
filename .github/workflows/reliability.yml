@@ -19,5 +19,5 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "22"
-      - name: Reliability gate
-        run: node scripts/reliability-check.mjs
+      - name: Full quality gate (reading, pedagogy and static assets)
+        run: sh scripts/build-static.sh
