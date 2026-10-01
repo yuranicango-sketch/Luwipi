@@ -35,6 +35,8 @@ assert.doesNotThrow(()=>new Function(sync));
 const html=await read("app.html"),live=await read("assets/live/live-mode.js");
 for(const file of ["specialized-n0-n1.js","progress-sync.js","sightreading-workspace.js"])assert.ok(html.includes(file));
 assert.ok(live.includes("pedagogyNovel=Boolean(options.firstSight)")&&live.includes("playButton.disabled=true;hearButton.disabled=true"));
-assert.ok(ui.includes("profile.seen.push(seed.id)")&&ui.includes("const special=S?.get(track,level)")&&ui.includes("chooseSeed(track,level,which,profile.seen)"));
+assert.ok(ui.includes("profile.seen.push(seed.id)")&&ui.includes("const special=S?.get(track,level)")&&
+ (ui.includes("chooseSeed(track,level,which,profile.seen)")||ui.includes("chooseSeed(track,level,assigned?3:which,profile.seen)")),
+ "Practice must preserve seen-piece bookkeeping and choose a focused unexposed seed for scheduled reviews");
 console.log(total+" original, goal-targeted eight-bar studies parsed on both staves, including G expression and J chord cues.");
 console.log("No-preview first-sight gate and authenticated draft integration: static and syntax checks passed.");
