@@ -18,6 +18,7 @@ for(const track of S.trackIds){
   assert.ok(score.events.some(e=>e.clef==="bass")&&score.events.some(e=>e.clef==="treble"),item.id+" must include both hands");
   const end=Math.max(...score.events.map(e=>e.startBeat+e.durationBeat));
   assert.equal(end,track==="F"&&level===1?24:32,item.id+" must have eight measured bars");
+  if(track==="F"&&level===0)assert.ok(score.rests.some(r=>r.clef==="bass")&&score.rests.some(r=>r.clef==="treble"),"Two-hand rhythm lost a rest");
   if(track==="G"){
    assert.ok(score.events.some(e=>e.articulations.includes(level?"accent":"staccato")),item.id+" lost articulation");
    if(level===0)assert.ok(score.events.some(e=>e.articulations.includes("tenuto")),"Articulation must contrast tenuto with staccato");
