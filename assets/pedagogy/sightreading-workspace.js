@@ -105,7 +105,7 @@ function splitABC(seed){
  const base=E.parseABC(headers.join('\n')+'\nC2 C2 C2 C2 | C2 C2 C2 C2 |');
  const events=rh.events.concat(lh.events);
  if(!events.length)throw Error('Exercício vazio');
- return E.normalizeScore({title:seed.title,source:'pedagogy',tempoBpm:base.tempoBpm,meter:base.meter,keyFifths:base.keyFifths,
+ return E.normalizeScore({title:seed.title,source:'pedagogy',tempoBpm:seed.meter==="6/8"?base.tempoBpm*1.5:base.tempoBpm,meter:base.meter,keyFifths:base.keyFifths,
  events,rests:rh.rests, keyMinor:base.keyMinor});
 }
 function launch(which){
