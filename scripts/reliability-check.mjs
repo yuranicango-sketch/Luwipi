@@ -757,7 +757,7 @@ await test('Rotas canónicas e diagnóstico de utilizadores',async()=>{
  assert(shell.includes("window.LuwipiWorkspaceRouter.go")&&!shell.includes("setTimeout(boot,80)"),'sidebar continua com boot paralelo');
  assert(shell.includes("libraryOpen=canvas.dataset.library==='reading'"),'sidebar perde estado da biblioteca ao recarregar');
  assert(shell.includes("window.addEventListener('luwipi:workspace-route',sync)"),'sidebar não reage ao histórico/restauro das rotas');
- assert(router.includes('navigate("reading",true,canvas.dataset.library!=="reading")'),'toggle antigo abre biblioteca fora do router canónico');
+ assert(router.includes('library=sectionName==="reading"?true:false;')&&router.includes('navigate("reading",true,true)'),'o menu Músicas e atividades deve abrir sempre a biblioteca, nunca a introdução antiga');
  assert(!shell.includes("roots=new Set(['readingView','diagnosticView'"),'diagnóstico não oferece caminho de retorno');
  assert(router.includes('practice:"liveModeView"')&&router.includes('diagnostic:"diagnosticView"'),'Prática ou diagnóstico não estão mapeados');
  assert(!app.includes('id="experienceCatalog"')&&app.includes('data-menu-catalog="reading"'),'menu mobile conserva o painel antigo ou perdeu as opções');
