@@ -81,6 +81,25 @@ await test("Score engine: MIDI corrompido é recusado",async()=>{
   assert(failed,"malformed MIDI was accepted");
 });
 
+await test("Golden fixture: Jingle Bells mantém partitura limpa e pistas separadas",async()=>{
+  const E=await engine();
+  const midi=await fs.readFile(path.join(ROOT,"assets/fixtures/jingle-bells-luwipi-golden.mid"));
+  const buffer=midi.buffer.slice(midi.byteOffset,midi.byteOffset+midi.byteLength);
+  const score=E.parseMIDI(buffer),audit=E.auditScore(score);
+  assert(score.tempoBpm===120&&score.meter[0]===4&&score.meter[1]===4&&score.keyFifths===0,"golden MIDI metadata drifted");
+  assert(score.ppq===480&&score.durationBeats===64,"golden MIDI timing drifted");
+  const names=score.transcription.trackNames.map(x=>x.title);
+  for(const name of ["Melody","Piano","Bass","Drums"])assert(names.includes(name),"golden MIDI track missing: "+name);
+  const melody=score.performanceEvents.filter(e=>e.track===0);
+  assert(melody.length===51&&melody.every(e=>e.durationBeat>=.5),"golden melody lost notes or introduced tiny gates");
+  assert(score.transcription.gridBeat===.5&&score.transcription.confidence===1,"golden MIDI no longer quantizes exactly to eighth notes");
+  assert(!melody.some(e=>E.durationKind(e.durationBeat).name==="sixteenth"),"golden melody generated false sixteenth notes");
+  assert(!audit.blocked&&audit.notePreservation===1,"golden MIDI fails fidelity audit");
+  const xml=await read("assets/fixtures/jingle-bells-luwipi-golden.musicxml");
+  assert((xml.match(/<measure number=/g)||[]).length===16&&(xml.match(/<note>/g)||[]).length===51,"golden MusicXML structure drifted");
+  assert(xml.includes("<divisions>2</divisions>")&&xml.includes("<per-minute>120</per-minute>")&&xml.includes("<type>eighth</type>")&&!xml.includes("<type>sixteenth</type>"),"golden MusicXML rhythm is no longer clean");
+});
+
 await test("Score engine: figuras musicais usam desenho estável",async()=>{
   const E=await engine();
   assert(E.restSymbol("whole")==="whole","whole rest classification failed");
