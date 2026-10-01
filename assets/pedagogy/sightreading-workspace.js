@@ -1,6 +1,6 @@
 (()=>{
 'use strict';
-const P=window.LuwipiPedagogyV1,E=window.LuwipiScoreEngine,S=window.LuwipiSpecializedStudies,S2=window.LuwipiSpecializedN2,host=document.getElementById('workspaceCanvas');
+const P=window.LuwipiPedagogyV1,E=window.LuwipiScoreEngine,S=window.LuwipiSpecializedStudies,S2=window.LuwipiSpecializedN2,S3=window.LuwipiSpecializedN3,host=document.getElementById('workspaceCanvas');
 if(!P||!E||!host)return;
 const KEY='luwipi:pedagogy:device-draft:v1',STEPS=[
  ['Aquecimento rítmico','2 min · Conta, bate e toca um padrão com metrónomo.'],
@@ -55,7 +55,7 @@ let syncRevision=0,signedIn=false,localEdits=0,explorationLevel=null;
 function currentStudyLevel(track){
  const formal=profile.levels?.[track]?.level||0;
  if(track!==selected||explorationLevel===null||explorationLevel<=formal)return formal;
- const study=S?.get(track,explorationLevel)||S2?.get(track,explorationLevel);
+ const study=S?.get(track,explorationLevel)||S2?.get(track,explorationLevel)||S3?.get(track,explorationLevel);
  return study?explorationLevel:formal;
 }
 const trackName=t=>P.tracks[t].name;
@@ -127,7 +127,7 @@ function render(){
   card.append(head,el('p','',mod.objective));
   const candidate=profile.placement?.[t]?.status;
   if(candidate&&candidate!=='não avaliado')card.append(el('small','', 'Diagnóstico: '+candidate));
-  if(S?.get(t,l.level||0)||S2?.get(t,l.level||0))card.append(el('small','', 'Estudo musical específico disponível'));
+  if(S?.get(t,l.level||0)||S2?.get(t,l.level||0)||S3?.get(t,l.level||0))card.append(el('small','', 'Estudo musical específico disponível'));
   const launch=el('button','',selected===t?'Selecionado · organizar sessão':'Preparar sessão');
   launch.type='button';launch.onclick=()=>{selected=t;stage=3;exercise=null;explorationLevel=null;render()};
   card.append(launch);map.append(card);
@@ -145,8 +145,10 @@ function render(){
  const canExploreN1=formalLevel===0&&Boolean(S?.get(selected,1));
  const canExploreN2=formalLevel<2&&Boolean(S2?.get(selected,2))&&
   (formalLevel>=1||profile.seen.includes(S?.get(selected,1)?.id||'unavailable'));
- for(const target of [1,2]){
-  if(target===1&&!canExploreN1||target===2&&!canExploreN2)continue;
+ const canExploreN3=formalLevel<3&&Boolean(S3?.get(selected,3))&&
+  (formalLevel>=2||profile.seen.includes(S2?.get(selected,2)?.id||'unavailable'));
+ for(const target of [1,2,3]){
+  if(target===1&&!canExploreN1||target===2&&!canExploreN2||target===3&&!canExploreN3)continue;
   const active=explorationLevel===target;
   const button=el('button','',active?'Regressar ao N'+formalLevel:'Explorar estudo N'+target+' (sem avançar)');
   button.type='button';button.className='workspace-path-explore';
@@ -188,6 +190,15 @@ function splitABC(seed){
  }
  const rh=read('RH','treble'),lh=read('LH','bass');
  const rh2=seed.secondTrebleVoice?read('RH2','treble'):{events:[],rests:[]};
+ if(seed.pedalEveryBar){
+  const meterBeats=seed.meter==='3/4'?3:seed.meter==='6/8'?3:4;
+  const marked=new Set();
+  lh.events.forEach(e=>{
+   const measure=Math.floor(e.startBeat/meterBeats);
+   if(marked.has(measure))return;
+   marked.add(measure);e.pedal=true;
+  });
+ }
  if(seed.secondTrebleVoice){
   rh.events.forEach(e=>e.voiceDirection='up');
   rh2.events.forEach(e=>e.voiceDirection='down');
@@ -217,9 +228,14 @@ function splitABC(seed){
 }
 // A pure selection rule shared by training and first-sight attempts.
 function chooseSeed(track,level,which,seen){
- const special=S?.get(track,level)||S2?.get(track,level)||null,variants=P.availableVariants(track,level);
+ const secondary=level===3&&S3?Array.from({length:S3.count(track)},(_,index)=>S3.get(track,level,index)).filter(Boolean):[];
+ const special=S?.get(track,level)||S2?.get(track,level)||secondary[0]||null,
+  variants=P.availableVariants(track,level);
  if(which!==3&&special)return special;
- if(which===3&&special&&!seen.includes(special.id))return special;
+ if(which===3){
+  const fresh=secondary.length?secondary.find(seed=>!seen.includes(seed.id)):(special&&!seen.includes(special.id)?special:null);
+  if(fresh)return fresh;
+ }
  const variant=which===3
   ?Array.from({length:variants},(_,i)=>i).find(i=>!seen.includes(track+'N'+level+'-s'+i))
   :(seen.length+which)%variants;
@@ -240,7 +256,12 @@ function launch(which){
  }
  exercise={...seed,id:seed.id,track,level,exploratory:track===selected&&level!==currentLevel,
   kind:which===3?'first_sight':'practice',stage:which,sessionId:String(Date.now())+'-'+seed.id};
- const opened=window.LuwipiLiveLoadPedagogy(score,score.title,{firstSight:which===3,exerciseId:seed.id,transposeSemitones:seed.transposeSemitones||0});
+ const opened=window.LuwipiLiveLoadPedagogy(score,score.title,{
+  firstSight:which===3,exerciseId:seed.id,transposeSemitones:seed.transposeSemitones||0,
+  instruction:seed.pedalEveryBar?'Troca o pedal nos símbolos Ped., a cada mudança de harmonia. A qualidade da pedalação exige observação.':
+   seed.crossingMeasures?'Cruza a esquerda por cima da direita nos compassos '+seed.crossingMeasures.map(n=>n+1).join(' e ')+'.':
+   seed.intent
+ });
  if(opened){
   // A warm-up or short pattern exposes musical content too: never re-label it
   // as an unseen first-sight exercise, even when only two bars were previewed.
