@@ -68,7 +68,7 @@ function loadProfile(){
  loadProfile.key=key;
  try{
   const diag=JSON.parse(localStorage.getItem('luwipi:sightreading:diagnostic:v1')||'null');
-  if(diag&&!profile.placement){profile.placement=P.placementFromDiagnostic({tests:[0,1,2,3,4].map(i=>diag.tests?.[i])})}
+  if(diag&&!profile.placement){profile.placement=P.placementFromDiagnostic({tests:[0,1,2,3,4].map(i=>diag.tests?.[i]),extra:Object.fromEntries(['C','G','H','I','J'].map(t=>[t,diag.tests?.[t]]))})}
  }catch{}
  render();
  if(signedIn&&window.LuwipiProgressSync){
