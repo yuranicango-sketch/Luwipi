@@ -6,7 +6,31 @@ const query=new URLSearchParams(location.search);
 if(query.get("parent")==="1"||["karaoke","exercise","song"].includes(query.get("type")))return;
 const roots={reading:"readingView",diagnostic:"diagnosticView",midi:"karaokeView",practice:"liveModeView",games:"gamesView",rhythm:"rhythmView"};
 const child={exerciseView:"reading",songView:"reading",noteFlowView:"reading",readingImportedView:"reading",rhythmReadView:"rhythm",rhythmSongView:"rhythm",pulseView:"rhythm",attackView:"rhythm",durationView:"rhythm",gameView:"games"};
-const storage="luwipi:workspace:route:v2",active=()=>viewport.querySelector(".view.active");
+const storage="luwipi:workspace:route:v2",scrollKey="luwipi:workspace:scroll:v1",active=()=>viewport.querySelector(".view.active");
+const scrollSelectors=[".page",".reading-library",".karaoke-rail","#karaokeStaff",".live-sidebar",".score-wrap",".live-svg-wrap",".rhythm-menu"];
+const scrollName=s=>[s.section||"reading",s.activity||"",s.library?"library":"normal"].join("|");
+function scrollNodes(){const view=active();return view?[view,...scrollSelectors.map(sel=>view.querySelector(sel)).filter(Boolean)]:[]}
+function remember(){
+ if(!booted||restoring)return;
+ try{
+  const saved=JSON.parse(sessionStorage.getItem(scrollKey)||"{}");
+  saved[scrollName(state)]={positions:scrollNodes().map((el,index)=>({index,top:el.scrollTop,left:el.scrollLeft})).filter(p=>p.top>0||p.left>0),at:Date.now()};
+  sessionStorage.setItem(scrollKey,JSON.stringify(Object.fromEntries(Object.entries(saved).sort((a,b)=>b[1].at-a[1].at).slice(0,20))));
+ }catch{}
+}
+function recall(s){
+ const key=scrollName(s);
+ const apply=()=>{
+  if(scrollName(state)!==key)return;
+  let saved;try{saved=JSON.parse(sessionStorage.getItem(scrollKey)||"{}")[key]}catch{}
+  if(!saved)return;
+  const nodes=scrollNodes();saved.positions.forEach(p=>{const el=nodes[p.index];if(el){el.scrollTop=p.top;el.scrollLeft=p.left}});
+ };
+ requestAnimationFrame(()=>requestAnimationFrame(apply));setTimeout(apply,280);
+}
+let scrollTimer=0;
+viewport.addEventListener("scroll",()=>{if(!booted||restoring)return;clearTimeout(scrollTimer);scrollTimer=setTimeout(remember,120)},{capture:true,passive:true});
+window.addEventListener("pagehide",remember);
 let state={section:"reading"},restoring=true,booted=false,last="",intent="",queued=false;
 function section(id){if(id==="homeView")return null;return Object.keys(roots).find(k=>roots[k]===id)||child[id]||null}
 function readStored(){try{const s=JSON.parse(sessionStorage.getItem(storage)||"null");return roots[s?.section]?s:null}catch{return null}}
@@ -33,7 +57,7 @@ function activate(id){const wanted=document.getElementById(id);if(!wanted)return
 function clearLibrary(){canvas.dataset.library="";document.getElementById("readingView")?.classList.remove("workspace-library-open")}
 function navigate(sectionName,push=true,library=false){
  if(!roots[sectionName])return;
- restoring=true;clearLibrary();activate(roots[sectionName]);
+ remember();restoring=true;clearLibrary();activate(roots[sectionName]);
  if(library&&sectionName==="reading"){canvas.dataset.library="reading";document.getElementById("readingView")?.classList.add("workspace-library-open")}
  const s={section:sectionName,...(library?{library:true}:{})};persist(s,push?"push":"replace");last=roots[sectionName];restoring=false;
  document.querySelector("#experienceMenu:not(.hidden) [data-experience-close]")?.click();window.dispatchEvent(new CustomEvent("luwipi:workspace-route",{detail:{...state}}));window.scrollTo(0,0);
@@ -62,12 +86,13 @@ function restore(s,normalize=true){
  if(s.section==="reading"&&s.library){canvas.dataset.library="reading";document.getElementById("readingView")?.classList.add("workspace-library-open")}
  else if(s.activity)replay(s);
  last=active()?.id||roots[s.section];state={...s};restoring=false;
+ recall(s);
  if(normalize)persist(s);
  if(s.section==="midi"&&s.midi)window.dispatchEvent(new CustomEvent("luwipi:restore-midi",{detail:{id:s.midi}}));window.dispatchEvent(new CustomEvent("luwipi:workspace-route",{detail:{...state}}));
 }
 function sync(){
  queued=false;if(!booted||restoring)return;
- const v=active();if(!v||v.id==="homeView"){navigate(state.section,false);return}
+ const v=active();if(!v||v.id==="homeView"){restore({...state});return}
  const mode=section(v.id);if(!mode)return;
  const library=mode==="reading"&&canvas.dataset.library==="reading";
  if(v.id===last&&Boolean(state.library)===library&&!intent)return;
@@ -135,5 +160,10 @@ window.addEventListener("popstate",()=>restore(parse(null),false));
 window.LuwipiWorkspaceRouter=Object.freeze({go:navigate,back:previous,current:()=>({...state}),setMidi(id){if(id&&typeof id==="string"){state.midi=id;if(section(active()?.id)==="midi")persist(state)}},clearMidi(){delete state.midi;if(section(active()?.id)==="midi")persist(state)}});
 function start(){if(booted)return;booted=true;restore(query.has("section")||query.has("open")?parse(null):readStored()||{section:"reading"});schedule()}
 if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",start,{once:true});else start();
+window.addEventListener("luwipi:core-ready",()=>{
+ if(!booted)return;
+ if(active()?.id==="homeView"){restore({...state});return}
+ if(state.activity&&active()?.id===roots[state.section]){restoring=true;replay(state);restoring=false;last=active()?.id||roots[state.section];recall(state)}
+},{once:true});
 window.addEventListener("pageshow",event=>{if(!booted)start();else if(event.persisted)schedule()});
 })();

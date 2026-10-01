@@ -747,6 +747,9 @@ await test('Rotas canónicas e diagnóstico de utilizadores',async()=>{
  assert(!shell.includes("roots=new Set(['readingView','diagnosticView'"),'diagnóstico não oferece caminho de retorno');
  assert(router.includes('practice:"liveModeView"')&&router.includes('diagnostic:"diagnosticView"'),'Prática ou diagnóstico não estão mapeados');
  assert(router.includes('popstate')&&router.includes('sessionStorage.setItem')&&router.includes('sessionStorage.getItem'),'atualizar ou voltar descarta a secção');
+ assert(router.includes('scrollKey="luwipi:workspace:scroll:v1"')&&router.includes('remember()')&&router.includes('recall(s)'),'a atualização perde a posição de leitura');
+ assert(router.includes('luwipi:core-ready')&&app.includes('window.LuwipiCoreLoaded=true'),'o router tenta restaurar antes do motor de música estar pronto');
+ assert(app.includes('journey-diagnostic-link')&&css.includes('.journey-diagnostic-link'),'o diagnóstico deve estar disponível dentro da Leitura');
  assert(router.includes('stopImmediatePropagation()')&&router.includes('data-experience-nav')&&router.includes('data-home-path'),'handlers antigos ainda podem reabrir home');
  assert(router.includes('CSS.escape(s.song)')&&router.includes('luwipi:restore-midi'),'restauro de exercícios e MIDI não é reproduzido');
  assert(diagnostic.includes('const survey=[')&&diagnostic.includes('const tests=[')&&diagnostic.includes("diagnostic-choice")&&diagnostic.includes('aria-pressed'),'diagnóstico não usa escolhas visuais');

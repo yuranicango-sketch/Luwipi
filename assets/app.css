@@ -3047,3 +3047,8 @@ body.luwipi-dark .diagnostic-score{background:#fff}
  #diagnosticView .diagnostic-metric .diagnostic-choices{grid-template-columns:repeat(2,minmax(0,1fr))}
  #diagnosticView .diagnostic-score svg{min-width:620px}
 }
+
+/* First-run reading diagnostic: accessible from within the reading canvas. */
+#readingView .journey-diagnostic-link{appearance:none;min-width:0;display:inline-flex;align-items:center;justify-content:center;gap:5px;min-height:30px;padding:4px 9px;border:1px solid #b0c2e6;border-radius:9px;background:#f8fbff;color:#244c9f;font:850 10px/1.1 system-ui;white-space:nowrap;cursor:pointer}
+#readingView .journey-diagnostic-link:focus-visible{outline:2px solid #3d71cc;outline-offset:2px}
+@media(max-width:620px){#readingView .journey-diagnostic-link{font-size:9px;min-height:28px;padding:3px 7px}#readingView .journey-stage-top{gap:6px}}
