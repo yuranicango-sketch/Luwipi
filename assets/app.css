@@ -2706,3 +2706,35 @@ html,body{max-width:100%;overflow-x:hidden}
  .curated-games-intro h2{font-size:28px}
 }
 
+
+/* source: unified workspace shell */
+@media(min-width:981px){
+ body.workspace-shell-enabled{padding-left:210px}
+ body.workspace-shell-enabled>.brand-header{display:none!important}
+ body.workspace-shell-enabled>.experience-menu-trigger{display:none!important}
+ .workspace-sidebar{position:fixed;inset:0 auto 0 0;z-index:120;width:210px;box-sizing:border-box;padding:16px 12px;display:flex;flex-direction:column;background:#edf3ff;border-right:1px solid #c8d6ef;color:#173366}
+ .workspace-brand{display:flex;align-items:center;gap:9px;padding:6px 7px 16px;font:800 19px/1 "Bricolage Grotesque",system-ui}
+ .workspace-brand img{width:30px;height:30px;object-fit:contain}
+ .workspace-nav,.workspace-nav-bottom{display:grid;gap:6px}
+ .workspace-nav-bottom{margin-top:auto;padding-top:12px;border-top:1px solid #cbd8ee}
+ .workspace-sidebar button{appearance:none;border:0;border-radius:12px;background:transparent;color:#36527e;min-height:44px;padding:0 11px;display:grid;grid-template-columns:26px 1fr;align-items:center;gap:7px;text-align:left;font:inherit;cursor:pointer}
+ .workspace-sidebar button span{font-size:18px;text-align:center}
+ .workspace-sidebar button b{font-size:12px}
+ .workspace-sidebar button:hover,.workspace-sidebar button.active{background:#fff;color:#173366;box-shadow:0 6px 18px #2c4f8a12}
+ body.workspace-shell-enabled .view.active{min-height:100dvh}
+ body.workspace-shell-enabled #karaokeView.active{overflow:auto}
+ body.workspace-shell-enabled #karaokeView .karaoke-studio{height:auto;min-height:100dvh}
+ body.workspace-shell-enabled #karaokeView .karaoke-workspace{grid-template-columns:270px minmax(0,1fr)}
+ body.workspace-shell-enabled #readingView .page,
+ body.workspace-shell-enabled #liveModeView .page,
+ body.workspace-shell-enabled #gamesView .page,
+ body.workspace-shell-enabled #rhythmView .page{width:min(100%,1280px)}
+}
+@media(max-width:980px){.workspace-sidebar{display:none!important}}
+body.luwipi-dark .workspace-sidebar{background:#0d1d36;border-color:#34517f;color:#f4f7ff}
+body.luwipi-dark .workspace-sidebar button{color:#bcd0ee}
+body.luwipi-dark .workspace-sidebar button:hover,body.luwipi-dark .workspace-sidebar button.active{background:#183158;color:#fff}
+#karaokeView .karaoke-library-row{display:grid;grid-template-columns:1fr 36px;gap:6px;margin-top:7px}
+#karaokeView .karaoke-library-row button{min-height:34px;border:1px solid var(--ks-line);border-radius:10px;background:var(--ks-paper);color:var(--ks-ink);font:850 9.5px/1 system-ui;cursor:pointer}
+#karaokeView .karaoke-library-row button:first-child.saved{border-color:#7acbb3;background:#e9faf4;color:#176f58}
+#karaokeView .karaoke-saved-field select{font-size:10px}
