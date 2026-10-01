@@ -36,15 +36,15 @@ function section(id){if(id==="homeView")return null;return Object.keys(roots).fi
 function readStored(){try{const s=JSON.parse(sessionStorage.getItem(storage)||"null");return roots[s?.section]?s:null}catch{return null}}
 function parse(fallback){
  const q=new URLSearchParams(location.search),section=roots[q.get("section")]?q.get("section"):q.get("open")==="games"?"games":fallback?.section||"reading";
- const s={section};for(const k of ["activity","song","version","ex","hand","level","game","rhythmSong","midi"]){const v=q.get(k)||(q.has("section")?null:fallback?.[k]);if(v&&v.length<80)s[k]=v}
+ const s={section};for(const k of ["activity","song","version","ex","hand","level","game","rhythmSong","readingId","midi"]){const v=q.get(k)||(q.has("section")?null:fallback?.[k]);if(v&&v.length<80)s[k]=v}
  if(q.get("library")==="1"||(!q.has("section")&&fallback?.library))s.library=true;
  if(s.activity&&child[s.activity]!==section)delete s.activity;
  return s;
 }
 function path(s){
- const u=new URL(location.href);for(const k of ["open","section","activity","song","version","ex","hand","level","game","rhythmSong","midi","library"])u.searchParams.delete(k);
+ const u=new URL(location.href);for(const k of ["open","section","activity","song","version","ex","hand","level","game","rhythmSong","readingId","midi","library"])u.searchParams.delete(k);
  u.searchParams.set("section",s.section);
- for(const k of ["activity","song","version","ex","hand","level","game","rhythmSong","midi"])if(s[k])u.searchParams.set(k,String(s[k]).slice(0,80));
+ for(const k of ["activity","song","version","ex","hand","level","game","rhythmSong","readingId","midi"])if(s[k])u.searchParams.set(k,String(s[k]).slice(0,80));
  if(s.library)u.searchParams.set("library","1");
  return u.pathname+u.search+u.hash;
 }
@@ -63,6 +63,15 @@ function navigate(sectionName,push=true,library=false){
  document.querySelector("#experienceMenu:not(.hidden) [data-experience-close]")?.click();window.dispatchEvent(new CustomEvent("luwipi:workspace-route",{detail:{...state}}));window.scrollTo(0,0);
 }
 function select(selector){const node=document.querySelector(selector);if(!node)return false;node.click();return true}
+let pendingReadingId="";
+function restoreReadingItem(id){
+ const library=window.LuwipiReadingLibrary;
+ if(!id||!library?.open||pendingReadingId===id)return;
+ pendingReadingId=id;
+ Promise.resolve(library.open(id)).then(()=>{
+  if(state.readingId===id&&active()?.id==="readingImportedView")recall(state);
+ }).catch(()=>{}).finally(()=>{if(pendingReadingId===id)pendingReadingId=""});
+}
 function replay(s){
  if(s.section==="reading"&&s.activity==="songView"&&s.song){
   if(select('[data-song="'+CSS.escape(s.song)+'"]'+(s.version?'[data-version="'+CSS.escape(s.version)+'"]':"")))return;
@@ -78,7 +87,9 @@ function replay(s){
  if(s.section==="rhythm"&&s.activity==="rhythmSongView"&&s.rhythmSong){
   if(select('[data-rhythm-song="'+CSS.escape(s.rhythmSong)+'"]'))return;
  }
- if(s.activity==="noteFlowView")activate("noteFlowView");
+ if(s.section==="reading"&&s.activity==="readingImportedView"&&s.readingId){restoreReadingItem(s.readingId);return}
+ const generic={noteFlowView:"noteFlow",rhythmReadView:"rhythmRead",pulseView:"pulse",attackView:"attack",durationView:"duration"};
+ if(generic[s.activity]&&select('[data-nav="'+generic[s.activity]+'"]'))return;
 }
 function restore(s,normalize=true){
  if(!roots[s.section])s={section:"reading"};
@@ -100,7 +111,7 @@ function sync(){
  if(library)next.library=true;
  else if(v.id!==roots[mode]){
   next.activity=v.id;
-  if(state.activity===v.id||intent==="detail")for(const k of ["song","version","ex","hand","level","game","rhythmSong"])if(state[k])next[k]=state[k];
+  if(state.activity===v.id||intent==="detail")for(const k of ["song","version","ex","hand","level","game","rhythmSong","readingId"])if(state[k])next[k]=state[k];
  }
  if(mode==="midi"&&state.midi)next.midi=state.midi;
  persist(next,["push","detail"].includes(intent)?"push":"replace");last=v.id;intent="";window.dispatchEvent(new CustomEvent("luwipi:workspace-route",{detail:{...state}}));
@@ -142,13 +153,14 @@ document.addEventListener("click",event=>{
   /* The shared shell opens and closes the same canonical library route. */
   intent="push";return;
  }
- const selection=button.closest("[data-song],[data-game],[data-rhythm-song],[data-ex],[data-hand],[data-reading-level]");
+ const selection=button.closest("[data-reading-id],[data-song],[data-game],[data-rhythm-song],[data-ex],[data-hand],[data-reading-level]");
  if(selection){
   const next={...state};
-  for(const [attr,key] of [["data-song","song"],["data-game","game"],["data-rhythm-song","rhythmSong"],["data-ex","ex"],["data-hand","hand"],["data-reading-level","level"]]){
+  for(const [attr,key] of [["data-reading-id","readingId"],["data-song","song"],["data-game","game"],["data-rhythm-song","rhythmSong"],["data-ex","ex"],["data-hand","hand"],["data-reading-level","level"]]){
    if(selection.hasAttribute(attr))next[key]=String(selection.getAttribute(attr)).slice(0,75);
   }
-  if(selection.hasAttribute("data-song")){
+  if(selection.hasAttribute("data-reading-id")){next.activity="readingImportedView";delete next.song;delete next.ex}
+  else if(selection.hasAttribute("data-song")){delete next.readingId;
    next.version=selection.dataset.version||"right";next.activity="songView";
   }else if(selection.hasAttribute("data-ex"))next.activity="exerciseView";
   else if(selection.hasAttribute("data-game"))next.activity="gameView";
@@ -165,5 +177,6 @@ window.addEventListener("luwipi:core-ready",()=>{
  if(active()?.id==="homeView"){restore({...state});return}
  if(state.activity&&active()?.id===roots[state.section]){restoring=true;replay(state);restoring=false;last=active()?.id||roots[state.section];recall(state)}
 },{once:true});
+window.addEventListener("luwipi:access-ready",()=>{if(booted&&state.activity==="readingImportedView"&&state.readingId&&active()?.id!=="readingImportedView")restoreReadingItem(state.readingId)});
 window.addEventListener("pageshow",event=>{if(!booted)start();else if(event.persisted)schedule()});
 })();

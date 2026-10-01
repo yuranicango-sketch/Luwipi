@@ -752,6 +752,9 @@ await test('Rotas canónicas e diagnóstico de utilizadores',async()=>{
  assert(app.includes('journey-diagnostic-link')&&css.includes('.journey-diagnostic-link'),'o diagnóstico deve estar disponível dentro da Leitura');
  assert(router.includes('stopImmediatePropagation()')&&router.includes('data-experience-nav')&&router.includes('data-home-path'),'handlers antigos ainda podem reabrir home');
  assert(router.includes('CSS.escape(s.song)')&&router.includes('luwipi:restore-midi'),'restauro de exercícios e MIDI não é reproduzido');
+ assert(router.includes('restoreReadingItem(s.readingId)')&&router.includes('data-reading-id')&&router.includes('readingImportedView'),'partituras pessoais não retomam o mesmo ficheiro após atualização');
+ assert(router.includes('generic={noteFlowView:')&&router.includes('rhythmReadView:"rhythmRead"'),'subatividades de ritmo e fluência não reabrem pela rota');
+ assert(router.includes('"luwipi:access-ready"')&&router.includes('pendingReadingId'),'a biblioteca remota precisa aguardar acesso sem abrir duas vezes');
  assert(diagnostic.includes('const survey=[')&&diagnostic.includes('const tests=[')&&diagnostic.includes("diagnostic-choice")&&diagnostic.includes('aria-pressed'),'diagnóstico não usa escolhas visuais');
  assert(diagnostic.includes("localStorage.setItem(KEY")&&diagnostic.includes('Repetir diagnóstico')&&diagnostic.includes('Copiar cartão de diagnóstico'),'diagnóstico e registo não persistem');
  assert(diagnostic.includes('E.render(svg,score')&&diagnostic.includes('durationBeats:32')&&diagnostic.includes('G,,2 D,2'),'leitura corrida tem de usar oito compassos rigorosos e a pauta gravada pelo motor musical');
