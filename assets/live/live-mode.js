@@ -113,8 +113,10 @@ function audio(){
 }
 function playNoteEvent(event,delayMs,durationMs,level){
   const baseBeatMs=60000/Math.max(20,tempo);
-  const effectiveBeats=Math.max(.03,Number(durationMs||baseBeatMs)/baseBeatMs);
-  const velocity=level||Math.max(.42,Math.min(1.05,event.velocity/92));
+  const articulation=score?.source==='pedagogy'?(event.articulations||[]):[];
+  const ratio=articulation.includes('staccato')?.46:articulation.includes('tenuto')?.96:1;
+  const effectiveBeats=Math.max(.03,Number(durationMs||baseBeatMs)*ratio/baseBeatMs);
+  const velocity=level||Math.max(.42,Math.min(1.15,(event.velocity/92)*(articulation.includes('accent')?1.12:1)));
   const bridge=audio();
   const timer=setTimeout(()=>{
     if(bridge&&typeof bridge.play==="function"){
