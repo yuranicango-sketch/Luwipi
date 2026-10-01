@@ -265,7 +265,7 @@ function launch(which){
  if(!seed){workout.append(el('p','workout-result','O material inédito terminou. É necessário acrescentar novas partituras.'));return}
  let score;
  try{score=splitABC(seed)}catch(error){workout.append(el('p','workout-result','Partitura não disponível: '+error.message));return}
- if(which===2){
+ if(which===2&&!assigned){
   const beats=score.meter[0]*(4/score.meter[1])*2;
   score=E.normalizeScore({...score,events:score.events.filter(x=>x.startBeat<beats),rests:score.rests?.filter(x=>x.startBeat<beats)});
   score.title=seed.title+' · padrão de 2 compassos';
