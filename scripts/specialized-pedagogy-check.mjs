@@ -18,7 +18,11 @@ for(const track of S.trackIds){
   assert.ok(score.events.some(e=>e.clef==="bass")&&score.events.some(e=>e.clef==="treble"),item.id+" must include both hands");
   const end=Math.max(...score.events.map(e=>e.startBeat+e.durationBeat));
   assert.equal(end,track==="F"&&level===1?24:32,item.id+" must have eight measured bars");
-  if(track==="G")assert.ok(score.events.some(e=>e.articulations.includes(level?"accent":"staccato")),item.id+" lost articulation");
+  if(track==="G"){
+   assert.ok(score.events.some(e=>e.articulations.includes(level?"accent":"staccato")),item.id+" lost articulation");
+   if(level===0)assert.ok(score.events.some(e=>e.articulations.includes("tenuto")),"Articulation must contrast tenuto with staccato");
+   if(level===1)assert.ok(score.events.some(e=>e.dynamic==="p")&&score.events.some(e=>e.dynamic==="f"),"Dynamics must contrast piano and forte");
+  }
   if(track==="J")assert.equal(item.cues.length,8,item.id+" lacks beat-aligned harmony labels");
   total++;
  }
