@@ -92,6 +92,9 @@ panel.querySelector('#pathClose').addEventListener('click',close);
 document.addEventListener('keydown',event=>{if(event.key==='Escape'&&!panel.hidden)close()});
 window.addEventListener('luwipi:workspace-route',()=>{if(!panel.hidden)close()});
 window.addEventListener('luwipi:access-ready',loadProfile);
+window.addEventListener('luwipi:pedagogy-measured',event=>{
+ if(exercise?.id===event.detail?.exerciseId)exercise.measured=event.detail;
+});
 function render(){
  map.replaceChildren();
  for(const t of P.trackIds){
@@ -186,7 +189,7 @@ function launch(which){
   score.title=seed.title+' · padrão de 2 compassos';
  }
  exercise={...seed,id:seed.id,track:selected,level:currentLevel,kind:'practice',stage:which,sessionId:String(Date.now())+'-'+seed.id};
- const opened=window.LuwipiLiveLoadPedagogy(score,score.title,{firstSight:which===3});
+ const opened=window.LuwipiLiveLoadPedagogy(score,score.title,{firstSight:which===3,exerciseId:seed.id});
  if(opened){
   if(which===3){profile.seen.push(seed.id);save()}
   if(seed.cues)window.dispatchEvent(new CustomEvent('luwipi:pedagogy-cues',{detail:{cues:seed.cues,track:seed.track}}));
@@ -197,6 +200,14 @@ function buildReview(container,actions){
  if(!exercise||exercise.track!==selected){
   container.append(el('div','workspace-path-banner','Abre primeiro uma partitura desta sessão. Depois regressa aqui para registar o resultado.'));
   return;
+ }
+ if(exercise.measured){
+  const m=exercise.measured,n=m.attemptedGroups?Math.round(100*m.correctGroups/m.attemptedGroups):null,
+    rhythmic=m.rhythmSamples?Math.round(100*m.rhythmWithinTolerance/m.rhythmSamples):null;
+  const report='Medição local ('+(m.input==='midi'?'teclado MIDI':m.input==='virtual'?'piano virtual':'outra entrada')+'): grupos de notas '+
+   (n===null?'sem dados':n+'%')+'; ataques dentro da tolerância '+(rhythmic===null?'sem dados':rhythmic+'%')+
+   '; '+m.bpm+' BPM. Não mede paragens nem certifica articulação ou leitura profissional.';
+  container.append(el('div','workspace-path-banner',report));
  }
  const fields=[
   ['bpm','Andamento real',Array.from({length:19},(_,i)=>(40+i*5)+' BPM')],
