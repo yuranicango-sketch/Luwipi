@@ -3209,3 +3209,21 @@ body.luwipi-dark .workspace-path-step-help{color:#c0d0e9}
 #readingImportedView .reading-imported-transport:has(.reading-lesson-panel:not([hidden])){align-items:center;flex-wrap:wrap}
 #readingImportedView .reader-top:has(+ .score-wrap + .reading-imported-transport .reading-lesson-panel:not([hidden])){padding-bottom:3px}
 @media(max-width:620px){.reading-lesson-panel{padding:6px;gap:5px}.reading-lesson-panel #readingLessonStatus{order:3;flex-basis:100%}}
+
+/* Keep exercise actions in view even when advanced pieces need several staves/systems.
+   The score itself scrolls; the full page and shared piano never get pushed away. */
+#readingImportedView .reading-imported-reader{
+ box-sizing:border-box;display:flex!important;flex-direction:column!important;
+ flex:1 1 auto;min-height:0!important;height:100%!important;max-height:100%!important;
+ overflow:hidden!important;gap:5px!important;padding:clamp(5px,.9dvh,12px)!important
+}
+#readingImportedView .reading-imported-reader .reader-top{flex:0 0 auto;min-height:0!important}
+#readingImportedView .reading-imported-score-wrap{
+ flex:1 1 auto!important;min-height:0!important;height:auto!important;max-height:none!important;
+ overflow:auto!important;overscroll-behavior:contain;margin:0!important
+}
+#readingImportedView .reading-imported-transport{
+ flex:0 0 auto!important;min-height:0!important;max-height:min(145px,27dvh);
+ overflow-y:auto;overflow-x:hidden;flex-wrap:wrap;margin:0!important;padding:5px!important
+}
+#readingImportedView.reading-curriculum-lesson .secondary-actions{display:none!important}

@@ -36,6 +36,7 @@ function lessonSave(){
 }
 function lessonStopTimer(){if(lessonTimer!==null){clearInterval(lessonTimer);lessonTimer=null}}
 function resetLesson(){
+ view?.classList.remove('reading-curriculum-lesson');
  lessonStopTimer();lessonMidiOff?.();lessonMidiOff=null;lesson=null;lessonPanel.hidden=true;
  playBtn.disabled=false;guideBtn.disabled=false;pianoBtn.hidden=false;
  if(hint)hint.textContent='Adicionada a partir da Prática.';
@@ -293,6 +294,7 @@ function openLesson(rawScore,options={},restoring=false){
   lesson={options:{...options,firstSight},expected,pressed:new Set(),
    remaining:firstSight?30:0,index:0,attempts:0,correct:0,started:false,done:false,
    input:'virtual',status:firstSight?'Observa a partitura: 30 segundos antes de começar.':'A partitura está pronta. Carrega em Começar exercício.'};
+  view.classList.add('reading-curriculum-lesson');
   lessonPanel.hidden=false;lessonStart.disabled=firstSight;
   lessonStart.textContent=firstSight?'Preparação · 30 s':'Começar exercício';
   if(category)category.textContent='Aprender partitura · N'+(options.level??0);

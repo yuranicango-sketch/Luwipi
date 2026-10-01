@@ -71,5 +71,9 @@ assert.ok(router.includes("function openLesson(id)")&&
  "Reading lessons require a canonical, refresh-safe Leitura route");
 assert.ok(css.includes(".reading-lesson-panel")&&css.includes(".reading-lesson-panel[hidden]"),
  "A real Start control and clear exercise status must be visible above the score");
+assert.ok(css.includes("#readingImportedView .reading-imported-reader{")&&
+ css.includes("#readingImportedView .reading-imported-score-wrap{")&&
+ css.includes("#readingImportedView.reading-curriculum-lesson .secondary-actions"),
+ "Long advanced notation must scroll inside the score, not push lesson controls below the screen");
 for(const source of [live,ui,library,router])assert.doesNotThrow(()=>new Function(source));
 console.log("Reading lesson route: N0–N7 open in the existing score-and-piano Leitura view, never in the importer.");
