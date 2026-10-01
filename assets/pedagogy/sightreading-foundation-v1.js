@@ -111,7 +111,7 @@ function placementFromDiagnostic(diagnostic){
 }
 function dueDates(isoDate){const d=new Date(isoDate+'T12:00:00Z');if(Number.isNaN(+d))throw Error('Data inválida');return [1,3,7,14].map(days=>new Date(+d+days*86400000).toISOString().slice(0,10))}
 function newProfile(){
- return {version:1,levels:Object.fromEntries(IDS.map(k=>[k,{level:0,certified:false,streak:[],sessions:[]}])),mistakes:[],seen:[],lastGeneralReview:null};
+ return {version:1,levels:Object.fromEntries(IDS.map(k=>[k,{level:0,certified:false,streak:[],sessions:[]}])),mistakes:[],seen:[],exploration:[],lastGeneralReview:null};
 }
 function record(profile,attempt){
  const p=structuredClone(profile),m=moduleFor(attempt.track,attempt.level),s=p.levels[m.track];
