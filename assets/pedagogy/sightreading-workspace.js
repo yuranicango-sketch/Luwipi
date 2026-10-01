@@ -1,6 +1,6 @@
 (()=>{
 'use strict';
-const P=window.LuwipiPedagogyV1,E=window.LuwipiScoreEngine,host=document.getElementById('workspaceCanvas');
+const P=window.LuwipiPedagogyV1,E=window.LuwipiScoreEngine,S=window.LuwipiSpecializedStudies,host=document.getElementById('workspaceCanvas');
 if(!P||!E||!host)return;
 const KEY='luwipi:pedagogy:device-draft:v1',STEPS=[
  ['Aquecimento rítmico','2 min · Conta, bate e toca um padrão com metrónomo.'],
@@ -102,6 +102,7 @@ function render(){
   card.append(head,el('p','',mod.objective));
   const candidate=profile.placement?.[t]?.status;
   if(candidate&&candidate!=='não avaliado')card.append(el('small','', 'Diagnóstico: '+candidate));
+  if(S?.get(t,l.level||0))card.append(el('small','', 'Estudo musical específico disponível'));
   const launch=el('button','',selected===t?'Selecionado · organizar sessão':'Preparar sessão');
   launch.type='button';launch.onclick=()=>{selected=t;stage=3;exercise=null;render()};
   card.append(launch);map.append(card);
@@ -148,20 +149,35 @@ function splitABC(seed){
  const base=E.parseABC(headers.join('\n')+'\nC2 C2 C2 C2 | C2 C2 C2 C2 |');
  const events=rh.events.concat(lh.events);
  if(!events.length)throw Error('Exercício vazio');
- return E.normalizeScore({title:seed.title,source:'pedagogy',tempoBpm:seed.meter==="6/8"?base.tempoBpm*1.5:base.tempoBpm,meter:base.meter,keyFifths:base.keyFifths,
- events,rests:rh.rests, keyMinor:base.keyMinor});
+ const result=E.normalizeScore({title:seed.title,source:'pedagogy',tempoBpm:seed.meter==="6/8"?base.tempoBpm*1.5:base.tempoBpm,meter:base.meter,keyFifths:base.keyFifths,
+ events,rests:rh.rests,keyMinor:base.keyMinor});
+ if(seed.expression){
+  result.events.forEach(e=>{
+   if(e.clef==='treble'){
+    e.articulations=seed.expression==='staccato'?['staccato']:['accent'];
+    if(seed.expression==='accent')e.dynamic=e.startBeat<16?'p':'f';
+   }
+  });
+ }
+ return result;
 }
 function launch(which){
  if(typeof window.LuwipiLiveLoadPedagogy!=='function'){workout.append(el('p','workout-result','A Prática ainda não está pronta. Atualiza a aplicação.'));return}
  const currentLevel=profile.levels[selected]?.level||0;
  const track=which===0?'F':selected,level=which===0?0:currentLevel;
  const variants=P.availableVariants(track,level);
- let variant=0;
- if(which===3){
-  variant=Array.from({length:variants},(_,i)=>i).find(i=>!profile.seen.includes(track+'N'+level+'-s'+i));
-  if(variant===undefined){workout.append(el('p','workout-result','O material inédito deste módulo terminou. Necessitamos de novas partituras originais.'));return}
- }else variant=(profile.seen.length+which)%variants;
- const seed=P.makeSeed(track,level,variant);
+ // A unique, authored, skill-targeted study is presented first at N0/N1.
+ // Once seen, move to unseen generative material; never recycle sight-reading.
+ let seed=S?.get(track,level)||null;
+ if(which===3&&seed&&profile.seen.includes(seed.id))seed=null;
+ if(!seed){
+  let variant;
+  if(which===3){
+   variant=Array.from({length:variants},(_,i)=>i).find(i=>!profile.seen.includes(track+'N'+level+'-s'+i));
+   if(variant===undefined){workout.append(el('p','workout-result','O material inédito terminou. É necessário acrescentar novas partituras.'));return}
+  }else variant=(profile.seen.length+which)%variants;
+  seed=P.makeSeed(track,level,variant);
+ }
  let score;
  try{score=splitABC(seed)}catch(error){workout.append(el('p','workout-result','Partitura não disponível: '+error.message));return}
  if(which===2){
@@ -170,9 +186,12 @@ function launch(which){
   score.title=seed.title+' · padrão de 2 compassos';
  }
  exercise={...seed,id:seed.id,track:selected,level:currentLevel,kind:'practice',stage:which,sessionId:String(Date.now())+'-'+seed.id};
- if(which===3){profile.seen.push(seed.id);save()}
  const opened=window.LuwipiLiveLoadPedagogy(score,score.title);
- if(opened){close()}else{workout.append(el('p','workout-result','Não foi possível iniciar o exercício.'))}
+ if(opened){
+  if(which===3){profile.seen.push(seed.id);save()}
+  if(seed.cues)window.dispatchEvent(new CustomEvent('luwipi:pedagogy-cues',{detail:{cues:seed.cues,track:seed.track}}));
+  close();
+ }else{workout.append(el('p','workout-result','Não foi possível iniciar o exercício.'))}
 }
 function buildReview(container,actions){
  if(!exercise||exercise.track!==selected){
