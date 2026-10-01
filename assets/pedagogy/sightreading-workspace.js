@@ -419,6 +419,35 @@ function chooseSeed(track,level,which,seen){
  return variant===undefined?null:P.makeSeed(track,level,variant);
 }
 
+
+/* A short pattern is a real two-measure excerpt, not an eight-bar backing
+   track with only the printed notes hidden. Preserve written/performed
+   ornament and swing timing, but clip every playback and notation layer to
+   the exact same musical boundary (also works with changing meters). */
+function shortPatternScore(rawScore){
+ const measures=E.measureTimeline(rawScore.meter,rawScore.meterMap,rawScore.durationBeats);
+ const last=measures[Math.min(1,measures.length-1)];
+ if(!last)throw Error('Padrão sem compassos');
+ const end=Math.round((last.startBeat+last.durationBeat)*10000)/10000;
+ const inside=event=>Number(event.startBeat)<end-1e-5;
+ const clip=events=>(events||[]).filter(inside).map(event=>{
+  const duration=Math.min(Number(event.durationBeat)||0,end-Number(event.startBeat));
+  return {...event,durationBeat:Math.round(duration*10000)/10000};
+ }).filter(event=>event.durationBeat>0);
+ const excerpt=E.normalizeScore({...rawScore,
+  events:clip(rawScore.events),rests:clip(rawScore.rests),
+  performanceEvents:clip(rawScore.performanceEvents||rawScore.events),
+  percussionEvents:clip(rawScore.percussionEvents),
+  meterMap:(rawScore.meterMap||[]).filter(x=>Number(x.beat)<end-1e-5),
+  tempoMap:(rawScore.tempoMap||[]).filter(x=>Number(x.beat)<end-1e-5),
+  keyMap:(rawScore.keyMap||[]).filter(x=>Number(x.beat)<end-1e-5),
+  clefMap:(rawScore.clefMap||[]).filter(x=>Number(x.beat)<end-1e-5),
+  octaveMarks:(rawScore.octaveMarks||[]).filter(x=>x.bar<2).map(x=>({...x,count:Math.min(x.count,2-x.bar)}))
+ });
+ if(!excerpt.events.length)throw Error('Padrão de dois compassos vazio');
+ return excerpt;
+}
+
 function launch(which){
  if(typeof window.LuwipiReadingLibrary?.openLesson!=='function'){workout.append(el('p','workout-result','A Leitura ainda não está pronta. Atualiza a aplicação.'));return}
  const currentLevel=profile.levels[selected]?.level||0,assigned=which===2?reviewTask:null;
@@ -430,8 +459,7 @@ function launch(which){
  let score;
  try{score=splitABC(seed)}catch(error){workout.append(el('p','workout-result','Partitura não disponível: '+error.message));return}
  if(which===2&&!assigned){
-  const beats=score.meter[0]*(4/score.meter[1])*2;
-  score=E.normalizeScore({...score,events:score.events.filter(x=>x.startBeat<beats),rests:score.rests?.filter(x=>x.startBeat<beats)});
+  score=shortPatternScore(score);
   score.title=seed.title+' · padrão de 2 compassos';
  }
  exercise={...seed,id:seed.id,track,level,exploratory:track===selected&&level!==currentLevel,
