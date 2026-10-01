@@ -40,7 +40,7 @@ function get(track,level){
  const c=CONFIG[track]?.[level];if(!c)return null;
  const [rh,lh,key,meter,intent]=c,bpm=level?64:60,voice=P[rh].split("|").map((bar,i)=>{
   if(track==="J")return '"'+CUES[level][i]+'"'+bar;
-  if(track==="G")return(level?"!accent!":"!staccato!")+bar;
+  if(track==="G")return(level?(i%2?"!p!":"!accent!"):(i%2?"!tenuto!":"!staccato!"))+bar;
   return bar;
  });
  const title=track+" · N"+level+" · Estudo orientado 1";
@@ -49,7 +49,7 @@ function get(track,level){
  "[V:RH] "+voice.join(" | ")+" |]","[V:LH] "+L[lh].split("|").join(" | ")+" |]"].join("\n");
  return Object.freeze({id:"special-"+track+"N"+level+"-01",track,level,title,abc,key,meter,bpm,
   intent,proof:intent,hands:["direita","esquerda"],specialized:true,certification:false,
-  expression:track==="G"?(level?"accent":"staccato"):null,
+  expression:track==="G"?(level?"accent":"staccato-tenuto"):null,
   cues:track==="J"?CUES[level]:null,
   limitations:["G","I","J"].includes(track)?"Esta competência exige avaliação observada.":""});
 }
