@@ -19,4 +19,5 @@ const packed=app.slice(app.lastIndexOf("const p=\""));
 assert.ok(packed.includes('b=atob(p)')&&packed.includes('LuwipiCoreLoaded=true'),"Packed boot may have been corrupted");
 const library=await read("assets/reading/reading-library.js"),sync=await read("assets/pedagogy/progress-sync.js");
 assert.ok(library.includes("window.LuwipiGetAccessToken")&&sync.includes("window.LuwipiGetAccessToken"));
+assert.ok(sync.includes("subject(t)!==activeUser")&&sync.includes("ownerAtSave!==activeUser"),"Account isolation guard missing");
 console.log("Ten-track initial placement, unanswered-track caution, six diagnostic blocks and shared authentication bridge: OK");
