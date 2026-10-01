@@ -1,6 +1,6 @@
 (()=>{
 'use strict';
-const P=window.LuwipiPedagogyV1,E=window.LuwipiScoreEngine,S=window.LuwipiSpecializedStudies,S2=window.LuwipiSpecializedN2,S3=window.LuwipiSpecializedN3,host=document.getElementById('workspaceCanvas');
+const P=window.LuwipiPedagogyV1,E=window.LuwipiScoreEngine,S=window.LuwipiSpecializedStudies,S2=window.LuwipiSpecializedN2,S3=window.LuwipiSpecializedN3,S4=window.LuwipiSpecializedN4,host=document.getElementById('workspaceCanvas');
 if(!P||!E||!host)return;
 const KEY='luwipi:pedagogy:device-draft:v1',STEPS=[
  ['Aquecimento rítmico','2 min · Conta, bate e toca um padrão com metrónomo.'],
@@ -56,7 +56,7 @@ function todayLocal(){const d=new Date();return d.getFullYear()+'-'+String(d.get
 function currentStudyLevel(track){
  const formal=profile.levels?.[track]?.level||0;
  if(track!==selected||explorationLevel===null||explorationLevel<=formal)return formal;
- const study=S?.get(track,explorationLevel)||S2?.get(track,explorationLevel)||S3?.get(track,explorationLevel);
+ const study=S?.get(track,explorationLevel)||S2?.get(track,explorationLevel)||S3?.get(track,explorationLevel)||S4?.get(track,explorationLevel);
  return study?explorationLevel:formal;
 }
 const trackName=t=>P.tracks[t].name;
@@ -128,7 +128,7 @@ function render(){
   card.append(head,el('p','',mod.objective));
   const candidate=profile.placement?.[t]?.status;
   if(candidate&&candidate!=='não avaliado')card.append(el('small','', 'Diagnóstico: '+candidate));
-  if(S?.get(t,l.level||0)||S2?.get(t,l.level||0)||S3?.get(t,l.level||0))card.append(el('small','', 'Estudo musical específico disponível'));
+  if(S?.get(t,l.level||0)||S2?.get(t,l.level||0)||S3?.get(t,l.level||0)||S4?.get(t,l.level||0))card.append(el('small','', 'Estudo musical específico disponível'));
   const launch=el('button','',selected===t?'Selecionado · organizar sessão':'Preparar sessão');
   launch.type='button';launch.onclick=()=>{selected=t;stage=3;exercise=null;explorationLevel=null;reviewTask=null;render()};
   card.append(launch);map.append(card);
@@ -161,8 +161,10 @@ function render(){
   (formalLevel>=1||profile.seen.includes(S?.get(selected,1)?.id||'unavailable'));
  const canExploreN3=formalLevel<3&&Boolean(S3?.get(selected,3))&&
   (formalLevel>=2||profile.seen.includes(S2?.get(selected,2)?.id||'unavailable'));
- for(const target of [1,2,3]){
-  if(target===1&&!canExploreN1||target===2&&!canExploreN2||target===3&&!canExploreN3)continue;
+ const canExploreN4=formalLevel<4&&Boolean(S4?.get(selected,4))&&
+  (formalLevel>=3||profile.seen.includes(S3?.get(selected,3,0)?.id||'unavailable'));
+ for(const target of [1,2,3,4]){
+  if(target===1&&!canExploreN1||target===2&&!canExploreN2||target===3&&!canExploreN3||target===4&&!canExploreN4)continue;
   const active=explorationLevel===target;
   const button=el('button','',active?'Regressar ao N'+formalLevel:'Explorar estudo N'+target+' (sem avançar)');
   button.type='button';button.className='workspace-path-explore';
@@ -172,6 +174,8 @@ function render(){
  }
  if(explorationLevel!==null&&explorationLevel>formalLevel)
   workout.append(el('div','workspace-path-banner','Exploração do N'+explorationLevel+' sem certificação. O teu nível confirmado permanece N'+formalLevel+'.'));
+ if(level===4&&S4?.get(selected,4)?.partialCoverage)
+  workout.append(el('div','workspace-path-banner','Competência N4 parcialmente treinada: '+S4.get(selected,4).limitations));
 
  const stages=el('label','','Etapa da sessão');
  const sel=el('select');STEPS.forEach(([name,desc],i)=>{const op=el('option','',String(i+1)+'. '+name);op.value=String(i);sel.append(op)});
@@ -204,6 +208,7 @@ function splitABC(seed){
  }
  const rh=read('RH','treble'),lh=read('LH','bass');
  const rh2=seed.secondTrebleVoice?read('RH2','treble'):{events:[],rests:[]};
+ const lh2=seed.secondBassVoice?read('LH2','bass'):{events:[],rests:[]};
  if(seed.pedalEveryBar){
   const meterBeats=seed.meter==='3/4'?3:seed.meter==='6/8'?3:4;
   const marked=new Set();
@@ -217,12 +222,16 @@ function splitABC(seed){
   rh.events.forEach(e=>e.voiceDirection='up');
   rh2.events.forEach(e=>e.voiceDirection='down');
  }
+ if(seed.secondBassVoice){
+  lh.events.forEach(e=>e.voiceDirection='up');
+  lh2.events.forEach(e=>e.voiceDirection='down');
+ }
  const base=E.parseABC(headers.join('\n')+'\nC2 C2 C2 C2 | C2 C2 C2 C2 |');
- const events=rh.events.concat(rh2.events,lh.events);
+ const events=rh.events.concat(rh2.events,lh.events,lh2.events);
  if(!events.length)throw Error('Exercício vazio');
  const result=E.normalizeScore({title:seed.title,source:'pedagogy',tempoBpm:seed.meter==="6/8"?base.tempoBpm*1.5:base.tempoBpm,
  pulseUnit:seed.meter==="6/8"?"dotted-quarter":"quarter",meter:base.meter,keyFifths:base.keyFifths,
- events,rests:rh.rests.concat(rh2.rests,lh.rests),keyMinor:base.keyMinor});
+ events,rests:rh.rests.concat(rh2.rests,lh.rests,lh2.rests),keyMinor:base.keyMinor});
  if(seed.expression){
   result.events.forEach(e=>{
    if(e.clef==='treble'){
@@ -243,7 +252,8 @@ function splitABC(seed){
 }
 // A pure selection rule shared by training and first-sight attempts.
 function chooseSeed(track,level,which,seen){
- const secondary=level===3&&S3?Array.from({length:S3.count(track)},(_,index)=>S3.get(track,level,index)).filter(Boolean):[];
+ const secondary=level===3&&S3?Array.from({length:S3.count(track)},(_,index)=>S3.get(track,level,index)).filter(Boolean)
+  :level===4&&S4?Array.from({length:S4.count(track)},(_,index)=>S4.get(track,level,index)).filter(Boolean):[];
  const special=S?.get(track,level)||S2?.get(track,level)||secondary[0]||null,
   variants=P.availableVariants(track,level);
  if(which!==3&&special)return special;
