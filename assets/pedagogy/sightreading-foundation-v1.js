@@ -11,10 +11,38 @@ function moduleFor(track,level){
  const [objective,proof]=TRACKS[track].levels[level];
  return {id:track+'-N'+level,track,level,name:TRACKS[track].name,objective,proof};
 }
-function availableVariants(track){if(!POOLS[track])throw Error('Trilha inválida');return POOLS[track].length*2}
+function effectivePool(track,level){
+ const specialized={
+  B:[
+   ['C','D','D','E','F','G'],
+   ['C','E','D','F','E','G'],
+   ['C','F','D','G','E','A'],
+   ['C','A','D','B','E','c'],
+   ['C','B','D','c','E','d'],
+   ['C','c','D','d','E','e'],
+   ['^C','G','_B','e','^F','c'],
+   ['_B','f','^C','g','=E','b']
+  ],
+  D:[
+   ['[CE]','[DF]','[EG]','[FA]','[GB]'],
+   ['[CEG]','[DFA]','[EGB]','[FAC]','[GBd]'],
+   ['[EGc]','[Gce]','[ACf]','[Cfa]','[DGB]'],
+   ['[CEGB]','[DFAc]','[EGBd]','[FACe]','[GBdf]'],
+   ['[CEGBd]','[DFAce]','[EGBdf]','[FACeg]','[GBdfa]'],
+   ['[CGeBd]','[DAcf]','[EBe^ga]','[FAce]','[GBdf]'],
+   ['[CE_G_B]','[DFAc]','[EG_Bd]','[FAC_e]','[G_Bdf]'],
+   ['[C_E_G_Bdf]','[DFAce]','[EGBdf]','[FACeg]','[GBdfa]']
+  ]
+ };
+ return specialized[track]?.[level]||POOLS[track].slice(0,Math.min(POOLS[track].length,level<2?6:level<4?9:POOLS[track].length));
+}
+function availableVariants(track,level=7){return effectivePool(track,level).length*2}
 function duration(v){return v===1?'':v===.5?'/2':String(v)}
 function initialBass(track,level,bar){
- const s=STAGES[level],r=s.bass,dom={C:'G,,',G:'D,',F:'C,',Dm:'A,,',A:'E,',E:'B,,',B:'^F,,'}[s.key]||'G,,';
+ const s=STAGES[level],key=track==='C'?['C','G','D','A','E','B','F#','C#'][level]:s.key;
+ const roots={C:'C,',G:'G,,',D:'D,',A:'A,,',E:'E,',B:'B,,','F#':'^F,','C#':'^C,',F:'F,',Dm:'D,'};
+ const dominants={C:'G,,',G:'D,',D:'A,,',A:'E,',E:'B,,',B:'^F,,','F#':'^C,','C#':'^G,,',F:'C,',Dm:'A,,'};
+ const r=roots[key],dom=dominants[key];
  const b=bar%2===0?r:dom;
  const chord=(level>=4?'['+b+'E,'+'G,'+']':'['+b+'E,'+']');
  if(track==='E'){
@@ -41,8 +69,8 @@ function initialBass(track,level,bar){
  }
 }
 function makeSeed(track,level,variant=0){
- const mod=moduleFor(track,level),s=STAGES[level],p=POOLS[track];
- if(!Number.isInteger(variant)||variant<0||variant>=availableVariants(track))throw Error('Banco de variantes esgotado: exige novas composições');
+ const mod=moduleFor(track,level),s=STAGES[level],p=effectivePool(track,level);
+ if(!Number.isInteger(variant)||variant<0||variant>=availableVariants(track,level))throw Error('Banco de variantes esgotado: exige novas composições');
  const reverse=variant>=p.length,shift=variant%p.length,barShift=[0,3,1,5,2,7,4,6],rh=[],lh=[];
  for(let bar=0;bar<8;bar++){
   const notes=s.d.map((v,i)=>{
@@ -50,22 +78,26 @@ function makeSeed(track,level,variant=0){
    if(reverse)n=p.length-1-n;
    const note=p[n];
    let prefix='';
-   if(track==='G')prefix=level<2?'!staccato!':level<4?'!accent!':level<6?'!p!':'!f!';
-   if(track==='J'&&i===0)prefix='"'+['C','G','F','Dm','Am','E7','B7','F#7'][bar]+'"';
+   if(track==='G')prefix=level<2?(bar%2?'!f!':'!p!!staccato!'):level<4?'!accent!':level<6?'!p!':'!f!';
+   if(track==='J'&&i===0)prefix='"'+(level===0?(bar%2?'G7':'C'):['C','G','F','Dm','Am','E7','B7','F#7'][bar])+'"';
+   if(track==='C'&&level===0&&bar===6&&i===0)return '^F'+duration(v);
+   if(track==='F'&&level===0&&i===1)return 'z'+duration(v);
    return prefix+note+duration(v);
   });
   // Módulos avançados exigem posteriormente uma partitura especializada; a semente não certifica competência.
   rh.push(notes.join(' '));lh.push(initialBass(track,level,bar));
  }
  const title=track+' · N'+level+' · Estudo original '+(variant+1);
- const abc=['X:1','T:'+title,'M:'+s.meter,'L:1/8','Q:1/4='+s.q,'K:'+((track==='C')?['C','G','D','A','E','B','F#','C#'][level]:s.key),'%%score { RH LH }','V:RH clef=treble','V:LH clef=bass','[V:RH] '+rh.join(' | ')+' |]','[V:LH] '+lh.join(' | ')+' |]'].join('\n');
- return {id:track+'N'+level+'-s'+variant,track,level,variant,title,abc,key:(track==='C')?['C','G','D','A','E','B','F#','C#'][level]:s.key,meter:s.meter,bpm:s.q,hands:['direita','esquerda'],intent:mod.objective,proof:mod.proof,coverage:level>=4?'base_de_leitura_nao_certifica_topico_avancado':'semente_de_leitura_sujeita_a_revisao',previewAllowed:false};
+ const abc=['X:1','T:'+title,'M:'+s.meter,'L:1/8','Q:'+(s.meter==='6/8'?'3/8':'1/4')+'='+s.q,'K:'+((track==='C')?['C','G','D','A','E','B','F#','C#'][level]:s.key),'%%score { RH LH }','V:RH clef=treble','V:LH clef=bass','[V:RH] '+rh.join(' | ')+' |]','[V:LH] '+lh.join(' | ')+' |]'].join('\n');
+ return {id:track+'N'+level+'-s'+variant,track,level,variant,title,abc,key:(track==='C')?['C','G','D','A','E','B','F#','C#'][level]:s.key,meter:s.meter,bpm:s.q,hands:['direita','esquerda'],intent:mod.objective,proof:mod.proof,coverage:(level<=1&&['A','B','D','E','F','G','H','I','J'].includes(track))?'semente_inicial_requer_validacao':'apenas_treino_nao_certifica_competencia',previewAllowed:false};
 }
 function placementFromDiagnostic(diagnostic){
  const names=['A','B','D','E','F'],result=Object.fromEntries(IDS.map(k=>[k,{level:0,status:'não avaliado',candidate:0}]));
- (diagnostic?.tests||[]).forEach((answer,i)=>{
-  if(i>=names.length)return;
-  result[names[i]]={level:0,status:answer===true?'reconhecimento elementar observado':'necessita reforço inicial',candidate:0};
+ const answers=[0,1,1,2,2];
+ names.forEach((track,i)=>{
+  const raw=diagnostic?.tests?.[i];const answer=typeof raw==='boolean'?raw:raw===answers[i];
+  if(raw===undefined||raw===null)return;
+  result[track]={level:0,status:answer?'reconhecimento elementar observado':'necessita reforço inicial',candidate:0};
  });
  // Um item de escolha múltipla nunca certifica uma trilha nem autoriza pular níveis.
  return result;
@@ -84,7 +116,8 @@ function record(profile,attempt){
  if(![note,rhythm].every(x=>Number.isFinite(x)&&x>=0&&x<=1)||!Number.isInteger(stops)||stops<0||!Number.isFinite(bpm)||bpm<=0)throw Error('Métricas inválidas');
  const min=Math.min(note,rhythm),objective=['verified_midi','teacher_verified'].includes(attempt.evidence);
  const stable=stops===0&&attempt.stablePulse===true,bpmOk=bpm>=STAGES[m.level].q*.85;
- const success=min>=.9&&stable&&bpmOk&&objective;
+ const fresh=s.sessions.every(x=>x.exerciseId!==attempt.exerciseId);
+ const success=min>=.9&&stable&&bpmOk&&objective&&fresh;
  const entry={sessionId:attempt.sessionId,exerciseId:attempt.exerciseId,date:attempt.date,notes:note,rhythm,stops,bpm,verified:objective,success};
  s.sessions.push(entry);
  if(attempt.kind==='first_sight')p.seen.push(attempt.exerciseId);
@@ -102,6 +135,7 @@ function record(profile,attempt){
 }
 function passGate(profile,track,parts){
  const p=structuredClone(profile),m=p.levels[track];if(!m||m.streak.length<3)throw Error('É necessário 90% e pulso estável em 3 sessões verificadas');
+ if(!parts?.trackCompetency||parts.trackCompetency.score<.9||!parts.trackCompetency.verified||parts.trackCompetency.materialKind!=='curated')throw Error('Falta prova original específica, validada, da trilha');
  const names=['recognition','rhythm','leftHand','continuousReading','preReading'];
  for(const k of names){
   const x=parts?.[k];
