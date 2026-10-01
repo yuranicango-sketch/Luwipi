@@ -196,7 +196,7 @@ function splitABC(seed){
   lh.events.forEach(e=>{
    const measure=Math.floor(e.startBeat/meterBeats);
    if(marked.has(measure))return;
-   marked.add(measure);e.pedal=true;
+   marked.add(measure);e.pedal=true;e.pedalAction=measure===0?'start':'change';
   });
  }
  if(seed.secondTrebleVoice){
