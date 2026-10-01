@@ -44,6 +44,7 @@ closeButton.addEventListener('click',()=>setSidebarOpen(false));
 document.addEventListener('keydown',event=>{if(event.key==='Escape'&&sidebarOpen)setSidebarOpen(false)});
 window.LuwipiWorkspaceSidebar=Object.freeze({open:()=>setSidebarOpen(true),close:()=>setSidebarOpen(false),isOpen:()=>sidebarOpen});
 function togglePath(){
+ document.querySelector('#experienceMenu:not(.hidden) [data-experience-close]')?.click();
  window.dispatchEvent(new CustomEvent('luwipi:path-toggle'));
  if(sidebarOpen)setSidebarOpen(false);
 }
