@@ -760,6 +760,8 @@ await test('Rotas canónicas e diagnóstico de utilizadores',async()=>{
  assert(router.includes('navigate("reading",true,canvas.dataset.library!=="reading")'),'toggle antigo abre biblioteca fora do router canónico');
  assert(!shell.includes("roots=new Set(['readingView','diagnosticView'"),'diagnóstico não oferece caminho de retorno');
  assert(router.includes('practice:"liveModeView"')&&router.includes('diagnostic:"diagnosticView"'),'Prática ou diagnóstico não estão mapeados');
+ assert(!app.includes('id="experienceCatalog"')&&app.includes('data-menu-catalog="reading"'),'menu mobile conserva o painel antigo ou perdeu as opções');
+ assert(router.includes('button.closest("[data-menu-catalog]")')&&router.includes('navigate(target,true,target==="reading")'),'catálogos do menu mobile não encaminham para os modos únicos');
  assert(router.includes('popstate')&&router.includes('sessionStorage.setItem')&&router.includes('sessionStorage.getItem'),'atualizar ou voltar descarta a secção');
  assert(router.includes('scrollKey="luwipi:workspace:scroll:v1"')&&router.includes('remember()')&&router.includes('recall(s)'),'a atualização perde a posição de leitura');
  assert(router.includes('luwipi:core-ready')&&app.includes('window.LuwipiCoreLoaded=true'),'o router tenta restaurar antes do motor de música estar pronto');

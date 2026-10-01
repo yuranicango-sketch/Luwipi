@@ -130,6 +130,16 @@ function previous(){
 document.addEventListener("click",event=>{
  if(!booted||restoring)return;
  const button=event.target.closest("button,a");if(!button)return;
+ const catalog=button.closest("[data-menu-catalog]");
+ if(catalog){
+  const target=catalog.dataset.menuCatalog;
+  if(target==="reading"||target==="games"||target==="rhythm"){
+   event.preventDefault();event.stopImmediatePropagation();
+   navigate(target,true,target==="reading");
+  }
+  return;
+ }
+
  const menu=button.closest("[data-experience-nav]"),side=button.closest("[data-workspace-nav]"),legacy=button.closest("[data-nav]"),home=button.closest("[data-home-path]");
  const key=menu?.dataset.experienceNav||side?.dataset.workspaceNav||legacy?.dataset.nav||home?.dataset.homePath;
  if(menu&&key==="back"){
