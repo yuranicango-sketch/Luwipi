@@ -14,7 +14,7 @@ pianoArea.innerHTML='<div class="workspace-piano-edge"><button id="workspacePian
 canvas.append(bar,viewport,pianoArea);sidebar.after(canvas);views.forEach(view=>viewport.append(view));
 
 const barBack=bar.querySelector('.workspace-canvas-back'),barTitle=bar.querySelector('#workspaceCanvasTitle'),barContext=bar.querySelector('#workspaceCanvasContext'),barPrimary=bar.querySelector('#workspaceCanvasPrimary');
-const roots=new Set(['readingView','diagnosticView','karaokeView','liveModeView','gamesView','rhythmView']);
+const roots=new Set(['readingView','karaokeView','liveModeView','gamesView','rhythmView']);
 let libraryOpen=false;
 function activeView(){return viewport.querySelector('.view.active')}
 function modeOf(view){
@@ -53,7 +53,7 @@ function open(target){
  window.scrollTo(0,0);setTimeout(sync,0);
 }
 function openReadingLibrary(){
- if(window.LuwipiWorkspaceRouter){window.LuwipiWorkspaceRouter.go('reading',true,true);return}
+ if(window.LuwipiWorkspaceRouter){window.LuwipiWorkspaceRouter.go('reading',true,true);sync();return}
  open('reading');libraryOpen=true;canvas.dataset.library='reading';
  document.getElementById('readingView')?.classList.add('workspace-library-open');sync();
 }
@@ -75,7 +75,7 @@ function primaryFor(mode){
 }
 function sync(){
  const view=activeView();
- if(libraryOpen&&view?.id!=='readingView')clearLibrary();
+ libraryOpen=canvas.dataset.library==='reading'&&view?.id==='readingView';
  const mode=modeOf(view),root=roots.has(view?.id)&&!libraryOpen;
  canvas.dataset.mode=mode;canvas.dataset.view=view?.id||'';
  sidebar.querySelectorAll('[data-workspace-nav]').forEach(b=>b.classList.toggle('active',b.dataset.workspaceNav===mode));
@@ -99,5 +99,6 @@ barBack.addEventListener('click',goBack);
 new MutationObserver(sync).observe(viewport,{subtree:true,attributes:true,attributeFilter:['class']});
 document.addEventListener('click',()=>setTimeout(sync,0),true);
 document.addEventListener('change',event=>{if(event.target?.id==='karaokeSong'||event.target?.id==='karaokeLead')setTimeout(sync,0)},true);
+window.addEventListener('luwipi:workspace-route',sync);
 sync(); // The canonical router restores the active section and browser history.
 })();

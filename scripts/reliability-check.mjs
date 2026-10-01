@@ -741,6 +741,10 @@ await test('Rotas canónicas e diagnóstico de utilizadores',async()=>{
  assert(app.includes('id="diagnosticView"')&&app.includes('id="liveModeView"'),'diagnóstico ou Prática está fora do canvas');
  assert(app.includes('/assets/activities/workspace-router.js')&&!app.includes('/assets/activities/release-routing.js'),'rotas antigas ainda disputam a navegação');
  assert(shell.includes("window.LuwipiWorkspaceRouter.go")&&!shell.includes("setTimeout(boot,80)"),'sidebar continua com boot paralelo');
+ assert(shell.includes("libraryOpen=canvas.dataset.library==='reading'"),'sidebar perde estado da biblioteca ao recarregar');
+ assert(shell.includes("window.addEventListener('luwipi:workspace-route',sync)"),'sidebar não reage ao histórico/restauro das rotas');
+ assert(router.includes('navigate("reading",true,canvas.dataset.library!=="reading")'),'toggle antigo abre biblioteca fora do router canónico');
+ assert(!shell.includes("roots=new Set(['readingView','diagnosticView'"),'diagnóstico não oferece caminho de retorno');
  assert(router.includes('practice:"liveModeView"')&&router.includes('diagnostic:"diagnosticView"'),'Prática ou diagnóstico não estão mapeados');
  assert(router.includes('popstate')&&router.includes('sessionStorage.setItem')&&router.includes('sessionStorage.getItem'),'atualizar ou voltar descarta a secção');
  assert(router.includes('stopImmediatePropagation()')&&router.includes('data-experience-nav')&&router.includes('data-home-path'),'handlers antigos ainda podem reabrir home');

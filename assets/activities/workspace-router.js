@@ -108,8 +108,13 @@ document.addEventListener("click",event=>{
  if(button.closest("[data-karaoke-open]")){
   event.preventDefault();event.stopImmediatePropagation();navigate("midi");return;
  }
- if(button.closest('[data-workspace-action="library"]')||button.closest('[data-library-toggle]')){
-  /* shell applies its existing library toggle; the router records its result. */
+ if(button.closest('[data-library-toggle]')){
+  event.preventDefault();event.stopImmediatePropagation();
+  navigate("reading",true,canvas.dataset.library!=="reading");
+  return;
+ }
+ if(button.closest('[data-workspace-action="library"]')){
+  /* The shared shell opens and closes the same canonical library route. */
   intent="push";return;
  }
  const selection=button.closest("[data-song],[data-game],[data-rhythm-song],[data-ex],[data-hand],[data-reading-level]");
