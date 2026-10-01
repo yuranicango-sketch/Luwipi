@@ -220,6 +220,10 @@ function normalizeScore(raw){
     tempoMap:Array.isArray(score.tempoMap)?score.tempoMap.map(x=>({beat:roundBeat(Number(x.beat)||0),bpm:clamp(Number(x.bpm)||tempoBpm,20,300)})):[],
     meter,
     meterMap:Array.isArray(score.meterMap)?score.meterMap.map(x=>({beat:roundBeat(Number(x.beat)||0),meter:Array.isArray(x.meter)?x.meter.slice(0,2):meter})):[],
+    pedalMarks:(Array.isArray(score.pedalMarks)?score.pedalMarks:[]).slice(0,40).flatMap(x=>{
+      const beat=Number(x?.beat),label=String(x?.label||"");
+      return Number.isFinite(beat)&&beat>=0&&["Ped.","↺","✱"].includes(label)?[{beat:roundBeat(beat),label}]:[];
+    }),
     keyFifths,
     keyMinor:Boolean(score.keyMinor),
     keyName:score.keyName||keyName(keyFifths,score.keyMinor),
@@ -831,6 +835,17 @@ function render(svg,rawScore,options){
         lastDynamicByClef[event.clef]=event.dynamic;
       }
     });
+  });
+  // Pedal instructions belong BELOW the bass staff; never overlay piano or stave notes.
+  (score.pedalMarks||[]).forEach(mark=>{
+    const measureIndex=Math.floor(mark.beat/measureBeats);
+    const system=Math.floor(measureIndex/measuresPerSystem),slot=measureIndex%measuresPerSystem;
+    if(system>=systems)return;
+    const fraction=(mark.beat-measureIndex*measureBeats)/measureBeats;
+    const x=left+slot*measureWidth+42+fraction*(measureWidth-50);
+    const y=50+system*systemHeight+193;
+    const label=mark.label==="↺"?"↺ Ped.":mark.label;
+    addText(svg,x,y,label,{"font-size":14,fill:"#364b7d","font-family":"serif","text-anchor":"middle","font-weight":700});
   });
   return{score,groups,width,height};
 }
