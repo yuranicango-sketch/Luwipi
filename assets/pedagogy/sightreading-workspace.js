@@ -50,11 +50,12 @@ copyCard.addEventListener('click',async()=>{
  catch{copyCard.textContent='Não foi possível copiar neste navegador'}
 });
 let profile=P.newProfile(),selected='',exercise=null,stage=3,verified=false,store=window.sessionStorage;
-let syncRevision=0,signedIn=false;
+let syncRevision=0,signedIn=false,localEdits=0;
 const trackName=t=>P.tracks[t].name;
 function safeRead(storage,key){try{return JSON.parse(storage.getItem(key)||'null')}catch{return null}}
 function loadProfile(){
  const revision=++syncRevision;
+ const editsAtLoad=localEdits;
  let address=document.getElementById('accountEmail')?.textContent?.trim().toLowerCase();
  if(address&&!address.includes('@'))address='';
  // A signed-in person's data is namespaced independently on this device.
@@ -74,13 +75,20 @@ function loadProfile(){
  if(signedIn&&window.LuwipiProgressSync){
   const sync=window.LuwipiProgressSync;
   void sync.load(profile).then(draft=>{
-   if(revision!==syncRevision||!draft)return;
-   profile=draft;persistLocal();render();
-  });
+   if(revision!==syncRevision||!signedIn||!draft)return;
+   // A student may start an activity before the first remote GET completes.
+   // Merge, never overwrite, notes and sight-read pieces recorded in that interval.
+   const edited=localEdits!==editsAtLoad;
+   profile=edited?sync.mergeDrafts(draft,profile):draft;
+   persistLocal();render();
+   if(edited)void sync.save(profile);
+  }).catch(()=>{syncState.textContent='Sem ligação · progresso local mantido'});
+
  }
 }
 function persistLocal(){try{store.setItem(loadProfile.key,JSON.stringify(profile))}catch{}}
 function save(){
+ localEdits++;
  persistLocal();
  if(signedIn&&window.LuwipiProgressSync)void window.LuwipiProgressSync.save(profile);
 }
@@ -92,6 +100,13 @@ panel.querySelector('#pathClose').addEventListener('click',close);
 document.addEventListener('keydown',event=>{if(event.key==='Escape'&&!panel.hidden)close()});
 window.addEventListener('luwipi:workspace-route',()=>{if(!panel.hidden)close()});
 window.addEventListener('luwipi:access-ready',loadProfile);
+window.addEventListener('luwipi:access-signed-out',()=>{
+ syncRevision++;localEdits++;signedIn=false;selected='';exercise=null;
+ profile=P.newProfile();store=window.sessionStorage;loadProfile.key=KEY+':guest';
+ try{store.removeItem(loadProfile.key)}catch{}
+ window.LuwipiProgressSync?.reset();
+ close();render();
+});
 window.addEventListener('luwipi:pedagogy-measured',event=>{
  if(exercise?.id===event.detail?.exerciseId)exercise.measured=event.detail;
 });
@@ -192,7 +207,9 @@ function launch(which){
  exercise={...seed,id:seed.id,track:selected,level:currentLevel,kind:'practice',stage:which,sessionId:String(Date.now())+'-'+seed.id};
  const opened=window.LuwipiLiveLoadPedagogy(score,score.title,{firstSight:which===3,exerciseId:seed.id});
  if(opened){
-  if(which===3){profile.seen.push(seed.id);save()}
+  // A warm-up or short pattern exposes musical content too: never re-label it
+  // as an unseen first-sight exercise, even when only two bars were previewed.
+  if(!profile.seen.includes(seed.id)){profile.seen.push(seed.id);save()}
   if(seed.cues)window.dispatchEvent(new CustomEvent('luwipi:pedagogy-cues',{detail:{cues:seed.cues,track:seed.track}}));
   close();
  }else{workout.append(el('p','workout-result','Não foi possível iniciar o exercício.'))}
