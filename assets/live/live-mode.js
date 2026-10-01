@@ -378,8 +378,11 @@ async function selectSource(kind){
 function startPractice(){
   if(!score||!groups.length)return;
   chooseView("interactive");
+  if(inputMode==="none"&&window.LuwipiWorkspacePiano){
+    inputMode="virtual";setInputState("Piano virtual ativo.");
+  }
   if(inputMode==="none"){
-    setFeedback("Primeiro liga o piano MIDI ou o microfone.","bad");return;
+    setFeedback("Liga o piano virtual, um teclado MIDI ou o microfone.","bad");return;
   }
   stopPlayback();practice=true;practiceIndex=0;practiceAnchor=0;practiceFirstBeat=groups[0].startBeat;
   correctCount=0;attempts=0;timingSamples=[];chordSeen.clear();noteOnTimes.clear();
@@ -602,14 +605,21 @@ sourceMidi.addEventListener("click",()=>selectSource("midi"));
 sourceMic.addEventListener("click",()=>selectSource("microphone"));
 
 unsubscribe=Input.subscribe(onInput);
-const onWorkspacePiano=event=>{
-  if(!view.classList.contains('active')||!Number.isInteger(event.detail?.midi))return;
-  onInput({type:event.detail.phase==='off'?'noteoff':'noteon',source:'midi',midi:event.detail.midi,at:performance.now()});
+const onVirtualPiano=event=>{
+ if(!view.classList.contains('active'))return;
+ const detail=event.detail||{},midi=Number(detail.midi);
+ if(!Number.isInteger(midi)||midi<0||midi>127)return;
+ if(inputMode!=='virtual'){
+  inputMode='virtual';
+  setInputState('Piano virtual ativo.');
+ }
+ onInput({type:detail.phase==='off'?'noteoff':'noteon',midi,source:'virtual',at:performance.now()});
 };
-window.addEventListener('luwipi:piano-note',onWorkspacePiano);
+window.addEventListener('luwipi:piano-note',onVirtualPiano);
+
 const observer=new MutationObserver(cleanupWhenHidden);
 observer.observe(view,{attributes:true,attributeFilter:["class"]});
-window.addEventListener("pagehide",()=>{stopPlayback();Input.disconnect();if(unsubscribe)unsubscribe();window.removeEventListener('luwipi:piano-note',onWorkspacePiano)});
+window.addEventListener("pagehide",()=>{stopPlayback();Input.disconnect();if(unsubscribe)unsubscribe();window.removeEventListener('luwipi:piano-note',onVirtualPiano)});
 
 toggle(guideToggle,guideOn);toggle(rhythmToggle,rhythmOn);
 window.LuwipiLiveTaskSource=Object.freeze({score:()=>score?{title:score.title||structuredFileName||"Partitura",kind:"music",score}:null});
