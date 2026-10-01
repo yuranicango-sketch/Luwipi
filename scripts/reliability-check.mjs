@@ -314,16 +314,13 @@ await test("Piano manual: ataque suave e teclado imóvel durante o toque",async(
   assert(!core.includes("?.scrollIntoView({block:'nearest',inline:'center',behavior:'smooth'});renderExerciseSteps()")&&core.includes("scoreScroller.scrollBy"),"exercise moves the whole page while playing");
 });
 
-await test("Ateliê musical: seis jogos individuais publicados",async()=>{
+await test("Ateliê musical: laboratório preservado, fora do catálogo público",async()=>{
   const html=await read("app.html"),page=await read("atelie-musical.html"),game=await read("assets/games/atelie-musical.js"),style=await read("assets/games/atelie-musical.css"),build=await read("scripts/build-static.sh");
   for(const id of ["partitura","jardim","ritmo","melodia","compassos","pinta"]){
-    assert(html.includes(`/atelie-musical.html?jogo=${id}`),`missing independent game ${id}`);
-    assert((await read(`assets/images/games/atelie-${id}.svg`)).includes("<svg"),`missing game artwork ${id}`);
+    assert(!html.includes(`/atelie-musical.html?jogo=${id}`),`prototype still exposed in public catalog: ${id}`);
+    assert((await read(`assets/images/games/atelie-${id}.svg`)).includes("<svg"),`missing archived game artwork ${id}`);
   }
-  assert(page.includes("atelie-musical.js")&&build.includes("cp atelie-musical.html public/atelie-musical.html"),"atelier is absent from static build");
-  const group=html.slice(html.indexOf('<section class="tiny-section atelie-section">'),html.indexOf('<div class="game-groups">'));
-  assert(group.includes("Pinta o Piano")&&group.includes("Pinta a Partitura")&&group.includes("Pinta e Toca"),"painting games are split across categories");
-  assert(game.includes("function partitura()")&&game.includes("function jardim()")&&game.includes("function rhythmGame(kind)")&&game.includes("function melodia()")&&game.includes("function pinta()"),"one or more games has no interaction");
+  assert(page.includes("atelie-musical.js")&&build.includes("cp atelie-musical.html public/atelie-musical.html"),"atelier laboratory was accidentally deleted");
   assert(game.includes("semitones=[0,2,4,5,7,9,11]")&&game.includes("staffTops=[117,103.5,90,76.5,63,49.5,36]"),"atelier pitch or staff heights are not diatonic");
   assert(game.includes("startMs+beatMs/2")&&game.includes("playFigure(i,at*beatMs)")&&style.includes(".spot.ledger:before"),"eighth-note attacks or middle-C ledger line missing");
 });
@@ -347,12 +344,15 @@ await test("Jogos: miniaturas e visual Luwipi consistentes",async()=>{
   assert(shell.includes('--luwipi-primary:#4568ff'),"game shell differs from site palette");
 });
 
-await test("Jogos: todos os cartões mostram miniaturas",async()=>{
+await test("Jogos: catálogo curto, forte e com miniaturas",async()=>{
   const app=await read("app.html"),start=app.indexOf('<section id="gamesView"'),end=app.indexOf('</main></section>',start);
   assert(start>=0&&end>start,"games view missing");
-  const cards=[...app.slice(start,end).matchAll(/<(?:button|a)[^>]*class="(?:tiny-card|game-card)[^"]*"[^>]*>[\s\S]*?<\/(?:button|a)>/g)];
-  assert(cards.length>=15,"expected curated Luwipi game cards");
+  const catalog=app.slice(start,end);
+  const cards=[...catalog.matchAll(/<(?:button|a)[^>]*class="game-card[^"]*"[^>]*>[\s\S]*?<\/(?:button|a)>/g)];
+  assert(cards.length===8,"expected exactly eight curated Luwipi game cards");
   for(const card of cards){const src=card[0].match(/src="\/assets\/images\/games\/([^"]+\.svg)"/);assert(src,"game card lacks thumbnail");await read("assets/images/games/"+src[1])}
+  for(const weak of ['data-game="direction"','data-game="highLow"','data-game="loudSoft"','data-game="tinyFollow"','/atelie-musical.html?jogo='])assert(!catalog.includes(weak),"weak prototype exposed in curated catalog: "+weak);
+  for(const strong of ['Super Paw Paw','Paw Paw Notas','Caça à Nota','Eco do Piano','Corrige o Professor','Piano dos Bichinhos','Bolhas do Som','Pinta o Piano'])assert(catalog.includes(strong),"strong game missing: "+strong);
 });
 
 await test("Acesso: rede pendente termina e sessão tem limite",async()=>{
@@ -444,7 +444,7 @@ await test("Activity-first: sem aulas, piano reativo e formatos musicais",async(
   assert(!app.includes('id="videosView"')&&!app.includes('id="plannerView"'),"lesson/video views should be removed");
   assert(app.includes('Atividades musicais')&&app.includes('id="homePaths"')&&!app.includes('id="homeStart"'),"home still promotes the paused course");
   for(const path of ["reading","rhythm","games","live"])assert(app.includes('data-home-path="'+path+'"'),"learner path missing: "+path);
-  assert(app.includes('id="gamesPathGrid"')&&journey.includes('gameGrid.appendChild(card)')&&layout.includes('#gamesView:not(.library-open) .games-library'),"games still expose a competing legacy index");
+  assert(app.includes('class="curated-game-grid"')&&!app.includes('id="gamesLibraryToggle"')&&!app.includes('id="gamesPathGrid"')&&!journey.includes('gameGrid.appendChild(card)'),"games still expose a competing or disappearing catalog");
   assert(!app.includes('class="home-tool-list"')&&!app.includes('id="homeResume"'),"duplicate learner navigation remains");
   assert(practice.includes("activity-piano-key")&&practice.includes("LuwipiAudioBridge"),"reactive piano preview missing");
   assert(live.includes(".abc")&&live.includes(".kar")&&live.includes(".json"),"extended score formats missing");
@@ -625,6 +625,14 @@ await test('Entrada pública, app autenticada e tarefas isoladas',async()=>{
   assert(standalone.includes('luwipi-shared-task')&&standalone.includes('.back-link')&&standalone.includes('#other'),'jogo partilhado ainda permite navegar pelo catálogo');
   assert(app.includes('Prática guiada')&&!app.includes('<span class="live-mode-badge">Ensine + Aprenda</span>'),'rótulo legado ainda está visível');
   assert(!config.redirects.some(x=>x.source==='/app'),'Vercel ainda desvia /app para a landing');
+});
+
+await test('Layout final: catálogo estável e retorno dos jogos',async()=>{
+  const app=await read('app.html'),css=await read('assets/activities/release-layout.css'),route=await read('assets/activities/release-routing.js'),standalone=await read('assets/tasks/standalone-task.js');
+  assert(app.includes('/assets/activities/release-layout.css')&&app.includes('/assets/activities/release-routing.js'),'final layout layer is not mounted');
+  assert(css.includes('.curated-game-grid')&&css.includes('@media(max-width:560px)')&&css.includes('#liveModeView .live-layout'),'desktop/mobile layout contract missing');
+  assert(route.includes("q.get('open')!=='games'")&&route.includes("target.classList.add('active')"),'return-to-games route missing');
+  assert(standalone.includes("link.href='/app?open=games'"),'standalone games still return to public landing');
 });
 
 console.log("\nLuwipi reliability gate: "+passed+" checks passed");

@@ -53,9 +53,5 @@
   const toggle=view.querySelector("[data-library-toggle]");toggle?.addEventListener("click",()=>{const open=view.classList.toggle("library-open");toggle.textContent=open?"Fechar escolhas":"Ver todas as atividades e músicas";toggle.setAttribute("aria-expanded",String(open))});
   new MutationObserver(()=>{if(view.classList.contains("active"))refresh()}).observe(view,{attributes:true,attributeFilter:["class"]});
   document.addEventListener("luwipi:journey-ready",refresh);refresh();
-  const games=document.getElementById("gamesView"),gameGrid=document.getElementById("gamesPathGrid"),gameToggle=document.getElementById("gamesLibraryToggle");
-  if(games&&gameGrid&&gameToggle){
-    [games.querySelector('[data-game="noteHunt"]'),games.querySelector('[href="/paw-paw-notas.html"]'),games.querySelector('[href="/super-paw-paw.html"]')].forEach(card=>{if(card)gameGrid.appendChild(card)});
-    gameToggle.addEventListener("click",()=>{const open=games.classList.toggle("library-open");gameToggle.setAttribute("aria-expanded",String(open));gameToggle.textContent=open?"Fechar jogos":"Ver todos os jogos"});
-  }
+  // Games are now a single curated catalog; cards stay in their original DOM order.
 })();

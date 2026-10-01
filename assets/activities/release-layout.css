@@ -1,0 +1,54 @@
+/* Final public-release layout layer. Loaded last to neutralize legacy collisions. */
+html,body{max-width:100%;overflow-x:hidden}
+.view.active{min-height:100dvh}
+#homeView .premium-home,#gamesView .page,#rhythmView .page,#readingView .page,#liveModeView .page,#karaokeView .page{width:min(100%,1180px);margin-inline:auto}
+#homeView .premium-home{padding-inline:clamp(14px,3vw,34px)}
+#homeView .home-path-grid{grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}
+#homeView .home-path-grid button{min-width:0}
+#gamesView .curated-games-page{padding:clamp(18px,3vw,32px) clamp(14px,3vw,28px) 60px}
+#gamesView .page-head{margin-bottom:14px}
+.curated-games-intro{max-width:760px;margin:6px 0 22px}
+.curated-games-intro small{font-size:10px;font-weight:900;letter-spacing:.12em;color:#365ed0}
+.curated-games-intro h2{margin:5px 0 7px;font-size:clamp(30px,4vw,48px);line-height:1;letter-spacing:-.05em;color:#172d63}
+.curated-games-intro p{margin:0;color:#63708b;font-size:13px;line-height:1.5}
+.curated-game-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+#gamesView .curated-game-card{appearance:none;width:100%;min-width:0;min-height:0;margin:0;padding:10px;border:1px solid #cad7ef;border-radius:18px;background:#fff;color:#172d63;text-decoration:none;text-align:left;display:flex;flex-direction:column;gap:10px;box-shadow:0 8px 20px rgba(23,45,99,.07);overflow:hidden}
+#gamesView button.curated-game-card{font:inherit;cursor:pointer}
+#gamesView .curated-game-card:hover,#gamesView .curated-game-card:focus-visible{border-color:#7897df;transform:translateY(-2px);box-shadow:0 12px 26px rgba(23,45,99,.12)}
+#gamesView .curated-game-card img{display:block;width:100%;aspect-ratio:16/9;height:auto;object-fit:cover;border-radius:12px;background:#eaf0ff}
+#gamesView .curated-game-card .game-card-copy{padding:0 4px 4px;display:flex;flex-direction:column;gap:4px}
+#gamesView .curated-game-card strong{font-size:17px;line-height:1.15;letter-spacing:-.02em}
+#gamesView .curated-game-card span{font-size:12px;line-height:1.4;color:#65718b}
+#gamesView .curated-game-card em{font-style:normal;font-size:9px;font-weight:900;letter-spacing:.07em;text-transform:uppercase;color:#4265be;margin-top:3px}
+#gamesView .curated-game-card.featured{grid-column:span 2;display:grid;grid-template-columns:minmax(190px,42%) 1fr;align-items:center}
+#gamesView .curated-game-card.featured img{height:100%;min-height:150px}
+#gamesView .curated-game-card.featured strong{font-size:clamp(19px,2vw,25px)}
+#rhythmView .rhythm-menu{width:100%;max-width:1100px;margin-inline:auto}
+#liveModeView .live-layout{grid-template-columns:minmax(270px,340px) minmax(0,1fr);gap:14px}
+#liveModeView .live-layout>*{min-width:0}
+#readingView .page,#rhythmView .page,#liveModeView .page,#karaokeView .page{padding-inline:clamp(10px,2.4vw,24px)}
+@media(max-width:920px){
+ #homeView .home-path-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ #homeView .home-path-grid button:last-child{grid-column:1/-1}
+ .curated-game-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ #gamesView .curated-game-card.featured{grid-column:span 1;display:flex}
+ #gamesView .curated-game-card.featured img{height:auto;min-height:0}
+ #liveModeView .live-layout{grid-template-columns:1fr}
+}
+@media(max-width:560px){
+ #homeView .home-path-grid{grid-template-columns:1fr}
+ #homeView .home-path-grid button:last-child{grid-column:auto}
+ .curated-game-grid{grid-template-columns:1fr}
+ #gamesView .curated-game-card{display:grid;grid-template-columns:112px minmax(0,1fr);align-items:center;gap:10px;padding:8px}
+ #gamesView .curated-game-card img,#gamesView .curated-game-card.featured img{width:112px;height:84px;min-height:0;aspect-ratio:auto}
+ #gamesView .curated-game-card .game-card-copy{padding:0}
+ #gamesView .curated-game-card strong{font-size:15px}
+ #gamesView .curated-game-card span{font-size:10.5px}
+ .curated-games-intro{margin-bottom:15px}
+}
+@media(max-height:560px) and (orientation:landscape){
+ #homeView .home-path-grid{grid-template-columns:repeat(5,minmax(0,1fr))}
+ #homeView .home-path-grid button:last-child{grid-column:auto}
+ #gamesView .curated-games-page{padding-top:10px}
+ .curated-games-intro h2{font-size:28px}
+}

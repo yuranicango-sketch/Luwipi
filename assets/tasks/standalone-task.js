@@ -1,6 +1,7 @@
 (()=>{
   'use strict';
   const params=new URLSearchParams(location.search),course=params.get('course'),shared=params.get('parent')==='1';
+  if(!shared)document.querySelectorAll('.back-link,a[href="/#games"],a[href="/"]').forEach(link=>{link.href='/app?open=games'});
   const controls=document.createElement('div');controls.className='luwipi-task-tools';
   controls.style.cssText='position:fixed;z-index:99;right:max(10px,env(safe-area-inset-right));top:max(9px,env(safe-area-inset-top));display:flex;gap:6px;max-width:calc(100vw - 20px)';
   if(shared){document.body.classList.add('parent-mode','luwipi-shared-task');const style=document.createElement('style');style.textContent='.luwipi-shared-task .back-link,.luwipi-shared-task #other,.luwipi-shared-task a[href="/"],.luwipi-shared-task a[href="/app"]{display:none!important}';document.head.append(style)}
