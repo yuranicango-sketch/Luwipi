@@ -152,7 +152,7 @@ function updateTabs(){
 function chooseView(which){
   if(which==="original"&&!pdfUrl)return;
   if(which==="interactive"&&!score)return;
-  activeView=which;updateTabs();
+  activeView=which;storePracticeView(which);updateTabs();
 }
 function fidelityLabel(report){
   if(!report)return{label:"—",title:"Sem verificação",tone:""};
@@ -234,7 +234,7 @@ function clearAll(){
   if(pdfUrl)URL.revokeObjectURL(pdfUrl);pdfUrl="";
   if(pdfFrame)pdfFrame.removeAttribute("src");pdfFallback.replaceChildren();
   activeView="interactive";updateFileState();renderScore();
-  void draftStore("delete");draftRestoreRequested=false;
+  void draftStore("delete");draftRestoreRequested=false;storePracticeView('interactive');
 }
 function readableError(code){
   const map={
@@ -261,6 +261,13 @@ function readableError(code){
 }
 /* Reload recovery is limited to this browser tab; it never publishes a private score. */
 const PRACTICE_TAB='luwipi:practice:tab:v1';
+const PRACTICE_VIEW='luwipi:practice:view:v1';
+function savedPracticeView(){
+ try{return sessionStorage.getItem(PRACTICE_VIEW)||'interactive'}catch{return'interactive'}
+}
+function storePracticeView(view){
+ try{sessionStorage.setItem(PRACTICE_VIEW,view)}catch{}
+}
 function tabId(){
  try{let id=sessionStorage.getItem(PRACTICE_TAB);if(!id){id=crypto.randomUUID();sessionStorage.setItem(PRACTICE_TAB,id)}return id}catch{return null}
 }
@@ -285,7 +292,10 @@ async function restorePracticeDraft(){
  if(draftRestoreRequested||score||pdfUrl)return;draftRestoreRequested=true;
  const draft=await draftStore('read');
  if(draft?.file&&Date.now()-draft.at<24*3600*1000&&!score&&!pdfUrl){
+  const preferred=savedPracticeView();
   await importFile(draft.file,true);
+  if(preferred==='original'&&pdfUrl)chooseView('original');
+  else if(score)chooseView('interactive');
   setFeedback('Retomaste a partitura desta sessão. Podes continuar onde estavas.','good');
  }
 }

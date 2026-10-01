@@ -65,8 +65,10 @@ async function updateSavedMidi(item){
  if(!item?.libraryId)return;
  try{await midiApi('',{method:'PATCH',headers:{'content-type':'application/json'},body:JSON.stringify({id:item.libraryId,leadKey,notationMode:notationMode.value,scoreMode,aiReview:item.ai||undefined,aiModel:item.ai?'gpt-6-luna':''})});await refreshMidiLibrary()}catch{}
 }
+let loadingSavedId="";
 async function loadSavedMidi(id){
- if(!id)return;
+ if(!id||loadingSavedId===id)return;
+ loadingSavedId=id;
  try{
   $('karaokeStatus').textContent='A abrir MIDI guardado…';
   const meta=(await midiApi('?id='+encodeURIComponent(id))).item;
@@ -78,7 +80,13 @@ async function loadSavedMidi(id){
   if(meta.lead_key&&[...lead.options].some(o=>o.value===meta.lead_key)){lead.value=meta.lead_key;leadKey=meta.lead_key;leadTouched=true;await setLead()}
   window.LuwipiWorkspaceRouter?.setMidi(item.libraryId);
   saveMidi.classList.add('saved');saveMidi.textContent='✓ Guardado';$('karaokeStatus').textContent=item.ai?'MIDI aberto · análise IA reutilizada.':'MIDI aberto da biblioteca.';
- }catch{$('karaokeStatus').textContent='Não foi possível abrir este MIDI guardado.'}
+ }catch(error){
+  if(error?.message==='unauthorized'){
+   $('karaokeStatus').textContent='A aguardar a sessão para abrir o MIDI guardado…';
+  }else{
+   $('karaokeStatus').textContent='Não foi possível abrir este MIDI guardado.';
+  }
+ }finally{if(loadingSavedId===id)loadingSavedId=""}
 }
 
 function msAt(beat){
@@ -403,7 +411,9 @@ if(saveMidi)saveMidi.addEventListener('click',()=>void saveCurrentMidi());if(ref
 window.addEventListener('luwipi:restore-midi',event=>{
  const id=event.detail?.id;if(!id||document.body.classList.contains('parent-mode'))return;
  const found=playlist.findIndex(item=>item.libraryId===id);
- if(found>=0){song.value=String(found);setSong(found)}else void loadSavedMidi(id);
+ if(found>=0){
+  if(current?.libraryId!==id){song.value=String(found);setSong(found)}
+ }else void loadSavedMidi(id);
 });
 drawKeys();setAiUI('idle');updateScoreModeUI();void refreshMidiLibrary();void openSharedTask();
 window.addEventListener('pagehide',()=>{stop();aiAbort?.abort();scoreAbort?.abort();if(unsubscribe)unsubscribe()});

@@ -177,6 +177,12 @@ window.addEventListener("luwipi:core-ready",()=>{
  if(active()?.id==="homeView"){restore({...state});return}
  if(state.activity&&active()?.id===roots[state.section]){restoring=true;replay(state);restoring=false;last=active()?.id||roots[state.section];recall(state)}
 },{once:true});
-window.addEventListener("luwipi:access-ready",()=>{if(booted&&state.activity==="readingImportedView"&&state.readingId&&active()?.id!=="readingImportedView")restoreReadingItem(state.readingId)});
+window.addEventListener("luwipi:access-ready",()=>{
+ if(!booted)return;
+ if(state.activity==="readingImportedView"&&state.readingId&&active()?.id!=="readingImportedView")restoreReadingItem(state.readingId);
+ if(state.section==="midi"&&state.midi&&active()?.id==="karaokeView"){
+  window.dispatchEvent(new CustomEvent("luwipi:restore-midi",{detail:{id:state.midi}}));
+ }
+});
 window.addEventListener("pageshow",event=>{if(!booted)start();else if(event.persisted)schedule()});
 })();

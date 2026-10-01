@@ -711,6 +711,20 @@ await test('Workspace responsivo: piano de duas oitavas partilhado e pauta livre
  assert(css.includes('.karaoke-workspace.tools-open .karaoke-rail'),'ferramentas MIDI não respeitam o canvas');
  assert(css.includes('.karaoke-key.workspace-lit'),'teclas não têm iluminação de pré-visualização');
 });
+await test('Recuperação de MIDI e da vista da Prática após refresh',async()=>{
+ const router=await read('assets/activities/workspace-router.js');
+ const midi=await read('assets/karaoke/karaoke.js');
+ const practice=await read('assets/live/live-mode.js');
+ assert(router.includes('state.section==="midi"&&state.midi')&&router.includes('new CustomEvent("luwipi:restore-midi"'),
+  'MIDI guardado não volta a abrir quando a autenticação fica pronta');
+ assert(midi.includes('loadingSavedId===id')&&midi.includes('finally{if(loadingSavedId===id)loadingSavedId=""}'),
+  'refresh de MIDI pode duplicar importações simultâneas');
+ assert(midi.includes('A aguardar a sessão para abrir o MIDI guardado'),'reentrada de MIDI não reconhece atraso de autenticação');
+ assert(practice.includes("PRACTICE_VIEW='luwipi:practice:view:v1'")&&practice.includes('savedPracticeView()'),
+  'Prática perde a vista original/interativa');
+ assert(practice.includes("if(preferred==='original'&&pdfUrl)chooseView('original')"),
+  'Prática não recupera a vista preferida do PDF');
+});
 await test('Workspace único: canvas real, sidebar desktop e biblioteca MIDI',async()=>{
  const app=await read('app.html'),css=await read('assets/app.css'),shell=await read('assets/activities/workspace-shell.js'),karaoke=await read('assets/karaoke/karaoke.js'),api=await read('api/midi-library.js'),config=JSON.parse(await read('vercel.json'));
  assert(app.includes('id="workspaceSidebar"')&&app.includes('data-workspace-nav="reading"')&&app.includes('id="readingView" class="view active"'),'workspace não abre diretamente em Leitura');
