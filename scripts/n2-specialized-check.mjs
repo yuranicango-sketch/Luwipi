@@ -50,7 +50,9 @@ for(const track of TRACKS){
  if(track==="C")assert.equal(score.keyFifths,3,"Three-sharp key signature failed");
  if(track==="D")assert.ok(score.events.filter(e=>e.clef==="treble"&&e.startBeat===0).length>=3,"Inverted chord lost notes");
  if(track==="E")assert.deepEqual(score.meter,[3,4],"Waltz meter failed");
- if(track==="F"){assert.equal(score.tempoBpm,108,"Dotted-quarter 72 must become quarter 108 for internal playback");assert.ok(score.rests.length>0,"Compound-meter rest missing");}
+ if(track==="F"){assert.equal(score.tempoBpm,108,"Dotted-quarter 72 must become quarter 108 for internal playback");
+ assert.equal(score.pulseUnit,"dotted-quarter","6/8 must retain two beats per bar in the displayed tempo");
+ assert.equal(E.normalizeScore(score).pulseUnit,"dotted-quarter","Compound beat survives re-normalization");assert.ok(score.rests.length>0,"Compound-meter rest missing");}
  if(track==="G"){const top=score.events.filter(e=>e.clef==="treble");assert.ok(top.some(e=>e.dynamic==="p")&&top.some(e=>e.dynamic==="f"),"Expression not written");assert.ok(Math.min(...top.map(e=>e.velocity))<Math.max(...top.map(e=>e.velocity)),"Crescendo not audible");}
  if(track==="H"){
   assert.ok(score.events.some(e=>e.voiceDirection==="up")&&score.events.some(e=>e.voiceDirection==="down"),"Independent stem directions missing");
@@ -60,7 +62,13 @@ for(const track of TRACKS){
  count++;
 }
 assert.equal(count,10);
-const live=await read("assets/live/live-mode.js");
+const live=await read("assets/live/live-mode.js"),engine=await read("assets/music/score-engine.js");
+assert.ok(engine.includes('score.pulseUnit==="dotted-quarter"?"♩. = "'),"Notation must display dotted-quarter=72, never quarter=108 as the written pulse");
+assert.ok(live.includes("function tempoText(value,which=score)")&&live.includes('pulseUnit:score?.pulseUnit'),"Practice tempo and results must use the written dotted-quarter");
+assert.ok(live.includes("if(practice&&next&&!pedagogyFlow)")&&live.includes("practice&&guideOn&&!pedagogyFlow"),"First sight must not show upcoming answer lights or tracking hints");
+assert.ok(live.includes('advancePractice("near","Nota diferente: passa ao próximo grupo sem voltar atrás.",false)'),"Incorrect first-sight notes must not force a repeat");
+assert.ok(live.includes('if(pedagogyFlow){advancePractice("near","Ataque fora do pulso: continua sem repetir.")'),"Late first-sight attacks must not force a repeat");
+assert.ok(live.includes("if(practiceButton)practiceButton.disabled=false"),"Cancelled preview timer must restore the Start button");
 assert.ok(live.includes("startPreRead(30)")&&live.includes("practiceButton.disabled=true")&&live.includes("pedagogyTranspose=[2,5,7].includes(interval)?interval:0"),"Sight-reading preparation or transposition contract missing");
 assert.ok(live.includes("if(!score||!groups.length||practiceButton.disabled)return"),"Pre-reading start is not gated");
 assert.ok(live.includes("if(pedagogyNovel||pedagogyTranspose){playButton.disabled=true;hearButton.disabled=true;}"),"Preview bypass during first sight or transposition");
