@@ -193,6 +193,7 @@ function normalizeScore(raw){
       track:Number(event.track)||0,
       channel:Number(event.channel)||0,
       articulations:Array.isArray(event.articulations)?event.articulations.slice(0,8):[],
+      accidental:Object.prototype.hasOwnProperty.call(event,"accidental")?event.accidental:undefined,
       voiceDirection:["up","down"].includes(event.voiceDirection)?event.voiceDirection:null,
       tieStart:Boolean(event.tieStart),
       tieStop:Boolean(event.tieStop),
@@ -690,6 +691,10 @@ function drawLedger(svg,x,bottom,step){
   if(step>=10)for(let s=10;s<=step;s+=2){const y=bottom-s*6;addLine(svg,x-15,y,x+15,y,{stroke:"#555a63","stroke-width":1.6})}
 }
 function accidentalForEvent(event){
+  if(event.accidental!==undefined){
+    const symbols={sharp:"♯",flat:"♭",natural:"♮","double-sharp":"𝄪","double-flat":"𝄫"};
+    return symbols[event.accidental]||"";
+  }
   const name=String(event.note||midiToName(event.midi));
   return name.includes("#")?"♯":name.includes("b")?"♭":"";
 }
@@ -867,31 +872,42 @@ function parseABC(text){
     if(div!==undefined){factor/=div===""?2:Number(div||2)}
     return Math.max(.03125,unitBeats*factor);
   }
+  // A written accidental persists for this pitch and octave until the next bar.
+  const measureAcc=new Map();
   function pitch(token){
     const m=/^([\^_=]*)([A-Ga-g])([,']*)$/.exec(token);if(!m)return null;
-    const letter=m[2].toUpperCase(),lower=m[2]===m[2].toLowerCase();
-    let octave=lower?5:4;
+    const letter=m[2].toUpperCase();let octave=m[2]===m[2].toLowerCase()?5:4;
     for(const c of m[3])octave+=c==="'"?1:-1;
-    let shift=keyAcc[letter]||0;
-    if(m[1].includes("="))shift=0;
-    else if(m[1].includes("^"))shift=(m[1].match(/\^/g)||[]).length;
-    else if(m[1].includes("_"))shift=-(m[1].match(/_/g)||[]).length;
-    return clamp((octave+1)*12+pcs[letter]+shift,0,127);
+    const key=letter+octave,marks=m[1];
+    let shift=measureAcc.has(key)?measureAcc.get(key):(keyAcc[letter]||0),accidental=null;
+    if(marks){
+      if(marks.includes("=")){shift=0;accidental="natural";}
+      else if(marks.includes("^")){shift=(marks.match(/\^/g)||[]).length;accidental=shift>1?"double-sharp":"sharp";}
+      else if(marks.includes("_")){shift=-(marks.match(/_/g)||[]).length;accidental=shift<(-1)?"double-flat":"flat";}
+      measureAcc.set(key,shift);
+    }
+    return{midi:clamp((octave+1)*12+pcs[letter]+shift,0,127),
+      note:letter+(shift>0?"#".repeat(shift):shift<0?"b".repeat(-shift):"")+octave,accidental};
   }
   const content=body.join(" ").replace(/"[^"]*"/g," ");
-  const re=/(\[[^\]]+\]|[\^_=]*[A-Ga-gzZ][,']*)(\d+)?(?:\/(\d*)?)?/g;
+  const re=/(\|+|:\||\|:|\[\||\[[^\]]+\]|[\^_=]*[A-Ga-gzZ][,']*)(\d+)?(?:\/(\d*)?)?/g;
   const events=[],rests=[];let beat=0,match;
   while((match=re.exec(content))){
     const token=match[1],dur=duration(match[2],match[3]);
+    if(token[0]==="|"||token===":|"||token==="|:"||token==="[|"){measureAcc.clear();continue}
     if(/^[zZ]/.test(token)){rests.push({id:"abc-rest-"+rests.length,startBeat:roundBeat(beat),durationBeat:roundBeat(dur),type:durationKind(dur).name});beat+=dur;continue}
     if(token[0]==="["){
       const inside=token.slice(1,-1),noteRe=/[\^_=]*[A-Ga-g][,']*/g;let nm,found=0;
-      while((nm=noteRe.exec(inside))){const midi=pitch(nm[0]);if(midi===null)continue;events.push({id:"abc-"+events.length,midi,startBeat:roundBeat(beat),durationBeat:roundBeat(dur),velocity:78,note:midiToSpelledName(midi,keyFifths),clef:midi<60?"bass":"treble"});found++}
+      while((nm=noteRe.exec(inside))){
+        const p=pitch(nm[0]);if(!p)continue;
+        events.push({id:"abc-"+events.length,...p,startBeat:roundBeat(beat),durationBeat:roundBeat(dur),velocity:78,clef:p.midi<60?"bass":"treble"});
+        found++;
+      }
       if(found)beat+=dur;
       continue;
     }
-    const midi=pitch(token);if(midi===null)continue;
-    events.push({id:"abc-"+events.length,midi,startBeat:roundBeat(beat),durationBeat:roundBeat(dur),velocity:78,note:midiToSpelledName(midi,keyFifths),clef:midi<60?"bass":"treble"});
+    const p=pitch(token);if(!p)continue;
+    events.push({id:"abc-"+events.length,...p,startBeat:roundBeat(beat),durationBeat:roundBeat(dur),velocity:78,clef:p.midi<60?"bass":"treble"});
     beat+=dur;
   }
   if(!events.length&&!rests.length)throw new Error("abc_no_notes");
