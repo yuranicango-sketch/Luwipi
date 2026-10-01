@@ -27,3 +27,16 @@
 ## Qualidade e regressão
 O build executa `reliability-check`, `pedagogy-check`, `workspace-pedagogy-check`, `specialized-pedagogy-check`, `progress-sync-check` e `diagnostic-mapping-check`.
 Os testes de instrumento validam sintaxe musical, 8 compassos e duas mãos, genuínos contrastes staccato/tenuto e níveis de dinâmica, invariantes de rota e privacidade dos resultados.
+
+## Atualização N2–N4 (estado incremental)
+
+- **N2:** dez estudos orientados, um por trilha, com 6/8 em pulsação composta, vozes independentes e transposição de 2ª; todos exigem revisão musical antes de servir como provas.
+- **N3:** catorze estudos originais distribuídos pelas dez trilhas, incluindo cruzamento de mãos, menores melódicas, baixo Alberti, síncopas, pedal, imitação e transposição de 4ª/5ª. Os testes verificam a duração de **cada compasso por voz**, não só a duração total.
+- **N4:** onze estudos originais em dez trilhas: registos extremos, 8ª/9ª/10ª, dominante secundária, acordes com tensões, oitavas quebradas e bossa, tercinas reais, mordente lento escrito, coral SATB a quatro vozes e pré-leitura de 30 s. Há **dois estudos de mão esquerda** para cobrir padrões diferentes.
+- **Cobertura N4 parcial, declarada na interface:** A (trocas de clave a meio da pauta), C (mudanças de armadura na mesma linha), F (mudanças de compasso), G (símbolos convencionais de ornamento) e J (claves de Dó) ainda requerem melhorias de notação e estudos adicionais. O material preparatório desses módulos não substitui os critérios formais.
+- O aluno pode **explorar** estudos superiores após passar pelos anteriores, mas a exploração não muda o seu nível confirmado e não constitui certificação.
+- A mesma área de trabalho apresenta pautas e piano; não se ativa o antigo dashboard de trilha.
+- A pré-leitura de primeira vista dispõe de 30 s sem demonstração sonora; o sistema atual não mede movimentos oculares nem certifica a observação de pedal.
+- `scripts/n4-specialized-check.mjs` verifica os onze estudos, incluindo compassos completos para todas as quatro vozes do coral, tercinas autênticas, pausas, cobertura explícita e não repetição das partituras inéditas.
+
+**Próximo requisito de qualidade:** validar visualmente a engravura de acordes densos, tercinas e coral em vários ecrãs, implementar trocas reais de clave/armadura/compasso, acrescentar rubricas observáveis e compor provas originais separadas dos estudos de treino.
