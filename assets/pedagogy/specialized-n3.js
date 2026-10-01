@@ -52,7 +52,7 @@ const DATA={
    pedalEveryBar:true,limitations:"Os símbolos mostram onde trocar o pedal; o piano virtual não avalia a libertação física nem ressonâncias."}],
  H:[{focus:"Ler a entrada de resposta imitativa na segunda voz, mantendo ambas as linhas independentes.",key:"C",bpm:58,
    rh:"E2 F2 G4|A4 G4|F2 E2 D4|E4 C4|G2 A2 B4|c4 B4|A2 G2 F4|E8",
-   rh2:"z8|G2 A2 B4|c4 B4|A2 G2 F4|G4 E4|E2 F2 G4|A4 G4|G8",
+   rh2:"z8|G2 _A2 _B4|c4 B4|A2 G2 F4|G4 E4|E2 F2 G4|A4 G4|G8",
    lh:"C,8|G,,8|F,8|C,8|G,,8|C,8|F,8|C,8",
    limitations:"Imitação introdutória com resposta deslocada um compasso; não equivale a uma prova de invenção/fuga."}],
  I:[{focus:"Olhar um compasso à frente e antecipar deslocamentos independentes de ambas as mãos.",key:"C",bpm:68,
