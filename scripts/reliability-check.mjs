@@ -547,6 +547,28 @@ await test('MusicXML: acordes, vozes, durações e isolamento de pista',async()=
  assert(score.transcription.programs.some(p=>p.channel===1&&p.program===40),'instrumento da pista perdido');
 });
 
+await test('MIDI notation: articulation, real rests, rapid attacks and original performance',async()=>{
+ const w={LuwipiScoreEngine:await engine()};new Function('window',await read('assets/karaoke/midi-notation.js'))(w);
+ const N=w.LuwipiMidiNotation,meta={meter:[4,4],keyFifths:0};
+ const detached=[0,.5,1,1.5,4].flatMap((startBeat,i)=>[60,64].map(midi=>({id:i+'-'+midi,midi,startBeat,durationBeat:.1})));
+ const original=JSON.stringify(detached),organized=N.convert(detached,meta,'Detached chords');
+ assert(organized.articulationNotes===6&&organized.notes.slice(0,6).every(n=>n.duration===480),'repeated short gates did not become staccato eighths');
+ assert(organized.xml.includes('<staccato/>')&&organized.xml.includes('<chord/>'),'articulation or chord engraving missing');
+ assert(organized.notes.find(n=>n.start===1440).duration<480,'a real phrase gap was bridged');
+ assert(JSON.stringify(detached)===original,'original playback events mutated');
+ const literal=N.convert(detached,meta,'Literal',{articulation:false});
+ assert(literal.articulationNotes===0&&!literal.xml.includes('<staccato/>'),'literal mode still guesses articulation');
+ const fast=Array.from({length:8},(_,i)=>({id:'fast-'+i,midi:60+i,startBeat:i*.125,durationBeat:.125}));
+ const rapid=N.convert(fast,meta,'Rapid');
+ assert(rapid.articulationNotes===0&&new Set(rapid.notes.map(n=>n.start)).size===8&&rapid.notes.every(n=>n.duration===120),'genuine thirty-second notes collapsed or lengthened');
+ const triplets=Array.from({length:6},(_,i)=>({id:'tri-'+i,midi:60+i,startBeat:i/3,durationBeat:1/3}));
+ assert(N.convert(triplets,meta,'Triplets').xml.includes('<actual-notes>3</actual-notes>'),'triplet rhythm lost');
+ const isolated=N.convert([{midi:60,startBeat:0,durationBeat:.1},{midi:62,startBeat:1,durationBeat:.1}],meta,'Uncertain');
+ assert(isolated.articulationNotes===0,'isolated notes treated as evidence of staccato');
+ const client=await read('assets/karaoke/karaoke.js');
+ assert(client.includes('!notationDocument.articulationNotes')&&client.includes('notationMode:notationMode.value'),'native replacement or sharing loses organized interpretation');
+});
+
 await test('MuseScore: MIDI inválido recusado e conversão autenticada',async()=>{
  const {validateMidi,verifyNotation}=await import('../server/musescore.mjs');
  verifyNotation('<note><pitch/></note>',0);
@@ -566,7 +588,7 @@ await test('MuseScore: MIDI inválido recusado e conversão autenticada',async()
  const foreign=await api.POST(new Request('https://luwipi.vercel.app/api/midi-score',{method:'POST',headers:{origin:'https://other.example'},body:valid}));
  assert(foreign.status===403,'origem externa aceite');
  const client=await read('assets/karaoke/karaoke.js');
- assert(client.includes('scoreAbort?.abort()')&&client.includes('request!==scoreRequest')&&client.includes('notation:current.nativeScores'),'seleção concorrente ou partilha perde partitura nativa');
+ assert(client.includes('scoreAbort?.abort()')&&client.includes('request!==scoreRequest')&&client.includes('current.nativeScores?.[leadKey]'),'seleção concorrente ou partilha perde partitura nativa');
  assert((await read('app.html')).includes('/assets/karaoke/musescore-client.js'),'cliente MuseScore não carregado');
 });
 
