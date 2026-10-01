@@ -78,8 +78,8 @@ for(const track of "ABCDEFGHIJ"){
   if(track==="H"){
    const v1=score.events.filter(e=>e.id.startsWith("RH-")&&e.startBeat<4).map(e=>e.midi);
    const v2=score.events.filter(e=>e.id.startsWith("RH2-")&&e.startBeat>=4&&e.startBeat<8).map(e=>e.midi);
-   assert.deepEqual(v1,[76,77,79]);
-   assert.equal(v2.length,3);assert.ok(v1.every((pitch,i)=>pitch-v2[i]===9),"Imitation must retain the exact interval contour");
+   assert.deepEqual(v1,[64,65,67]);
+   assert.equal(v2.length,3);assert.ok(v1.every((pitch,i)=>v2[i]-pitch===3),"Imitation must retain the exact interval contour");
    assert.ok(score.events.some(e=>e.voiceDirection==="up")&&score.events.some(e=>e.voiceDirection==="down"),"Voice stem direction lost");
   }
   if(track==="I")assert.ok(score.events.some(e=>e.clef==="treble"&&e.durationBeat===.5)&&score.events.some(e=>e.clef==="bass"&&e.durationBeat===1),"Hand independence missing");
