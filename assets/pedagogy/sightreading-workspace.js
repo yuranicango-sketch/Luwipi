@@ -159,7 +159,7 @@ function splitABC(seed){
    if(e.clef==='treble'){
     const measure=Math.floor(e.startBeat/(seed.meter==='3/4'?3:4));
     e.articulations=seed.expression==='staccato-tenuto'?(measure%2===0?['staccato']:['tenuto']):(measure%2===0?['accent']:[]);
-    if(seed.expression==='accent')e.dynamic=measure<4?'p':'f';
+    if(seed.expression==='accent'){e.dynamic=measure<4?'p':'f';e.velocity=measure<4?48:104;}
    }
   });
  }
