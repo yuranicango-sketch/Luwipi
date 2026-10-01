@@ -180,23 +180,22 @@ function splitABC(seed){
  }
  return result;
 }
+// A pure selection rule shared by training and first-sight attempts.
+function chooseSeed(track,level,which,seen){
+ const special=S?.get(track,level)||null,variants=P.availableVariants(track,level);
+ if(which!==3&&special)return special;
+ if(which===3&&special&&!seen.includes(special.id))return special;
+ const variant=which===3
+  ?Array.from({length:variants},(_,i)=>i).find(i=>!seen.includes(track+'N'+level+'-s'+i))
+  :(seen.length+which)%variants;
+ return variant===undefined?null:P.makeSeed(track,level,variant);
+}
 function launch(which){
  if(typeof window.LuwipiLiveLoadPedagogy!=='function'){workout.append(el('p','workout-result','A Prática ainda não está pronta. Atualiza a aplicação.'));return}
  const currentLevel=profile.levels[selected]?.level||0;
  const track=which===0?'F':selected,level=which===0?0:currentLevel;
- const variants=P.availableVariants(track,level);
- // A unique, authored, skill-targeted study is presented first at N0/N1.
- // Once seen, move to unseen generative material; never recycle sight-reading.
- let seed=S?.get(track,level)||null;
- if(which===3&&seed&&profile.seen.includes(seed.id))seed=null;
- if(!seed){
-  let variant;
-  if(which===3){
-   variant=Array.from({length:variants},(_,i)=>i).find(i=>!profile.seen.includes(track+'N'+level+'-s'+i));
-   if(variant===undefined){workout.append(el('p','workout-result','O material inédito terminou. É necessário acrescentar novas partituras.'));return}
-  }else variant=(profile.seen.length+which)%variants;
-  seed=P.makeSeed(track,level,variant);
- }
+ const seed=chooseSeed(track,level,which,profile.seen);
+ if(!seed){workout.append(el('p','workout-result','O material inédito terminou. É necessário acrescentar novas partituras.'));return}
  let score;
  try{score=splitABC(seed)}catch(error){workout.append(el('p','workout-result','Partitura não disponível: '+error.message));return}
  if(which===2){
@@ -204,7 +203,7 @@ function launch(which){
   score=E.normalizeScore({...score,events:score.events.filter(x=>x.startBeat<beats),rests:score.rests?.filter(x=>x.startBeat<beats)});
   score.title=seed.title+' · padrão de 2 compassos';
  }
- exercise={...seed,id:seed.id,track:selected,level:currentLevel,kind:'practice',stage:which,sessionId:String(Date.now())+'-'+seed.id};
+ exercise={...seed,id:seed.id,track,level,kind:which===3?'first_sight':'practice',stage:which,sessionId:String(Date.now())+'-'+seed.id};
  const opened=window.LuwipiLiveLoadPedagogy(score,score.title,{firstSight:which===3,exerciseId:seed.id});
  if(opened){
   // A warm-up or short pattern exposes musical content too: never re-label it
