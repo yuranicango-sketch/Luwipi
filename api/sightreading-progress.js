@@ -62,7 +62,7 @@ async function load(auth){
 export async function GET(request){
  const auth=await principal(request);if(!auth)return reply({error:"unauthorized"},401);
  const existing=await load(auth);if(existing.failed)return reply({error:"progress_unavailable"},502);
- return reply({draft:existing.row?.draft||null,updatedAt:existing.row?.updated_at||null});
+ return reply({userId:auth.id,draft:existing.row?.draft||null,updatedAt:existing.row?.updated_at||null});
 }
 export async function PUT(request){
  if(!sameOrigin(request))return reply({error:"forbidden_origin"},403);
@@ -92,5 +92,5 @@ export async function PUT(request){
  }
  const saved=await result.json().catch(()=>[]);
  if(!saved.length)return reply({error:"revision_conflict"},409);
- return reply({ok:true,draft,updatedAt:saved[0].updated_at});
+ return reply({ok:true,userId:auth.id,draft,updatedAt:saved[0].updated_at});
 }
