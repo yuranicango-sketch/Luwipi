@@ -1,0 +1,26 @@
+name: Learning Studio Browser Test
+on:
+  push:
+    branches: [fix/learning-studio-not-importer]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - run: sh scripts/build-static.sh
+      - run: npm install --no-save playwright@1.55.1
+      - run: npx playwright install --with-deps chromium
+      - name: Serve static app
+        run: python3 -m http.server 4173 --directory public > /tmp/luwipi-static.log 2>&1 &
+      - name: Test learning flow in real browser
+        run: node scripts/learning-browser-check.mjs
