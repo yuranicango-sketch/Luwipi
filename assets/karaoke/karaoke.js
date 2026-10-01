@@ -39,7 +39,7 @@ async function saveCurrentMidi(){
  if(!current?.binary||!saveMidi)return;
  saveMidi.disabled=true;saveMidi.textContent='A guardar…';
  try{
-  const meta={title:current.name,score:current.score,aiReview:current.ai||{},leadKey,notationMode:notationMode.value,scoreMode,aiModel:current.ai?'gpt-6-luna':''};
+  const s=current.score||{},meta={title:current.name,score:{tempoBpm:s.tempoBpm||120,meter:s.meter||[4,4],keyFifths:s.keyFifths||0,keyMinor:Boolean(s.keyMinor),durationBeats:s.durationBeats||0},aiReview:current.ai||{},leadKey,notationMode:notationMode.value,scoreMode,aiModel:current.ai?'gpt-6-luna':''};
   const form=new FormData();form.append('file',new File([current.binary],current.originalName||current.name+'.mid',{type:'audio/midi'}));form.append('meta',JSON.stringify(meta));
   const body=await midiApi('',{method:'POST',body:form});current.libraryId=body.item?.id||current.libraryId;
   saveMidi.classList.add('saved');saveMidi.textContent='✓ Guardado';$('karaokeStatus').textContent='MIDI guardado na tua biblioteca. Na próxima vez não precisas carregar nem voltar a analisar.';
