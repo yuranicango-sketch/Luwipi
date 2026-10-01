@@ -87,6 +87,10 @@ function startPreRead(seconds){
 }
 let fidelityReport=null,publishKind="music",publishScope="personal",publishOpener=null;
 
+function tempoText(value,which=score){
+ const bpm=Math.round(Number(value)||0);
+ return which?.pulseUnit==="dotted-quarter"?"♩. = "+Math.round(bpm*2/3)+" BPM":"♩ = "+bpm+" BPM";
+}
 const PT={C:"Dó","C#":"Dó♯",D:"Ré","D#":"Ré♯",E:"Mi",F:"Fá","F#":"Fá♯",G:"Sol","G#":"Sol♯",A:"Lá","A#":"Lá♯",B:"Si"};
 
 function ptNote(midi){
@@ -212,14 +216,14 @@ function updateFileState(){
     const fidelity=score.source==="midi"&&trans
       ?" · MIDI preservado: "+perfCount+" eventos · notação automática "+(trans.gridBeat?("grade "+String(trans.gridBeat.toFixed(3)).replace(/0+$/,"").replace(/\.$/,"")+" tempo"):"")
       :"";
-    fileMeta.textContent=Math.round(score.tempoBpm)+" BPM · "+score.meter[0]+"/"+score.meter[1]+" · "+score.events.length+" eventos notados · "+score.keyName+fidelity;
+    fileMeta.textContent=tempoText(score.tempoBpm,score)+" · "+score.meter[0]+"/"+score.meter[1]+" · "+score.events.length+" eventos notados · "+score.keyName+fidelity;
   }else if(pdfFileName){
     fileMeta.textContent="PDF preservado como original · associa MIDI/MusicXML para Play, Guia e avaliação";
   }else{
     fileMeta.textContent="MIDI e MusicXML estruturam a partitura; PDF é mantido como documento visual.";
   }
   tempo=score?Math.round(score.tempoBpm):tempo;
-  tempoLabel.textContent=tempo+" BPM";
+  tempoLabel.textContent=tempoText(tempo);
   playButton.disabled=!score;
   practiceButton.disabled=!score;
   hearButton.disabled=!score;
@@ -483,7 +487,8 @@ function advancePractice(tone,message,correct=true){
        const tolerance=(60000/Math.max(1,tempo))*.22;
        const within=timingSamples.filter(x=>Math.abs(x)<=tolerance).length;
        window.dispatchEvent(new CustomEvent('luwipi:pedagogy-measured',{detail:{
-         exerciseId:pedagogyExerciseId,bpm:tempo,input:inputMode,observedClient:true,
+         exerciseId:pedagogyExerciseId,bpm:score?.pulseUnit==="dotted-quarter"?Math.round(tempo*2/3):tempo,
+         pulseUnit:score?.pulseUnit||"quarter",input:inputMode,observedClient:true,
          correctGroups:correctCount,attemptedGroups:attempts,
          rhythmWithinTolerance:within,rhythmSamples:timingSamples.length
        }}));
@@ -686,8 +691,8 @@ publishName?.addEventListener("keydown",event=>{if(event.key==="Enter"){event.pr
 publishModal?.addEventListener("click",event=>{if(event.target===publishModal)closePublishPreview()});
 document.addEventListener("keydown",event=>{if(event.key==="Escape"&&!publishModal?.classList.contains("hidden"))closePublishPreview()});
 practiceButton.addEventListener("click",()=>practice?stopPractice():startPractice());
-tempoDown.addEventListener("click",()=>{tempo=Math.max(30,tempo-4);tempoLabel.textContent=tempo+" BPM";if(practice)resetPractice()});
-tempoUp.addEventListener("click",()=>{tempo=Math.min(240,tempo+4);tempoLabel.textContent=tempo+" BPM";if(practice)resetPractice()});
+tempoDown.addEventListener("click",()=>{tempo=Math.max(30,tempo-4);tempoLabel.textContent=tempoText(tempo);if(practice)resetPractice()});
+tempoUp.addEventListener("click",()=>{tempo=Math.min(240,tempo+4);tempoLabel.textContent=tempoText(tempo);if(practice)resetPractice()});
 guideToggle.addEventListener("click",()=>{guideOn=!guideOn;toggle(guideToggle,guideOn);renderScore()});
 rhythmToggle.addEventListener("click",()=>{rhythmOn=!rhythmOn;toggle(rhythmToggle,rhythmOn);if(practice)resetPractice()});
 sourceMidi.addEventListener("click",()=>selectSource("midi"));
@@ -702,7 +707,7 @@ const onWorkspacePiano=event=>{
 window.addEventListener('luwipi:piano-note',onWorkspacePiano);
 const observer=new MutationObserver(cleanupWhenHidden);
 observer.observe(view,{attributes:true,attributeFilter:["class"]});
-window.addEventListener("pagehide",()=>{stopPlayback();Input.disconnect();if(unsubscribe)unsubscribe();window.removeEventListener('luwipi:piano-note',onWorkspacePiano)});
+window.addEventListener("pagehide",()=>{cancelPreRead();stopPlayback();Input.disconnect();if(unsubscribe)unsubscribe();window.removeEventListener('luwipi:piano-note',onWorkspacePiano)});
 
 toggle(guideToggle,guideOn);toggle(rhythmToggle,rhythmOn);
 window.LuwipiLiveTaskSource=Object.freeze({score:()=>score?{title:score.title||structuredFileName||"Partitura",kind:"music",score}:null});
