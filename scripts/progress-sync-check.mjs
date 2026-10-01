@@ -44,6 +44,7 @@ try{
  }]}},mistakes:[{track:"A",level:0,pattern:"2.ª descendente",lastSeen:"2026-10-01",due:["2026-10-02"]}],seen:["A0-1"]};
  res=await api.PUT(new Request(url,{method:"PUT",headers:auth,body:JSON.stringify({draft,updatedAt:null})}));
  assert.equal(res.status,200);const result=await res.json();
+ assert.equal(result.userId,uuid);
  assert.equal(result.draft.levels.A.certified,false);
  assert.equal(result.draft.levels.A.streak.length,0);
  assert.equal(result.draft.levels.A.sessions[0].verified,false);
