@@ -4,7 +4,7 @@ const read=path=>readFile(new URL("../"+path,import.meta.url),"utf8");
 await import("../assets/pedagogy/sightreading-foundation-v1.js");
 await import("../assets/pedagogy/specialized-n0-n1.js");
 const P=globalThis.LuwipiPedagogyV1,S=globalThis.LuwipiSpecializedStudies,ui=await read("assets/pedagogy/sightreading-workspace.js");
-const first=ui.indexOf("function chooseSeed("),last=ui.indexOf("\\nfunction launch(",first);
+const first=ui.indexOf("function chooseSeed("),last=ui.indexOf("\nfunction launch(",first);
 assert.ok(first>=0&&last>first,"Explicit unseen-score selection is missing");
 const chooseSeed=new Function("P","S",ui.slice(first,last)+";return chooseSeed;")(P,S);
 let count=0;
@@ -29,7 +29,7 @@ const consumed=[S.get(track,level).id,...Array.from({length:variants},(_,i)=>P.m
 assert.equal(chooseSeed(track,level,3,consumed),null,"Must stop when all musical material was exposed");
 assert.ok(ui.includes("localEdits!==editsAtLoad")&&ui.includes("sync.mergeDrafts(draft,profile)")&&ui.includes("if(edited)void sync.save(profile)"),"Sync load overwrites new local attempts");
 const sync=await read("assets/pedagogy/progress-sync.js");
-assert.ok(sync.includes("loadTicket++")&&sync.includes("ownerAtSave!==activeUser")&&sync.includes("function reset()"),"Signout sync isolation missing");
+assert.ok(sync.includes("++loadTicket")&&sync.includes("ownerAtSave!==activeUser")&&sync.includes("function reset()"),"Signout sync isolation missing");
 const html=await read("app.html"),anchor='const p="',start=html.lastIndexOf(anchor),end=html.indexOf('",b=atob(p)',start);
 assert.ok(start>=0&&end>start,"Packed core not found");
 const core=Buffer.from(html.slice(start+anchor.length,end),"base64").map(x=>x^83).toString("utf8");
