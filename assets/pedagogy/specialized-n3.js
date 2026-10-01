@@ -24,7 +24,7 @@ const DATA={
  lh:["C, G, E, G, C, G, E, G,","F, C F C F, C F C","G,, D, B, D, G,, D, B, D,","C, G, E, G, C, G, E, G,","F, C F C F, C F C","G,, D, B, D, G,, D, B, D,","C, G, E, G, G,, D, B, D,","C,8"],
  limitations:"Este estudo isola Alberti; a realização em outros tons e arpejos largos exige novos padrões."},
  F:{key:"C",meter:"4/4",bpm:64,focus:"Executar síncopas de colcheia e células de semicolcheias sobre o mesmo pulso.",
- rh:["z C3 D/2 E/2 F2 G","C/2 D/2 E/2 F/2 G2 z2 A2","z D3 E/2 F/2 G2 A","E2 z F3 G/2 A/2","z C3 E/2 F/2 G2 A","C/2 D/2 E/2 F/2 G2 A2 z2","z F3 G/2 A/2 B2 c","G2 z E3 D/2 C/2"],
+ rh:["z C3 D/2 E/2 F2 G","C/2 D/2 E/2 F/2 G2 z2 A2","z D3 E/2 F/2 G2 A","E2 z F3 G/2 A/2 G","z C3 E/2 F/2 G2 A","C/2 D/2 E/2 F/2 G2 A2 z2","z F3 G/2 A/2 B2 c","G2 z E3 D/2 C/2 C"],
  lh:["C,4 G,,4","F,4 C,4","G,,4 D,4","C,8","F,4 C,4","G,,4 D,4","C,4 G,,4","C,8"],
  limitations:"O ritmo sincopado sem ligaduras é treinado aqui; a escrita de ligaduras entre pulsações exige notação específica adicional."},
  G:{key:"C",meter:"4/4",bpm:65,focus:"Mudar o pedal apenas na troca harmónica sem perturbar o pulso.",
