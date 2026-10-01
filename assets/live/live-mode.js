@@ -64,7 +64,7 @@ const scopeHelp=document.getElementById("livePublishScopeHelp");
 let score=null,groups=[],pdfUrl="",pdfFileName="",structuredFileName="",activeView="interactive";
 let tempo=120,guideOn=true,rhythmOn=true,practice=false,practiceIndex=0,practiceAnchor=0,practiceFirstBeat=0;
 let correctCount=0,attempts=0,timingSamples=[],chordSeen=new Set(),noteOnTimes=new Map(),playTimers=[],playing=false;
-let inputMode="none",unsubscribe=null,lastDetected="-",pedagogyNovel=false;
+let inputMode="none",unsubscribe=null,lastDetected="-",pedagogyNovel=false,pedagogyExerciseId="";
 let fidelityReport=null,publishKind="music",publishScope="personal",publishOpener=null;
 
 const PT={C:"Dó","C#":"Dó♯",D:"Ré","D#":"Ré♯",E:"Mi",F:"Fá","F#":"Fá♯",G:"Sol","G#":"Sol♯",A:"Lá","A#":"Lá♯",B:"Si"};
@@ -224,7 +224,7 @@ function updateMetrics(){
   timingMetric.innerHTML="<b>"+(timingSamples.length?mean+" ms":"—")+"</b> ritmo";
 }
 function setScore(next,name){
-  pedagogyNovel=false;
+  pedagogyNovel=false;pedagogyExerciseId="";
   score=Engine.normalizeScore(next);groups=Engine.groupEvents(score);structuredFileName=name||score.title;
   tempo=Math.round(score.tempoBpm);activeView="interactive";
   resetPractice();updateFileState();renderScore();
@@ -453,6 +453,15 @@ function advancePractice(tone,message){
   if(practiceIndex>=groups.length){
     practice=false;practiceButton.textContent="Repetir treino";setSession(false,"Concluído");
     setFeedback("Terminaste a partitura. Revê a precisão de notas e o ritmo abaixo.","good");
+     if(pedagogyExerciseId){
+       const tolerance=(60000/Math.max(1,tempo))*.22;
+       const within=timingSamples.filter(x=>Math.abs(x)<=tolerance).length;
+       window.dispatchEvent(new CustomEvent('luwipi:pedagogy-measured',{detail:{
+         exerciseId:pedagogyExerciseId,bpm:tempo,input:inputMode,observedClient:true,
+         correctGroups:correctCount,attemptedGroups:attempts,
+         rhythmWithinTolerance:within,rhythmSamples:timingSamples.length
+       }}));
+     }
     emitPianoLight([]);
   }else{
     setFeedback(message||"Certo. Continua.",tone||"good");
@@ -671,6 +680,7 @@ window.LuwipiLiveTaskSource=Object.freeze({score:()=>score?{title:score.title||s
    if(window.LuwipiWorkspaceRouter)window.LuwipiWorkspaceRouter.go('practice');
    setScore(exercise,title||exercise.title||'Leitura');
    pedagogyNovel=Boolean(options.firstSight);
+   pedagogyExerciseId=String(options.exerciseId||'');
    if(pedagogyNovel){playButton.disabled=true;hearButton.disabled=true;}
    setFeedback(pedagogyNovel?'Leitura inédita: observa a partitura e inicia sem ouvir a demonstração. O preview é libertado após começar.':'Treino: reconhece o desenho antes de tocar.','near');
    return true;
