@@ -109,7 +109,34 @@ function placementFromDiagnostic(diagnostic){
  // Um item de escolha múltipla nunca certifica uma trilha nem autoriza pular níveis.
  return result;
 }
-function dueDates(isoDate){const d=new Date(isoDate+'T12:00:00Z');if(Number.isNaN(+d))throw Error('Data inválida');return [1,3,7,14].map(days=>new Date(+d+days*86400000).toISOString().slice(0,10))}
+function addDays(isoDate,days){
+ if(!/^\d{4}-\d{2}-\d{2}$/.test(isoDate))throw Error('Data inválida');
+ const d=new Date(isoDate+'T12:00:00Z');if(Number.isNaN(+d))throw Error('Data inválida');
+ return new Date(+d+days*86400000).toISOString().slice(0,10);
+}
+function dueDates(isoDate){return [1,3,7,14].map(days=>addDays(isoDate,days))}
+function dueReviews(profile,today){
+ if(!/^\d{4}-\d{2}-\d{2}$/.test(today))throw Error('Data inválida');
+ return (profile.mistakes||[]).flatMap(m=>{
+  const step=m.review?.next??0;
+  if(step>=4)return [];
+  const nextDue=m.review?.nextDue||m.due?.[0]||dueDates(m.lastSeen)[0];
+  return nextDue<=today?[{track:m.track,level:m.level,pattern:m.pattern,nextDue,step}]:[];
+ }).sort((a,b)=>a.nextDue.localeCompare(b.nextDue)||a.track.localeCompare(b.track));
+}
+function completeReview(profile,task,date,passed){
+ const p=structuredClone(profile);
+ const m=p.mistakes?.find(x=>x.track===task.track&&x.level===task.level&&x.pattern===task.pattern);
+ if(!m)throw Error('Padrão de erro desconhecido');
+ const current=m.review||{next:0,nextDue:m.due?.[0]||dueDates(m.lastSeen)[0],history:[]};
+ if(current.next>=4||current.nextDue>date)throw Error('Revisão ainda não está vencida');
+ if((current.history||[]).some(x=>x.date===date&&x.due===current.nextDue))throw Error('Esta revisão já foi registada');
+ const done=passed===true;
+ const next=done?current.next+1:current.next;
+ const nextDue=next>=4?null:addDays(date,done?[2,4,7][current.next]:1);
+ m.review={next,nextDue,history:[...(current.history||[]),{date,due:current.nextDue,passed:done}].slice(-12)};
+ return {profile:p,completed:next>=4,nextDue,passed:done};
+}
 function newProfile(){
  return {version:1,levels:Object.fromEntries(IDS.map(k=>[k,{level:0,certified:false,streak:[],sessions:[]}])),mistakes:[],seen:[],exploration:[],lastGeneralReview:null};
 }
@@ -135,8 +162,8 @@ function record(profile,attempt){
   if(!error?.pattern)continue;
   const found=p.mistakes.find(x=>x.pattern===error.pattern&&x.track===m.track&&x.level===m.level);
   const dates=dueDates(attempt.date);
-  if(found){found.lastSeen=attempt.date;found.due=dates}
-  else p.mistakes.push({track:m.track,level:m.level,pattern:String(error.pattern),lastSeen:attempt.date,due:dates});
+  if(found){found.lastSeen=attempt.date;found.due=dates;found.review={next:0,nextDue:dates[0],history:[]}}
+  else p.mistakes.push({track:m.track,level:m.level,pattern:String(error.pattern),lastSeen:attempt.date,due:dates,review:{next:0,nextDue:dates[0],history:[]}});
  }
  return {profile:p,eligibleForGate:s.streak.length===3,provisional:!objective,recommendation:s.recommendation};
 }
@@ -151,5 +178,5 @@ function passGate(profile,track,parts){
  if(m.level>=7){m.certified=true;return p}
  m.level++;m.certified=false;m.streak=[];return p;
 }
-root.LuwipiPedagogyV1=Object.freeze({tracks:TRACKS,stages:STAGES,levels:LEVELS,trackIds:IDS,moduleFor,makeSeed,availableVariants,placementFromDiagnostic,newProfile,record,passGate,dueDates});
+root.LuwipiPedagogyV1=Object.freeze({tracks:TRACKS,stages:STAGES,levels:LEVELS,trackIds:IDS,moduleFor,makeSeed,availableVariants,placementFromDiagnostic,newProfile,record,passGate,dueDates,dueReviews,completeReview});
 })(typeof window!=='undefined'?window:globalThis);

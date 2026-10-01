@@ -51,7 +51,8 @@ copyCard.addEventListener('click',async()=>{
  catch{copyCard.textContent='Não foi possível copiar neste navegador'}
 });
 let profile=P.newProfile(),selected='',exercise=null,stage=3,verified=false,store=window.sessionStorage;
-let syncRevision=0,signedIn=false,localEdits=0,explorationLevel=null;
+let syncRevision=0,signedIn=false,localEdits=0,explorationLevel=null,reviewTask=null;
+function todayLocal(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
 function currentStudyLevel(track){
  const formal=profile.levels?.[track]?.level||0;
  if(track!==selected||explorationLevel===null||explorationLevel<=formal)return formal;
@@ -108,7 +109,7 @@ document.addEventListener('keydown',event=>{if(event.key==='Escape'&&!panel.hidd
 window.addEventListener('luwipi:workspace-route',()=>{if(!panel.hidden)close()});
 window.addEventListener('luwipi:access-ready',loadProfile);
 window.addEventListener('luwipi:access-signed-out',()=>{
- syncRevision++;localEdits++;signedIn=false;selected='';exercise=null;explorationLevel=null;
+ syncRevision++;localEdits++;signedIn=false;selected='';exercise=null;explorationLevel=null;reviewTask=null;
  profile=P.newProfile();store=window.sessionStorage;loadProfile.key=KEY+':guest';
  try{store.removeItem(loadProfile.key)}catch{}
  window.LuwipiProgressSync?.reset();
@@ -129,12 +130,21 @@ function render(){
   if(candidate&&candidate!=='não avaliado')card.append(el('small','', 'Diagnóstico: '+candidate));
   if(S?.get(t,l.level||0)||S2?.get(t,l.level||0)||S3?.get(t,l.level||0))card.append(el('small','', 'Estudo musical específico disponível'));
   const launch=el('button','',selected===t?'Selecionado · organizar sessão':'Preparar sessão');
-  launch.type='button';launch.onclick=()=>{selected=t;stage=3;exercise=null;explorationLevel=null;render()};
+  launch.type='button';launch.onclick=()=>{selected=t;stage=3;exercise=null;explorationLevel=null;reviewTask=null;render()};
   card.append(launch);map.append(card);
  }
- const due=(profile.mistakes||[]).filter(e=>e.due?.some(d=>d<=new Date().toISOString().slice(0,10)));
+ const due=P.dueReviews(profile,todayLocal());
  if(due.length){
-  const hint=el('div','workspace-path-banner',due.length+' padrão(ões) para rever agora: '+due.slice(0,2).map(e=>e.pattern+' ('+e.track+')').join('; '));
+  const hint=el('div','workspace-path-banner',due.length+' revisão(ões) de padrão disponíveis:');
+  due.slice(0,4).forEach(task=>{
+   const button=el('button','workspace-path-due-action',
+    task.track+' · N'+task.level+' · '+task.pattern+' · '+task.nextDue);
+   button.type='button';
+   button.addEventListener('click',()=>{
+    selected=task.track;stage=2;exercise=null;explorationLevel=null;reviewTask={...task};render();
+   });
+   hint.append(button);
+  });
   map.prepend(hint);
  }
  workout.hidden=!selected;if(!selected)return;
@@ -142,6 +152,10 @@ function render(){
  const formalLevel=profile.levels?.[selected]?.level||0;
  const level=currentStudyLevel(selected),mod=P.moduleFor(selected,level);
  workout.append(el('h3','',selected+' · N'+level+' · '+mod.objective));
+ if(reviewTask&&reviewTask.track===selected){
+  workout.append(el('div','workspace-path-banner',
+    'Revisão vencida: '+reviewTask.pattern+'. Escolhe o treino de padrões. Confirma no fim se este excerto trabalhou o erro pretendido. A revisão não certifica níveis.'));
+ }
  const canExploreN1=formalLevel===0&&Boolean(S?.get(selected,1));
  const canExploreN2=formalLevel<2&&Boolean(S2?.get(selected,2))&&
   (formalLevel>=1||profile.seen.includes(S?.get(selected,1)?.id||'unavailable'));
@@ -244,18 +258,21 @@ function chooseSeed(track,level,which,seen){
 }
 function launch(which){
  if(typeof window.LuwipiLiveLoadPedagogy!=='function'){workout.append(el('p','workout-result','A Prática ainda não está pronta. Atualiza a aplicação.'));return}
- const currentLevel=profile.levels[selected]?.level||0;
- const track=which===0?'F':selected,level=which===0?0:currentStudyLevel(selected);
- const seed=chooseSeed(track,level,which,profile.seen);
+ const currentLevel=profile.levels[selected]?.level||0,assigned=which===2?reviewTask:null;
+ const track=assigned?.track||(which===0?'F':selected);
+ const level=assigned?.level??(which===0?0:currentStudyLevel(selected));
+ const seed=chooseSeed(track,level,assigned?3:which,profile.seen)||
+  (assigned?(S?.get(track,level)||S2?.get(track,level)||S3?.get(track,level,0)||P.makeSeed(track,level,0)):null);
  if(!seed){workout.append(el('p','workout-result','O material inédito terminou. É necessário acrescentar novas partituras.'));return}
  let score;
  try{score=splitABC(seed)}catch(error){workout.append(el('p','workout-result','Partitura não disponível: '+error.message));return}
- if(which===2){
+ if(which===2&&!assigned){
   const beats=score.meter[0]*(4/score.meter[1])*2;
   score=E.normalizeScore({...score,events:score.events.filter(x=>x.startBeat<beats),rests:score.rests?.filter(x=>x.startBeat<beats)});
   score.title=seed.title+' · padrão de 2 compassos';
  }
  exercise={...seed,id:seed.id,track,level,exploratory:track===selected&&level!==currentLevel,
+  reviewTask:assigned?{...assigned}:null,
   kind:which===3?'first_sight':'practice',stage:which,sessionId:String(Date.now())+'-'+seed.id};
  const opened=window.LuwipiLiveLoadPedagogy(score,score.title,{
   firstSight:which===3,exerciseId:seed.id,transposeSemitones:seed.transposeSemitones||0,
@@ -291,6 +308,15 @@ function buildReview(container,actions){
   ['rhythm','Precisão do ritmo',['0 · Pulso perdido','1 · Várias falhas','2 · Ritmo maioritariamente certo','3 · Sem erros percebidos']],
   ['where','Padrão a rever',['Sem erro identificado','Notas na clave de Fá','Salto intervalar','Inversão ou acorde','Padrão da mão esquerda','Pulso/subdivisão','Articulação','Coordenação das vozes','Antecipação do olhar']]
  ];
+ let reviewCoverage=null;
+ if(exercise.reviewTask){
+  const label=el('label','','O excerto permitiu praticar "'+exercise.reviewTask.pattern+'"?');
+  reviewCoverage=el('select');
+  [['0','Não · preciso de outro exercício'],['1','Sim · pratiquei esse padrão']].forEach(([value,title])=>{
+   const opt=el('option','',title);opt.value=value;reviewCoverage.append(opt);
+  });
+  label.append(reviewCoverage);container.append(label);
+ }
  const selects={};for(const [id,name,opts] of fields){
   const label=el('label','',name),select=el('select');selects[id]=select;
   for(let i=0;i<opts.length;i++){const o=el('option','',opts[i]);o.value=String(i);select.append(o)}
@@ -301,9 +327,33 @@ function buildReview(container,actions){
  const submit=el('button','','Guardar revisão');
  const result=el('p','workout-result','');submit.onclick=()=>{
   const scale=[0,.35,.75,1],bpm=40+Number(selects.bpm.value)*5;
-  const attempt={track:exercise.track,level:exercise.level,exerciseId:exercise.id,sessionId:exercise.sessionId,date:new Date().toISOString().slice(0,10),kind:'practice',notes:scale[Number(selects.notes.value)],rhythm:scale[Number(selects.rhythm.value)],stops:Number(selects.stops.value),bpm,stablePulse:Number(selects.stops.value)===0&&Number(selects.rhythm.value)===3,evidence:'self_report',errors:Number(selects.where.value)?[{pattern:fields[4][2][Number(selects.where.value)]}]:[]};
+  const attempt={track:exercise.track,level:exercise.level,exerciseId:exercise.id,sessionId:exercise.sessionId,date:todayLocal(),kind:'practice',notes:scale[Number(selects.notes.value)],rhythm:scale[Number(selects.rhythm.value)],stops:Number(selects.stops.value),bpm,stablePulse:Number(selects.stops.value)===0&&Number(selects.rhythm.value)===3,evidence:'self_report',errors:Number(selects.where.value)?[{pattern:fields[4][2][Number(selects.where.value)]}]:[]};
   try{
-   if(exercise.exploratory){
+   if(exercise.reviewTask){
+    if(reviewCoverage?.value!=='1'){
+     result.textContent='Escolhe uma partitura que contenha o padrão de erro indicado. Esta tarefa não foi concluída.';
+     return;
+    }
+    // A self-reported spaced review records PRACTICE only, not verified mastery.
+    const reviewed=exercise.reviewTask;
+    if(attempt.level===(profile.levels[attempt.track]?.level||0)){
+     const ordinary={...attempt,errors:(attempt.errors||[]).filter(e=>e.pattern!==reviewed.pattern)};
+     profile=P.record(profile,ordinary).profile;
+    }else{
+     profile.exploration=[...(profile.exploration||[]),{
+      track:attempt.track,level:attempt.level,sessionId:attempt.sessionId,exerciseId:attempt.exerciseId,
+      date:attempt.date,bpm:attempt.bpm,notes:attempt.notes,rhythm:attempt.rhythm,stops:attempt.stops,
+      error:attempt.errors?.[0]?.pattern||'',kind:'exploration',verified:false,certified:false
+     }].slice(-120);
+    }
+    const practised=attempt.notes>=.75&&attempt.rhythm>=.75&&attempt.stops===0;
+    const resultReview=P.completeReview(profile,reviewed,attempt.date,practised);
+    profile=resultReview.profile;save();
+    result.textContent=practised
+     ?(resultReview.completed?'Quatro revisões praticadas. O ciclo está concluído (sem certificação).':'Revisão praticada. Próxima: '+resultReview.nextDue)
+     :'Revisão registada com dificuldades; repete o padrão a partir de '+resultReview.nextDue+'.';
+    reviewTask=null;
+   }else if(exercise.exploratory){
     if((profile.exploration||[]).some(x=>x.sessionId===attempt.sessionId))throw Error('Esta revisão já foi guardada');
     const error=attempt.errors?.[0]?.pattern||'';
     const observation={track:attempt.track,level:attempt.level,sessionId:attempt.sessionId,
@@ -313,8 +363,14 @@ function buildReview(container,actions){
     profile.exploration=[...(profile.exploration||[]),observation].slice(-120);
     if(error){
       const existing=profile.mistakes.find(x=>x.track===attempt.track&&x.level===attempt.level&&x.pattern===error);
-      if(existing){existing.lastSeen=attempt.date;existing.due=P.dueDates(attempt.date)}
-      else profile.mistakes.push({track:attempt.track,level:attempt.level,pattern:error,lastSeen:attempt.date,due:P.dueDates(attempt.date)});
+      if(existing){
+       existing.lastSeen=attempt.date;existing.due=P.dueDates(attempt.date);
+       existing.review={next:0,nextDue:existing.due[0],history:[]};
+      }else{
+       const dates=P.dueDates(attempt.date);
+       profile.mistakes.push({track:attempt.track,level:attempt.level,pattern:error,lastSeen:attempt.date,due:dates,
+        review:{next:0,nextDue:dates[0],history:[]}});
+      }
     }
     save();result.textContent='Estudo exploratório N1 guardado. O nível formal continua N0.';
    }else{

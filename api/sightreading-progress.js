@@ -43,8 +43,14 @@ function sanitize(raw){
  const mistakes=(Array.isArray(raw.mistakes)?raw.mistakes:[]).slice(-150).flatMap(m=>{
   if(!TRACKS.includes(m?.track)||!bounded(m.pattern,140))return[];
   const date=isoDate(m.lastSeen);
+  const review=m.review&&typeof m.review==="object"&&!Array.isArray(m.review)?{
+   next:integer(m.review.next,0,4),
+   nextDue:isoDate(m.review.nextDue),
+   history:(Array.isArray(m.review.history)?m.review.history:[]).slice(-12).flatMap(h=>
+    isoDate(h?.date)&&isoDate(h?.due)?[{date:h.date,due:h.due,passed:h.passed===true}]:[])
+  }:undefined;
   return [{track:m.track,level:integer(m.level,0,7),pattern:bounded(m.pattern,140),lastSeen:date,
-   due:(Array.isArray(m.due)?m.due:[]).slice(0,4).map(isoDate).filter(Boolean)}];
+   due:(Array.isArray(m.due)?m.due:[]).slice(0,4).map(isoDate).filter(Boolean),review}];
  });
  const exploration=(Array.isArray(raw.exploration)?raw.exploration:[]).slice(-120).flatMap(x=>{
   if(!TRACKS.includes(x?.track)||!bounded(x.sessionId,90)||!isoDate(x.date))return [];
