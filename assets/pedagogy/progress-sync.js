@@ -61,11 +61,11 @@ async function load(localProfile){
  const merged=merge(r.draft,localProfile);
  if(!r.draft&&hasProgress(localProfile)){
   // First connection migrates the local draft without trusting client certification.
-  try{const saved=await api("PUT",{draft:merged,updatedAt:null});revision=saved.updatedAt;setStatus("Progresso sincronizado");return saved.draft}
+  try{const saved=await api("PUT",{draft:merged,updatedAt:null});if(ticket!==loadTicket)return null;revision=saved.updatedAt;setStatus("Progresso sincronizado");return saved.draft}
   catch{setStatus("Ligação disponível · importação pendente");return merged}
  }
  if(r.draft&&JSON.stringify(merged)!==JSON.stringify(r.draft)){
-  try{const saved=await api("PUT",{draft:merged,updatedAt:revision});revision=saved.updatedAt;setStatus("Progresso sincronizado");return saved.draft}
+  try{const saved=await api("PUT",{draft:merged,updatedAt:revision});if(ticket!==loadTicket)return null;revision=saved.updatedAt;setStatus("Progresso sincronizado");return saved.draft}
   catch{setStatus("A sincronização está pendente");return merged}
  }
  setStatus("Progresso sincronizado");return r.draft||merged;
@@ -79,19 +79,24 @@ function save(draft){
    try{saved=await api("PUT",{draft:snapshot,updatedAt:revision});}
    catch(error){
     if(error.status!==409)throw error;
+    if(ownerAtSave!==activeUser)throw Error("account_changed");
     const latest=await api("GET");
-    if(!latest)throw Error("signed_out");
+    if(!latest||latest.userId!==ownerAtSave||ownerAtSave!==activeUser)throw Error("account_changed");
     const combined=merge(latest.draft,snapshot);
     saved=await api("PUT",{draft:combined,updatedAt:latest.updatedAt||null});
     // Notify the UI to adopt the merged remote history rather than overwriting it next time.
     window.dispatchEvent(new CustomEvent("luwipi:progress-merged",{detail:{draft:saved.draft}}));
    }
-   if(!saved)return;
+   if(!saved||ownerAtSave!==activeUser)return;
    revision=saved.updatedAt;
    setStatus("Progresso sincronizado");
   }catch{setStatus("Sem ligação · alterações guardadas localmente")}
  });
  return queue;
 }
-window.LuwipiProgressSync=Object.freeze({load,save,status:()=>syncText});
+function reset(){
+ ++loadTicket;active=false;activeUser=null;revision=null;
+ setStatus("Sem conta · progresso nesta sessão");
+}
+window.LuwipiProgressSync=Object.freeze({load,save,reset,mergeDrafts:merge,status:()=>syncText});
 })();
