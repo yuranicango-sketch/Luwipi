@@ -820,14 +820,8 @@ function render(svg,rawScore,options){
   const measures=measureTimeline(score.meter,score.meterMap,score.durationBeats);
   const defaultStaves=[{id:"RH",clef:"treble"},{id:"LH",clef:"bass"}];
   const staves=score.staffLayout?.length?score.staffLayout:defaultStaves;
-  const staffCount=staves.length,staffGap=87,systemHeight=staffCount*87+46,
-    width=1120,measuresPerSystem=4,systems=Math.max(1,Math.ceil(measures.length/measuresPerSystem)),height=50+systems*systemHeight;
-  svg.setAttribute("viewBox","0 0 "+width+" "+height);
-  svg.setAttribute("role","img");
-  svg.setAttribute("aria-label",score.title+" — partitura");
-  svg.appendChild(svgEl("rect",{x:0,y:0,width,height,rx:18,fill:"#fff"}));
-  addText(svg,36,29,score.title,{"font-size":17,"font-weight":700,fill:"#17181d"});
-  addText(svg,width-36,29,(score.pulseUnit==="dotted-quarter"?"♩. = "+Math.round(score.tempoBpm*2/3):"♩ = "+Math.round(score.tempoBpm))+" · "+score.keyName,{"font-size":11,"font-weight":700,fill:"#777c85","text-anchor":"end"});
+  const staffCount=staves.length,
+    width=1120,measuresPerSystem=4,systems=Math.max(1,Math.ceil(measures.length/measuresPerSystem));
   const left=105,right=1080,measureWidth=(right-left)/measuresPerSystem;
   const keyAt=(beat,staff)=>{
     if(staff&&staff.fifths!==null&&staff.fifths!==undefined)return staff.fifths;
@@ -845,7 +839,6 @@ function render(svg,rawScore,options){
     while(lo<hi){const mid=Math.floor((lo+hi+1)/2);if(measures[mid].startBeat<=beat+1e-5)lo=mid;else hi=mid-1}
     return measures[lo];
   }
-  const topFor=(system,index)=>50+system*systemHeight+25+index*staffGap;
   const clefGlyph={treble:"𝄞",bass:"𝄢",alto:"𝄡",tenor:"𝄡"};
   function staffOf(event){
     const voice=String(event.id||"").split("-")[0];
@@ -855,8 +848,55 @@ function render(svg,rawScore,options){
     }
     return event.clef==="bass"?Math.max(0,staves.findIndex(s=>s.clef==="bass")):0;
   }
+  // The old fixed 87-unit staff gap/220-unit system hid low and high ledger
+  // lines, especially on mobile. Reserve real space from each staff's pitch
+  // extremes, stems, ornaments and pedal/dynamic markings, before rendering.
+  // The SVG keeps its natural height and the existing Leitura viewport scrolls.
+  const bounds=Array.from({length:systems},()=>Array.from({length:staffCount},()=>({min:-28,max:66})));
+  const measureAt=beat=>{
+    let lo=0,hi=measures.length-1;
+    while(lo<hi){const mid=Math.floor((lo+hi+1)/2);
+      if(measures[mid].startBeat<=beat+1e-5)lo=mid;else hi=mid-1}
+    return measures[lo];
+  };
+  for(const event of score.events){
+    const measure=measureAt(event.startBeat),sys=Math.floor(measure.index/measuresPerSystem),
+      index=staffOf(event),staff=staves[index]||staves[0],
+      clef=clefAt(staff,event.startBeat),step=staffStep(event.midi,clef,event.note),
+      y=48-step*6,kind=durationKind(event.durationBeat),
+      stemUp=event.voiceDirection==="up"?true:event.voiceDirection==="down"?false:step<5,
+      b=bounds[sys][index];
+    // Extra clearance for flags, ties, accidentals and annotations is deliberate:
+    // those markings are part of the notation, not decorative overflow.
+    const headAbove=y-14,headBelow=y+14;
+    b.min=Math.min(b.min,headAbove,kind.stem&&stemUp?y-59:headAbove,
+      event.ornament?y-53:headAbove,kind.tuplet?y-65:headAbove,
+      event.tieStart&&step>=5?y-30:headAbove);
+    b.max=Math.max(b.max,headBelow,kind.stem&&!stemUp?y+67:headBelow,
+      event.pedal&&clef==="bass"?y+82:headBelow,
+      event.tieStart&&step<5?y+30:headBelow);
+    if(event.dynamic&&event.dynamic!==" ")b.max=Math.max(b.max,86);
+  }
+  const tops=[],bases=[],heights=[];let cursor=50;
   for(let system=0;system<systems;system++){
-    const first=measures[system*measuresPerSystem],baseY=50+system*systemHeight;
+    bases[system]=cursor;
+    const bb=bounds[system],tt=[];
+    tt[0]=cursor+25+Math.max(0,-28-bb[0].min);
+    for(let i=1;i<staffCount;i++)
+      tt[i]=tt[i-1]+Math.max(87,bb[i-1].max-bb[i].min+16);
+    tops[system]=tt;
+    heights[system]=Math.max(staffCount*87+46,tt[staffCount-1]-cursor+bb[staffCount-1].max+33);
+    cursor+=heights[system];
+  }
+  const height=cursor,topFor=(system,index)=>tops[system][index];
+  svg.setAttribute("viewBox","0 0 "+width+" "+height);
+  svg.setAttribute("role","img");
+  svg.setAttribute("aria-label",score.title+" — partitura");
+  svg.appendChild(svgEl("rect",{x:0,y:0,width,height,rx:18,fill:"#fff"}));
+  addText(svg,36,29,score.title,{"font-size":17,"font-weight":700,fill:"#17181d"});
+  addText(svg,width-36,29,(score.pulseUnit==="dotted-quarter"?"♩. = "+Math.round(score.tempoBpm*2/3):"♩ = "+Math.round(score.tempoBpm))+" · "+score.keyName,{"font-size":11,"font-weight":700,fill:"#777c85","text-anchor":"end"});
+  for(let system=0;system<systems;system++){
+    const first=measures[system*measuresPerSystem],baseY=bases[system];
     for(let i=0;i<staffCount;i++){
       const staff=staves[i],top=topFor(system,i),clef=clefAt(staff,first.startBeat);
       drawStaff(svg,left,right,top);

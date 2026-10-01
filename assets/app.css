@@ -3249,3 +3249,13 @@ body.luwipi-dark .workspace-path-step-help{color:#c0d0e9}
 /* No empty playback/tempo row during an unseen first-sight challenge.
    The score itself already displays the written tempo. */
 #readingImportedView.reading-curriculum-lesson .reading-imported-transport:has(#readingImportedPlay[hidden]) .tempo{display:none!important}
+
+/* Ledger lines must remain in the score's scrollable area, never behind a
+   fixed-height crop. The score engine now reserves per-staff vertical space. */
+#readingImportedView .reading-imported-score-wrap{
+ box-sizing:border-box;padding:12px 10px 16px!important;scrollbar-gutter:stable;
+}
+#readingImportedView .reading-imported-score-wrap svg{
+ display:block;height:auto!important;max-height:none!important;
+ overflow:visible;
+}
