@@ -20,7 +20,7 @@ const tests=[
  ['Padrões de mão esquerda','Dó–Sol–Mi–Sol tocados separadamente formam:',['Quinta oca','Oom-pah','Acorde quebrado','Walking bass'],2,'As notas de uma tríade são tocadas sucessivamente.'],
  ['Ritmo e métrica','Em 4/4, semínima pontuada + colcheia + mínima duram:',['3 tempos','3½ tempos','4 tempos','4½ tempos'],2,'1,5 + 0,5 + 2 = 4 tempos.']
 ];
-const abc='X:1\nT:Leitura inicial · 8 compassos\nM:4/4\nL:1/4\nQ:1/4=60\nK:C\n%%score {RH LH}\nV:RH clef=treble\nV:LH clef=bass\n[V:RH] C D E G | G F E D | E E F G | G2 E2 | F E D C | E G F D | C D E F | E2 C2 |]\n[V:LH] C,2 G,2 | G,2 D2 | C,2 G,2 | C,4 | F,2 C2 | G,2 D2 | C,2 G,2 | C,4 |';
+const abc='X:1\nT:Leitura inicial · 8 compassos\nM:4/4\nL:1/4\nQ:1/4=60\nK:C\n%%score {RH LH}\nV:RH clef=treble\nV:LH clef=bass\n[V:RH] C D E G | G F E D | E E F G | G2 E2 | F E D C | E G F D | C D E F | E2 C2 |]\n[V:LH] C,2 G,,2 | G,,2 D,2 | C,2 G,,2 | C,4 | F,2 C,2 | G,,2 D,2 | C,2 G,,2 | C,4 |';
 let data;try{data=JSON.parse(localStorage.getItem(KEY)||'null')}catch{}
 if(!data||data.version!==1)data={version:1,step:0,answers:{},tests:{},performance:{}};
 const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(data))}catch{}};
@@ -30,30 +30,46 @@ function choices(opts,selected,onChange){
  opts.forEach((name,i)=>{const button=el('button','diagnostic-choice'+(selected===i?' selected':''),name);button.type='button';button.setAttribute('aria-pressed',String(selected===i));button.onclick=()=>{onChange(i);save();render()};wrap.append(button)});
  return wrap;
 }
-function score(){
- const notes=[['C4','D4','E4','G4'],['G4','F4','E4','D4'],['E4','E4','F4','G4'],['G4','E4'],['F4','E4','D4','C4'],['E4','G4','F4','D4'],['C4','D4','E4','F4'],['E4','C4']];
- const pitch={C4:117,D4:107,E4:97,F4:87,G4:77};
- let s='<svg viewBox="0 0 760 380" role="img" aria-label="Exercício de oito compassos em clave de Sol e Fá">';
- for(let row=0;row<2;row++){
-  const shift=row*182;
-  for(const y of [47,59,71,83,95,132,144,156,168,180])s+='<line x1="36" x2="740" y1="'+(y+shift)+'" y2="'+(y+shift)+'" stroke="#8798b2"/>';
-  s+='<text x="38" y="'+(90+shift)+'" font-size="49">𝄞</text><text x="38" y="'+(173+shift)+'" font-size="40">𝄢</text>';
-  for(let m=0;m<4;m++){
-   const idx=row*4+m,x=110+m*155,arr=notes[idx],dx=arr.length===2?67:33;
-   s+='<text x="'+x+'" y="'+(30+shift)+'" font-size="10" fill="#647897">'+(idx+1)+'</text>';
-   if(m)s+='<line x1="'+(x-17)+'" x2="'+(x-17)+'" y1="'+(47+shift)+'" y2="'+(180+shift)+'" stroke="#8798b2"/>';
-   arr.forEach((note,j)=>{const nx=x+j*dx,ny=pitch[note]+shift,hollow=arr.length===2;
-    s+='<ellipse cx="'+nx+'" cy="'+ny+'" rx="6.5" ry="4.5" transform="rotate(-19 '+nx+' '+ny+')" fill="'+(hollow?'white':'#203863')+'" stroke="#203863" stroke-width="1.5"/><line x1="'+(nx+6)+'" x2="'+(nx+6)+'" y1="'+ny+'" y2="'+(ny-29)+'" stroke="#203863"/>';
-    if(note==='C4')s+='<line x1="'+(nx-11)+'" x2="'+(nx+12)+'" y1="'+(117+shift)+'" y2="'+(117+shift)+'" stroke="#8798b2"/>';
-   });
-   const bass=idx===4?['F3','C3']:idx===1||idx===5?['G2','D3']:['C3','G2'];
-   for(let k=0;k<(idx===3||idx===7?1:2);k++){
-    const nx=x+k*67,ny=({C3:156,F3:138,D3:149,G2:180})[bass[k]]+shift;
-    s+='<ellipse cx="'+nx+'" cy="'+ny+'" rx="7" ry="4.5" fill="white" stroke="#203863" stroke-width="1.5"/><line x1="'+(nx+6)+'" x2="'+(nx+6)+'" y1="'+ny+'" y2="'+(ny-27)+'" stroke="#203863"/>';
+/* Engrave the eight-bar sight-reading test using the same deterministic music engine as Practice. */
+function drawScore(host){
+ const E=window.LuwipiScoreEngine;
+ if(!E?.render){host.textContent='Partitura indisponível. Usa a notação ABC abaixo.';return}
+ const rh=[
+  [['C4',1],['D4',1],['E4',1],['G4',1]],
+  [['G4',1],['F4',1],['E4',1],['D4',1]],
+  [['E4',1],['E4',1],['F4',1],['G4',1]],
+  [['G4',2],['E4',2]],
+  [['F4',1],['E4',1],['D4',1],['C4',1]],
+  [['E4',1],['G4',1],['F4',1],['D4',1]],
+  [['C4',1],['D4',1],['E4',1],['F4',1]],
+  [['E4',2],['C4',2]]
+ ];
+ const lh=[
+  [['C3',2],['G2',2]],
+  [['G2',2],['D3',2]],
+  [['C3',2],['G2',2]],
+  [['C3',4]],
+  [['F3',2],['C3',2]],
+  [['G2',2],['D3',2]],
+  [['C3',2],['G2',2]],
+  [['C3',4]]
+ ];
+ const events=[];
+ for(const [clef,measures] of [['treble',rh],['bass',lh]]){
+  measures.forEach((measure,index)=>{
+   let beat=index*4;
+   for(const [note,durationBeat] of measure){
+    const midi=E.nameToMidi(note);
+    events.push({id:'diag-'+clef+'-'+events.length,midi,note,clef,startBeat:beat,durationBeat,velocity:78});
+    beat+=durationBeat;
    }
-  }
+  });
  }
- return s+'</svg>';
+ const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
+ svg.setAttribute('aria-label','Leitura inicial: oito compassos nas claves de Sol e Fá');
+ host.replaceChildren(svg);
+ const score=E.normalizeScore({title:'Leitura inicial · 8 compassos',source:'diagnostic',tempoBpm:60,meter:[4,4],keyFifths:0,events,durationBeats:32});
+ E.render(svg,score,{showNoteNames:false,currentGroupIndex:-1});
 }
 function chooseMetric(name,heading,labels){const box=el('div','diagnostic-metric');box.append(el('strong','',heading));box.append(choices(labels,data.performance[name],n=>data.performance[name]=n));return box}
 function results(){
@@ -80,7 +96,7 @@ function render(){
  if(n===13){
   content.append(el('h3','','Toca estes oito compassos sem voltar atrás'));
   content.append(el('p','','Usa o metrónomo a 60 BPM. Não pares perante erros; mantém o pulso.'));
-  const sheet=el('div','diagnostic-score');sheet.innerHTML=score();content.append(sheet);
+  const sheet=el('div','diagnostic-score');content.append(sheet);drawScore(sheet);
   const abcBox=el('details','diagnostic-abc');abcBox.append(el('summary','','Notação ABC acessível'));abcBox.append(el('pre','',abc));content.append(abcBox);
   content.append(chooseMetric('bpm','Andamento real',['50 BPM','60 BPM','72 BPM','90 BPM','100 BPM ou mais']));
   content.append(chooseMetric('pauses','Quantas vezes paraste?',['Nenhuma','Uma','Duas','Três ou mais']));

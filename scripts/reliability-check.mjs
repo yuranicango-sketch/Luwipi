@@ -747,6 +747,7 @@ await test('Rotas canónicas e diagnóstico de utilizadores',async()=>{
  assert(router.includes('CSS.escape(s.song)')&&router.includes('luwipi:restore-midi'),'restauro de exercícios e MIDI não é reproduzido');
  assert(diagnostic.includes('const survey=[')&&diagnostic.includes('const tests=[')&&diagnostic.includes("diagnostic-choice")&&diagnostic.includes('aria-pressed'),'diagnóstico não usa escolhas visuais');
  assert(diagnostic.includes("localStorage.setItem(KEY")&&diagnostic.includes('Repetir diagnóstico')&&diagnostic.includes('Copiar cartão de diagnóstico'),'diagnóstico e registo não persistem');
+ assert(diagnostic.includes('E.render(svg,score')&&diagnostic.includes('durationBeats:32')&&diagnostic.includes('G,,2 D,2'),'leitura corrida tem de usar oito compassos rigorosos e a pauta gravada pelo motor musical');
  assert(practice.includes("indexedDB.open('luwipi-practice-session'")&&practice.includes("restorePracticeDraft")&&practice.includes("'luwipi:workspace-route'"),'Prática não recupera ficheiro na mesma aba');
  assert(midi.includes("'luwipi:restore-midi'")&&midi.includes('setMidi(item.libraryId)')&&midi.includes('aiReview:current.ai'),'MIDI guardado perdeu rota ou análise');
  assert(midi.includes("window.LuwipiWorkspaceRouter.go('reading')"),'voltar do MIDI ainda reabre o dashboard antigo');
