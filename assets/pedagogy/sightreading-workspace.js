@@ -1,6 +1,6 @@
 (()=>{
 'use strict';
-const P=window.LuwipiPedagogyV1,E=window.LuwipiScoreEngine,S=window.LuwipiSpecializedStudies,host=document.getElementById('workspaceCanvas');
+const P=window.LuwipiPedagogyV1,E=window.LuwipiScoreEngine,S=window.LuwipiSpecializedStudies,S2=window.LuwipiSpecializedN2,host=document.getElementById('workspaceCanvas');
 if(!P||!E||!host)return;
 const KEY='luwipi:pedagogy:device-draft:v1',STEPS=[
  ['Aquecimento rítmico','2 min · Conta, bate e toca um padrão com metrónomo.'],
@@ -54,7 +54,9 @@ let profile=P.newProfile(),selected='',exercise=null,stage=3,verified=false,stor
 let syncRevision=0,signedIn=false,localEdits=0,explorationLevel=null;
 function currentStudyLevel(track){
  const formal=profile.levels?.[track]?.level||0;
- return track===selected&&formal===0&&explorationLevel===1&&S?.get(track,1)?1:formal;
+ if(track!==selected||explorationLevel===null||explorationLevel<=formal)return formal;
+ const study=S?.get(track,explorationLevel)||S2?.get(track,explorationLevel);
+ return study?explorationLevel:formal;
 }
 const trackName=t=>P.tracks[t].name;
 function safeRead(storage,key){try{return JSON.parse(storage.getItem(key)||'null')}catch{return null}}
@@ -125,7 +127,7 @@ function render(){
   card.append(head,el('p','',mod.objective));
   const candidate=profile.placement?.[t]?.status;
   if(candidate&&candidate!=='não avaliado')card.append(el('small','', 'Diagnóstico: '+candidate));
-  if(S?.get(t,l.level||0))card.append(el('small','', 'Estudo musical específico disponível'));
+  if(S?.get(t,l.level||0)||S2?.get(t,l.level||0))card.append(el('small','', 'Estudo musical específico disponível'));
   const launch=el('button','',selected===t?'Selecionado · organizar sessão':'Preparar sessão');
   launch.type='button';launch.onclick=()=>{selected=t;stage=3;exercise=null;explorationLevel=null;render()};
   card.append(launch);map.append(card);
@@ -140,14 +142,20 @@ function render(){
  const formalLevel=profile.levels?.[selected]?.level||0;
  const level=currentStudyLevel(selected),mod=P.moduleFor(selected,level);
  workout.append(el('h3','',selected+' · N'+level+' · '+mod.objective));
- if(formalLevel===0&&S?.get(selected,1)){
-  const preview=el('button','',explorationLevel===1?'Regressar ao N0':'Explorar estudo N1 (sem avançar)');
-  preview.type='button';preview.className='workspace-path-explore';
-  preview.setAttribute('aria-pressed',String(explorationLevel===1));
-  preview.addEventListener('click',()=>{explorationLevel=explorationLevel===1?null:1;stage=3;exercise=null;render()});
-  workout.append(preview);
-  if(explorationLevel===1)workout.append(el('div','workspace-path-banner','Estás a explorar N1. O nível oficial desta trilha permanece N0 até cumprires todas as provas de passagem.'));
+ const canExploreN1=formalLevel===0&&Boolean(S?.get(selected,1));
+ const canExploreN2=formalLevel<2&&Boolean(S2?.get(selected,2))&&
+  (formalLevel>=1||profile.seen.includes(S?.get(selected,1)?.id||'unavailable'));
+ for(const target of [1,2]){
+  if(target===1&&!canExploreN1||target===2&&!canExploreN2)continue;
+  const active=explorationLevel===target;
+  const button=el('button','',active?'Regressar ao N'+formalLevel:'Explorar estudo N'+target+' (sem avançar)');
+  button.type='button';button.className='workspace-path-explore';
+  button.setAttribute('aria-pressed',String(active));
+  button.addEventListener('click',()=>{explorationLevel=active?null:target;stage=3;exercise=null;render()});
+  workout.append(button);
  }
+ if(explorationLevel!==null&&explorationLevel>formalLevel)
+  workout.append(el('div','workspace-path-banner','Exploração do N'+explorationLevel+' sem certificação. O teu nível confirmado permanece N'+formalLevel+'.'));
 
  const stages=el('label','','Etapa da sessão');
  const sel=el('select');STEPS.forEach(([name,desc],i)=>{const op=el('option','',String(i+1)+'. '+name);op.value=String(i);sel.append(op)});
@@ -179,17 +187,29 @@ function splitABC(seed){
   return{events:result.events.map((x,i)=>({...x,id:hand+'-'+i,clef})),rests:(result.rests||[]).map((x,i)=>({...x,id:hand+'-rest-'+i,clef}))};
  }
  const rh=read('RH','treble'),lh=read('LH','bass');
+ const rh2=seed.secondTrebleVoice?read('RH2','treble'):{events:[],rests:[]};
+ if(seed.secondTrebleVoice){
+  rh.events.forEach(e=>e.voiceDirection='up');
+  rh2.events.forEach(e=>e.voiceDirection='down');
+ }
  const base=E.parseABC(headers.join('\n')+'\nC2 C2 C2 C2 | C2 C2 C2 C2 |');
- const events=rh.events.concat(lh.events);
+ const events=rh.events.concat(rh2.events,lh.events);
  if(!events.length)throw Error('Exercício vazio');
  const result=E.normalizeScore({title:seed.title,source:'pedagogy',tempoBpm:seed.meter==="6/8"?base.tempoBpm*1.5:base.tempoBpm,meter:base.meter,keyFifths:base.keyFifths,
- events,rests:rh.rests.concat(lh.rests),keyMinor:base.keyMinor});
+ events,rests:rh.rests.concat(rh2.rests,lh.rests),keyMinor:base.keyMinor});
  if(seed.expression){
   result.events.forEach(e=>{
    if(e.clef==='treble'){
-    const measure=Math.floor(e.startBeat/(seed.meter==='3/4'?3:4));
-    e.articulations=seed.expression==='staccato-tenuto'?(measure%2===0?['staccato']:['tenuto']):(measure%2===0?['accent']:[]);
-    if(seed.expression==='accent'){e.dynamic=measure<4?'p':'f';e.velocity=measure<4?48:104;}
+    const measure=Math.floor(e.startBeat/result.beatsPerMeasure);
+    if(seed.expression==='staccato-tenuto'||seed.expression==='accent'){
+     e.articulations=seed.expression==='staccato-tenuto'?(measure%2===0?['staccato']:['tenuto']):(measure%2===0?['accent']:[]);
+     if(seed.expression==='accent'){e.dynamic=measure<4?'p':'f';e.velocity=measure<4?48:104;}
+    }
+    if(seed.expression==='cresc-dim'){
+     const velocities=[50,63,78,100,101,86,66,50];
+     const markings=['p','cresc.','cresc.','f','f','dim.','dim.','p'];
+     e.velocity=velocities[measure]||50;e.dynamic=markings[measure]||'p';
+    }
    }
   });
  }
@@ -197,7 +217,7 @@ function splitABC(seed){
 }
 // A pure selection rule shared by training and first-sight attempts.
 function chooseSeed(track,level,which,seen){
- const special=S?.get(track,level)||null,variants=P.availableVariants(track,level);
+ const special=S?.get(track,level)||S2?.get(track,level)||null,variants=P.availableVariants(track,level);
  if(which!==3&&special)return special;
  if(which===3&&special&&!seen.includes(special.id))return special;
  const variant=which===3
@@ -220,7 +240,7 @@ function launch(which){
  }
  exercise={...seed,id:seed.id,track,level,exploratory:track===selected&&level!==currentLevel,
   kind:which===3?'first_sight':'practice',stage:which,sessionId:String(Date.now())+'-'+seed.id};
- const opened=window.LuwipiLiveLoadPedagogy(score,score.title,{firstSight:which===3,exerciseId:seed.id});
+ const opened=window.LuwipiLiveLoadPedagogy(score,score.title,{firstSight:which===3,exerciseId:seed.id,transposeSemitones:seed.transposeSemitones||0});
  if(opened){
   // A warm-up or short pattern exposes musical content too: never re-label it
   // as an unseen first-sight exercise, even when only two bars were previewed.

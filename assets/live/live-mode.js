@@ -64,7 +64,26 @@ const scopeHelp=document.getElementById("livePublishScopeHelp");
 let score=null,groups=[],pdfUrl="",pdfFileName="",structuredFileName="",activeView="interactive";
 let tempo=120,guideOn=true,rhythmOn=true,practice=false,practiceIndex=0,practiceAnchor=0,practiceFirstBeat=0;
 let correctCount=0,attempts=0,timingSamples=[],chordSeen=new Set(),noteOnTimes=new Map(),playTimers=[],playing=false;
-let inputMode="none",unsubscribe=null,lastDetected="-",pedagogyNovel=false,pedagogyExerciseId="";
+let inputMode="none",unsubscribe=null,lastDetected="-",pedagogyNovel=false,pedagogyExerciseId="",pedagogyTranspose=0,preReadTimer=null,preReadSession=0;
+function cancelPreRead(){
+ preReadSession++;if(preReadTimer!==null){clearTimeout(preReadTimer);preReadTimer=null;}
+}
+function startPreRead(seconds){
+ cancelPreRead();
+ let remaining=seconds,session=preReadSession;
+ practiceButton.disabled=true;
+ function tick(){
+  if(session!==preReadSession)return;
+  if(remaining<=0){
+   preReadTimer=null;practiceButton.disabled=false;
+   setFeedback(pedagogyTranspose?'Pré-leitura concluída. Toca tudo um tom acima sem alterar a partitura.':'Pré-leitura concluída. Inicia a leitura sem ouvir a demonstração.','near');
+   return;
+  }
+  setFeedback('Pré-leitura · '+remaining+' s: observa clave, armadura, compasso e padrões. Sem tocar nem ouvir.','near');
+  remaining--;preReadTimer=setTimeout(tick,1000);
+ }
+ tick();
+}
 let fidelityReport=null,publishKind="music",publishScope="personal",publishOpener=null;
 
 const PT={C:"Dó","C#":"Dó♯",D:"Ré","D#":"Ré♯",E:"Mi",F:"Fá","F#":"Fá♯",G:"Sol","G#":"Sol♯",A:"Lá","A#":"Lá♯",B:"Si"};
@@ -226,7 +245,7 @@ function updateMetrics(){
   timingMetric.innerHTML="<b>"+(timingSamples.length?mean+" ms":"—")+"</b> ritmo";
 }
 function setScore(next,name){
-  pedagogyNovel=false;pedagogyExerciseId="";
+  cancelPreRead();pedagogyNovel=false;pedagogyExerciseId="";pedagogyTranspose=0;
   score=Engine.normalizeScore(next);groups=Engine.groupEvents(score);structuredFileName=name||score.title;
   tempo=Math.round(score.tempoBpm);activeView="interactive";
   resetPractice();updateFileState();renderScore();
@@ -424,14 +443,17 @@ async function selectSource(kind){
   }
 }
 function startPractice(){
-  if(!score||!groups.length)return;
-  if(pedagogyNovel){pedagogyNovel=false;playButton.disabled=false;hearButton.disabled=false;}
+  if(!score||!groups.length||practiceButton.disabled)return;
   chooseView("interactive");
   if(inputMode==="none"&&window.LuwipiWorkspacePiano){
     inputMode="virtual";setInputState("Piano virtual ativo.");
   }
   if(inputMode==="none"){
     setFeedback("Liga o piano virtual, um teclado MIDI ou o microfone.","bad");return;
+  }
+  if(pedagogyNovel){
+   pedagogyNovel=false;
+   if(!pedagogyTranspose){playButton.disabled=false;hearButton.disabled=false;}
   }
   stopPlayback();practice=true;practiceIndex=0;practiceAnchor=0;practiceFirstBeat=groups[0].startBeat;
   correctCount=0;attempts=0;timingSamples=[];chordSeen.clear();noteOnTimes.clear();
@@ -538,7 +560,7 @@ function toggle(button,next){
 }
 function cleanupWhenHidden(){
   if(view.classList.contains("active"))return;
-  stopPlayback();stopPractice();
+  cancelPreRead();stopPlayback();stopPractice();
   Input.disconnect();inputMode="none";sourceMidi.classList.remove("active");sourceMic.classList.remove("active");
   setInputState("Entrada desligada ao sair do Prática.");
 }
@@ -683,8 +705,17 @@ window.LuwipiLiveTaskSource=Object.freeze({score:()=>score?{title:score.title||s
    setScore(exercise,title||exercise.title||'Leitura');
    pedagogyNovel=Boolean(options.firstSight);
    pedagogyExerciseId=String(options.exerciseId||'');
-   if(pedagogyNovel){playButton.disabled=true;hearButton.disabled=true;}
-   setFeedback(pedagogyNovel?'Leitura inédita: observa a partitura e inicia sem ouvir a demonstração. O preview é libertado após começar.':'Treino: reconhece o desenho antes de tocar.','near');
+   pedagogyTranspose=Number(options.transposeSemitones)===2?2:0;
+   if(pedagogyTranspose){
+    const altered=Engine.normalizeScore({...score,events:score.events.map(event=>{
+     const midi=Math.min(127,event.midi+pedagogyTranspose),note=Engine.midiToName(midi);
+     return {...event,midi,note,noteName:note};
+    })});
+    groups=Engine.groupEvents(altered);updateMetrics();
+   }
+   if(pedagogyNovel||pedagogyTranspose){playButton.disabled=true;hearButton.disabled=true;}
+   if(pedagogyNovel)startPreRead(30);
+   else setFeedback(pedagogyTranspose?'Estudo de transposição: a pauta está em Dó; toca em Ré, um tom acima. A demonstração original fica desativada.':'Treino: reconhece o desenho antes de tocar.','near');
    return true;
  };
  window.addEventListener('luwipi:pedagogy-cues',event=>{
