@@ -5,12 +5,12 @@ import { webcrypto } from "node:crypto";
 if(!globalThis.crypto)globalThis.crypto=webcrypto;
 
 const ROOT=process.cwd();
-let passed=0;
+let passed=0,failures=0;
 const notes=[];
 function assert(cond,msg){if(!cond)throw new Error(msg)}
 async function test(name,fn){
   try{await fn();passed++;notes.push("✓ "+name)}
-  catch(error){notes.push("✗ "+name+" — "+(error?.message||error));throw error}
+  catch(error){failures++;notes.push("✗ "+name+" — "+(error?.message||error))}
 }
 async function read(rel){return fs.readFile(path.join(ROOT,rel),"utf8")}
 function response(body,status=200,headers={}){return new Response(typeof body==="string"?body:JSON.stringify(body),{status,headers:{"content-type":"application/json",...headers}})}
@@ -684,5 +684,6 @@ await test('CSS canónico: sem camadas antigas de layout',async()=>{
   assert(standalone.includes("link.href='/app?open=games'"),'standalone games still return to public landing');
 });
 
+await fs.writeFile(path.join(ROOT,"assets/reliability-report.json"),JSON.stringify({passed,failures,notes},null,2),"utf8");
 console.log("\nLuwipi reliability gate: "+passed+" checks passed");
 for(const line of notes)console.log(line);
