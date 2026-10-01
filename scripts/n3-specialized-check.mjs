@@ -2,7 +2,15 @@ import assert from "node:assert/strict";
 import {readFile} from "node:fs/promises";
 const read=path=>readFile(new URL("../"+path,import.meta.url),"utf8");
 const win={};
-new Function("window",await read("assets/music/score-engine.js"))(win);
+class SvgStub{
+ constructor(name){this.name=name;this.children=[];this.attributes={};this.textContent="";}
+ setAttribute(name,value){this.attributes[name]=String(value)}
+ appendChild(node){this.children.push(node);return node}
+ removeChild(node){this.children.splice(this.children.indexOf(node),1);return node}
+ get firstChild(){return this.children[0]||null}
+}
+const doc={createElementNS:(_ns,name)=>new SvgStub(name)};
+new Function("window","document",await read("assets/music/score-engine.js"))(win,doc);
 new Function("globalThis",await read("assets/pedagogy/specialized-n3.js"))(win);
 const E=win.LuwipiScoreEngine,N3=win.LuwipiSpecializedN3,ui=await read("assets/pedagogy/sightreading-workspace.js");
 const start=ui.indexOf("function splitABC(seed){"),end=ui.indexOf("// A pure selection",start);
@@ -71,6 +79,14 @@ for(const track of tracks){
  }
 }
 assert.equal(tracks.length,10);
+// Assert the actual SVG score renderer places pedagogic pedal cues beneath the staves.
+const svg=doc.createElementNS("http://www.w3.org/2000/svg","svg");
+E.render(svg,parse(N3.get("G",3)),{});
+function svgTexts(root){return [root.name==="text"?root.textContent:"",...root.children.flatMap(svgTexts)].filter(Boolean)}
+const markings=svgTexts(svg);
+assert.ok(markings.includes("Ped."),"Initial pedal marking was not drawn");
+assert.ok(markings.filter(x=>x==="↺ Ped.").length>=5,"Pedal exchange symbols were not drawn");
+assert.ok(markings.includes("✱"),"Final pedal release missing");
 const live=await read("assets/live/live-mode.js");
 assert.ok(live.includes("[2,5].includes(Number(options.transposeSemitones))"),"Fourth-up transposition missing");
 assert.ok(live.includes("pedagogyHint=String(options.guideHint"),"Pedal interpretation cue missing");
