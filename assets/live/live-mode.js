@@ -64,7 +64,10 @@ const scopeHelp=document.getElementById("livePublishScopeHelp");
 let score=null,groups=[],pdfUrl="",pdfFileName="",structuredFileName="",activeView="interactive";
 let tempo=120,guideOn=true,rhythmOn=true,practice=false,practiceIndex=0,practiceAnchor=0,practiceFirstBeat=0;
 let correctCount=0,attempts=0,timingSamples=[],chordSeen=new Set(),noteOnTimes=new Map(),playTimers=[],playing=false;
-let inputMode="none",unsubscribe=null,lastDetected="-",pedagogyNovel=false,pedagogyExerciseId="",pedagogyTranspose=0,preReadTimer=null,preReadSession=0;
+let inputMode="none",unsubscribe=null,lastDetected="-",pedagogyNovel=false,pedagogyExerciseId="",pedagogyTranspose=0,pedagogyHint="",preReadTimer=null,preReadSession=0;
+function transposeMessage(){
+ return pedagogyTranspose===5?"uma quarta justa acima":pedagogyTranspose===2?"um tom acima":"conforme a pauta";
+}
 function cancelPreRead(){
  preReadSession++;if(preReadTimer!==null){clearTimeout(preReadTimer);preReadTimer=null;}
 }
@@ -76,7 +79,7 @@ function startPreRead(seconds){
   if(session!==preReadSession)return;
   if(remaining<=0){
    preReadTimer=null;practiceButton.disabled=false;
-   setFeedback(pedagogyTranspose?'Pré-leitura concluída. Toca tudo um tom acima sem alterar a partitura.':'Pré-leitura concluída. Inicia a leitura sem ouvir a demonstração.','near');
+   setFeedback((pedagogyTranspose?'Pré-leitura concluída. Toca tudo '+transposeMessage()+' sem alterar a partitura.':'Pré-leitura concluída. Inicia a leitura sem ouvir a demonstração.')+(pedagogyHint?' '+pedagogyHint:''),'near');
    return;
   }
   setFeedback('Pré-leitura · '+remaining+' s: observa clave, armadura, compasso e padrões. Sem tocar nem ouvir.','near');
@@ -245,7 +248,7 @@ function updateMetrics(){
   timingMetric.innerHTML="<b>"+(timingSamples.length?mean+" ms":"—")+"</b> ritmo";
 }
 function setScore(next,name){
-  cancelPreRead();pedagogyNovel=false;pedagogyExerciseId="";pedagogyTranspose=0;
+  cancelPreRead();pedagogyNovel=false;pedagogyExerciseId="";pedagogyTranspose=0;pedagogyHint="";
   score=Engine.normalizeScore(next);groups=Engine.groupEvents(score);structuredFileName=name||score.title;
   tempo=Math.round(score.tempoBpm);activeView="interactive";
   resetPractice();updateFileState();renderScore();
@@ -705,7 +708,8 @@ window.LuwipiLiveTaskSource=Object.freeze({score:()=>score?{title:score.title||s
    setScore(exercise,title||exercise.title||'Leitura');
    pedagogyNovel=Boolean(options.firstSight);
    pedagogyExerciseId=String(options.exerciseId||'');
-   pedagogyTranspose=Number(options.transposeSemitones)===2?2:0;
+   pedagogyTranspose=[2,5].includes(Number(options.transposeSemitones))?Number(options.transposeSemitones):0;
+   pedagogyHint=String(options.guideHint||"").trim().slice(0,180);
    if(pedagogyTranspose){
     const altered=Engine.normalizeScore({...score,events:score.events.map(event=>{
      const midi=Math.min(127,event.midi+pedagogyTranspose),note=Engine.midiToName(midi);
@@ -715,7 +719,7 @@ window.LuwipiLiveTaskSource=Object.freeze({score:()=>score?{title:score.title||s
    }
    if(pedagogyNovel||pedagogyTranspose){playButton.disabled=true;hearButton.disabled=true;}
    if(pedagogyNovel)startPreRead(30);
-   else setFeedback(pedagogyTranspose?'Estudo de transposição: a pauta está em Dó; toca em Ré, um tom acima. A demonstração original fica desativada.':'Treino: reconhece o desenho antes de tocar.','near');
+   else setFeedback((pedagogyTranspose?'Estudo de transposição: lê '+transposeMessage()+'; o áudio da pauta original está desativado.':'Treino: reconhece o desenho antes de tocar.')+(pedagogyHint?' '+pedagogyHint:''),'near');
    return true;
  };
  window.addEventListener('luwipi:pedagogy-cues',event=>{
