@@ -9,8 +9,8 @@ if(!view||!E)return;
 let scoreRequest=0,scoreAbort,aiRequest=0,aiAbort;
 let playRequest=0,loading=false,audition=false,notationDocument=null;
 let playlist=[],current=null,leadKey='',leadNotes=[],backing=[],timer=0,playing=false,points=0,hit=new Set(),unsubscribe=null;
-let keyboardBase=48,scoreMode='ai',leadTouched=false;
-const notationMode=$('karaokeNotationMode');
+let keyboardBase=48,scoreMode='ai',leadTouched=false,libraryItems=[];
+const notationMode=$('karaokeNotationMode'),saveMidi=$('karaokeSaveMidi'),savedMidi=$('karaokeSavedMidi'),refreshLibrary=$('karaokeRefreshLibrary');
 
 const noteName=m=>E.ptSolfege(m).replace(/-?\d+$/,'');
 const keyOf=e=>`${e.track}:${e.channel}`;
@@ -19,6 +19,52 @@ const escapeHtml=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;'
 
 function access(){try{return typeof LuwipiProductionAccess!=='undefined'?LuwipiProductionAccess:null}catch{return null}}
 async function accessToken(){const gate=access();return gate&&typeof gate.getAccessToken==='function'?await gate.getAccessToken():null}
+async function midiApi(path,options={}){
+ const token=await accessToken();if(!token)throw new Error('unauthorized');
+ const headers=new Headers(options.headers||{});headers.set('authorization','Bearer '+token);
+ const r=await fetch('/api/midi-library'+(path||''),{...options,headers,cache:'no-store'});
+ if(options.raw){if(!r.ok)throw new Error('library_unavailable');return r}
+ const body=await r.json().catch(()=>({}));if(!r.ok)throw new Error(body.error||'library_unavailable');return body;
+}
+async function refreshMidiLibrary(){
+ if(!savedMidi)return;
+ try{
+  const body=await midiApi('');libraryItems=body.items||[];
+  const value=savedMidi.value;savedMidi.replaceChildren(new Option('Músicas guardadas',''));
+  libraryItems.forEach(item=>savedMidi.add(new Option(item.title+(item.ai_analyzed_at?' · IA pronta':''),item.id)));
+  if([...savedMidi.options].some(o=>o.value===value))savedMidi.value=value;
+ }catch{savedMidi.replaceChildren(new Option('Biblioteca indisponível',''))}
+}
+async function saveCurrentMidi(){
+ if(!current?.binary||!saveMidi)return;
+ saveMidi.disabled=true;saveMidi.textContent='A guardar…';
+ try{
+  const meta={title:current.name,score:current.score,aiReview:current.ai||{},leadKey,notationMode:notationMode.value,scoreMode,aiModel:current.ai?'gpt-6-luna':''};
+  const form=new FormData();form.append('file',new File([current.binary],current.originalName||current.name+'.mid',{type:'audio/midi'}));form.append('meta',JSON.stringify(meta));
+  const body=await midiApi('',{method:'POST',body:form});current.libraryId=body.item?.id||current.libraryId;
+  saveMidi.classList.add('saved');saveMidi.textContent='✓ Guardado';$('karaokeStatus').textContent='MIDI guardado na tua biblioteca. Na próxima vez não precisas carregar nem voltar a analisar.';
+  await refreshMidiLibrary();
+ }catch(error){saveMidi.textContent='♡ Guardar MIDI';$('karaokeStatus').textContent=error.message==='unauthorized'?'Inicia sessão para guardar o MIDI.':'Não foi possível guardar este MIDI agora.'}
+ finally{saveMidi.disabled=!current?.binary;setTimeout(()=>{if(current?.binary)saveMidi.textContent=current.libraryId?'✓ Guardado':'♡ Guardar MIDI'},1500)}
+}
+async function updateSavedMidi(item){
+ if(!item?.libraryId)return;
+ try{await midiApi('',{method:'PATCH',headers:{'content-type':'application/json'},body:JSON.stringify({id:item.libraryId,leadKey,notationMode:notationMode.value,scoreMode,aiReview:item.ai||undefined,aiModel:item.ai?'gpt-6-luna':''})});await refreshMidiLibrary()}catch{}
+}
+async function loadSavedMidi(id){
+ if(!id)return;
+ try{
+  $('karaokeStatus').textContent='A abrir MIDI guardado…';
+  const meta=(await midiApi('?id='+encodeURIComponent(id))).item;
+  const response=await midiApi('?id='+encodeURIComponent(id)+'&download=1',{raw:true});
+  const binary=await response.arrayBuffer(),score=E.parseMIDI(binary);
+  const item={name:meta.title,originalName:meta.original_name||meta.title+'.mid',score,binary,nativeScores:{},ai:meta.ai_review&&Object.keys(meta.ai_review).length?meta.ai_review:null,libraryId:meta.id};
+  playlist.push(item);song.add(new Option(item.name,String(playlist.length-1)));song.value=String(playlist.length-1);
+  notationMode.value=meta.notation_mode==='literal'?'literal':'organized';scoreMode=meta.score_mode==='original'?'original':'ai';setSong(playlist.length-1);
+  if(meta.lead_key&&[...lead.options].some(o=>o.value===meta.lead_key)){lead.value=meta.lead_key;leadKey=meta.lead_key;leadTouched=true;await setLead()}
+  saveMidi.classList.add('saved');saveMidi.textContent='✓ Guardado';$('karaokeStatus').textContent=item.ai?'MIDI aberto · análise IA reutilizada.':'MIDI aberto da biblioteca.';
+ }catch{$('karaokeStatus').textContent='Não foi possível abrir este MIDI guardado.'}
+}
 
 function msAt(beat){
  const map=(current?.score?.tempoMap||[]).slice().sort((a,b)=>a.beat-b.beat);
@@ -140,6 +186,7 @@ async function analyzeAI(force=false){
   if(request!==aiRequest||item!==current)return;
   if(!response.ok)throw Object.assign(new Error(body.error||'analysis_unavailable'),{code:body.error||'analysis_unavailable'});
   item.ai=body.review;item.aiUsage=body.usage||null;
+  if(item.libraryId)void updateSavedMidi(item);
   setAiUI('ready',item.ai);
   const suggested=reviewKey(item.ai);
   if(!leadTouched&&suggested&&[...lead.options].some(o=>o.value===suggested)){lead.value=suggested;leadKey=suggested}
@@ -179,7 +226,8 @@ $('karaokeOctaveUp').addEventListener('click',()=>{keyboardBase=Math.min(84,keyb
 function setSong(index){
  scoreRequest++;scoreAbort?.abort();aiRequest++;aiAbort?.abort();stop();
  current=playlist[index]||null;lead.innerHTML='';leadTouched=false;scoreMode='ai';updateScoreModeUI();setAiUI('idle');updateSongTitle();
- if(!current){$('karaokeAiButton').disabled=true;return}
+ if(!current){$('karaokeAiButton').disabled=true;if(saveMidi)saveMidi.disabled=true;return}
+ if(saveMidi){saveMidi.disabled=!current.binary;saveMidi.classList.toggle('saved',Boolean(current.libraryId));saveMidi.textContent=current.libraryId?'✓ Guardado':'♡ Guardar MIDI'}
  const tracks=groups(current.score);
  lead.add(new Option('Escolher pista para a partitura',''));
  tracks.forEach(g=>lead.add(new Option(`${g.title} · ${g.instrument} · ${g.events.length} notas`,g.key)));
@@ -272,7 +320,7 @@ async function upload(list){
  for(const file of list){
   try{
    const binary=await file.arrayBuffer(),score=E.parseMIDI(binary);
-   incoming.push({name:file.name.replace(/\.midi?$/i,''),score,binary,nativeScores:{},ai:null});
+   incoming.push({name:file.name.replace(/\.midi?$/i,''),originalName:file.name,score,binary,nativeScores:{},ai:null,libraryId:null});
   }catch(error){console.error('MIDI karaoke import:',error);$('karaokeStatus').textContent=`${file.name}: não foi possível ler este MIDI (${error?.message||'erro'}).`}
  }
  playlist.push(...incoming);song.replaceChildren();playlist.forEach((item,i)=>song.add(new Option(item.name,String(i))));
@@ -295,7 +343,7 @@ $('karaokeListenTrack').addEventListener('click',()=>void play(true));
 $('karaokeExportXML').addEventListener('click',()=>{if(!notationDocument)return;const url=URL.createObjectURL(new Blob([notationDocument.xml],{type:'application/vnd.recordare.musicxml+xml'})),a=document.createElement('a');a.href=url;a.download=(current.name||'pista')+(scoreMode==='ai'&&current?.ai?'-ia':'')+'.musicxml';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)});
 $('karaokeStop').addEventListener('click',()=>{stop();render(0)});
 $('karaokeBack').addEventListener('click',()=>{stop();aiAbort?.abort();view.classList.remove('active');$('homeView').classList.add('active')});
-document.querySelectorAll('[data-karaoke-open]').forEach(button=>button.addEventListener('click',()=>{document.querySelectorAll('.view.active').forEach(v=>v.classList.remove('active'));view.classList.add('active');document.querySelector('.experience-menu-close')?.click();scrollTo(0,0)}));
+document.querySelectorAll('[data-karaoke-open]').forEach(button=>button.addEventListener('click',()=>{document.querySelectorAll('.view.active').forEach(v=>v.classList.remove('active'));view.classList.add('active');document.querySelector('.experience-menu-close')?.click();void refreshMidiLibrary();scrollTo(0,0)}));
 $('karaokeMidi').addEventListener('click',async()=>{try{const data=await window.LuwipiLiveInput.connectMIDI();$('karaokeStatus').textContent=`Teclado MIDI ligado · ${data.count} entrada(s)`;$('karaokeMidi').classList.add('connected')}catch{$('karaokeStatus').textContent='Não foi possível ligar o teclado MIDI.'}});
 $('karaokeMic').addEventListener('click',async()=>{try{await window.LuwipiLiveInput.connectMicrophone();$('karaokeStatus').textContent='Microfone ligado. Toca a melodia.';$('karaokeMic').classList.add('connected')}catch{$('karaokeStatus').textContent='Não foi possível ligar o microfone.'}});
 unsubscribe=window.LuwipiLiveInput?.subscribe(input);
@@ -334,7 +382,8 @@ async function openSharedTask(){
   }
  }catch(error){console.warn('Tarefa MIDI inválida',error);$('karaokeStatus').textContent='Não foi possível abrir a tarefa MIDI.'}
 }
-drawKeys();setAiUI('idle');updateScoreModeUI();void openSharedTask();
+if(saveMidi)saveMidi.addEventListener('click',()=>void saveCurrentMidi());if(refreshLibrary)refreshLibrary.addEventListener('click',()=>void refreshMidiLibrary());if(savedMidi)savedMidi.addEventListener('change',()=>void loadSavedMidi(savedMidi.value));
+drawKeys();setAiUI('idle');updateScoreModeUI();void refreshMidiLibrary();void openSharedTask();
 window.addEventListener('pagehide',()=>{stop();aiAbort?.abort();scoreAbort?.abort();if(unsubscribe)unsubscribe()});
 })();
 
