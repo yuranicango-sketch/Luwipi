@@ -25,6 +25,22 @@ panel.id='workspacePathPanel';panel.className='workspace-path-panel';panel.setAt
 panel.innerHTML='<div class="workspace-path-head"><h2>Meu percurso</h2><button type="button" id="pathClose" aria-label="Fechar o meu percurso">×</button></div><div class="workspace-path-sub">10 trilhas independentes · níveis N0–N7. A pauta e o piano continuam no espaço de trabalho.</div><div class="workspace-path-map" id="pathMap"></div><section class="workspace-path-workout" id="pathWorkout" hidden></section>';
 host.append(panel);
 const map=panel.querySelector('#pathMap'),workout=panel.querySelector('#pathWorkout');
+const copyCard=document.createElement('button');
+copyCard.type='button';copyCard.className='workspace-path-copy';copyCard.textContent='Copiar cartão de progresso';
+panel.insertBefore(copyCard,workout);
+copyCard.addEventListener('click',async()=>{
+ const levels=P.trackIds.map(t=>{
+  const level=profile.levels?.[t]||{},last=level.sessions?.at(-1);
+  return t+': N'+(level.level||0)+(level.certified?' certificado':' em formação')+(last?' · '+last.bpm+' BPM':'');
+ });
+ const errors=(profile.mistakes||[]).map(e=>e.track+' N'+e.level+' '+e.pattern+' · revisão '+(e.due?.join(', ')||'pendente'));
+ const card=['LUWIPI · CARTÃO DE PROGRESSO','Níveis:',...levels,'Erros:',...(errors.length?errors:['Nenhum registado']),
+ 'Rever: '+(errors[0]||'exercício inédito da trilha atual'),
+ 'Próxima sessão: 2 min aquecimento, 4 min reconhecimento, 4 min padrões, 8 min leitura nova e 2 min revisão.',
+ 'Estado: desempenho provisório neste dispositivo; o sistema não certifica por autorrelato.'].join('\n');
+ try{await navigator.clipboard.writeText(card);copyCard.textContent='Cartão copiado ✓';setTimeout(()=>copyCard.textContent='Copiar cartão de progresso',1800)}
+ catch{copyCard.textContent='Não foi possível copiar neste navegador'}
+});
 let profile=P.newProfile(),selected='',exercise=null,stage=3,verified=false,store=window.sessionStorage;
 const trackName=t=>P.tracks[t].name;
 function safeRead(storage,key){try{return JSON.parse(storage.getItem(key)||'null')}catch{return null}}
@@ -67,6 +83,11 @@ function render(){
   const launch=el('button','',selected===t?'Selecionado · organizar sessão':'Preparar sessão');
   launch.type='button';launch.onclick=()=>{selected=t;stage=3;exercise=null;render()};
   card.append(launch);map.append(card);
+ }
+ const due=(profile.mistakes||[]).filter(e=>e.due?.some(d=>d<=new Date().toISOString().slice(0,10)));
+ if(due.length){
+  const hint=el('div','workspace-path-banner',due.length+' padrão(ões) para rever agora: '+due.slice(0,2).map(e=>e.pattern+' ('+e.track+')').join('; '));
+  map.prepend(hint);
  }
  workout.hidden=!selected;if(!selected)return;
  workout.replaceChildren();
