@@ -36,9 +36,19 @@ function merge(remote,local){
  result.seen=[...new Set([...(remote.seen||[]),...(local.seen||[])])].slice(-2500);
  const unique=new Map();
  for(const m of [...(remote.mistakes||[]),...(local.mistakes||[])]){
-  const k=[m.track,m.level,m.pattern].join("|");
-  const older=unique.get(k);
-  if(!older||String(m.lastSeen)>=String(older.lastSeen))unique.set(k,m);
+  const k=[m.track,m.level,m.pattern].join("|"),older=unique.get(k);
+  if(!older||String(m.lastSeen)>String(older.lastSeen)){unique.set(k,m);continue}
+  if(String(m.lastSeen)<String(older.lastSeen))continue;
+  // Both devices started reviewing the same original mistake. Merge history
+  // without losing the most advanced, unverified scheduled-review step.
+  const a=older.review||{next:0,history:[]},b=m.review||{next:0,history:[]};
+  const history=new Map();
+  for(const entry of [...(a.history||[]),...(b.history||[])])
+   history.set([entry.due,entry.date].join("|"),entry);
+  const prefer=(b.next||0)>(a.next||0)||
+    ((b.next||0)===(a.next||0)&&String(b.history?.at(-1)?.date||"")>String(a.history?.at(-1)?.date||""));
+  const chosen=prefer?m:older,active=prefer?b:a;
+  unique.set(k,{...chosen,review:{...active,history:[...history.values()].slice(-12)}});
  }
  result.mistakes=[...unique.values()].slice(-150);
  const explored=new Map();
