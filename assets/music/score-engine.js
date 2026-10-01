@@ -218,6 +218,7 @@ function normalizeScore(raw){
     title:String(score.title||"Partitura").slice(0,160),
     source:String(score.source||"structured"),
     tempoBpm,
+    pulseUnit:score.pulseUnit==="dotted-quarter"?"dotted-quarter":"quarter",
     tempoMap:Array.isArray(score.tempoMap)?score.tempoMap.map(x=>({beat:roundBeat(Number(x.beat)||0),bpm:clamp(Number(x.bpm)||tempoBpm,20,300)})):[],
     meter,
     meterMap:Array.isArray(score.meterMap)?score.meterMap.map(x=>({beat:roundBeat(Number(x.beat)||0),meter:Array.isArray(x.meter)?x.meter.slice(0,2):meter})):[],
@@ -778,7 +779,7 @@ function render(svg,rawScore,options){
   svg.setAttribute("aria-label",score.title+" — partitura");
   const bg=svgEl("rect",{x:0,y:0,width,height,rx:18,fill:"#fff"});svg.appendChild(bg);
   addText(svg,36,29,score.title,{"font-size":17,"font-weight":700,fill:"#17181d"});
-  addText(svg,width-36,29,"♩ = "+Math.round(score.tempoBpm)+" · "+score.meter[0]+"/"+score.meter[1]+" · "+score.keyName,{"font-size":11,"font-weight":700,fill:"#777c85","text-anchor":"end"});
+  addText(svg,width-36,29,(score.pulseUnit==="dotted-quarter"?"♩. = "+Math.round(score.tempoBpm*2/3):"♩ = "+Math.round(score.tempoBpm))+" · "+score.meter[0]+"/"+score.meter[1]+" · "+score.keyName,{"font-size":11,"font-weight":700,fill:"#777c85","text-anchor":"end"});
   const left=105,right=1080,usable=right-left,measureWidth=usable/measuresPerSystem;
   const measureBeats=score.beatsPerMeasure;
   for(let system=0;system<systems;system++){
