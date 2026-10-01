@@ -71,7 +71,7 @@ assert.ok(live.includes('if(pedagogyFlow){advancePractice("near","Ataque fora do
 assert.ok(live.includes("if(practiceButton)practiceButton.disabled=false"),"Cancelled preview timer must restore the Start button");
 assert.ok(live.includes("startPreRead(30)")&&live.includes("practiceButton.disabled=true")&&live.includes("pedagogyTranspose=[2,5,7].includes(interval)?interval:0"),"Sight-reading preparation or transposition contract missing");
 assert.ok(live.includes("if(!score||!groups.length||practiceButton.disabled)return"),"Pre-reading start is not gated");
-assert.ok(live.includes("if(pedagogyNovel||pedagogyTranspose){playButton.disabled=true;hearButton.disabled=true;}"),"Preview bypass during first sight or transposition");
+assert.ok(live.includes("if(pedagogyNovel||pedagogyTranspose||pedagogyByVoice){playButton.disabled=true;hearButton.disabled=true;}"),"Preview bypass during first sight or transposition");
 assert.ok(ui.includes("S2?.get(track,level)")&&ui.includes("transposeSemitones:seed.transposeSemitones||0"),"N2 did not wire into one workspace");
 console.log("N2 specialized: "+count+" authored studies, "+voices+" independently measured voices, 8 bars each and valid two-staff parsing.");
 console.log("Tested key signature, ledger lines, inversions, waltz, compound rhythm, expressive dynamics, two-voice stems, reading ahead and both-hand transposition.");

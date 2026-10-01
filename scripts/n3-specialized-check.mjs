@@ -98,7 +98,7 @@ for(const track of "ABCDEFGHIJ"){
 assert.equal(count,14);
 const live=await read("assets/live/live-mode.js"),html=await read("app.html"),engine=await read("assets/music/score-engine.js");
 assert.ok(live.includes("pedagogyTranspose=[2,5,7].includes(interval)?interval:0"),"Fourth/fifth transposition is not actually matched");
-assert.ok(live.includes("startPreRead(30)")&&live.includes("if(pedagogyNovel||pedagogyTranspose){playButton.disabled=true;hearButton.disabled=true;}"),"No-preview/pre-read contract broken");
+assert.ok(live.includes("startPreRead(30)")&&live.includes("if(pedagogyNovel||pedagogyTranspose||pedagogyByVoice){playButton.disabled=true;hearButton.disabled=true;}"),"No-preview/pre-read contract broken");
 assert.ok(engine.includes("event.pedalAction==='change'")&&engine.includes('voiceDirection:["up","down"]'),"Pedal markings or independent stems missing");
 assert.ok(html.includes("specialized-n3.js")&&ui.includes("S3?.get(track,explorationLevel)"),"N3 not mounted in existing workspace");
 console.log("N3 music: "+count+" original studies across ten tracks; "+laneCount+" independently verified eight-bar voices.");
