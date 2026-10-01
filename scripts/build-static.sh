@@ -11,6 +11,7 @@ node scripts/reading-integrity-check.mjs
 node scripts/n2-specialized-check.mjs
 node scripts/n3-specialized-check.mjs
 node scripts/spaced-review-check.mjs
+node scripts/abc-accidental-fidelity-check.mjs
 
 if [ "${VERCEL:-0}" = "1" ]; then
   node scripts/prepare-musescore.mjs
