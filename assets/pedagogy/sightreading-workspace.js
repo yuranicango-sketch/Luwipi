@@ -25,6 +25,14 @@ panel.id='workspacePathPanel';panel.className='workspace-path-panel';panel.setAt
 panel.innerHTML='<div class="workspace-path-head"><h2>Meu percurso</h2><button type="button" id="pathClose" aria-label="Fechar o meu percurso">×</button></div><div class="workspace-path-sub">10 trilhas independentes · níveis N0–N7. A pauta e o piano continuam no espaço de trabalho.</div><div class="workspace-path-map" id="pathMap"></div><section class="workspace-path-workout" id="pathWorkout" hidden></section>';
 host.append(panel);
 const map=panel.querySelector('#pathMap'),workout=panel.querySelector('#pathWorkout');
+const syncState=document.createElement('p');syncState.className='workspace-path-sync';
+syncState.setAttribute('role','status');
+syncState.textContent='Progresso provisório · neste dispositivo';
+panel.insertBefore(syncState,map);
+window.addEventListener('luwipi:progress-sync',event=>{syncState.textContent=event.detail?.status||syncState.textContent});
+window.addEventListener('luwipi:progress-merged',event=>{
+ if(event.detail?.draft){profile=event.detail.draft;persistLocal();render()}
+});
 const copyCard=document.createElement('button');
 copyCard.type='button';copyCard.className='workspace-path-copy';copyCard.textContent='Copiar cartão de progresso';
 panel.insertBefore(copyCard,workout);
@@ -42,14 +50,17 @@ copyCard.addEventListener('click',async()=>{
  catch{copyCard.textContent='Não foi possível copiar neste navegador'}
 });
 let profile=P.newProfile(),selected='',exercise=null,stage=3,verified=false,store=window.sessionStorage;
+let syncRevision=0,signedIn=false;
 const trackName=t=>P.tracks[t].name;
 function safeRead(storage,key){try{return JSON.parse(storage.getItem(key)||'null')}catch{return null}}
 function loadProfile(){
+ const revision=++syncRevision;
  let address=document.getElementById('accountEmail')?.textContent?.trim().toLowerCase();
  if(address&&!address.includes('@'))address='';
  // A signed-in person's data is namespaced independently on this device.
  // Until server storage is installed, these are explicitly non-certified device drafts.
  let key=KEY;
+ signedIn=Boolean(address);
  if(address){let hash=2166136261;for(const char of address){hash^=char.charCodeAt(0);hash=Math.imul(hash,16777619)}key+=':user-'+(hash>>>0).toString(16);store=window.localStorage}
  else{key+=':guest';store=window.sessionStorage}
  const stored=safeRead(store,key);
@@ -60,8 +71,19 @@ function loadProfile(){
   if(diag&&!profile.placement){profile.placement=P.placementFromDiagnostic({tests:[0,1,2,3,4].map(i=>diag.tests?.[i])})}
  }catch{}
  render();
+ if(signedIn&&window.LuwipiProgressSync){
+  const sync=window.LuwipiProgressSync;
+  void sync.load(profile).then(draft=>{
+   if(revision!==syncRevision||!draft)return;
+   profile=draft;persistLocal();render();
+  });
+ }
 }
-function save(){try{store.setItem(loadProfile.key,JSON.stringify(profile))}catch{}}
+function persistLocal(){try{store.setItem(loadProfile.key,JSON.stringify(profile))}catch{}}
+function save(){
+ persistLocal();
+ if(signedIn&&window.LuwipiProgressSync)void window.LuwipiProgressSync.save(profile);
+}
 function el(tag,cl,text){const x=document.createElement(tag);if(cl)x.className=cl;if(text!==undefined)x.textContent=text;return x}
 function open(){panel.hidden=false;render();panel.querySelector('#pathClose').focus()}
 function close(){panel.hidden=true}
