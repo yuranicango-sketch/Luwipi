@@ -10,7 +10,8 @@ fi
 rm -rf public
 mkdir -p public/auth public/assets
 
-cp app.html public/index.html
+cp index.html public/index.html
+cp app.html public/app.html
 cp super-paw-paw.html public/super-paw-paw.html
 cp paw-paw-notas.html public/paw-paw-notas.html
 cp pintar-teclas.html public/pintar-teclas.html

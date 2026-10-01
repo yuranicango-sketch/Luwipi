@@ -133,7 +133,7 @@ await test("Paddle checkout: auth, custom_data e URL de retorno",async()=>{
   const body=await res.json();
   assert(res.status===200&&body.url.includes("checkout"),"checkout URL missing");
   assert(sent.custom_data.product==="ensine"&&sent.custom_data.user_id,"checkout custom_data missing");
-  assert(sent.checkout.url==="https://app.test/ensine?billing=return","billing return URL mismatch");
+  assert(sent.checkout.url==="https://app.test/app?billing=return","billing return URL mismatch");
   const forbidden=await mod.POST(new Request("https://app.test/api/billing/checkout",{method:"POST",headers:{origin:"https://evil.test"}}));
   assert(forbidden.status===403,"checkout cross-origin request not blocked");
 });
@@ -223,6 +223,7 @@ await test("Super Paw Paw: 10 níveis rítmicos e compassos completos",async()=>
   assert(levels[0].patterns.every(p=>p==="q q q q"),"first level must teach a simple quarter-note pulse");
   assert(levels.at(-1).patterns.some(p=>p.includes("s")),"last level must include sixteenth notes");
   assert(html.includes("hat(ac.currentTime,.16)"),"rhythm input has no audible percussion");
+  assert(html.includes("Math.ceil(ev.length*.6)")&&html.includes("REPETIR NÍVEL ↻")&&html.includes("correct++"),"zero-score playthrough can still advance a level");
   assert(html.includes("X=480")&&html.indexOf('id="jump"')<html.indexOf('class="overlay"'),"in-game timing button or desktop hit zone missing");
   assert(html.includes("c.addEventListener('pointerdown'"),"tapping the score does not trigger the note");
   assert(html.includes("visible*.16")&&html.includes("run/lead"),"mobile hit zone does not preserve room for a four-beat preview");
@@ -314,7 +315,7 @@ await test("Piano manual: ataque suave e teclado imóvel durante o toque",async(
 });
 
 await test("Ateliê musical: seis jogos individuais publicados",async()=>{
-  const html=await read("app.html"),page=await read("atelie-musical.html"),game=await read("assets/games/atelie-musical.js"),build=await read("scripts/build-static.sh");
+  const html=await read("app.html"),page=await read("atelie-musical.html"),game=await read("assets/games/atelie-musical.js"),style=await read("assets/games/atelie-musical.css"),build=await read("scripts/build-static.sh");
   for(const id of ["partitura","jardim","ritmo","melodia","compassos","pinta"]){
     assert(html.includes(`/atelie-musical.html?jogo=${id}`),`missing independent game ${id}`);
     assert((await read(`assets/images/games/atelie-${id}.svg`)).includes("<svg"),`missing game artwork ${id}`);
@@ -323,6 +324,8 @@ await test("Ateliê musical: seis jogos individuais publicados",async()=>{
   const group=html.slice(html.indexOf('<section class="tiny-section atelie-section">'),html.indexOf('<div class="game-groups">'));
   assert(group.includes("Pinta o Piano")&&group.includes("Pinta a Partitura")&&group.includes("Pinta e Toca"),"painting games are split across categories");
   assert(game.includes("function partitura()")&&game.includes("function jardim()")&&game.includes("function rhythmGame(kind)")&&game.includes("function melodia()")&&game.includes("function pinta()"),"one or more games has no interaction");
+  assert(game.includes("semitones=[0,2,4,5,7,9,11]")&&game.includes("staffTops=[117,103.5,90,76.5,63,49.5,36]"),"atelier pitch or staff heights are not diatonic");
+  assert(game.includes("startMs+beatMs/2")&&game.includes("playFigure(i,at*beatMs)")&&style.includes(".spot.ledger:before"),"eighth-note attacks or middle-C ledger line missing");
 });
 
 await test("Pinta o Piano: pincel e três teclados publicados",async()=>{
@@ -513,7 +516,7 @@ await test('Área de atividades: navegação única e estilos sem duplicação a
   assert(!app.includes('home-feature')&&!app.includes('home-tool-list')&&!app.includes('data-menu-course'),'chamadas da interface antiga permanecem');
   assert(!tasks.includes("task('course')")&&!tasks.includes('teacher-task-action')&&tasks.includes("task('reading')"),'partilha usa percurso inativo ou ação duplicada');
   assert(css.includes('repeat(5,minmax(0,1fr))')&&css.includes('max-width:650px')&&css.includes('orientation:landscape'),'grelha não se adapta aos dispositivos');
-  assert(!build.includes('public/app.html')&&build.includes('rm -f public/assets/activities/learning-path.js'),'build publica código antigo ou uma entrada duplicada');
+  assert(build.includes('cp index.html public/index.html')&&build.includes('cp app.html public/app.html')&&build.includes('rm -f public/assets/activities/learning-path.js'),'landing pública e app privada não estão separadas no build');
 });
 
 await test('Karaokê preserva MIDI original e ataques do solo',async()=>{
@@ -598,9 +601,9 @@ await test('Entrada única, menu, tema e karaokê MIDI',async()=>{
   assert(core.includes("const initialMode='aprenda'"),'a entrada ainda escolhe duas experiências');
   assert(core.includes('product=in.(aprenda,ensine)'),'acessos antigos não são considerados');
   assert(app.includes('id="experienceMenuButton"')&&app.includes('id="experienceMenuTheme"')&&app.includes('id="karaokeBack"'),'menu, tema ou voltar ausente');
-  assert(!app.includes('.parent-mode header{display:none}')&&!((await read('assets/reading/score-experience.css')).includes('body.parent-mode .experience-menu-trigger{display:none!important}')),'modo tarefa oculta navegação interna');
+  assert(app.includes('.parent-mode #experienceMenuButton')&&app.includes('.parent-mode #karaokeBack'),'modo tarefa ainda expõe navegação do produto');
   assert(app.includes('id="karaokeFiles"')&&app.includes('multiple'),'importação de vários MIDI ausente');
-  assert(config.redirects.some(x=>x.source==='/ensine'&&x.destination==='/')&&config.redirects.some(x=>x.source==='/aprenda'&&x.destination==='/'),'rotas antigas não convergem');
+  assert(config.redirects.some(x=>x.source==='/ensine'&&x.destination==='/app')&&config.redirects.some(x=>x.source==='/aprenda'&&x.destination==='/app')&&!config.redirects.some(x=>x.source==='/app'),'rotas antigas ou /app estão incorretas');
   const karaoke=await read('assets/karaoke/karaoke.js');
   assert(karaoke.includes('E.parseMIDI')&&karaoke.includes('E.performanceEvents')&&karaoke.includes('backing=events.filter(e=>keyOf(e)!==selected)'),'separação de melodia não está ligada aos eventos MIDI');
   assert(karaoke.includes('LuwipiLiveInput.connectMIDI')&&karaoke.includes('LuwipiLiveInput.connectMicrophone'),'entrada instrumental ausente');
@@ -611,6 +614,17 @@ await test('Entrada única, menu, tema e karaokê MIDI',async()=>{
   const t2=[0,255,3,5,...name(Buffer.from('Piano')),0,193,0,0,145,48,70,131,96,129,48,0,0,255,47,0];
   const fixture=new Uint8Array([77,84,104,100,0,0,0,6,0,1,0,2,1,224,77,84,114,107,...u32(t1.length),...t1,77,84,114,107,...u32(t2.length),...t2]);
   const score=E.parseMIDI(fixture.buffer);assert(score.transcription.trackNames.some(x=>x.title==='Melody')&&score.transcription.programs.some(x=>x.program===73)&&E.performanceEvents(score).some(x=>x.track===1),'pistas MIDI independentes não foram preservadas');
+});
+
+await test('Entrada pública, app autenticada e tarefas isoladas',async()=>{
+  const landing=await read('index.html'),build=await read('scripts/build-static.sh'),app=await read('app.html'),tasks=await read('assets/activities/universal-tasks.js'),karaoke=await read('assets/karaoke/karaoke.js'),standalone=await read('assets/tasks/standalone-task.js'),config=JSON.parse(await read('vercel.json'));
+  assert(landing.includes('Atividades musicais')&&landing.includes('href="/app"')&&!landing.includes('id="accessOverlay"'),'landing pública ainda abre paywall ou não encaminha para o app');
+  assert(landing.includes("q.get('parent')==='1'")&&landing.includes("location.replace('/app'"),'links de tarefa antigos deixam de abrir no app');
+  assert(build.includes('cp index.html public/index.html')&&build.includes('cp app.html public/app.html'),'build não separa landing e aplicação');
+  assert(tasks.includes("new URL('/app',location.origin)")&&karaoke.includes("new URL('/app',location.origin)"),'novas tarefas ainda apontam para a landing');
+  assert(standalone.includes('luwipi-shared-task')&&standalone.includes('.back-link')&&standalone.includes('#other'),'jogo partilhado ainda permite navegar pelo catálogo');
+  assert(app.includes('Prática guiada')&&!app.includes('<span class="live-mode-badge">Ensine + Aprenda</span>'),'rótulo legado ainda está visível');
+  assert(!config.redirects.some(x=>x.source==='/app'),'Vercel ainda desvia /app para a landing');
 });
 
 console.log("\nLuwipi reliability gate: "+passed+" checks passed");

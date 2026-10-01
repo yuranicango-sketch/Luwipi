@@ -4,27 +4,22 @@
   "redirects": [
     {
       "source": "/ensine",
-      "destination": "/",
+      "destination": "/app",
       "permanent": false
     },
     {
       "source": "/ensine/",
-      "destination": "/",
+      "destination": "/app",
       "permanent": false
     },
     {
       "source": "/aprenda",
-      "destination": "/",
+      "destination": "/app",
       "permanent": false
     },
     {
       "source": "/aprenda/",
-      "destination": "/",
-      "permanent": false
-    },
-    {
-      "source": "/app",
-      "destination": "/",
+      "destination": "/app",
       "permanent": false
     }
   ],

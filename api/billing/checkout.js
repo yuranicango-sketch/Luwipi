@@ -56,7 +56,7 @@ export async function POST(request) {
     body: JSON.stringify({
       items: [{ price_id: price, quantity: 1 }],
       custom_data: { user_id: user.id, plan: body.plan, product },
-      checkout: { url: appUrl + "/" + product + "?billing=return" }
+      checkout: { url: appUrl + "/app?billing=return" }
     })
   });
 
