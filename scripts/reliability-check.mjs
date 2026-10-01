@@ -661,17 +661,26 @@ await test('Score Doctor API: privada, estruturada e fixa em GPT-6 Luna',async()
 });
 
 
-await test('Workspace único e biblioteca MIDI pessoal',async()=>{
+await test('Workspace único: canvas real, sidebar desktop e biblioteca MIDI',async()=>{
  const app=await read('app.html'),css=await read('assets/app.css'),shell=await read('assets/activities/workspace-shell.js'),karaoke=await read('assets/karaoke/karaoke.js'),api=await read('api/midi-library.js'),config=JSON.parse(await read('vercel.json'));
- assert(app.includes('id="workspaceSidebar"')&&app.includes('data-workspace-nav="reading"')&&app.includes('id="readingView" class="view active"'),'workspace único não abre em Leitura');
+ assert(app.includes('id="workspaceSidebar"')&&app.includes('data-workspace-nav="reading"')&&app.includes('id="readingView" class="view active"'),'workspace não abre diretamente em Leitura');
+ assert(!app.includes('data-workspace-nav="home"')&&app.includes('data-workspace-action="library"'),'desktop ainda expõe hub Início ou perdeu a biblioteca');
  assert(app.includes('id="karaokeSaveMidi"')&&app.includes('id="karaokeSavedMidi"'),'biblioteca MIDI não está integrada no canvas');
- assert(css.includes('.workspace-sidebar')&&css.includes('@media(max-width:980px){.workspace-sidebar{display:none!important}}'),'sidebar desktop/mobile incompleta');
+ assert(app.includes('<h1>MIDI</h1>')&&!app.includes('<b>Karaokê MIDI</b>'),'MIDI ainda parece um ambiente separado de karaokê');
+ assert(shell.includes("canvas.id='workspaceCanvas'")&&shell.includes('views.forEach(view=>viewport.append(view))'),'views não são montadas num único canvas real');
+ assert(shell.includes("canvas.dataset.mode=mode")&&shell.includes("canvas.dataset.view=view?.id||''"),'canvas não acompanha o módulo ativo');
+ assert(shell.includes('openReadingLibrary')&&shell.includes('workspace-library-open'),'biblioteca de leitura não abre dentro do canvas');
  assert(shell.includes("target==='karaoke'")&&shell.includes("open('reading')"),'navegação do canvas não está centralizada');
+ assert(css.includes('.workspace-canvas-viewport')&&css.includes('.workspace-canvas-bar')&&css.includes('.workspace-canvas{display:contents}'),'contrato desktop/mobile do canvas incompleto');
+ assert(css.includes('#readingView .journey-stage')&&css.includes('grid-template-rows:auto auto auto minmax(0,1fr) auto auto'),'partitura e piano deixaram de ser o centro da Leitura');
+ assert(css.includes('#karaokeView .karaoke-topbar{display:none!important}')&&css.includes('#liveModeView .live-mode-intro{display:none!important}'),'MIDI ou Prática ainda têm chrome próprio concorrente');
+ assert(css.includes('#readingView.workspace-library-open .reading-library{display:block!important'),'catálogo de Leitura não vive no mesmo canvas');
  assert(karaoke.includes("fetch('/api/midi-library'")&&karaoke.includes('saveCurrentMidi')&&karaoke.includes('loadSavedMidi'),'guardar/reabrir MIDI não está ligado');
  assert(karaoke.includes('ai_review')||karaoke.includes('aiReview:item.ai')||karaoke.includes('aiReview:current.ai'),'revisão IA não é preservada no MIDI guardado');
  assert(api.includes('midi_library_items')&&api.includes('storage/v1/')&&api.includes('fingerprint'),'API não persiste ficheiro e metadados');
  assert(config.functions?.['api/midi-library.js']?.maxDuration===30,'função da biblioteca MIDI não está configurada');
 });
+
 await test('Entrada pública, app autenticada e tarefas isoladas',async()=>{
   const landing=await read('index.html'),build=await read('scripts/build-static.sh'),app=await read('app.html'),tasks=await read('assets/activities/universal-tasks.js'),karaoke=await read('assets/karaoke/karaoke.js'),standalone=await read('assets/tasks/standalone-task.js'),config=JSON.parse(await read('vercel.json'));
   assert(landing.includes('Atividades musicais')&&landing.includes('href="/app"')&&!landing.includes('id="accessOverlay"'),'landing pública ainda abre paywall ou não encaminha para o app');

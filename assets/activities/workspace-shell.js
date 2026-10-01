@@ -1,35 +1,101 @@
 (()=>{
 'use strict';
 const sidebar=document.getElementById('workspaceSidebar');if(!sidebar)return;
-const q=new URLSearchParams(location.search);
-const isTask=q.get('parent')==='1'||q.get('type');
+const q=new URLSearchParams(location.search),isTask=q.get('parent')==='1'||Boolean(q.get('type'));
+document.body.classList.toggle('workspace-task-mode',isTask);
+
+const views=[...document.body.children].filter(node=>node.classList?.contains('view'));
+const canvas=document.createElement('main');canvas.id='workspaceCanvas';canvas.className='workspace-canvas';
+const bar=document.createElement('div');bar.className='workspace-canvas-bar';
+bar.innerHTML='<button type="button" class="workspace-canvas-back" aria-label="Voltar">←</button><div class="workspace-canvas-heading"><small>LUWIPI</small><strong id="workspaceCanvasTitle">Leitura</strong><span id="workspaceCanvasContext">Ouve. Vê. Toca.</span></div><div class="workspace-canvas-actions"><button id="workspaceCanvasPrimary" type="button" hidden></button></div>';
+const viewport=document.createElement('div');viewport.className='workspace-canvas-viewport';
+canvas.append(bar,viewport);sidebar.after(canvas);views.forEach(view=>viewport.append(view));
+
+const barBack=bar.querySelector('.workspace-canvas-back'),barTitle=bar.querySelector('#workspaceCanvasTitle'),barContext=bar.querySelector('#workspaceCanvasContext'),barPrimary=bar.querySelector('#workspaceCanvasPrimary');
+const roots=new Set(['readingView','karaokeView','liveModeView','gamesView','rhythmView']);
+let libraryOpen=false;
+function activeView(){return viewport.querySelector('.view.active')}
+function modeOf(view){
+ const id=view?.id||'';
+ if(id==='karaokeView')return'karaoke';
+ if(id==='liveModeView')return'live';
+ if(id==='gamesView'||id==='gameView'||id==='animalPianoView'||id==='soundBubblesView')return'games';
+ if(id==='rhythmView'||/rhythm|pulse|attack|complete|duration/i.test(id))return'rhythm';
+ return'reading';
+}
+function labelOf(mode){return mode==='karaoke'?'MIDI':mode==='live'?'Prática':mode==='games'?'Jogos':mode==='rhythm'?'Ritmo':'Leitura'}
+function clearLibrary(){
+ libraryOpen=false;canvas.dataset.library='';
+ document.getElementById('readingView')?.classList.remove('workspace-library-open');
+}
+function localContext(view,mode){
+ if(libraryOpen&&view?.id==='readingView')return'Músicas e atividades';
+ if(!view)return'';
+ if(mode==='karaoke'){const song=document.getElementById('karaokeSongTitle')?.textContent?.trim();return song&&song!=='Importa uma música para começar'?song:'Importa, lê e toca.'}
+ const specific=view.querySelector('.page-head strong,.reader-top h2,.rhythm-activity-head h2,.game-stage-head h2,[data-journey-title],.section-title h2,.live-file-state strong,h2');
+ const text=specific?.textContent?.replace(/\s+/g,' ').trim();
+ if(text&&text!==labelOf(mode))return text;
+ return mode==='live'?'Partitura · piano · execução':mode==='games'?'Escolhe uma atividade':mode==='rhythm'?'Pulso, leitura e execução':'Partitura e piano';
+}
+function localBack(view){return view?.querySelector('.page-head .back,#karaokeBack,#courseBack')}
 function open(target){
-  if(target==='karaoke'){document.querySelector('[data-karaoke-open]')?.click();return}
-  if(target==='home'){const view=document.getElementById('homeView');if(view){document.querySelectorAll('.view.active').forEach(v=>v.classList.remove('active'));view.classList.add('active');window.scrollTo(0,0)}return}
-  const btn=[...document.querySelectorAll('[data-nav="'+target+'"]')].find(el=>!el.closest('#experienceMenu')&&!el.closest('#workspaceSidebar'));
-  if(btn)btn.click();
-  else{
-    const id=target==='reading'?'readingView':target==='live'?'liveModeView':target==='games'?'gamesView':target==='rhythm'?'rhythmView':'';
-    const view=id&&document.getElementById(id);if(view){document.querySelectorAll('.view.active').forEach(v=>v.classList.remove('active'));view.classList.add('active')}
-  }
-  window.scrollTo(0,0);
+ clearLibrary();
+ if(target==='karaoke'){document.querySelector('[data-karaoke-open]')?.click();return}
+ const btn=[...document.querySelectorAll('[data-nav="'+target+'"]')].find(el=>!el.closest('#experienceMenu')&&!el.closest('#workspaceSidebar'));
+ if(btn)btn.click();
+ else{
+  const id=target==='reading'?'readingView':target==='live'?'liveModeView':target==='games'?'gamesView':target==='rhythm'?'rhythmView':'';
+  const view=id&&document.getElementById(id);if(view){document.querySelectorAll('.view.active').forEach(v=>v.classList.remove('active'));view.classList.add('active')}
+ }
+ window.scrollTo(0,0);setTimeout(sync,0);
+}
+function openReadingLibrary(){
+ open('reading');libraryOpen=true;canvas.dataset.library='reading';
+ document.getElementById('readingView')?.classList.add('workspace-library-open');sync();
+}
+function goBack(){
+ const view=activeView();
+ if(libraryOpen&&view?.id==='readingView'){clearLibrary();sync();return}
+ const button=localBack(view);
+ if(button){
+  if(button.dataset.nav==='home'){open(modeOf(view));return}
+  button.click();return;
+ }
+ if(modeOf(view)!=='reading')open('reading');
+}
+function primaryFor(mode){
+ if(mode==='karaoke')return{label:'＋ Importar MIDI',run:()=>document.getElementById('karaokeFiles')?.click()};
+ if(mode==='live')return{label:'＋ Importar ficheiro',run:()=>document.getElementById('liveScoreFile')?.click()};
+ return null;
+}
+function sync(){
+ const view=activeView();
+ if(libraryOpen&&view?.id!=='readingView')clearLibrary();
+ const mode=modeOf(view),root=roots.has(view?.id)&&!libraryOpen;
+ canvas.dataset.mode=mode;canvas.dataset.view=view?.id||'';
+ sidebar.querySelectorAll('[data-workspace-nav]').forEach(b=>b.classList.toggle('active',b.dataset.workspaceNav===mode));
+ const library=sidebar.querySelector('[data-workspace-action="library"]');if(library)library.classList.toggle('active',libraryOpen);
+ barTitle.textContent=labelOf(mode);barContext.textContent=localContext(view,mode);
+ barBack.hidden=root||isTask;
+ const sideBack=sidebar.querySelector('[data-workspace-action="back"]');if(sideBack)sideBack.disabled=root||isTask;
+ const guide=sidebar.querySelector('[data-workspace-action="guide"]');if(guide)guide.hidden=mode!=='reading'||libraryOpen;
+ const task=sidebar.querySelector('[data-workspace-action="task"]');if(task)task.hidden=isTask||libraryOpen;
+ const primary=primaryFor(mode);barPrimary.hidden=!primary||isTask;
+ if(primary){barPrimary.textContent=primary.label;barPrimary.onclick=primary.run}else barPrimary.onclick=null;
 }
 sidebar.querySelectorAll('[data-workspace-nav]').forEach(button=>button.addEventListener('click',()=>open(button.dataset.workspaceNav)));
-sidebar.querySelector('[data-workspace-action="back"]')?.addEventListener('click',()=>{const view=document.querySelector('.view.active');(view?.querySelector('.page-head .back')||view?.querySelector('#karaokeBack')||document.querySelector('[data-workspace-nav="reading"]'))?.click()});
-sidebar.querySelector('[data-workspace-action="guide"]')?.addEventListener('click',()=>{const view=document.querySelector('.view.active'),button=view?.querySelector('.reading-guide-toggle,[data-reading-guide-toggle]');if(button)button.click();else document.getElementById('experienceMenuGuide')?.click()});
+sidebar.querySelector('[data-workspace-action="library"]')?.addEventListener('click',()=>libraryOpen?goBack():openReadingLibrary());
+sidebar.querySelector('[data-workspace-action="back"]')?.addEventListener('click',goBack);
+sidebar.querySelector('[data-workspace-action="guide"]')?.addEventListener('click',()=>{const view=activeView(),button=view?.querySelector('.reading-guide-toggle,[data-reading-guide-toggle]');if(button)button.click();else document.getElementById('experienceMenuGuide')?.click()});
 sidebar.querySelector('[data-workspace-action="task"]')?.addEventListener('click',()=>document.getElementById('experienceMenuTask')?.click());
 sidebar.querySelector('[data-workspace-action="theme"]')?.addEventListener('click',()=>document.getElementById('experienceMenuTheme')?.click());
 sidebar.querySelector('[data-workspace-action="account"]')?.addEventListener('click',()=>document.getElementById('accountButton')?.click());
-function sync(){
- const active=document.querySelector('.view.active'),id=active?.id||'';
- let key=id==='homeView'?'home':id==='karaokeView'?'karaoke':id==='liveModeView'?'live':id==='gamesView'||id==='gameView'?'games':id==='rhythmView'||/rhythm|pulse|attack|complete/i.test(id)?'rhythm':'reading';
- sidebar.querySelectorAll('[data-workspace-nav]').forEach(b=>b.classList.toggle('active',b.dataset.workspaceNav===key));
-}
-new MutationObserver(sync).observe(document.body,{subtree:true,attributes:true,attributeFilter:['class']});
+barBack.addEventListener('click',goBack);
+new MutationObserver(sync).observe(viewport,{subtree:true,attributes:true,attributeFilter:['class']});
 document.addEventListener('click',()=>setTimeout(sync,0),true);
+document.addEventListener('change',event=>{if(event.target?.id==='karaokeSong'||event.target?.id==='karaokeLead')setTimeout(sync,0)},true);
 if(!isTask&&q.get('open')!=='games'){
- const boot=()=>{const current=document.querySelector('.view.active');if(!current||current.id==='homeView')open('reading');sync()};
+ const boot=()=>{const current=activeView();if(!current||current.id==='homeView')open('reading');sync()};
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(boot,80),{once:true});else setTimeout(boot,80);
-}
-sync();
+}else sync();
 })();

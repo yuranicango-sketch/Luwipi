@@ -2707,34 +2707,122 @@ html,body{max-width:100%;overflow-x:hidden}
 }
 
 
-/* source: unified workspace shell */
-@media(min-width:981px){
- body.workspace-shell-enabled{padding-left:210px}
- body.workspace-shell-enabled>.brand-header{display:none!important}
- body.workspace-shell-enabled>.experience-menu-trigger{display:none!important}
- .workspace-sidebar{position:fixed;inset:0 auto 0 0;z-index:120;width:210px;box-sizing:border-box;padding:16px 12px;display:flex;flex-direction:column;background:#edf3ff;border-right:1px solid #c8d6ef;color:#173366}
- .workspace-brand{display:flex;align-items:center;gap:9px;padding:6px 7px 16px;font:800 19px/1 "Bricolage Grotesque",system-ui}
- .workspace-brand img{width:30px;height:30px;object-fit:contain}
- .workspace-nav,.workspace-nav-bottom{display:grid;gap:6px}
- .workspace-nav-bottom{margin-top:auto;padding-top:12px;border-top:1px solid #cbd8ee}
- .workspace-sidebar button{appearance:none;border:0;border-radius:12px;background:transparent;color:#36527e;min-height:44px;padding:0 11px;display:grid;grid-template-columns:26px 1fr;align-items:center;gap:7px;text-align:left;font:inherit;cursor:pointer}
- .workspace-sidebar button span{font-size:18px;text-align:center}
- .workspace-sidebar button b{font-size:12px}
- .workspace-sidebar button:hover,.workspace-sidebar button.active{background:#fff;color:#173366;box-shadow:0 6px 18px #2c4f8a12}
- body.workspace-shell-enabled .view.active{min-height:100dvh}
- body.workspace-shell-enabled #karaokeView.active{overflow:auto}
- body.workspace-shell-enabled #karaokeView .karaoke-studio{height:auto;min-height:100dvh}
- body.workspace-shell-enabled #karaokeView .karaoke-workspace{grid-template-columns:270px minmax(0,1fr)}
- body.workspace-shell-enabled #readingView .page,
- body.workspace-shell-enabled #liveModeView .page,
- body.workspace-shell-enabled #gamesView .page,
- body.workspace-shell-enabled #rhythmView .page{width:min(100%,1280px)}
-}
-@media(max-width:980px){.workspace-sidebar{display:none!important}}
-body.luwipi-dark .workspace-sidebar{background:#0d1d36;border-color:#34517f;color:#f4f7ff}
-body.luwipi-dark .workspace-sidebar button{color:#bcd0ee}
-body.luwipi-dark .workspace-sidebar button:hover,body.luwipi-dark .workspace-sidebar button.active{background:#183158;color:#fff}
+/* source: unified workspace canvas */
+.workspace-sidebar,.workspace-canvas-bar{display:none}
 #karaokeView .karaoke-library-row{display:grid;grid-template-columns:1fr 36px;gap:6px;margin-top:7px}
 #karaokeView .karaoke-library-row button{min-height:34px;border:1px solid var(--ks-line);border-radius:10px;background:var(--ks-paper);color:var(--ks-ink);font:850 9.5px/1 system-ui;cursor:pointer}
 #karaokeView .karaoke-library-row button:first-child.saved{border-color:#7acbb3;background:#e9faf4;color:#176f58}
 #karaokeView .karaoke-saved-field select{font-size:10px}
+
+@media(min-width:981px){
+ body.workspace-shell-enabled{padding-left:190px!important;overflow:hidden!important;background:#dce8ff}
+ body.workspace-shell-enabled>.brand-header,body.workspace-shell-enabled>.experience-menu-trigger{display:none!important}
+ .workspace-sidebar{position:fixed;inset:0 auto 0 0;z-index:120;width:190px;box-sizing:border-box;padding:13px 10px;display:flex;flex-direction:column;background:#edf3ff;border-right:1px solid #c7d6ef;color:#173366}
+ .workspace-brand{display:flex;align-items:center;gap:8px;padding:5px 7px 14px;font:800 18px/1 "Bricolage Grotesque",system-ui}
+ .workspace-brand img{width:28px;height:28px;object-fit:contain}
+ .workspace-nav,.workspace-nav-bottom{display:grid;gap:4px}
+ .workspace-nav-bottom{margin-top:auto;padding-top:10px;border-top:1px solid #cbd8ee}
+ .workspace-sidebar button{appearance:none;border:0;border-radius:10px;background:transparent;color:#36527e;min-height:40px;padding:0 9px;display:grid;grid-template-columns:24px 1fr;align-items:center;gap:6px;text-align:left;font:inherit;cursor:pointer}
+ .workspace-sidebar button span{font-size:16px;text-align:center}
+ .workspace-sidebar button b{font-size:11px}
+ .workspace-sidebar button:hover,.workspace-sidebar button.active{background:#fff;color:#173366;box-shadow:0 5px 16px #2c4f8a12}
+ .workspace-sidebar button:disabled{opacity:.34;cursor:default;box-shadow:none;background:transparent}
+ .workspace-sidebar .workspace-subnav{min-height:32px;margin:-1px 0 4px 20px;padding-left:6px;grid-template-columns:18px 1fr;color:#61779d}
+ .workspace-sidebar .workspace-subnav span{font-size:12px}
+ .workspace-sidebar .workspace-subnav b{font-size:9.5px;font-weight:800}
+
+ .workspace-canvas{height:100dvh;min-width:0;display:grid;grid-template-rows:52px minmax(0,1fr);background:#dce8ff}
+ .workspace-canvas-bar{display:flex;align-items:center;gap:10px;min-width:0;padding:6px 12px;border-bottom:1px solid #bdcdea;background:#dce8ff}
+ .workspace-canvas-back{width:34px;height:34px;flex:0 0 auto;border:1px solid #b9c9e6;border-radius:10px;background:#f6f9ff;color:#173366;font-weight:900}
+ .workspace-canvas-back[hidden]{display:none!important}
+ .workspace-canvas-heading{display:grid;grid-template-columns:auto minmax(0,1fr);grid-template-rows:auto auto;column-gap:8px;align-items:end;min-width:0}
+ .workspace-canvas-heading small{grid-row:1/3;align-self:center;color:#5d76a6;font-size:7px;font-weight:950;letter-spacing:.14em;writing-mode:vertical-rl;transform:rotate(180deg)}
+ .workspace-canvas-heading strong{min-width:0;font:800 17px/1 "Bricolage Grotesque",system-ui;color:#173366}
+ .workspace-canvas-heading span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#66799a;font-size:9px;font-weight:700}
+ .workspace-canvas-actions{margin-left:auto;display:flex;align-items:center;gap:6px}
+ .workspace-canvas-actions button{min-height:34px;border:1px solid #9fb6e0;border-radius:10px;background:#f8faff;color:#244a94;padding:0 11px;font-size:9.5px;font-weight:900}
+ .workspace-canvas-viewport{position:relative;min-width:0;min-height:0;overflow:hidden}
+ .workspace-canvas-viewport>.view.active{height:100%!important;min-height:0!important;overflow:hidden!important;background:transparent!important}
+ .workspace-canvas-viewport>.view.active>.page{box-sizing:border-box;width:100%!important;max-width:none!important;height:100%!important;min-height:0!important;margin:0!important;padding:9px 11px 11px!important;overflow:hidden!important;display:flex!important;flex-direction:column}
+ .workspace-canvas-viewport>.view.active .page-head{display:none!important}
+
+ /* Reading is the default canvas: score and keyboard stay dominant. */
+ #readingView .journey-stage{flex:1;min-height:0;height:100%;margin:0!important;padding:12px 15px!important;border-radius:18px;display:grid;grid-template-rows:auto auto auto minmax(0,1fr) auto auto;gap:6px}
+ #readingView .journey-stage h2{margin:2px 0 0!important;font-size:clamp(24px,3vw,36px)!important}
+ #readingView .journey-stage .journey-sub{margin:0!important;font-size:11px!important}
+ #readingView .journey-score{min-height:0;height:100%;padding:8px 10px!important;border-radius:14px!important;overflow:hidden}
+ #readingView .journey-score svg{display:block;width:100%;height:100%!important;max-height:none!important}
+ #readingView .journey-keyboard{height:clamp(96px,17dvh,150px)!important;min-height:76px}
+ #readingView .journey-actions{margin-top:0!important}
+ #readingView .journey-actions button{min-height:38px!important}
+ #readingView.workspace-library-open .journey-stage{display:none!important}
+ #readingView.workspace-library-open .reading-library{display:block!important;flex:1;min-height:0;overflow:auto;margin:0!important;padding:4px 5px 20px;scrollbar-width:thin}
+ #readingView.workspace-library-open .reading-library .tabs,#readingView.workspace-library-open .reading-library .reading-levels{position:static!important}
+ #readingView.workspace-library-open .journey-library-toggle{display:none!important}
+
+ /* MIDI lives in the same canvas; its old top bar is redundant. */
+ #karaokeView.active{height:100%!important;min-height:0!important;overflow:hidden!important}
+ #karaokeView .karaoke-topbar{display:none!important}
+ #karaokeView .karaoke-studio{box-sizing:border-box;height:100%!important;min-height:0!important;display:block!important;padding:8px 10px 10px!important}
+ #karaokeView .karaoke-workspace{height:100%;min-height:0;grid-template-columns:258px minmax(0,1fr)!important;gap:9px!important}
+ #karaokeView .karaoke-rail{height:100%;min-height:0;overflow:auto;gap:7px!important;scrollbar-width:thin}
+ #karaokeView .karaoke-panel{padding:9px!important;border-radius:13px!important}
+ #karaokeView .karaoke-panel-title{margin-bottom:6px!important}
+ #karaokeView .karaoke-performance{height:100%;min-height:0;grid-template-rows:minmax(0,1fr) auto auto auto!important;gap:6px!important}
+ #karaokeView .karaoke-stage{min-height:0!important;border-radius:15px!important}
+ #karaokeView .karaoke-score{min-height:0}
+ #karaokeView .karaoke-keys{height:clamp(82px,14dvh,132px)!important}
+
+ /* Practice keeps its inspector, but score is the actual canvas. */
+ #liveModeView .live-mode-intro{display:none!important}
+ #liveModeView .live-layout{flex:1;min-height:0;height:100%;grid-template-columns:260px minmax(0,1fr)!important;gap:9px!important;align-items:stretch!important}
+ #liveModeView .live-sidebar{position:static!important;min-height:0;max-height:100%;overflow:auto;gap:7px!important;scrollbar-width:thin}
+ #liveModeView .live-panel{padding:10px!important;border-radius:13px!important}
+ #liveModeView .live-import-help{display:none}
+ #liveModeView .live-stage{height:100%;min-height:0;display:grid;grid-template-rows:auto minmax(0,1fr) auto auto;border-radius:15px!important}
+ #liveModeView .live-score-shell{min-height:0!important;height:auto;overflow:hidden}
+ #liveModeView .live-score-empty{min-height:0!important;height:100%}
+ #liveModeView .live-svg-wrap{height:100%;max-height:none!important;overflow:auto}
+ #liveModeView .live-pdf-wrap{height:100%!important;min-height:0!important}
+ #liveModeView .live-stage-head{padding:9px 11px}
+ #liveModeView .live-transport{padding:8px 10px;gap:5px}
+ #liveModeView .live-session{padding:8px 10px}
+
+ /* Catalog modes stay inside the same frame and scroll only inside the canvas. */
+ .workspace-canvas[data-view="gamesView"] .workspace-canvas-viewport>.view.active,
+ .workspace-canvas[data-view="rhythmView"] .workspace-canvas-viewport>.view.active{overflow:auto!important}
+ .workspace-canvas[data-view="gamesView"] .workspace-canvas-viewport>.view.active>.page,
+ .workspace-canvas[data-view="rhythmView"] .workspace-canvas-viewport>.view.active>.page{height:auto!important;min-height:100%!important;overflow:visible!important}
+ #gamesView .curated-games-page{padding-top:10px!important;padding-bottom:24px!important}
+ #gamesView .curated-games-intro{margin:2px 0 12px}
+ #gamesView .curated-games-intro h2{font-size:clamp(25px,3vw,38px);margin:3px 0 5px}
+
+ body.workspace-task-mode,body.parent-mode.workspace-shell-enabled{padding-left:0!important}
+ body.workspace-task-mode .workspace-sidebar,body.parent-mode .workspace-sidebar{display:none!important}
+ body.workspace-task-mode .workspace-canvas,body.parent-mode .workspace-canvas{grid-template-rows:minmax(0,1fr)}
+ body.workspace-task-mode .workspace-canvas-bar,body.parent-mode .workspace-canvas-bar{display:none!important}
+}
+@media(max-width:980px){
+ .workspace-sidebar{display:none!important}
+ .workspace-canvas{display:contents}
+ .workspace-canvas-bar{display:none!important}
+}
+@media(min-width:981px) and (max-height:590px){
+ .workspace-canvas{grid-template-rows:44px minmax(0,1fr)}
+ .workspace-canvas-bar{padding-block:4px}
+ .workspace-canvas-heading strong{font-size:15px}
+ #readingView .journey-stage{padding:8px 12px!important;gap:3px}
+ #readingView .journey-stage h2{font-size:22px!important}
+ #readingView .journey-stage .journey-sub{display:none}
+ #readingView .journey-keyboard{height:82px!important}
+ #karaokeView .karaoke-keys{height:72px!important}
+ #liveModeView .live-stage-head,#liveModeView .live-session{padding-block:6px}
+}
+body.luwipi-dark .workspace-sidebar{background:#0d1d36;border-color:#34517f;color:#f4f7ff}
+body.luwipi-dark .workspace-sidebar button{color:#bcd0ee}
+body.luwipi-dark .workspace-sidebar button:hover,body.luwipi-dark .workspace-sidebar button.active{background:#183158;color:#fff}
+body.luwipi-dark .workspace-canvas,body.luwipi-dark .workspace-canvas-bar{background:#0b1930;border-color:#304a75}
+body.luwipi-dark .workspace-canvas-heading strong{color:#f2f6ff}
+body.luwipi-dark .workspace-canvas-heading span,body.luwipi-dark .workspace-canvas-heading small{color:#a9bfdf}
+body.luwipi-dark .workspace-canvas-back,body.luwipi-dark .workspace-canvas-actions button{background:#132743;border-color:#3d5d8d;color:#eef4ff}
+
