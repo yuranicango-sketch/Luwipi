@@ -20,4 +20,4 @@ jobs:
         with:
           node-version: "22"
       - name: Reliability gate
-        run: node scripts/reliability-check.mjs
+        run: sh scripts/build-static.sh

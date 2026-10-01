@@ -196,7 +196,8 @@ function normalizeScore(raw){
       voiceDirection:["up","down"].includes(event.voiceDirection)?event.voiceDirection:null,
       tieStart:Boolean(event.tieStart),
       tieStop:Boolean(event.tieStop),
-      pedal:Boolean(event.pedal)
+      pedal:Boolean(event.pedal),
+      pedalAction:['start','change'].includes(event.pedalAction)?event.pedalAction:null
     };
   };
   const events=(Array.isArray(score.events)?score.events:[]).map((e,i)=>normalizeEvent(e,i,"ev")).sort((a,b)=>a.startBeat-b.startBeat||a.midi-b.midi);
@@ -756,6 +757,7 @@ function drawNote(svg,event,x,bottom,groupIndex,current){
   if(kind.dots)svg.appendChild(svgEl("circle",{cx:x+18,cy:y-1,r:2.35,fill:"#292d34"}));
   
   if(kind.tuplet)addText(svg,x,y-52,String(kind.tuplet),{"font-size":10,fill:"#555a63","font-weight":800,"text-anchor":"middle"});
+  if(event.pedal&&event.clef==="bass")addText(svg,x,y+62,event.pedalAction==='change'?'Ped. ↻':'Ped.',{"font-size":13,fill:"#34373d","text-anchor":"middle","font-family":"serif","font-style":"italic"});
   if(event.articulations.includes("staccato"))svg.appendChild(svgEl("circle",{cx:x,cy:y+(stepValue<5?13:-13),r:2.4,fill:"#292d34"}));
   if(event.articulations.includes("tenuto"))addLine(svg,x-7,y+(stepValue<5?14:-14),x+7,y+(stepValue<5?14:-14),{stroke:"#292d34","stroke-width":2});
   if(event.articulations.includes("accent"))addText(svg,x,y+(stepValue<5?19:-15),">",{"font-size":17,fill:"#292d34","text-anchor":"middle","font-weight":700});
