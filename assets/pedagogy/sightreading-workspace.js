@@ -186,7 +186,7 @@ function launch(which){
   score.title=seed.title+' · padrão de 2 compassos';
  }
  exercise={...seed,id:seed.id,track:selected,level:currentLevel,kind:'practice',stage:which,sessionId:String(Date.now())+'-'+seed.id};
- const opened=window.LuwipiLiveLoadPedagogy(score,score.title);
+ const opened=window.LuwipiLiveLoadPedagogy(score,score.title,{firstSight:which===3});
  if(opened){
   if(which===3){profile.seen.push(seed.id);save()}
   if(seed.cues)window.dispatchEvent(new CustomEvent('luwipi:pedagogy-cues',{detail:{cues:seed.cues,track:seed.track}}));
