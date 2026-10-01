@@ -14,24 +14,24 @@ pianoArea.innerHTML='<div class="workspace-piano-edge"><button id="workspacePian
 canvas.append(bar,viewport,pianoArea);sidebar.after(canvas);views.forEach(view=>viewport.append(view));
 
 const barBack=bar.querySelector('.workspace-canvas-back'),barTitle=bar.querySelector('#workspaceCanvasTitle'),barContext=bar.querySelector('#workspaceCanvasContext'),barPrimary=bar.querySelector('#workspaceCanvasPrimary');
-const roots=new Set(['readingView','karaokeView','liveModeView','gamesView','rhythmView']);
+const roots=new Set(['readingView','diagnosticView','karaokeView','liveModeView','gamesView','rhythmView']);
 let libraryOpen=false;
 function activeView(){return viewport.querySelector('.view.active')}
 function modeOf(view){
  const id=view?.id||'';
- if(id==='karaokeView')return'karaoke';
+ if(id==='diagnosticView')return'diagnostic';if(id==='karaokeView')return'karaoke';
  if(id==='liveModeView')return'live';
  if(id==='gamesView'||id==='gameView'||id==='animalPianoView'||id==='soundBubblesView')return'games';
  if(id==='rhythmView'||/rhythm|pulse|attack|complete|duration/i.test(id))return'rhythm';
  return'reading';
 }
-function labelOf(mode){return mode==='karaoke'?'MIDI':mode==='live'?'Prática':mode==='games'?'Jogos':mode==='rhythm'?'Ritmo':'Leitura'}
+function labelOf(mode){return mode==='diagnostic'?'Diagnóstico':mode==='karaoke'?'MIDI':mode==='live'?'Prática':mode==='games'?'Jogos':mode==='rhythm'?'Ritmo':'Leitura'}
 function clearLibrary(){
  libraryOpen=false;canvas.dataset.library='';
  document.getElementById('readingView')?.classList.remove('workspace-library-open');
 }
 function localContext(view,mode){
- if(libraryOpen&&view?.id==='readingView')return'Músicas e atividades';
+ if(libraryOpen&&view?.id==='readingView')return'Músicas e atividades';if(mode==='diagnostic')return'Leitura · avaliação inicial';
  if(!view)return'';
  if(mode==='karaoke'){const song=document.getElementById('karaokeSongTitle')?.textContent?.trim();return song&&song!=='Importa uma música para começar'?song:'Importa, lê e toca.'}
  const specific=view.querySelector('.page-head strong,.reader-top h2,.rhythm-activity-head h2,.game-stage-head h2,[data-journey-title],.section-title h2,.live-file-state strong,h2');
@@ -41,21 +41,24 @@ function localContext(view,mode){
 }
 function localBack(view){return view?.querySelector('.page-head .back,#karaokeBack,#courseBack')}
 function open(target){
+ if(window.LuwipiWorkspaceRouter){window.LuwipiWorkspaceRouter.go(target==='live'?'practice':target==='karaoke'?'midi':target);return}
  clearLibrary();
  if(target==='karaoke'){document.querySelector('[data-karaoke-open]')?.click();return}
  const btn=[...document.querySelectorAll('[data-nav="'+target+'"]')].find(el=>!el.closest('#experienceMenu')&&!el.closest('#workspaceSidebar'));
  if(btn)btn.click();
  else{
-  const id=target==='reading'?'readingView':target==='live'?'liveModeView':target==='games'?'gamesView':target==='rhythm'?'rhythmView':'';
+  const id=target==='diagnostic'?'diagnosticView':target==='reading'?'readingView':target==='live'?'liveModeView':target==='games'?'gamesView':target==='rhythm'?'rhythmView':'';
   const view=id&&document.getElementById(id);if(view){document.querySelectorAll('.view.active').forEach(v=>v.classList.remove('active'));view.classList.add('active')}
  }
  window.scrollTo(0,0);setTimeout(sync,0);
 }
 function openReadingLibrary(){
+ if(window.LuwipiWorkspaceRouter){window.LuwipiWorkspaceRouter.go('reading',true,true);return}
  open('reading');libraryOpen=true;canvas.dataset.library='reading';
  document.getElementById('readingView')?.classList.add('workspace-library-open');sync();
 }
 function goBack(){
+ if(window.LuwipiWorkspaceRouter){window.LuwipiWorkspaceRouter.back();return}
  const view=activeView();
  if(libraryOpen&&view?.id==='readingView'){clearLibrary();sync();return}
  const button=localBack(view);
@@ -96,8 +99,5 @@ barBack.addEventListener('click',goBack);
 new MutationObserver(sync).observe(viewport,{subtree:true,attributes:true,attributeFilter:['class']});
 document.addEventListener('click',()=>setTimeout(sync,0),true);
 document.addEventListener('change',event=>{if(event.target?.id==='karaokeSong'||event.target?.id==='karaokeLead')setTimeout(sync,0)},true);
-if(!isTask&&q.get('open')!=='games'){
- const boot=()=>{const current=activeView();if(!current||current.id==='homeView')open('reading');sync()};
- if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(boot,80),{once:true});else setTimeout(boot,80);
-}else sync();
+sync(); // The canonical router restores the active section and browser history.
 })();

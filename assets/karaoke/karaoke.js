@@ -55,6 +55,7 @@ async function saveCurrentMidi(){
   const s=current.score||{},meta={title:current.name,score:{tempoBpm:s.tempoBpm||120,meter:s.meter||[4,4],keyFifths:s.keyFifths||0,keyMinor:Boolean(s.keyMinor),durationBeats:s.durationBeats||0},aiReview:current.ai||{},leadKey,notationMode:notationMode.value,scoreMode,aiModel:current.ai?'gpt-6-luna':''};
   const form=new FormData();form.append('file',new File([current.binary],current.originalName||current.name+'.mid',{type:'audio/midi'}));form.append('meta',JSON.stringify(meta));
   const body=await midiApi('',{method:'POST',body:form});current.libraryId=body.item?.id||current.libraryId;
+  window.LuwipiWorkspaceRouter?.setMidi(current.libraryId);
   saveMidi.classList.add('saved');saveMidi.textContent='✓ Guardado';$('karaokeStatus').textContent='MIDI guardado na tua biblioteca. Na próxima vez não precisas carregar nem voltar a analisar.';
   await refreshMidiLibrary();
  }catch(error){saveMidi.textContent='♡ Guardar MIDI';$('karaokeStatus').textContent=error.message==='unauthorized'?'Inicia sessão para guardar o MIDI.':'Não foi possível guardar este MIDI agora.'}
@@ -71,10 +72,11 @@ async function loadSavedMidi(id){
   const meta=(await midiApi('?id='+encodeURIComponent(id))).item;
   const response=await midiApi('?id='+encodeURIComponent(id)+'&download=1',{raw:true});
   const binary=await response.arrayBuffer(),score=E.parseMIDI(binary);
-  const item={name:meta.title,originalName:meta.original_name||meta.title+'.mid',score,binary,nativeScores:{},ai:meta.ai_review&&Object.keys(meta.ai_review).length?meta.ai_review:null,libraryId:meta.id};
+  const item={name:meta.title,originalName:meta.original_name||meta.title+'.mid',score,binary,nativeScores:{},ai:meta.ai_review&&Object.keys(meta.ai_review).length?meta.ai_review:null,libraryId:meta.id,savedScoreMode:meta.score_mode};
   playlist.push(item);song.add(new Option(item.name,String(playlist.length-1)));song.value=String(playlist.length-1);
   notationMode.value=meta.notation_mode==='literal'?'literal':'organized';scoreMode=meta.score_mode==='original'?'original':'ai';setSong(playlist.length-1);
   if(meta.lead_key&&[...lead.options].some(o=>o.value===meta.lead_key)){lead.value=meta.lead_key;leadKey=meta.lead_key;leadTouched=true;await setLead()}
+  window.LuwipiWorkspaceRouter?.setMidi(item.libraryId);
   saveMidi.classList.add('saved');saveMidi.textContent='✓ Guardado';$('karaokeStatus').textContent=item.ai?'MIDI aberto · análise IA reutilizada.':'MIDI aberto da biblioteca.';
  }catch{$('karaokeStatus').textContent='Não foi possível abrir este MIDI guardado.'}
 }
@@ -238,7 +240,9 @@ $('karaokeOctaveUp').addEventListener('click',()=>{keyboardBase=Math.min(84,keyb
 
 function setSong(index){
  scoreRequest++;scoreAbort?.abort();aiRequest++;aiAbort?.abort();stop();
- current=playlist[index]||null;lead.innerHTML='';leadTouched=false;scoreMode='ai';updateScoreModeUI();setAiUI('idle');updateSongTitle();
+ current=playlist[index]||null;
+ if(window.LuwipiWorkspaceRouter){if(current?.libraryId)window.LuwipiWorkspaceRouter.setMidi(current.libraryId);else window.LuwipiWorkspaceRouter.clearMidi()}
+ lead.innerHTML='';leadTouched=false;scoreMode=current?.savedScoreMode==='original'?'original':'ai';updateScoreModeUI();setAiUI('idle');updateSongTitle();
  if(!current){$('karaokeAiButton').disabled=true;if(saveMidi)saveMidi.disabled=true;return}
  if(saveMidi){saveMidi.disabled=!current.binary;saveMidi.classList.toggle('saved',Boolean(current.libraryId));saveMidi.textContent=current.libraryId?'✓ Guardado':'♡ Guardar MIDI'}
  const tracks=groups(current.score);
@@ -346,16 +350,16 @@ const drop=$('karaokeDropzone');
 ['dragleave','drop'].forEach(type=>drop.addEventListener(type,event=>{event.preventDefault();drop.classList.remove('dragging')}));
 drop.addEventListener('drop',event=>{const list=[...(event.dataTransfer?.files||[])].filter(file=>/\.midi?$/i.test(file.name));if(list.length)void upload(list)});
 song.addEventListener('change',()=>setSong(Number(song.value)));
-lead.addEventListener('change',()=>{leadTouched=true;void setLead()});
-notationMode.addEventListener('change',()=>{if(leadKey&&scoreMode==='original')void setLead()});
-$('karaokeAiMode').addEventListener('click',async()=>{scoreMode='ai';updateScoreModeUI();if(!current?.ai)await analyzeAI(false);else if(leadKey)await setLead()});
-$('karaokeOriginalMode').addEventListener('click',()=>{scoreMode='original';updateScoreModeUI();if(leadKey)void setLead()});
+lead.addEventListener('change',()=>{leadTouched=true;void setLead();if(current?.libraryId)void updateSavedMidi(current)});
+notationMode.addEventListener('change',()=>{if(leadKey&&scoreMode==='original')void setLead();if(current?.libraryId)void updateSavedMidi(current)});
+$('karaokeAiMode').addEventListener('click',async()=>{scoreMode='ai';updateScoreModeUI();if(!current?.ai)await analyzeAI(false);else if(leadKey)await setLead();if(current?.libraryId)void updateSavedMidi(current)});
+$('karaokeOriginalMode').addEventListener('click',()=>{scoreMode='original';updateScoreModeUI();if(leadKey)void setLead();if(current?.libraryId)void updateSavedMidi(current)});
 $('karaokeAiButton').addEventListener('click',()=>void analyzeAI(true));
 $('karaokePlay').addEventListener('click',()=>void play(false));
 $('karaokeListenTrack').addEventListener('click',()=>void play(true));
 $('karaokeExportXML').addEventListener('click',()=>{if(!notationDocument)return;const url=URL.createObjectURL(new Blob([notationDocument.xml],{type:'application/vnd.recordare.musicxml+xml'})),a=document.createElement('a');a.href=url;a.download=(current.name||'pista')+(scoreMode==='ai'&&current?.ai?'-ia':'')+'.musicxml';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)});
 $('karaokeStop').addEventListener('click',()=>{stop();render(0)});
-$('karaokeBack').addEventListener('click',()=>{stop();aiAbort?.abort();view.classList.remove('active');$('homeView').classList.add('active')});
+$('karaokeBack').addEventListener('click',()=>{stop();aiAbort?.abort();if(window.LuwipiWorkspaceRouter){window.LuwipiWorkspaceRouter.go('reading');return}view.classList.remove('active');$('homeView').classList.add('active')});
 document.querySelectorAll('[data-karaoke-open]').forEach(button=>button.addEventListener('click',()=>{document.querySelectorAll('.view.active').forEach(v=>v.classList.remove('active'));view.classList.add('active');document.querySelector('.experience-menu-close')?.click();void refreshMidiLibrary();scrollTo(0,0)}));
 $('karaokeMidi').addEventListener('click',async()=>{try{const data=await window.LuwipiLiveInput.connectMIDI();$('karaokeStatus').textContent=`Teclado MIDI ligado · ${data.count} entrada(s)`;$('karaokeMidi').classList.add('connected')}catch{$('karaokeStatus').textContent='Não foi possível ligar o teclado MIDI.'}});
 $('karaokeMic').addEventListener('click',async()=>{try{await window.LuwipiLiveInput.connectMicrophone();$('karaokeStatus').textContent='Microfone ligado. Toca a melodia.';$('karaokeMic').classList.add('connected')}catch{$('karaokeStatus').textContent='Não foi possível ligar o microfone.'}});
@@ -396,6 +400,11 @@ async function openSharedTask(){
  }catch(error){console.warn('Tarefa MIDI inválida',error);$('karaokeStatus').textContent='Não foi possível abrir a tarefa MIDI.'}
 }
 if(saveMidi)saveMidi.addEventListener('click',()=>void saveCurrentMidi());if(refreshLibrary)refreshLibrary.addEventListener('click',()=>void refreshMidiLibrary());if(savedMidi)savedMidi.addEventListener('change',()=>void loadSavedMidi(savedMidi.value));
+window.addEventListener('luwipi:restore-midi',event=>{
+ const id=event.detail?.id;if(!id||document.body.classList.contains('parent-mode'))return;
+ const found=playlist.findIndex(item=>item.libraryId===id);
+ if(found>=0){song.value=String(found);setSong(found)}else void loadSavedMidi(id);
+});
 drawKeys();setAiUI('idle');updateScoreModeUI();void refreshMidiLibrary();void openSharedTask();
 window.addEventListener('pagehide',()=>{stop();aiAbort?.abort();scoreAbort?.abort();if(unsubscribe)unsubscribe()});
 })();

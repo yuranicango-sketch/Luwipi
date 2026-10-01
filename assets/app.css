@@ -2994,3 +2994,56 @@ body.workspace-shell-enabled #songView .reader:fullscreen .song-piano-toggle{dis
 .workspace-canvas #readingView .journey-keyboard{display:none!important}
 .workspace-canvas #readingView .journey-stage{grid-template-rows:auto auto auto minmax(0,1fr) auto!important}
 .workspace-piano .karaoke-key:focus-visible{outline:3px solid #ffcf69;outline-offset:-3px}
+
+/* Canonical routing: the old home dashboard is not a user-facing view. */
+#homeView,#homeView.active{display:none!important}
+.diagnostic-page{box-sizing:border-box;min-height:0;max-width:none!important;width:100%;height:100%;display:grid;place-items:stretch;padding:10px}
+.diagnostic-surface{box-sizing:border-box;width:min(980px,100%);height:100%;min-height:0;display:flex;flex-direction:column;gap:12px;align-self:center;justify-self:center;padding:clamp(12px,2vw,25px);border:1px solid #d1def1;border-radius:18px;background:#f8fbff;box-shadow:0 8px 32px #29477512;color:#193766}
+.diagnostic-heading{display:flex;align-items:start;justify-content:space-between;gap:12px}
+.diagnostic-heading small{display:block;font-size:9px;font-weight:850;letter-spacing:.11em;color:#5170aa}
+.diagnostic-heading h2{margin:3px 0 4px;font-size:clamp(20px,3vw,28px);letter-spacing:-.035em}
+.diagnostic-heading p{margin:0;max-width:670px;font-size:12px;line-height:1.45;color:#617492}
+.diagnostic-heading>button{flex:none;width:35px;height:35px;border:1px solid #d2dded;border-radius:10px;background:#fff;color:#294775;font-size:23px;cursor:pointer}
+.diagnostic-stepbar{display:grid;gap:7px}
+.diagnostic-stepbar>span{font-size:10px;font-weight:850;color:#4d6fae}
+.diagnostic-progress{height:5px;border-radius:99px;overflow:hidden;background:#e0e9f7}
+.diagnostic-progress>span{display:block;height:100%;width:6%;background:#436ac0;border-radius:inherit;transition:width .15s}
+.diagnostic-stage{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;padding:7px 4px}
+.diagnostic-stage h3{font-size:clamp(18px,2.6vw,24px);margin:6px 0 16px;letter-spacing:-.025em}
+.diagnostic-stage>p{font-size:12px;color:#657694;line-height:1.5}
+.diagnostic-choices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.diagnostic-choice{appearance:none;min-height:60px;text-align:left;padding:11px 14px;border:1.5px solid #d1ddf0;background:#fff;border-radius:13px;color:#29446c;font:750 13px/1.32 system-ui;cursor:pointer;transition:border-color .14s,background .14s}
+.diagnostic-choice:hover{border-color:#7c9cda;background:#f3f7ff}
+.diagnostic-choice.selected{border-color:#426fce;background:#eaf1ff;box-shadow:inset 0 0 0 1px #426fce}
+.diagnostic-choice:focus-visible,.diagnostic-footer button:focus-visible{outline:3px solid #efba4a;outline-offset:2px}
+.diagnostic-footer{display:flex;align-items:center;justify-content:space-between;gap:10px;padding-top:10px;border-top:1px solid #dde7f5}
+.diagnostic-footer button,.diagnostic-copy,.diagnostic-again{min-height:40px;border:1px solid #aac0e5;border-radius:10px;padding:8px 16px;background:#eff4ff;color:#2854a3;font-weight:850;cursor:pointer}
+.diagnostic-footer button:last-child{margin-left:auto;background:#325ec4;border-color:#325ec4;color:#fff}
+.diagnostic-footer button:disabled{opacity:.38;cursor:not-allowed}
+.diagnostic-tag{font-weight:900;letter-spacing:.11em;color:#466db2;font-size:10px;text-transform:uppercase}
+.diagnostic-score{width:100%;min-width:0;overflow-x:auto;overflow-y:hidden;border:1px solid #d3deef;border-radius:13px;background:#fff;padding:5px;box-sizing:border-box}
+.diagnostic-score svg{display:block;width:100%;min-width:670px;height:auto}
+.diagnostic-abc{margin:8px 0;color:#55709e;font-size:11px}
+.diagnostic-abc summary{cursor:pointer}
+.diagnostic-abc pre{white-space:pre-wrap;font:10px/1.4 monospace;color:#1b3057}
+.diagnostic-metric{display:grid;gap:6px;margin-top:15px}
+.diagnostic-metric strong{font-size:12px}
+.diagnostic-metric .diagnostic-choices{grid-template-columns:repeat(auto-fit,minmax(125px,1fr));gap:5px}
+.diagnostic-metric .diagnostic-choice{min-height:40px;padding:8px 10px;font-size:10px}
+.diagnostic-results h3{margin-bottom:8px}
+.diagnostic-result-row{margin:6px 0;padding:8px 10px;border:1px solid #d8e3f6;border-radius:9px;font-size:12px;font-weight:750}
+.diagnostic-results button{margin:10px 8px 0 0}
+body.luwipi-dark .diagnostic-surface{background:#122640;border-color:#35547e;color:#f3f7ff}
+body.luwipi-dark .diagnostic-stage>p,body.luwipi-dark .diagnostic-heading p{color:#c0cde5}
+body.luwipi-dark .diagnostic-choice{background:#192f4e;border-color:#405d87;color:#eef5ff}
+body.luwipi-dark .diagnostic-choice.selected{background:#244776;border-color:#8bacff}
+body.luwipi-dark .diagnostic-score{background:#fff}
+@media(max-width:980px){
+ #diagnosticView .diagnostic-page{padding:7px!important;overflow:hidden!important}
+ #diagnosticView .diagnostic-surface{padding:12px;border-radius:14px}
+ #diagnosticView .diagnostic-heading p{font-size:10px}
+ #diagnosticView .diagnostic-choices{grid-template-columns:1fr;gap:7px}
+ #diagnosticView .diagnostic-choice{min-height:46px;padding:8px 11px;font-size:12px}
+ #diagnosticView .diagnostic-metric .diagnostic-choices{grid-template-columns:repeat(2,minmax(0,1fr))}
+ #diagnosticView .diagnostic-score svg{min-width:620px}
+}

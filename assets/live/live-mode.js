@@ -234,6 +234,7 @@ function clearAll(){
   if(pdfUrl)URL.revokeObjectURL(pdfUrl);pdfUrl="";
   if(pdfFrame)pdfFrame.removeAttribute("src");pdfFallback.replaceChildren();
   activeView="interactive";updateFileState();renderScore();
+  void draftStore("delete");draftRestoreRequested=false;
 }
 function readableError(code){
   const map={
@@ -258,7 +259,40 @@ function readableError(code){
   if(code==="json_no_notes")return"O JSON não contém eventos musicais reconhecíveis.";
   return map[code]||"Não foi possível interpretar este ficheiro com segurança.";
 }
-async function importFile(file){
+/* Reload recovery is limited to this browser tab; it never publishes a private score. */
+const PRACTICE_TAB='luwipi:practice:tab:v1';
+function tabId(){
+ try{let id=sessionStorage.getItem(PRACTICE_TAB);if(!id){id=crypto.randomUUID();sessionStorage.setItem(PRACTICE_TAB,id)}return id}catch{return null}
+}
+async function draftStore(operation,file){
+ const id=tabId();if(!id||!('indexedDB'in window))return null;
+ return new Promise(resolve=>{
+  const req=indexedDB.open('luwipi-practice-session',1);
+  req.onupgradeneeded=()=>{if(!req.result.objectStoreNames.contains('drafts'))req.result.createObjectStore('drafts')};
+  req.onerror=()=>resolve(null);
+  req.onsuccess=()=>{
+   const db=req.result,tx=db.transaction('drafts',operation==='read'?'readonly':'readwrite'),store=tx.objectStore('drafts');
+   let value=null;
+   const op=operation==='read'?store.get(id):operation==='delete'?store.delete(id):store.put({file,at:Date.now()},id);
+   op.onsuccess=()=>{value=op.result};
+   tx.oncomplete=()=>{db.close();resolve(value)};
+   tx.onerror=()=>{db.close();resolve(null)};
+  };
+ });
+}
+let draftRestoreRequested=false;
+async function restorePracticeDraft(){
+ if(draftRestoreRequested||score||pdfUrl)return;draftRestoreRequested=true;
+ const draft=await draftStore('read');
+ if(draft?.file&&Date.now()-draft.at<24*3600*1000&&!score&&!pdfUrl){
+  await importFile(draft.file,true);
+  setFeedback('Retomaste a partitura desta sessão. Podes continuar onde estavas.','good');
+ }
+}
+window.addEventListener('luwipi:workspace-route',event=>{
+ if(event.detail?.section==='practice')void restorePracticeDraft();
+});
+async function importFile(file,restoring=false){
   if(!file)return;
   const name=String(file.name||"ficheiro"),lower=name.toLowerCase();
   try{
@@ -295,8 +329,9 @@ async function importFile(file){
       updateFileState();
       setFeedback(score?"PDF associado à partitura estruturada. Usa Original ou Interativo conforme precisares.":"PDF preservado. Para tocar ou avaliar, adiciona o MIDI/MusicXML correspondente.","near");
     }else{
-      setFeedback("Formato não suportado. Usa MIDI/KAR/SMF, MusicXML/MXL, ABC, JSON ou PDF.","bad");
+      setFeedback("Formato não suportado. Usa MIDI/KAR/SMF, MusicXML/MXL, ABC, JSON ou PDF.","bad");return;
     }
+    if(!restoring&&file.size<=8*1024*1024)void draftStore("write",file);
   }catch(error){
     setFeedback(error&&error.message==="file_too_large"?"O ficheiro é demasiado grande para processamento local.":readableError(error&&error.message), "bad");
   }finally{

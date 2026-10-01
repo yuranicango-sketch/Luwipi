@@ -462,8 +462,8 @@ await test("Activity-first: sem aulas, piano reativo e formatos musicais",async(
   const app=await read("app.html"),live=await read("assets/live/live-mode.js"),engine=await read("assets/music/score-engine.js"),practice=await read("assets/activities/interactive-practice.js");
   const journey=await read("assets/reading/immersive-journey.js"),layout=await read("assets/app.css");
   assert(!app.includes('id="videosView"')&&!app.includes('id="plannerView"'),"lesson/video views should be removed");
-  assert(app.includes('Atividades musicais')&&app.includes('id="homePaths"')&&!app.includes('id="homeStart"'),"home still promotes the paused course");
-  for(const path of ["reading","rhythm","games","live"])assert(app.includes('data-home-path="'+path+'"'),"learner path missing: "+path);
+  assert(!app.includes('id="homePaths"')&&!app.includes('id="homeStart"')&&app.includes('id="homeView" class="view" hidden'),"dashboard antigo continua visível");
+  for(const path of ["reading","rhythm","games","live"])assert(app.includes('data-experience-nav="'+path+'"'),"navegação mobile incompleta: "+path);
   assert(app.includes('class="curated-game-grid"')&&!app.includes('id="gamesLibraryToggle"')&&!app.includes('id="gamesPathGrid"')&&!journey.includes('gameGrid.appendChild(card)'),"games still expose a competing or disappearing catalog");
   assert(!app.includes('class="home-tool-list"')&&!app.includes('id="homeResume"'),"duplicate learner navigation remains");
   assert(practice.includes("activity-piano-key")&&practice.includes("LuwipiAudioBridge"),"reactive piano preview missing");
@@ -534,7 +534,7 @@ await test('Aulas interativas: demonstração, compreensão e prática por idade
 
 await test('Área de atividades: navegação única e estilos sem duplicação antiga',async()=>{
   const app=await read('app.html'),tasks=await read('assets/activities/universal-tasks.js'),css=await read('assets/app.css'),build=await read('scripts/build-static.sh');
-  assert(app.includes('/assets/app.css')&&app.includes('Atividades musicais')&&app.includes('data-karaoke-open'),'entrada de atividades incompleta');
+  assert(app.includes('/assets/app.css')&&app.includes('id="workspaceCanvas')===false&&app.includes('data-karaoke-open')&&app.includes('id="liveModeView"'),'entrada dos módulos incompleta');
   assert(!app.includes('home-feature')&&!app.includes('home-tool-list')&&!app.includes('data-menu-course'),'chamadas da interface antiga permanecem');
   assert(!tasks.includes("task('course')")&&!tasks.includes('teacher-task-action')&&tasks.includes("task('reading')"),'partilha usa percurso inativo ou ação duplicada');
   assert(css.includes('repeat(5,minmax(0,1fr))')&&css.includes('max-width:650px')&&css.includes('orientation:landscape'),'grelha não se adapta aos dispositivos');
@@ -720,7 +720,7 @@ await test('Workspace único: canvas real, sidebar desktop e biblioteca MIDI',as
  assert(shell.includes("canvas.id='workspaceCanvas'")&&shell.includes('views.forEach(view=>viewport.append(view))'),'views não são montadas num único canvas real');
  assert(shell.includes("canvas.dataset.mode=mode")&&shell.includes("canvas.dataset.view=view?.id||''"),'canvas não acompanha o módulo ativo');
  assert(shell.includes('openReadingLibrary')&&shell.includes('workspace-library-open'),'biblioteca de leitura não abre dentro do canvas');
- assert(shell.includes("target==='karaoke'")&&shell.includes("open('reading')"),'navegação do canvas não está centralizada');
+ assert(shell.includes("window.LuwipiWorkspaceRouter.go")&&shell.includes("open('reading')"),'sidebar não utiliza o router partilhado');
  assert(css.includes('.workspace-canvas-viewport')&&css.includes('.workspace-canvas-bar')&&css.includes('.workspace-canvas{display:contents}'),'contrato desktop/mobile do canvas incompleto');
  assert(css.includes('#readingView .journey-stage')&&css.includes('grid-template-rows:auto auto auto minmax(0,1fr) auto auto'),'partitura e piano deixaram de ser o centro da Leitura');
  assert(css.includes('#karaokeView .karaoke-topbar{display:none!important}')&&css.includes('#liveModeView .live-mode-intro{display:none!important}'),'MIDI ou Prática ainda têm chrome próprio concorrente');
@@ -731,6 +731,28 @@ await test('Workspace único: canvas real, sidebar desktop e biblioteca MIDI',as
  assert(config.functions?.['api/midi-library.js']?.maxDuration===30,'função da biblioteca MIDI não está configurada');
 });
 
+await test('Rotas canónicas e diagnóstico de utilizadores',async()=>{
+ const app=await read('app.html'),shell=await read('assets/activities/workspace-shell.js');
+ const router=await read('assets/activities/workspace-router.js'),diagnostic=await read('assets/reading/sightreading-diagnostic.js');
+ const practice=await read('assets/live/live-mode.js'),midi=await read('assets/karaoke/karaoke.js');
+ const css=await read('assets/app.css');
+ assert(!app.includes('id="homePaths"')&&app.includes('id="homeView" class="view" hidden'),'dashboard desativado voltou a aparecer');
+ assert(app.includes('data-workspace-nav="diagnostic"')&&app.includes('data-experience-nav="diagnostic"'),'diagnóstico falta na sidebar ou no hamburger');
+ assert(app.includes('id="diagnosticView"')&&app.includes('id="liveModeView"'),'diagnóstico ou Prática está fora do canvas');
+ assert(app.includes('/assets/activities/workspace-router.js')&&!app.includes('/assets/activities/release-routing.js'),'rotas antigas ainda disputam a navegação');
+ assert(shell.includes("window.LuwipiWorkspaceRouter.go")&&!shell.includes("setTimeout(boot,80)"),'sidebar continua com boot paralelo');
+ assert(router.includes('practice:"liveModeView"')&&router.includes('diagnostic:"diagnosticView"'),'Prática ou diagnóstico não estão mapeados');
+ assert(router.includes('popstate')&&router.includes('sessionStorage.setItem')&&router.includes('sessionStorage.getItem'),'atualizar ou voltar descarta a secção');
+ assert(router.includes('stopImmediatePropagation()')&&router.includes('data-experience-nav')&&router.includes('data-home-path'),'handlers antigos ainda podem reabrir home');
+ assert(router.includes('CSS.escape(s.song)')&&router.includes('luwipi:restore-midi'),'restauro de exercícios e MIDI não é reproduzido');
+ assert(diagnostic.includes('const survey=[')&&diagnostic.includes('const tests=[')&&diagnostic.includes("diagnostic-choice")&&diagnostic.includes('aria-pressed'),'diagnóstico não usa escolhas visuais');
+ assert(diagnostic.includes("localStorage.setItem(KEY")&&diagnostic.includes('Repetir diagnóstico')&&diagnostic.includes('Copiar cartão de diagnóstico'),'diagnóstico e registo não persistem');
+ assert(practice.includes("indexedDB.open('luwipi-practice-session'")&&practice.includes("restorePracticeDraft")&&practice.includes("'luwipi:workspace-route'"),'Prática não recupera ficheiro na mesma aba');
+ assert(midi.includes("'luwipi:restore-midi'")&&midi.includes('setMidi(item.libraryId)')&&midi.includes('aiReview:current.ai'),'MIDI guardado perdeu rota ou análise');
+ assert(midi.includes("window.LuwipiWorkspaceRouter.go('reading')"),'voltar do MIDI ainda reabre o dashboard antigo');
+ assert(css.includes('.diagnostic-choice.selected')&&css.includes('#homeView,#homeView.active{display:none!important}'),'dashboard obsoleto ou diagnóstico sem interface');
+ for(const [name,source] of Object.entries({shell,router,diagnostic,practice,midi}))assert(new Function(source),name+' com erro de sintaxe');
+});
 await test('Entrada pública, app autenticada e tarefas isoladas',async()=>{
   const landing=await read('index.html'),build=await read('scripts/build-static.sh'),app=await read('app.html'),tasks=await read('assets/activities/universal-tasks.js'),karaoke=await read('assets/karaoke/karaoke.js'),standalone=await read('assets/tasks/standalone-task.js'),config=JSON.parse(await read('vercel.json'));
   assert(landing.includes('Atividades musicais')&&landing.includes('href="/app"')&&!landing.includes('id="accessOverlay"'),'landing pública ainda abre paywall ou não encaminha para o app');
@@ -743,7 +765,7 @@ await test('Entrada pública, app autenticada e tarefas isoladas',async()=>{
 });
 
 await test('CSS canónico: sem camadas antigas de layout',async()=>{
-  const app=await read('app.html'),css=await read('assets/app.css'),route=await read('assets/activities/release-routing.js'),standalone=await read('assets/tasks/standalone-task.js');
+  const app=await read('app.html'),css=await read('assets/app.css'),route=await read('assets/activities/workspace-router.js'),standalone=await read('assets/tasks/standalone-task.js');
   const localCss=[...app.matchAll(/<link[^>]+href="([^"]+\.css)"/g)].map(match=>match[1]);
   assert(localCss.length===1&&localCss[0]==='/assets/app.css','app still loads multiple CSS layers');
   assert(!/<style\b/i.test(app),'inline style layers remain in app.html');
@@ -751,7 +773,7 @@ await test('CSS canónico: sem camadas antigas de layout',async()=>{
   assert(css.includes('.curated-game-grid')&&css.includes('@media(max-width:560px)')&&css.includes('#liveModeView .live-layout'),'desktop/mobile layout contract missing');
   assert(css.includes('#songView .song-piano-toggle')&&css.includes('#songView.song-piano-hidden .score-wrap'),'reading/song layout missing from canonical CSS');
   assert(css.includes('.rhythm-menu')&&css.includes('#rhythmView'),'rhythm layout missing from canonical CSS');
-  assert(route.includes("q.get('open')!=='games'")&&route.includes("target.classList.add('active')"),'return-to-games route missing');
+  assert(route.includes('popstate')&&route.includes('sessionStorage.setItem')&&route.includes('practice:"liveModeView"'),'router canónico não recupera página e Prática');
   assert(standalone.includes("link.href='/app?open=games'"),'standalone games still return to public landing');
 });
 
