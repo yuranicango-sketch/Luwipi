@@ -6,7 +6,7 @@
   const sequence=[0,1,2,3,5,4,6,7,8,9,10,11,12,13];
   const svg=stage.querySelector("svg"),keyboard=stage.querySelector(".journey-keyboard"),status=stage.querySelector(".journey-sub");
   let notes=[],next=0,timers=[],playing=false;
-  const clear=()=>{timers.forEach(clearTimeout);timers=[];playing=false;stage.querySelectorAll(".lit").forEach(el=>el.classList.remove("lit"));keyboard.querySelectorAll(".lit").forEach(el=>el.classList.remove("lit"));stage.querySelector("[data-journey-listen]").textContent="▶ Ouvir e ver"};
+  const clear=()=>{timers.forEach(clearTimeout);timers=[];playing=false;stage.querySelectorAll(".lit").forEach(el=>el.classList.remove("lit"));keyboard.querySelectorAll(".lit").forEach(el=>el.classList.remove("lit"));document.querySelectorAll('#workspacePiano .lit').forEach(el=>el.classList.remove('lit'));stage.querySelector("[data-journey-listen]").textContent="▶ Ouvir e ver"};
   function progress(){try{return JSON.parse(localStorage.getItem("luwipi:reading-progress:v1")||"{}")||{}}catch{return {}}}
   function draw(){
     const lines=[67,88,109,130,151].map(y=>`<line x1="35" y1="${y}" x2="865" y2="${y}" stroke="#b9c8df" stroke-width="2"/>`).join("");
@@ -20,6 +20,9 @@
   function light(note,index){
     stage.querySelectorAll(".lit").forEach(el=>el.classList.remove("lit"));
     keyboard.querySelector(`[data-note="${note}"]`)?.classList.add("lit");
+    const shared=document.querySelector('#workspacePiano [data-midi="'+window.LuwipiScoreEngine?.nameToMidi(note)+'"]');
+    document.querySelectorAll('#workspacePiano .lit').forEach(el=>el.classList.remove('lit'));
+    shared?.classList.add('lit');
     const mark=index===undefined?svg.querySelector(`.journey-note[data-note="${note}"]`):svg.querySelectorAll(".journey-note")[index];
     mark?.classList.add("lit");
     const score=stage.querySelector(".journey-score");
@@ -52,6 +55,11 @@
   });
   const toggle=view.querySelector("[data-library-toggle]");toggle?.addEventListener("click",()=>{const open=view.classList.toggle("library-open");toggle.textContent=open?"Fechar escolhas":"Ver todas as atividades e músicas";toggle.setAttribute("aria-expanded",String(open))});
   new MutationObserver(()=>{if(view.classList.contains("active"))refresh()}).observe(view,{attributes:true,attributeFilter:["class"]});
+  window.addEventListener('luwipi:piano-note',event=>{
+    if(!view.classList.contains('active')||event.detail?.phase!=='on')return;
+    const note=window.LuwipiScoreEngine?.midiToName(event.detail.midi);
+    if(note&&notes.includes(note))light(note);
+  });
   document.addEventListener("luwipi:journey-ready",refresh);refresh();
   // Games are now a single curated catalog; cards stay in their original DOM order.
 })();

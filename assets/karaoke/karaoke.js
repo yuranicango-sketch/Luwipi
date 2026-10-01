@@ -11,6 +11,19 @@ let playRequest=0,loading=false,audition=false,notationDocument=null;
 let playlist=[],current=null,leadKey='',leadNotes=[],backing=[],timer=0,playing=false,points=0,hit=new Set(),unsubscribe=null;
 let keyboardBase=48,scoreMode='ai',leadTouched=false,libraryItems=[];
 const notationMode=$('karaokeNotationMode'),saveMidi=$('karaokeSaveMidi'),savedMidi=$('karaokeSavedMidi'),refreshLibrary=$('karaokeRefreshLibrary');
+const studio=document.querySelector('#karaokeView .karaoke-workspace'),rail=document.querySelector('#karaokeView .karaoke-rail');
+if(studio&&rail){
+ const tools=document.createElement('div');tools.className='karaoke-mobile-actions';
+ tools.innerHTML='<button class="karaoke-mobile-import" type="button" aria-label="Importar MIDI" title="Importar MIDI">＋</button><button class="karaoke-mobile-tools" type="button" aria-controls="karaokeToolsPanel" aria-expanded="false" aria-label="Mostrar ferramentas" title="Ferramentas">☷</button>';
+ rail.id='karaokeToolsPanel';rail.before(tools);
+ tools.querySelector('.karaoke-mobile-import').addEventListener('click',()=>files.click());
+ const control=tools.querySelector('.karaoke-mobile-tools');
+ control.addEventListener('click',()=>{
+  const opened=studio.classList.toggle('tools-open');control.setAttribute('aria-expanded',String(opened));
+  control.setAttribute('aria-label',opened?'Recolher ferramentas':'Mostrar ferramentas');
+ });
+}
+
 
 const noteName=m=>E.ptSolfege(m).replace(/-?\d+$/,'');
 const keyOf=e=>`${e.track}:${e.channel}`;
@@ -347,7 +360,7 @@ document.querySelectorAll('[data-karaoke-open]').forEach(button=>button.addEvent
 $('karaokeMidi').addEventListener('click',async()=>{try{const data=await window.LuwipiLiveInput.connectMIDI();$('karaokeStatus').textContent=`Teclado MIDI ligado · ${data.count} entrada(s)`;$('karaokeMidi').classList.add('connected')}catch{$('karaokeStatus').textContent='Não foi possível ligar o teclado MIDI.'}});
 $('karaokeMic').addEventListener('click',async()=>{try{await window.LuwipiLiveInput.connectMicrophone();$('karaokeStatus').textContent='Microfone ligado. Toca a melodia.';$('karaokeMic').classList.add('connected')}catch{$('karaokeStatus').textContent='Não foi possível ligar o microfone.'}});
 unsubscribe=window.LuwipiLiveInput?.subscribe(input);
-document.addEventListener('click',event=>{if(view.classList.contains('active')&&event.target.closest('[data-nav],[data-menu-course],[data-experience-nav]')){stop();view.classList.remove('active')}},true);
+document.addEventListener('click',event=>{if(view.classList.contains('active')&&event.target.closest('[data-nav],[data-menu-course],[data-experience-nav],[data-workspace-nav]')){stop();view.classList.remove('active')}},true);
 document.addEventListener('keydown',event=>{if(view.classList.contains('active')&&event.code==='Space'&&!event.target.closest('button,input,select,summary')){event.preventDefault();void play(false)}});
 
 $('karaokeTaskClose').addEventListener('click',()=>$('karaokeTaskSheet').hidden=true);

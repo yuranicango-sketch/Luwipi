@@ -668,7 +668,7 @@ await test('Piano partilhado: seta discreta, espaço reservado e controlos exist
  assert(shell.includes("pianoArea.id='workspacePiano'")&&shell.includes('canvas.append(bar,viewport,pianoArea)'),'piano não tem uma linha permanente no canvas');
  assert(shell.includes('id="workspacePianoToggle"')&&shell.includes('aria-controls="workspacePianoBody"'),'falta a seta de recolher acessível');
  assert(app.includes('/assets/activities/workspace-piano.js')&&app.includes('/assets/activities/score-follow.js'),'módulos de piano e partitura não são carregados');
- assert(piano.includes("if(view.id==='karaokeView')return midi")&&piano.includes("return journey"),'MIDI e Leitura não partilham o mesmo espaço para o piano');
+ assert(piano.includes("['readingView','karaokeView','liveModeView'].includes(view.id)")&&piano.includes("return midi||journey"),'Leitura, MIDI e Prática não reutilizam o teclado de duas oitavas');
  assert(piano.includes("legacy.classList.contains('hidden')")&&piano.includes("body.replaceChildren(wanted)"),'piano legado não funciona no espaço comum');
  assert(piano.includes("sessionStorage.setItem('luwipi:workspace-piano-collapsed'"),'preferência de recolher o piano não é conservada');
  assert(piano.includes('window.LuwipiWorkspacePiano=Object.freeze')&&piano.includes("subscribe(fn)"),'jogos futuros não conseguem reutilizar o piano partilhado');
@@ -688,6 +688,20 @@ await test('Seguimento automático horizontal e vertical sem obstruir a pauta',a
  assert(reading.includes("['songSvg'")&&reading.includes("['liveScoreSvg'"),'seguimento não cobre as partituras de Leitura e Prática');
  assert(css.includes('#karaokeView #karaokeStaff[data-direction="vertical"]')&&css.includes('overflow-y:auto!important'),'partitura vertical não tem viewport dedicado');
  assert(css.includes('body.workspace-shell-enabled #songScoreMode::after'),'direção da partitura ainda ocupa espaço textual excessivo');
+});
+await test('Workspace responsivo: piano de duas oitavas partilhado e pauta livre',async()=>{
+ const piano=await read('assets/activities/workspace-piano.js'),journey=await read('assets/reading/immersive-journey.js');
+ const live=await read('assets/live/live-mode.js'),karaoke=await read('assets/karaoke/karaoke.js'),css=await read('assets/app.css');
+ for(const [name,source] of Object.entries({piano,journey,live,karaoke}))assert(new Function(source),name+' tem erro de sintaxe');
+ assert(piano.includes("['readingView','karaokeView','liveModeView'].includes(view.id)")&&piano.includes("highlight(notes=[],duration=560)"),'o teclado de duas oitavas ou iluminação comum foi perdido');
+ assert(journey.includes("window.addEventListener('luwipi:piano-note'")&&journey.includes("shared?.classList.add('lit')"),'as notas da Leitura não reagem ao piano comum');
+ assert(live.includes("window.addEventListener('luwipi:piano-note',onWorkspacePiano)")&&live.includes("window.removeEventListener('luwipi:piano-note',onWorkspacePiano)"),'Prática não consome/limpa os eventos do piano comum');
+ assert(karaoke.includes("karaoke-mobile-tools")&&karaoke.includes("studio.classList.toggle('tools-open')"),'ferramentas MIDI não recolhem no mobile');
+ assert(karaoke.includes('[data-experience-nav],[data-workspace-nav]'),'playback MIDI não termina ao trocar de módulo');
+ assert(css.includes('body.workspace-shell-enabled>.brand-header{display:none!important}'),'o cabeçalho antigo ainda rouba espaço em telemóveis');
+ assert(css.includes('grid-template-rows:48px minmax(0,1fr) auto!important'),'o header mobile, partitura e piano ainda podem competir pelo ecrã');
+ assert(css.includes('.karaoke-workspace.tools-open .karaoke-rail'),'ferramentas MIDI não respeitam o canvas');
+ assert(css.includes('.karaoke-key.workspace-lit'),'teclas não têm iluminação de pré-visualização');
 });
 await test('Workspace único: canvas real, sidebar desktop e biblioteca MIDI',async()=>{
  const app=await read('app.html'),css=await read('assets/app.css'),shell=await read('assets/activities/workspace-shell.js'),karaoke=await read('assets/karaoke/karaoke.js'),api=await read('api/midi-library.js'),config=JSON.parse(await read('vercel.json'));

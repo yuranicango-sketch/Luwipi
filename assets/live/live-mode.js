@@ -602,9 +602,14 @@ sourceMidi.addEventListener("click",()=>selectSource("midi"));
 sourceMic.addEventListener("click",()=>selectSource("microphone"));
 
 unsubscribe=Input.subscribe(onInput);
+const onWorkspacePiano=event=>{
+  if(!view.classList.contains('active')||!Number.isInteger(event.detail?.midi))return;
+  onInput({type:event.detail.phase==='off'?'noteoff':'noteon',source:'midi',midi:event.detail.midi,at:performance.now()});
+};
+window.addEventListener('luwipi:piano-note',onWorkspacePiano);
 const observer=new MutationObserver(cleanupWhenHidden);
 observer.observe(view,{attributes:true,attributeFilter:["class"]});
-window.addEventListener("pagehide",()=>{stopPlayback();Input.disconnect();if(unsubscribe)unsubscribe()});
+window.addEventListener("pagehide",()=>{stopPlayback();Input.disconnect();if(unsubscribe)unsubscribe();window.removeEventListener('luwipi:piano-note',onWorkspacePiano)});
 
 toggle(guideToggle,guideOn);toggle(rhythmToggle,rhythmOn);
 window.LuwipiLiveTaskSource=Object.freeze({score:()=>score?{title:score.title||structuredFileName||"Partitura",kind:"music",score}:null});
