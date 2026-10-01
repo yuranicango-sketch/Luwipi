@@ -99,6 +99,13 @@ function placementFromDiagnostic(diagnostic){
   if(raw===undefined||raw===null)return;
   result[track]={level:0,status:answer?'reconhecimento elementar observado':'necessita reforço inicial',candidate:0};
  });
+ const extraCorrect={C:1,I:1,G:1,H:1,J:0};
+ for(const [track,correct] of Object.entries(extraCorrect)){
+  const raw=diagnostic?.extra?.[track];
+  if(raw===undefined||raw===null)continue;
+  const accurate=typeof raw==='boolean'?raw:raw===correct;
+  result[track]={level:0,status:accurate?'reconhecimento elementar observado':'necessita reforço inicial',candidate:0};
+ }
  // Um item de escolha múltipla nunca certifica uma trilha nem autoriza pular níveis.
  return result;
 }

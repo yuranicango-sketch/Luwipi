@@ -3109,3 +3109,10 @@ body.luwipi-dark .workspace-path-track{background:#1e3556;border-color:#48678f}
 body.luwipi-dark .workspace-path-track p,body.luwipi-dark .workspace-path-sub{color:#b9cee9}
 @media(max-width:980px){.workspace-path-panel{position:fixed;top:0;right:0;bottom:0;max-width:100%;z-index:200;padding-top:max(12px,env(safe-area-inset-top))}}
 @media(max-height:590px) and (min-width:981px){.workspace-path-panel{top:44px}}
+
+/* Compact study continuity and two-question diagnostic blocks. */
+.workspace-path-sync{font-size:11px;line-height:1.35;color:#466aa2;margin:6px 3px 9px}
+.workspace-path-copy{flex:none;min-height:33px;margin:0 3px 9px;padding:5px 10px;align-self:stretch;border:1px solid #aac4e8;border-radius:9px;background:#fff;color:#244f99;font-size:11px;font-weight:800}
+.diagnostic-stage .diagnostic-second-question{margin-top:20px;padding-top:17px;border-top:1px solid #d9e5f6}
+body.luwipi-dark .workspace-path-sync{color:#b8d3f7}
+body.luwipi-dark .workspace-path-copy{background:#1e3556;border-color:#486caa;color:#e6f0ff}
