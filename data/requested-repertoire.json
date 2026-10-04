@@ -932,42 +932,50 @@
   {
     "title": "Gymnopédie nº 1",
     "category": "Instrumentais e clássicos suaves",
-    "status": "awaiting_score_file"
+    "status": "published_piano",
+    "score_id": "piano-public-01"
   },
   {
     "title": "Clair de Lune",
     "category": "Instrumentais e clássicos suaves",
-    "status": "awaiting_score_file"
+    "status": "published_piano",
+    "score_id": "piano-public-02"
   },
   {
     "title": "Noturno Op. 9 nº 2",
     "category": "Instrumentais e clássicos suaves",
-    "status": "awaiting_score_file"
+    "status": "published_piano",
+    "score_id": "piano-public-03"
   },
   {
     "title": "Canon em Ré",
     "category": "Instrumentais e clássicos suaves",
-    "status": "awaiting_score_file"
+    "status": "published_piano",
+    "score_id": "piano-public-04"
   },
   {
     "title": "Ave Maria (Schubert)",
     "category": "Instrumentais e clássicos suaves",
-    "status": "awaiting_score_file"
+    "status": "published_piano",
+    "score_id": "piano-public-05"
   },
   {
     "title": "Air (Bach)",
     "category": "Instrumentais e clássicos suaves",
-    "status": "awaiting_score_file"
+    "status": "published_piano",
+    "score_id": "piano-public-06"
   },
   {
     "title": "Prelúdio em Dó (Bach)",
     "category": "Instrumentais e clássicos suaves",
-    "status": "awaiting_score_file"
+    "status": "published_piano",
+    "score_id": "piano-public-07"
   },
   {
     "title": "Arabesque nº 1 (Debussy)",
     "category": "Instrumentais e clássicos suaves",
-    "status": "awaiting_score_file"
+    "status": "published_piano",
+    "score_id": "piano-public-08"
   },
   {
     "title": "Je Te Veux (Satie)",
@@ -992,7 +1000,8 @@
   {
     "title": "Liebestraum nº 3",
     "category": "Instrumentais e clássicos suaves",
-    "status": "awaiting_score_file"
+    "status": "published_piano",
+    "score_id": "piano-public-09"
   },
   {
     "title": "Rêverie (Debussy)",

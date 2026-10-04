@@ -3,6 +3,12 @@
 const Engine=window.LuwipiScoreEngine;
 const DB_NAME="luwipi-reading-library-v1",STORE="scores",FALLBACK_KEY="luwipi_reading_library_v1";
 let remoteCache=[],permissionCache=null,lastRemoteError="",current=null,timers=[],playing=false,tempo=120;
+let pianoCatalogPromise=null;
+const pianoScores=new Map();
+async function pianoCatalog(){
+ if(!pianoCatalogPromise)pianoCatalogPromise=fetch('/assets/piano/catalog.json').then(r=>{if(!r.ok)throw Error('piano_catalog_unavailable');return r.json()}).then(rows=>rows.map(row=>({...row,builtin:true,remote:false,editable:false,visibility:'global',kind:'music',updatedAt:'2026-10-04'}))).catch(error=>{pianoCatalogPromise=null;throw error});
+ return pianoCatalogPromise;
+}
 const $=id=>document.getElementById(id),svg=$('readingImportedSvg'),view=$('readingImportedView');
 function access(){
   try{return typeof LuwipiProductionAccess!=="undefined"?LuwipiProductionAccess:null}catch{return null}
@@ -77,12 +83,16 @@ async function remoteList(){
   }
 }
 async function all(){
-  const [remote,local]=await Promise.all([remoteList(),localAll()]);
+  const [remote,local,piano]=await Promise.all([remoteList(),localAll(),pianoCatalog().catch(()=>[])]);
   const remoteKeys=new Set(remote.map(x=>(x.kind||"music")+"|"+(x.title||"")+"|"+(x.sourceName||"")));
   const locals=local.map(x=>({...x,remote:false,localOnly:true,editable:true,visibility:"personal"})).filter(x=>!remoteKeys.has((x.kind||"music")+"|"+(x.title||"")+"|"+(x.sourceName||"")));
-  return remote.concat(locals).sort((a,b)=>String(b.updatedAt||"").localeCompare(String(a.updatedAt||"")));
+  return piano.concat(remote,locals).sort((a,b)=>String(b.updatedAt||"").localeCompare(String(a.updatedAt||"")));
 }
 async function get(id){
+  if(String(id||'').startsWith('piano-public-')){
+   if(pianoScores.has(id))return pianoScores.get(id);
+   try{const entry=(await pianoCatalog()).find(x=>x.id===id);if(!entry)return null;const response=await fetch(entry.scoreUrl);if(!response.ok)return null;let score=await response.json();if(score.encoding==='gzip-base64'){const bytes=Uint8Array.from(atob(score.data),c=>c.charCodeAt(0));score=JSON.parse(await new Response(new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'))).text())}const item={...entry,score};pianoScores.set(id,item);return item}catch{return null}
+  }
   if(String(id||"").startsWith("local-"))return localGet(id);
   const cached=remoteCache.find(x=>x.id===id&&x.score);
   if(cached)return cached;
@@ -136,33 +146,37 @@ async function renderList(){
  const list=$('importedReadingList');list.replaceChildren();
  const items=(await all()).filter(item=>item.kind!=='exercise');
  $('importedReadingEmpty').hidden=items.length>0;
- for(const item of items){const card=document.createElement('article');card.className='song-card';card.innerHTML='<div><h3>'+escapeHtml(item.title)+'</h3><p>'+(item.visibility==='global'?'Para todos':item.localOnly?'Este dispositivo':'Pessoal')+'</p></div><button type="button">Abrir partitura</button>';card.querySelector('button').onclick=()=>open(item.id);list.append(card)}
+ for(const item of items){const card=document.createElement('article');card.className='song-card';card.innerHTML='<div><h3>'+escapeHtml(item.title)+'</h3><p>'+escapeHtml(item.builtin?item.composer+' · '+item.description:item.visibility==='global'?'Para todos':item.localOnly?'Este dispositivo':'Pessoal')+'</p></div><button type="button">Abrir partitura</button>';card.querySelector('button').onclick=()=>open(item.id);list.append(card)}
  const perms=await permissions();$('scoreScopeLabel').hidden=!perms.canPublishGlobal;
 }
 function stop(){timers.forEach(clearTimeout);timers=[];playing=false;$('pianoBoard').querySelectorAll('.down').forEach(k=>k.classList.remove('down'));$('readingImportedPlay').textContent='▶ Tocar';svg.querySelectorAll('.reading-current-note').forEach(n=>n.classList.remove('reading-current-note'))}
 function render(){
  Engine.render(svg,current.score,{});
  $('readingImportedTitle').textContent=current.title;$('readingImportedHeading').textContent=current.title;
- $('readingImportedMeta').textContent=current.score.meter.join('/')+' · Partitura';
+ $('readingImportedMeta').textContent=current.score.meter.join('/')+' · '+(current.builtin?current.composer+' · '+current.description:'Partitura');
  $('readingImportedTempo').textContent='♩ = '+tempo;$('readingImportedRemove').hidden=!current.editable;
 }
 function openShared(item){
  stop();current={...item,score:Engine.normalizeScore(item.score),editable:false};tempo=Math.round(current.score.tempoBpm);render();view.dataset.taskId=current.id||'';nav('readingImported');document.dispatchEvent(new CustomEvent('luwipi:score-open',{detail:{id:current.id}}));
+ requestAnimationFrame(()=>{const key=$('pianoBoard').querySelector('[data-piano-note="C3"]'),scroll=$('pianoBoard').parentElement;if(key)scroll.scrollLeft=Math.max(0,key.offsetLeft-scroll.clientWidth/2)});
 }
 async function open(id){const item=await get(id);if(!item?.score){$('scoreUploadStatus').textContent='Não foi possível abrir a partitura. Tenta novamente.';return}openShared(item);current.editable=item.editable;$('readingImportedRemove').hidden=!current.editable}
 $('readingImportedPlay').onclick=()=>{
  if(playing){stop();return}if(!current)return;stop();playing=true;$('readingImportedPlay').textContent='■ Parar';
- const groups=Engine.groupEvents(current.score),bm=60000/tempo;
- const end=Math.max(...current.score.events.map(e=>e.startBeat+e.durationBeat));
+ const score=current.score,groups=Engine.groupEvents(score),bm=60000/tempo;
+ const perf=Engine.performanceEvents(score),end=Math.max(...perf.map(e=>e.startBeat+e.durationBeat));
+ const ms=beat=>Engine.beatToMs(score,beat,tempo);
  for(const [i,group] of groups.entries()){timers.push(setTimeout(()=>{
-  Engine.render(svg,current.score,{currentGroupIndex:i});
-  svg.querySelector('[data-group-index="'+i+'"]')?.scrollIntoView({block:'nearest',inline:'center'});
-  for(const event of current.score.events.filter(e=>Math.abs(e.startBeat-group.startBeat)<.001)){
-   const note=Engine.midiToName(event.midi);window.LuwipiAudioBridge?.play(note,event.durationBeat,bm,event.velocity/127);
-   const key=$('pianoBoard').querySelector('[data-piano-note="'+note+'"]');key?.classList.add('down');if(key)timers.push(setTimeout(()=>key.classList.remove('down'),event.durationBeat*bm));
-  }
- },group.startBeat*bm))}
- timers.push(setTimeout(stop,end*bm+200));
+  svg.querySelectorAll('.reading-current-note').forEach(n=>n.classList.remove('reading-current-note'));
+  const heads=svg.querySelectorAll('[data-live-group="'+i+'"]');heads.forEach(n=>n.classList.add('reading-current-note'));
+  heads[0]?.scrollIntoView({block:'nearest',inline:'center'});
+ },ms(group.startBeat)))}
+ for(const event of perf){timers.push(setTimeout(()=>{
+  const note=Engine.midiToName(event.midi),duration=Engine.durationToMs(score,event.startBeat,event.durationBeat,tempo);
+  window.LuwipiAudioBridge?.play(note,duration/bm,bm,event.velocity/127);
+  const key=$('pianoBoard').querySelector('[data-piano-note="'+note+'"]');key?.classList.add('down');if(key)timers.push(setTimeout(()=>key.classList.remove('down'),duration));
+ },ms(event.startBeat)))}
+ timers.push(setTimeout(stop,ms(end)+200));
 };
 $('readingImportedTempoDown').onclick=()=>{stop();tempo=Math.max(30,tempo-4);render()};
 $('readingImportedTempoUp').onclick=()=>{stop();tempo=Math.min(200,tempo+4);render()};

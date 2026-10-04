@@ -490,11 +490,11 @@ const pianoBoard=document.getElementById('pianoBoard');
 const pianoDock=document.getElementById('pianoDock');
 const noteColorByLetter=n=>colors[parsePitch(n)?.l||'C'];
 function buildPiano(){
-  const whites=[];for(let octave=2;octave<=5;octave++)for(const l of ['C','D','E','F','G','A','B'])whites.push(l+octave);
+  const whites=[];for(let octave=0;octave<=8;octave++)for(const l of ['C','D','E','F','G','A','B']){const n=l+octave,m=noteMidi(n);if(m>=21&&m<=108)whites.push(n)}
   const W=46;pianoBoard.style.width=(whites.length*W)+'px';
   let h='';whites.forEach((n,i)=>{h+=`<button class="piano-white" data-piano-note="${n}" style="left:${i*W}px;--key-color:${noteColorByLetter(n)}"><span>${names[n[0]]}</span></button>`});
   const blackAfter={C:'C#',D:'D#',F:'F#',G:'G#',A:'A#'};
-  whites.forEach((n,i)=>{const l=n[0],o=n.slice(1);if(blackAfter[l]){const bn=blackAfter[l]+o;h+=`<button class="piano-black" data-piano-note="${bn}" style="left:${i*W+W-14}px;--key-color:${noteColorByLetter(n)}" aria-label="${bn}"></button>`}});
+  whites.forEach((n,i)=>{const l=n[0],o=n.slice(1);if(blackAfter[l]){const bn=blackAfter[l]+o;if(noteMidi(bn)>108)return;h+=`<button class="piano-black" data-piano-note="${bn}" style="left:${i*W+W-14}px;--key-color:${noteColorByLetter(n)}" aria-label="${bn}"></button>`}});
   pianoBoard.innerHTML=h;
   pianoBoard.querySelectorAll('[data-piano-note]').forEach(k=>{
     const down=e=>{e.preventDefault();const n=k.dataset.pianoNote;k.classList.add('down');pianoNoteOn(n,.98);};

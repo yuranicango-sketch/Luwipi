@@ -1,0 +1,110 @@
+[
+  {
+    "id": "piano-public-01",
+    "title": "Gymnopédie nº 1",
+    "composer": "Erik Satie",
+    "description": "Piano solo",
+    "scoreUrl": "/assets/piano/piano-public-01.json",
+    "musicxmlUrl": "/assets/piano/piano-public-01.mxl",
+    "sourceUrl": "https://github.com/musetrainer/library/blob/master/scores/Gymnopdie_No._1__Satie.mxl",
+    "sourceDeclaration": "Public domain MusicXML library",
+    "notes": 469,
+    "measures": 78
+  },
+  {
+    "id": "piano-public-02",
+    "title": "Clair de Lune",
+    "composer": "Claude Debussy",
+    "description": "Piano solo",
+    "scoreUrl": "/assets/piano/piano-public-02.json",
+    "musicxmlUrl": "/assets/piano/piano-public-02.mxl",
+    "sourceUrl": "https://github.com/musetrainer/library/blob/master/scores/Clair_de_Lune__Debussy.mxl",
+    "sourceDeclaration": "Public domain MusicXML library",
+    "notes": 1719,
+    "measures": 72
+  },
+  {
+    "id": "piano-public-03",
+    "title": "Noturno Op. 9 nº 2",
+    "composer": "Frédéric Chopin",
+    "description": "Piano solo",
+    "scoreUrl": "/assets/piano/piano-public-03.json",
+    "musicxmlUrl": "/assets/piano/piano-public-03.mxl",
+    "sourceUrl": "https://github.com/musetrainer/library/blob/master/scores/Chopin_-_Nocturne_Op_9_No_2_E_Flat_Major.mxl",
+    "sourceDeclaration": "Public domain MusicXML library",
+    "notes": 1238,
+    "measures": 38
+  },
+  {
+    "id": "piano-public-04",
+    "title": "Canon em Ré",
+    "composer": "Johann Pachelbel",
+    "description": "Piano solo · arranjo",
+    "scoreUrl": "/assets/piano/piano-public-04.json",
+    "musicxmlUrl": "/assets/piano/piano-public-04.mxl",
+    "sourceUrl": "https://github.com/musetrainer/library/blob/master/scores/Canon_in_D.mxl",
+    "sourceDeclaration": "Public domain MusicXML library",
+    "notes": 1599,
+    "measures": 102
+  },
+  {
+    "id": "piano-public-05",
+    "title": "Ave Maria (Schubert)",
+    "composer": "Franz Schubert",
+    "description": "Piano solo · versão curta",
+    "scoreUrl": "/assets/piano/piano-public-05.json",
+    "musicxmlUrl": "/assets/piano/piano-public-05.mxl",
+    "sourceUrl": "https://github.com/musetrainer/library/blob/master/scores/Ave_Maria_D839_-_Schubert_-_Solo_Piano_Arrg..mxl",
+    "sourceDeclaration": "Public domain MusicXML library",
+    "notes": 611,
+    "measures": 17
+  },
+  {
+    "id": "piano-public-06",
+    "title": "Air (Bach)",
+    "composer": "Johann Sebastian Bach",
+    "description": "Piano solo · arranjo",
+    "scoreUrl": "/assets/piano/piano-public-06.json",
+    "musicxmlUrl": "/assets/piano/piano-public-06.mxl",
+    "sourceUrl": "https://github.com/musetrainer/library/blob/master/scores/J._S._Bach_-_Air_on_the_G_String_Piano_arrangement.mxl",
+    "sourceDeclaration": "Public domain MusicXML library",
+    "notes": 468,
+    "measures": 37
+  },
+  {
+    "id": "piano-public-07",
+    "title": "Prelúdio em Dó (Bach)",
+    "composer": "Johann Sebastian Bach",
+    "description": "Piano solo",
+    "scoreUrl": "/assets/piano/piano-public-07.json",
+    "musicxmlUrl": "/assets/piano/piano-public-07.mxl",
+    "sourceUrl": "https://github.com/musetrainer/library/blob/master/scores/Prelude_I_in_C_major_BWV_846_-_Well_Tempered_Clavier_First_Book.mxl",
+    "sourceDeclaration": "Public domain MusicXML library",
+    "notes": 601,
+    "measures": 34
+  },
+  {
+    "id": "piano-public-08",
+    "title": "Arabesque nº 1 (Debussy)",
+    "composer": "Claude Debussy",
+    "description": "Piano solo",
+    "scoreUrl": "/assets/piano/piano-public-08.json",
+    "musicxmlUrl": "/assets/piano/piano-public-08.mxl",
+    "sourceUrl": "https://github.com/musetrainer/library/blob/master/scores/Arabesque_L._66_No._1_in_E_Major.mxl",
+    "sourceDeclaration": "Public domain MusicXML library",
+    "notes": 1545,
+    "measures": 107
+  },
+  {
+    "id": "piano-public-09",
+    "title": "Liebestraum nº 3",
+    "composer": "Franz Liszt",
+    "description": "Piano solo",
+    "scoreUrl": "/assets/piano/piano-public-09.json",
+    "musicxmlUrl": "/assets/piano/piano-public-09.mxl",
+    "sourceUrl": "https://github.com/musetrainer/library/blob/master/scores/Liebestraum_No._3_in_A_Major.mxl",
+    "sourceDeclaration": "Public domain MusicXML library",
+    "notes": 1962,
+    "measures": 88
+  }
+]

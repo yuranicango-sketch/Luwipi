@@ -138,6 +138,10 @@ function normalizeScore(raw){
       voiceDirection:["up","down"].includes(event.voiceDirection)?event.voiceDirection:null,
       tieStart:Boolean(event.tieStart),
       tieStop:Boolean(event.tieStop),
+      notationType:String(event.notationType||''),
+      dots:Number(event.dots)||0,
+      tuplet:Number(event.tuplet)||0,
+      graceNotes:Array.isArray(event.graceNotes)?event.graceNotes.slice(0,8).map(n=>({midi:Number(n.midi),note:String(n.note||'')})):[],
       pedal:Boolean(event.pedal),
       pedalAction:['start','change'].includes(event.pedalAction)?event.pedalAction:null
     };
@@ -156,6 +160,7 @@ function normalizeScore(raw){
   const tempoBpm=clamp(Number(score.tempoBpm)||120,20,300);
   const beatsPerMeasure=meter[0]*(4/meter[1]);
   const endBeat=Math.max(events.reduce((max,e)=>Math.max(max,e.startBeat+e.durationBeat),0),rests.reduce((max,r)=>Math.max(max,r.startBeat+r.durationBeat),0));
+  const measureMap=Array.isArray(score.measureMap)?score.measureMap.slice(0,2048).filter(m=>Number.isFinite(m.startBeat)&&m.startBeat>=0&&Number.isFinite(m.durationBeat)&&m.durationBeat>0&&Array.isArray(m.meter)&&m.meter.length===2).map((m,index)=>({...m,index})):[];
   return{
     title:String(score.title||"Partitura").slice(0,160),
     source:String(score.source||"structured"),
@@ -163,6 +168,7 @@ function normalizeScore(raw){
     pulseUnit:score.pulseUnit==="dotted-quarter"?"dotted-quarter":"quarter",
     tempoMap:Array.isArray(score.tempoMap)?score.tempoMap.map(x=>({beat:roundBeat(Number(x.beat)||0),bpm:clamp(Number(x.bpm)||tempoBpm,20,300)})):[],
     meter,
+    measureMap,
     meterMap:Array.isArray(score.meterMap)?score.meterMap.map(x=>({beat:roundBeat(Number(x.beat)||0),meter:Array.isArray(x.meter)?x.meter.slice(0,2):meter})):[],
     keyFifths,
     keyMinor:Boolean(score.keyMinor),
@@ -180,7 +186,7 @@ function normalizeScore(raw){
     transcription:score.transcription&&typeof score.transcription==="object"?Object.assign({},score.transcription):null,
     beatsPerMeasure,
     durationBeats:endBeat,
-    measures:measureTimeline(meter,score.meterMap,endBeat).length
+    measures:measureMap.length||measureTimeline(meter,score.meterMap,endBeat).length
   };
 }
 function groupEvents(score){
@@ -487,8 +493,18 @@ function drawRest(svg,rest,x,bottom,current){
  if(rest.dotted)svg.appendChild(svgEl("circle",{cx:x+20,cy:y-7,r:2.4,fill:ink}));
 }
 function drawNote(svg,event,x,bottom,groupIndex,current){
-  const y=staffY(event.midi,event.clef,bottom,event.note),stepValue=staffStep(event.midi,event.clef,event.note),kind=durationKind(event.durationBeat);
+  const writtenBeats={whole:4,half:2,quarter:1,eighth:.5,'16th':.25,'32nd':.125,'64th':.0625};
+  const kind=event.notationType in writtenBeats?{...durationKind(writtenBeats[event.notationType]),dots:event.dots,tuplet:event.tuplet}:durationKind(event.durationBeat);
+  const y=staffY(event.midi,event.clef,bottom,event.note),stepValue=staffStep(event.midi,event.clef,event.note);
   drawLedger(svg,x,bottom,stepValue);
+  for(const [i,grace] of (event.graceNotes||[]).entries()){
+    const gx=x-30-((event.graceNotes.length-1)-i)*16,gy=staffY(grace.midi,event.clef,bottom,grace.note);
+    drawLedger(svg,gx,bottom,staffStep(grace.midi,event.clef,grace.note));
+    svg.appendChild(svgEl('ellipse',{cx:gx,cy:gy,rx:5,ry:3.4,fill:'#292d34',transform:'rotate(-20 '+gx+' '+gy+')','data-grace-note':grace.note}));
+    addLine(svg,gx+4,gy,gx+4,gy-25,{stroke:'#292d34','stroke-width':1.4});
+    const accidental=grace.note.includes('#')?'♯':grace.note.includes('b')?'♭':'';
+    if(accidental)addText(svg,gx-10,gy+4,accidental,{'font-size':12});
+  }
   if(event.ornament){
     if(event.ornament.type==="mordent")
      svg.appendChild(svgEl("path",{d:"M "+(x-14)+" "+(y-24)+" l 7 -8 l 7 8 l 7 -8 l 7 8",
@@ -541,12 +557,15 @@ function render(svg,rawScore,options){
     currentGroup=Number.isInteger(opts.currentGroupIndex)?opts.currentGroupIndex:-1,
     showNoteNames=opts.showNoteNames===true;
   while(svg.firstChild)svg.removeChild(svg.firstChild);
-  const measures=measureTimeline(score.meter,score.meterMap,score.durationBeats);
+  const measures=score.measureMap.length?score.measureMap:measureTimeline(score.meter,score.meterMap,score.durationBeats);
   const defaultStaves=[{id:"RH",clef:"treble"},{id:"LH",clef:"bass"}];
+  const density=Math.max(1,...measures.map(m=>new Set(score.events.filter(e=>e.startBeat>=m.startBeat-1e-5&&e.startBeat<m.startBeat+m.durationBeat-1e-5).map(e=>e.startBeat)).size));
+  const measuresPerSystem=density>10?1:density>5?2:4;
   const staves=score.staffLayout?.length?score.staffLayout:defaultStaves;
   const staffCount=staves.length,
-    width=1120,measuresPerSystem=4,systems=Math.max(1,Math.ceil(measures.length/measuresPerSystem));
-  const left=105,right=1080,measureWidth=(right-left)/measuresPerSystem;
+    width=Math.max(1120,density*32+180),systems=Math.max(1,Math.ceil(measures.length/measuresPerSystem));
+  const maxKey=Math.max(Math.abs(score.keyFifths),...(score.keyMap||[]).map(k=>Math.abs(k.fifths)));
+  const left=Math.max(105,130+maxKey*14),right=width-40,measureWidth=(right-left)/measuresPerSystem;
   const keyAt=(beat,staff)=>{
     if(staff&&staff.fifths!==null&&staff.fifths!==undefined)return staff.fifths;
     let current=score.keyFifths;
@@ -614,6 +633,7 @@ function render(svg,rawScore,options){
   }
   const height=cursor,topFor=(system,index)=>tops[system][index];
   svg.setAttribute("viewBox","0 0 "+width+" "+height);
+  svg.style.width=width+'px';
   svg.setAttribute("role","img");
   svg.setAttribute("aria-label",score.title+" — partitura");
   svg.appendChild(svgEl("rect",{x:0,y:0,width,height,rx:18,fill:"#fff"}));
@@ -627,7 +647,7 @@ function render(svg,rawScore,options){
       addText(svg,42,top+(clef==="treble"?52:45),clefGlyph[clef]||"C",{"font-size":clef==="treble"?68:56,fill:"#34373d","font-family":"serif"});
       if(staff.label)addText(svg,23,top+75,staff.label,{"font-size":10,fill:"#525867","font-weight":700});
       const ks=drawKeySignature(svg,keyAt(first.startBeat,staff),clef,79,top);
-      if(system===0||system>0&&measures[system*4-1]?.meter.join("/")!==first.meter.join("/")){
+      if(system===0||system>0&&measures[system*measuresPerSystem-1]?.meter.join("/")!==first.meter.join("/")){
         const tsx=79+ks+9;
         addText(svg,tsx,top+20,String(first.meter[0]),{"font-size":18,"font-weight":800,fill:"#292d34"});
         addText(svg,tsx,top+43,String(first.meter[1]),{"font-size":18,"font-weight":800,fill:"#292d34"});
@@ -676,14 +696,14 @@ function render(svg,rawScore,options){
   }
   const dynamics=new Map();
   for(const rest of score.rests||[]){
-    const measure=locate(rest.startBeat),system=Math.floor(measure.index/4),slot=measure.index%4,index=staffOf(rest),
+    const measure=locate(rest.startBeat),system=Math.floor(measure.index/measuresPerSystem),slot=measure.index%measuresPerSystem,index=staffOf(rest),
       bottom=topFor(system,index)+48,beatIn=rest.startBeat-measure.startBeat,
       x=left+slot*measureWidth+42+(beatIn/measure.durationBeat)*(measureWidth-50);
     drawRest(svg,rest,x,bottom,false);
   }
   groups.forEach((group,g)=>{
     group.events.forEach((event,eventIndex)=>{
-      const measure=locate(event.startBeat),system=Math.floor(measure.index/4),slot=measure.index%4,
+      const measure=locate(event.startBeat),system=Math.floor(measure.index/measuresPerSystem),slot=measure.index%measuresPerSystem,
         index=staffOf(event),staff=staves[index]||staves[0],
         bottom=topFor(system,index)+48,beatIn=event.startBeat-measure.startBeat,
         x=left+slot*measureWidth+42+(beatIn/measure.durationBeat)*(measureWidth-50),
