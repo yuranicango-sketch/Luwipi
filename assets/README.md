@@ -1,14 +1,3 @@
 # Assets
 
-Coloque aqui os ficheiros usados pelo Luwipi.
-
-## Pastas
-
-- `samples/piano/`: samples do instrumento.
-- `samples/animals/`: sons reais de animais.
-- `audio/`: músicas, efeitos e outros sons.
-- `images/`: imagens.
-- `printables/`: PDFs e materiais para impressão.
-- `data/`: dados estáticos.
-
-Evite colocar chaves de API ou segredos dentro destas pastas ou no HTML.
+`simple-core.js`: leitura, piano e acesso. `simple-workspace.js`: navegação e tarefas. `printables.js`: publicação e acesso a PDFs/ZIP. `reading/reading-library.js`: partituras MusicXML/ABC. `games/bolhas-do-som.js`: jogo de balões; o jogo de pintura está em `pintar-teclas.html`.

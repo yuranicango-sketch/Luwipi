@@ -1,28 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "cleanUrls": true,
-  "redirects": [
-    {
-      "source": "/ensine",
-      "destination": "/app",
-      "permanent": false
-    },
-    {
-      "source": "/ensine/",
-      "destination": "/app",
-      "permanent": false
-    },
-    {
-      "source": "/aprenda",
-      "destination": "/app",
-      "permanent": false
-    },
-    {
-      "source": "/aprenda/",
-      "destination": "/app",
-      "permanent": false
-    }
-  ],
   "rewrites": [
     {
       "source": "/api/video-download",
@@ -184,48 +162,10 @@
           "value": "private, no-store"
         }
       ]
-    },
-    {
-      "source": "/ensine",
-      "headers": [
-        {
-          "key": "X-Robots-Tag",
-          "value": "noindex, nofollow, noarchive"
-        },
-        {
-          "key": "Cache-Control",
-          "value": "private, no-store"
-        }
-      ]
-    },
-    {
-      "source": "/aprenda",
-      "headers": [
-        {
-          "key": "X-Robots-Tag",
-          "value": "noindex, nofollow, noarchive"
-        },
-        {
-          "key": "Cache-Control",
-          "value": "private, no-store"
-        }
-      ]
     }
   ],
   "framework": null,
   "installCommand": "npm ci --ignore-scripts",
   "buildCommand": "sh scripts/build-static.sh",
-  "outputDirectory": "public",
-  "functions": {
-    "api/midi-score.js": {
-      "maxDuration": 90,
-      "includeFiles": "server/musescore-snapshot.json"
-    },
-    "api/score-doctor.js": {
-      "maxDuration": 90
-    },
-    "api/midi-library.js": {
-      "maxDuration": 30
-    }
-  }
+  "outputDirectory": "public"
 }

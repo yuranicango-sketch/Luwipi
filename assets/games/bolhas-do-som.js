@@ -386,4 +386,5 @@
   playButton.addEventListener("click", startGame);
   replayButton.addEventListener("click", startGame);
   window.addEventListener("pagehide", stopGame);
+  document.addEventListener("luwipi:navigate",stopGame);
 })();

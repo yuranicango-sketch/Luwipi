@@ -64,89 +64,6 @@ function quantizeValue(value,grid){
   if(!Number.isFinite(value)||!Number.isFinite(grid)||grid<=0)return value;
   return Math.round(value/grid)*grid;
 }
-function inferNotationGrid(events){
-  if(!events||!events.length)return .25;
-  const grids=[1,.5,.25,.125,1/3,1/6,.0625];
-  const samples=[];
-  events.slice(0,5000).forEach(e=>{
-    if(Number.isFinite(e.startBeat))samples.push(e.startBeat);
-    if(Number.isFinite(e.durationBeat))samples.push(e.durationBeat);
-  });
-  let best={grid:.25,score:Infinity,error:Infinity};
-  grids.forEach(grid=>{
-    let err=0;
-    for(const v of samples)err+=Math.min(grid/2,Math.abs(v-quantizeValue(v,grid)));
-    const avg=samples.length?err/samples.length:0;
-    const complexity=grid<.125?.045:grid<.25?.020:0;
-    const score=avg+complexity;
-    if(score<best.score)best={grid,score,error:avg};
-  });
-  return best.grid;
-}
-function splitAcrossBars(event,beatsPerMeasure){
-  const out=[];
-  let start=event.startBeat,remaining=event.durationBeat,part=0;
-  while(remaining>.0001){
-    const inMeasure=((start%beatsPerMeasure)+beatsPerMeasure)%beatsPerMeasure;
-    const room=beatsPerMeasure-inMeasure;
-    const dur=Math.min(remaining,room||beatsPerMeasure);
-    out.push(Object.assign({},event,{
-      id:event.id+(part?("-tie-"+part):""),
-      startBeat:roundBeat(start),
-      durationBeat:roundBeat(dur),
-      tieStart:remaining>dur||Boolean(event.tieStart),
-      tieStop:part>0||Boolean(event.tieStop),
-      sourceEventId:event.sourceEventId||event.id
-    }));
-    start+=dur;remaining-=dur;part++;
-    if(part>32)break;
-  }
-  return out;
-}
-function transcribePerformance(rawEvents,meta){
-  const meter=Array.isArray(meta?.meter)?meta.meter:[4,4];
-  const beatsPerMeasure=(Number(meter[0])||4)*(4/(Number(meter[1])||4));
-  const grid=inferNotationGrid(rawEvents);
-  let totalErr=0,count=0;
-  const notated=[];
-  const trackStats=new Map();
-  rawEvents.forEach(raw=>{
-    const key=Number(raw.track)||0,arr=trackStats.get(key)||[];
-    arr.push(Number(raw.midi)||60);trackStats.set(key,arr);
-  });
-  const trackMode=new Map();
-  trackStats.forEach((arr,key)=>{
-    const sorted=arr.slice().sort((a,b)=>a-b),median=sorted[Math.floor(sorted.length/2)]||60,min=sorted[0]||60,max=sorted[sorted.length-1]||60;
-    trackMode.set(key,{split:min<55&&max>65,fixed:median<60?"bass":"treble"});
-  });
-  rawEvents.forEach((raw,index)=>{
-    const perfStart=Math.max(0,Number(raw.startBeat)||0);
-    const perfDur=Math.max(.03125,Number(raw.durationBeat)||1);
-    const qStart=Math.max(0,quantizeValue(perfStart,grid));
-    const qDur=Math.max(grid,quantizeValue(perfDur,grid));
-    totalErr+=Math.abs(perfStart-qStart)+Math.abs(perfDur-qDur);count+=2;
-    const base=Object.assign({},raw,{
-      id:String(raw.id||"midi-"+index),
-      sourceEventId:String(raw.id||"midi-"+index),
-      performanceStartBeat:roundBeat(perfStart),
-      performanceDurationBeat:roundBeat(perfDur),
-      startBeat:roundBeat(qStart),
-      durationBeat:roundBeat(qDur),
-      note:midiToSpelledName(raw.midi,meta?.keyFifths),
-      clef:raw.clef||((trackMode.get(Number(raw.track)||0)||{}).split?(raw.midi<60?"bass":"treble"):((trackMode.get(Number(raw.track)||0)||{}).fixed||(raw.midi<60?"bass":"treble")))
-    });
-    splitAcrossBars(base,beatsPerMeasure).forEach(e=>notated.push(e));
-  });
-  notated.sort((a,b)=>a.startBeat-b.startBeat||a.midi-b.midi);
-  const meanError=count?totalErr/count:0;
-  const confidence=clamp(1-(meanError/Math.max(grid,.125)),0,1);
-  return{
-    events:notated,
-    gridBeat:grid,
-    confidence,
-    meanQuantizationError:roundBeat(meanError)
-  };
-}
 function performanceEvents(score){
   return Array.isArray(score?.performanceEvents)&&score.performanceEvents.length?score.performanceEvents:score?.events||[];
 }
@@ -300,136 +217,6 @@ function readVar(bytes,state,end){
 }
 function bytesText(bytes,start,len){
   try{return new TextDecoder("utf-8",{fatal:false}).decode(bytes.slice(start,start+len)).replace(/\0/g,"").trim()}catch{return""}
-}
-function parseMIDI(arrayBuffer){
-  const view=new DataView(arrayBuffer),bytes=new Uint8Array(arrayBuffer);
-  if(bytes.length<14||bytesText(bytes,0,4)!=="MThd")throw new Error("midi_header_invalid");
-  const headerLength=readU32(view,4);
-  const format=readU16(view,8),tracksCount=readU16(view,10),division=readU16(view,12);
-  if(format>1)throw new Error("midi_format_unsupported");
-  if(division&0x8000)throw new Error("midi_smpte_unsupported");
-  let pos=8+headerLength;
-  const rawEvents=[],percussionEvents=[],tempos=[],meters=[],keys=[],trackNames=[],programs=[];
-  for(let track=0;track<tracksCount;track++){
-    if(pos+8>bytes.length||bytesText(bytes,pos,4)!=="MTrk")throw new Error("midi_track_invalid");
-    const len=readU32(view,pos+4),end=Math.min(bytes.length,pos+8+len);
-    const state={pos:pos+8};
-    let tick=0,running=0;
-    const active=new Map(),sustained=new Map(),pedalDown=new Map();
-    function closeNote(channel,note,releaseTick,pedaled){
-      const key=channel+":"+note,stack=active.get(key);
-      if(!stack||!stack.length)return;
-      const on=stack.shift();
-      const target=channel===9?percussionEvents:rawEvents;
-      target.push({
-        id:"midi-"+track+"-"+(channel===9?"drum-":"")+target.length,
-        midi:note,
-        startBeat:on.tick/division,
-        durationBeat:Math.max(.03125,(releaseTick-on.tick)/division),
-        velocity:on.velocity,
-        track,
-        channel,
-        pedal:Boolean(pedaled)
-      });
-      if(!stack.length)active.delete(key);
-    }
-    function releaseSustain(channel,releaseTick){
-      const pending=sustained.get(channel)||[];
-      pending.forEach(item=>closeNote(channel,item.note,releaseTick,true));
-      sustained.set(channel,[]);
-    }
-    while(state.pos<end){
-      tick+=readVar(bytes,state,end);
-      let status=bytes[state.pos];
-      if(status<0x80){
-        if(!running)throw new Error("midi_running_status_invalid");
-        status=running;
-      }else{
-        state.pos++;
-        if(status<0xF0)running=status;
-      }
-      if(status===0xFF){
-        if(state.pos>=end)break;
-        const type=bytes[state.pos++],metaLen=readVar(bytes,state,end),metaStart=state.pos;
-        if(metaStart+metaLen>end)break;
-        if(type===0x51&&metaLen===3){
-          const us=(bytes[metaStart]<<16)|(bytes[metaStart+1]<<8)|bytes[metaStart+2];
-          if(us>0)tempos.push({tick,us});
-        }else if(type===0x58&&metaLen>=2){
-          meters.push({tick,num:bytes[metaStart]||4,den:Math.pow(2,bytes[metaStart+1]||2)});
-        }else if(type===0x59&&metaLen>=2){
-          const signed=bytes[metaStart]>127?bytes[metaStart]-256:bytes[metaStart];
-          keys.push({tick,fifths:clamp(signed,-7,7),minor:bytes[metaStart+1]===1});
-        }else if(type===0x03){
-          const title=bytesText(bytes,metaStart,metaLen);
-          if(title)trackNames.push({track,title});
-        }
-        state.pos+=metaLen;continue;
-      }
-      if(status===0xF0||status===0xF7){
-        const syxLen=readVar(bytes,state,end);state.pos=Math.min(end,state.pos+syxLen);running=0;continue;
-      }
-      const hi=status&0xF0,channel=status&15,one=hi===0xC0||hi===0xD0;
-      if(state.pos>=end)break;
-      const a=bytes[state.pos++],b=one?0:(state.pos<end?bytes[state.pos++]:0);
-      if(hi===0xC0){
-        programs.push({tick,track,channel,program:a});continue;
-      }
-      if(hi===0xB0&&a===64){
-        const was=Boolean(pedalDown.get(channel)),now=b>=64;
-        pedalDown.set(channel,now);
-        if(was&&!now)releaseSustain(channel,tick);
-        continue;
-      }
-      if(hi===0x90&&b>0){
-        const key=channel+":"+a,stack=active.get(key)||[];
-        stack.push({tick,velocity:b});active.set(key,stack);
-      }else if(hi===0x80||(hi===0x90&&b===0)){
-        if(pedalDown.get(channel)){
-          const pending=sustained.get(channel)||[];
-          pending.push({note:a});sustained.set(channel,pending);
-        }else closeNote(channel,a,tick,false);
-      }
-    }
-    for(const [channel,pending] of sustained.entries()){
-      pending.forEach(item=>closeNote(channel,item.note,tick,true));
-    }
-    for(const [key,stack] of active.entries()){
-      const [channel,note]=key.split(":").map(Number);
-      while(stack.length)closeNote(channel,note,tick,false);
-    }
-    pos=end;
-  }
-  if(!rawEvents.length)throw new Error("midi_no_notes");
-  tempos.sort((a,b)=>a.tick-b.tick);meters.sort((a,b)=>a.tick-b.tick);keys.sort((a,b)=>a.tick-b.tick);
-  const firstTempo=tempos[0]||{tick:0,us:500000},firstMeter=meters[0]||{tick:0,num:4,den:4},firstKey=keys[0]||{tick:0,fifths:0,minor:false};
-  const tempoMap=tempos.map(t=>({beat:t.tick/division,bpm:60000000/t.us}));
-  const meterMap=meters.map(m=>({beat:m.tick/division,meter:[m.num,m.den]}));
-  const keyMap=keys.map(k=>({beat:k.tick/division,fifths:k.fifths,minor:k.minor}));
-  const transcription=transcribePerformance(rawEvents,{meter:[firstMeter.num,firstMeter.den],keyFifths:firstKey.fifths});
-  return normalizeScore({
-    title:(trackNames.find(x=>x.title)||{}).title||"Partitura MIDI",
-    source:"midi",
-    tempoBpm:60000000/firstTempo.us,
-    tempoMap,
-    meter:[firstMeter.num,firstMeter.den],
-    meterMap,
-    keyFifths:firstKey.fifths,
-    keyMinor:firstKey.minor,
-    keyMap,
-    ppq:division,
-    events:transcription.events,
-    performanceEvents:rawEvents,
-    percussionEvents,
-    transcription:{
-      mode:"automatic-midi",
-      gridBeat:transcription.gridBeat,
-      confidence:transcription.confidence,
-      meanQuantizationError:transcription.meanQuantizationError,
-      notesPreserved:rawEvents.length,
-      programs,trackNames
-    }
-  });
 }
 
 function childElements(node){return Array.from(node&&node.children?node.children:[])}
@@ -623,72 +410,9 @@ function durationToMs(score,startBeat,durationBeat,tempoOverride){
   return Math.max(0,beatToMs(score,end,tempoOverride)-beatToMs(score,start,tempoOverride));
 }
 function auditScore(rawScore){
-  const score=normalizeScore(rawScore);
-  const notation=score.events||[];
-  const perf=performanceEvents(score)||[];
-  const warnings=[],issues=[];
-  let points=100;
-  if(!notation.length){issues.push("A partitura não contém eventos notados.");points=0}
-  if(!perf.length){issues.push("A camada de performance está vazia.");points=0}
-  const invalidNotation=notation.filter(e=>!Number.isFinite(e.midi)||e.midi<0||e.midi>127||!Number.isFinite(e.startBeat)||e.startBeat<0||!Number.isFinite(e.durationBeat)||e.durationBeat<=0);
-  if(invalidNotation.length){issues.push(invalidNotation.length+" evento(s) notado(s) inválido(s).");points-=40}
-  const perfIds=new Set(perf.map(e=>String(e.sourceEventId||e.id||"")));
-  const represented=new Map();
-  notation.forEach(e=>{
-    const id=String(e.sourceEventId||e.id||"");
-    if(!represented.has(id))represented.set(id,new Set());
-    represented.get(id).add(Number(e.midi));
-  });
-  let lost=0,pitchMismatch=0;
-  perf.forEach(e=>{
-    const id=String(e.sourceEventId||e.id||"");
-    if(!represented.has(id)){lost++;return}
-    if(!represented.get(id).has(Number(e.midi)))pitchMismatch++;
-  });
-  const notePreservation=perf.length?Math.max(0,1-lost/perf.length):0;
-  if(lost){issues.push(lost+" evento(s) MIDI não chegaram à camada de notação.");points-=Math.min(50,lost/perf.length*100)}
-  if(pitchMismatch){issues.push(pitchMismatch+" evento(s) mudaram de altura entre performance e notação.");points-=Math.min(40,pitchMismatch/perf.length*100)}
-  const transcription=score.transcription||{};
-  const quantConfidence=Number.isFinite(Number(transcription.confidence))?clamp(Number(transcription.confidence),0,1):score.source==="midi"?0:1;
-  if(score.source==="midi"&&!score.transcription){warnings.push("Este MIDI não contém relatório de transcrição automática.");points-=12}
-  if(score.source==="midi"&&quantConfidence<.72){warnings.push("A execução tem timing muito livre; revê visualmente os valores rítmicos.");points-=18}
-  else if(score.source==="midi"&&quantConfidence<.88){warnings.push("Há pequenas ambiguidades rítmicas; o preview deve ser revisto.");points-=8}
-  if(Number(transcription.gridBeat)>0&&Number(transcription.gridBeat)<.125){warnings.push("Foi necessária uma subdivisão rítmica muito fina.");points-=5}
-  const tempoChanges=(score.tempoMap||[]).filter((x,i,a)=>i===0||Math.abs(Number(x.bpm)-Number(a[i-1]?.bpm))>.01).length;
-  if(tempoChanges>1)warnings.push("O MIDI contém mudanças de andamento; o playback preserva-as, mas confirma as marcações visuais.");
-  const meterChanges=(score.meterMap||[]).length>1;
-  if(meterChanges){warnings.push("Há mudanças de compasso. O motor preserva os dados, mas a paginação atual deve ser confirmada no preview.");points-=10}
-  const keyChanges=(score.keyMap||[]).length>1;
-  if(keyChanges){warnings.push("Há mudanças de tonalidade. Confirma acidentes e assinaturas no preview.");points-=8}
-  const groups=groupEvents(score);
-  const maxChord=groups.reduce((m,g)=>Math.max(m,g.pitches.length),0);
-  if(maxChord>8)warnings.push("Foram encontrados acordes muito densos ("+maxChord+" notas simultâneas).");
-  const outOfPiano=perf.filter(e=>e.midi<21||e.midi>108).length;
-  if(outOfPiano){warnings.push(outOfPiano+" nota(s) estão fora da extensão de um piano de 88 teclas.");points-=Math.min(8,outOfPiano)}
-  const maxBeat=notation.reduce((m,e)=>Math.max(m,e.startBeat+e.durationBeat),0);
-  if(maxBeat>4000){warnings.push("Partitura muito longa; a renderização pode ficar pesada em dispositivos modestos.");points-=4}
-  points=Math.max(0,Math.min(100,Math.round(points)));
-  const blocked=issues.length>0||notePreservation<.999||pitchMismatch>0;
-  const rating=blocked?"blocked":points>=90?"high":points>=75?"review":"low";
-  return{
-    rating,
-    score:points,
-    blocked,
-    canPublishGlobal:!blocked&&points>=80,
-    notePreservation:Number(notePreservation.toFixed(4)),
-    quantizationConfidence:Number(quantConfidence.toFixed(4)),
-    meanQuantizationError:Number(Number(transcription.meanQuantizationError||0).toFixed(4)),
-    notationEvents:notation.length,
-    performanceEvents:perf.length,
-    groups:groups.length,
-    maxChord,
-    tempoChanges,
-    meterChanges,
-    keyChanges,
-    warnings,
-    issues,
-    checkedAt:new Date().toISOString()
-  };
+ const score=normalizeScore(rawScore),issues=[];
+ if(!score.events.length)issues.push('Partitura sem notas.');
+ return {rating:issues.length?'blocked':'good',score:issues.length?0:100,blocked:!!issues.length,canPublishGlobal:!issues.length,warnings:[],issues};
 }
 
 function playNote(midi,durationBeat,beatMs,velocity){
@@ -1053,7 +777,6 @@ function parseABC(text){
 }
 window.LuwipiScoreEngine=Object.freeze({
   normalizeScore,
-  parseMIDI,
   parseMusicXML,
   parseMXL,
   parseABC,
@@ -1068,8 +791,6 @@ window.LuwipiScoreEngine=Object.freeze({
   dynamicFromVelocity,
   keyName,
   midiToSpelledName,
-  inferNotationGrid,
-  transcribePerformance,
   performanceEvents,
   beatToMs,
   durationToMs,
