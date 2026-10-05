@@ -507,6 +507,7 @@ function syncSongImmersive(){
   immersiveButton.textContent=active?'✕ Sair do ecrã inteiro':'⛶ Ecrã inteiro';
 }
 immersiveButton.onclick=async()=>{
+  if(matchMedia('(pointer:coarse)').matches||innerWidth<=1100){await window.LuwipiPianoFullscreen?.open(immersiveButton);return}
   const reader=document.querySelector('#songView .reader');
   if(reader?.classList.contains('reading-immersive-fallback')){reader.classList.remove('reading-immersive-fallback');syncSongImmersive();return}
   if(document.fullscreenElement){await document.exitFullscreen?.();syncSongImmersive();return}
