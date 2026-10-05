@@ -521,15 +521,27 @@ const pianoDock=document.getElementById('pianoDock');
 const noteColorByLetter=n=>colors[parsePitch(n)?.l||'C'];
 function buildPiano(){
   const whites=[];for(let octave=0;octave<=8;octave++)for(const l of ['C','D','E','F','G','A','B']){const n=l+octave,m=noteMidi(n);if(m>=21&&m<=108)whites.push(n)}
-  const W=46;pianoBoard.style.width=(whites.length*W)+'px';
-  let h='';whites.forEach((n,i)=>{h+=`<button class="piano-white" data-piano-note="${n}" aria-label="${names[n[0]]} ${n.slice(1)}" style="left:${i*W}px;--key-color:${noteColorByLetter(n)}"><span>${names[n[0]]}</span></button>`});
+  const W=46;pianoBoard.style.width=(whites.length*W)+'px';pianoBoard.style.setProperty('--white-keys',whites.length);
+  let h='';whites.forEach((n,i)=>{h+=`<button class="piano-white" data-piano-note="${n}" aria-label="${names[n[0]]} ${n.slice(1)}" style="left:${i*W}px;--key-index:${i};--key-color:${noteColorByLetter(n)}"><span>${names[n[0]]}</span></button>`});
   const blackAfter={C:'C#',D:'D#',F:'F#',G:'G#',A:'A#'};
-  whites.forEach((n,i)=>{const l=n[0],o=n.slice(1);if(blackAfter[l]){const bn=blackAfter[l]+o;if(noteMidi(bn)>108)return;h+=`<button class="piano-black" data-piano-note="${bn}" style="left:${i*W+W-14}px;--key-color:${noteColorByLetter(n)}" aria-label="${bn}"></button>`}});
+  whites.forEach((n,i)=>{const l=n[0],o=n.slice(1);if(blackAfter[l]){const bn=blackAfter[l]+o;if(noteMidi(bn)>108)return;h+=`<button class="piano-black" data-piano-note="${bn}" style="left:${i*W+W-14}px;--key-index:${i+1};--key-color:${noteColorByLetter(n)}" aria-label="${bn}"></button>`}});
   pianoBoard.innerHTML=h;
   pianoBoard.querySelectorAll('[data-piano-note]').forEach(k=>{
-    const down=e=>{e.preventDefault();k.setPointerCapture?.(e.pointerId);const n=k.dataset.pianoNote;k.classList.add('down');pianoNoteOn(n,.98);};
-    const up=()=>{const n=k.dataset.pianoNote;k.classList.remove('down');pianoNoteOff(n)};
-    k.addEventListener('pointerdown',down);k.addEventListener('pointerup',up);k.addEventListener('pointerleave',up);k.addEventListener('pointercancel',up);
+    let tap=null;
+    const play=()=>{k.classList.add('down');pianoNoteOn(k.dataset.pianoNote,.98)};
+    const down=e=>{
+      if(pianoDock.classList.contains('piano-fullscreen')&&e.pointerType==='touch'){
+        // Native horizontal panning wins; a note is played only after a stationary tap.
+        tap={id:e.pointerId,x:e.clientX,y:e.clientY};return;
+      }
+      e.preventDefault();k.setPointerCapture?.(e.pointerId);play();
+    };
+    const move=e=>{if(tap&&tap.id===e.pointerId&&(Math.abs(e.clientX-tap.x)>10||Math.abs(e.clientY-tap.y)>10))tap=null};
+    const release=()=>{k.classList.remove('down');pianoNoteOff(k.dataset.pianoNote)};
+    const up=e=>{if(tap&&tap.id===e.pointerId){tap=null;play();setTimeout(release,180)}else release()};
+    const cancel=()=>{tap=null;release()};
+    k.addEventListener('pointerdown',down);k.addEventListener('pointermove',move);k.addEventListener('pointerup',up);k.addEventListener('pointerleave',cancel);k.addEventListener('pointercancel',cancel);
+
   });
 }
 let songPianoVisible=true;
