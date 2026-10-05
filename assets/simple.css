@@ -23,3 +23,14 @@
 .piano-fullscreen .piano-head button{font-size:14px}
 #songBlocks[aria-pressed=true]{background:#e1ebff}
 @media(max-height:500px) and (min-width:650px){.simple-workspace #songView .reader:has(.illustrated-score) .reader-top{display:none}.simple-workspace #songView .reader:has(.illustrated-score) .aid-row{position:static}.simple-workspace #songView .reader:has(.illustrated-score) .song-score-toolbar{display:none}}
+/* Large touch targets with the full 88-key keyboard available horizontally. */
+.piano-fullscreen{--fullscreen-key-width:clamp(84px,12vw,120px)}
+.piano-fullscreen .piano-board{width:calc(var(--white-keys)*var(--fullscreen-key-width))!important;margin:0}
+.piano-fullscreen .piano-white{left:calc(var(--key-index)*var(--fullscreen-key-width))!important;width:var(--fullscreen-key-width);touch-action:pan-x}
+.piano-fullscreen .piano-black{left:calc((var(--key-index) - .3)*var(--fullscreen-key-width))!important;width:calc(var(--fullscreen-key-width)*.6);touch-action:pan-x}
+.piano-fullscreen .piano-scroll{touch-action:pan-x;overscroll-behavior-x:contain;scrollbar-width:none}
+.piano-fullscreen .piano-scroll::-webkit-scrollbar{display:none}
+.piano-fullscreen .piano-white span{font-size:20px;user-select:none}
+.piano-fullscreen .piano-head button{min-height:44px;padding:10px 16px}
+.piano-slide-control{display:flex;align-items:center;gap:14px;flex:none;padding:8px 12px 0;font-size:14px;font-weight:700;min-height:48px;user-select:none}
+.piano-slide-control input{flex:1;min-width:0;height:36px;accent-color:#2864e5;touch-action:none}
