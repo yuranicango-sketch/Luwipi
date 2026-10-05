@@ -13,5 +13,12 @@ function walk(path){for(const name of readdirSync(path,{withFileTypes:true})){co
 const source=readFileSync('assets/simple-core.js','utf8');const songsSource=source.slice(source.indexOf('const songs='),source.indexOf("let songKey="));
 const songs=vm.runInNewContext(songsSource+';songs');
 for(const [key,song] of Object.entries(songs))for(const hand of ['right','left'])for(const bar of song[hand]||[])assert(Math.abs(bar.reduce((sum,n)=>sum+n.d,0)-song.meter[0])<.001,key+' has invalid measure');
+const illustrated=Object.values(songs).filter(song=>song.illustrated);
+assert.equal(illustrated.length,5);
+for(const song of illustrated){
+ const notes=song.right.flat();
+ assert(notes.every(note=>typeof note.lyric==='string'&&note.lyric.length>0),song.title+' has missing syllables');
+ assert(new Set(notes.map(note=>note.n)).size<=5,song.title+' exceeds beginner range');
+}
 assert.equal(JSON.parse(readFileSync('data/requested-repertoire.json')).length,200);
 console.log('Simplified app: routes, deleted features, assets, JavaScript and score measures verified.');
