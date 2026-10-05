@@ -26,8 +26,8 @@
 /* Large touch targets with the full 88-key keyboard available horizontally. */
 .piano-fullscreen{--fullscreen-key-width:clamp(84px,12vw,120px)}
 .piano-fullscreen .piano-board{width:calc(var(--white-keys)*var(--fullscreen-key-width))!important;margin:0}
-.piano-fullscreen .piano-white{left:calc(var(--key-index)*var(--fullscreen-key-width))!important;width:var(--fullscreen-key-width);touch-action:pan-x}
-.piano-fullscreen .piano-black{left:calc((var(--key-index) - .3)*var(--fullscreen-key-width))!important;width:calc(var(--fullscreen-key-width)*.6);touch-action:pan-x}
+.piano-fullscreen .piano-white{left:calc(var(--key-index)*var(--fullscreen-key-width))!important;width:var(--fullscreen-key-width);touch-action:none}
+.piano-fullscreen .piano-black{left:calc((var(--key-index) - .3)*var(--fullscreen-key-width))!important;width:calc(var(--fullscreen-key-width)*.6);touch-action:none}
 .piano-fullscreen .piano-scroll{touch-action:pan-x;overscroll-behavior-x:contain;scrollbar-width:none}
 .piano-fullscreen .piano-scroll::-webkit-scrollbar{display:none}
 .piano-fullscreen .piano-white span{font-size:20px;user-select:none}

@@ -532,14 +532,15 @@ function buildPiano(){
     const play=()=>{k.classList.add('down');pianoNoteOn(k.dataset.pianoNote,.98)};
     const down=e=>{
       if(pianoDock.classList.contains('piano-fullscreen')&&e.pointerType==='touch'){
-        // Native horizontal panning wins; a note is played only after a stationary tap.
-        tap={id:e.pointerId,x:e.clientX,y:e.clientY};return;
+        // Separate horizontal dragging from a stationary tap in keyboard-only mode.
+        e.preventDefault();k.setPointerCapture?.(e.pointerId);
+        tap={id:e.pointerId,x:e.clientX,y:e.clientY,scroll:pianoDock.querySelector('.piano-scroll').scrollLeft,moved:false};return;
       }
       e.preventDefault();k.setPointerCapture?.(e.pointerId);play();
     };
-    const move=e=>{if(tap&&tap.id===e.pointerId&&(Math.abs(e.clientX-tap.x)>10||Math.abs(e.clientY-tap.y)>10))tap=null};
+    const move=e=>{if(!tap||tap.id!==e.pointerId)return;const dx=e.clientX-tap.x;if(Math.abs(dx)>10||Math.abs(e.clientY-tap.y)>10)tap.moved=true;if(tap.moved)pianoDock.querySelector('.piano-scroll').scrollLeft=tap.scroll-dx};
     const release=()=>{k.classList.remove('down');pianoNoteOff(k.dataset.pianoNote)};
-    const up=e=>{if(tap&&tap.id===e.pointerId){tap=null;play();setTimeout(release,180)}else release()};
+    const up=e=>{if(tap&&tap.id===e.pointerId&&!tap.moved){tap=null;play();setTimeout(release,180)}else{tap=null;release()}};
     const cancel=()=>{tap=null;release()};
     k.addEventListener('pointerdown',down);k.addEventListener('pointermove',move);k.addEventListener('pointerup',up);k.addEventListener('pointerleave',cancel);k.addEventListener('pointercancel',cancel);
 
