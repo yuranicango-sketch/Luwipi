@@ -531,8 +531,8 @@ function buildPiano(){
     let tap=null;
     const play=()=>{k.classList.add('down');pianoNoteOn(k.dataset.pianoNote,.98)};
     const down=e=>{
-      if(pianoDock.classList.contains('piano-fullscreen')&&e.pointerType==='touch'){
-        // Separate horizontal dragging from a stationary tap in keyboard-only mode.
+      if(e.pointerType==='touch'){
+        // Separate horizontal dragging from a stationary tap in both the reading piano and keyboard-only mode.
         e.preventDefault();k.setPointerCapture?.(e.pointerId);
         tap={id:e.pointerId,x:e.clientX,y:e.clientY,scroll:pianoDock.querySelector('.piano-scroll').scrollLeft,moved:false};return;
       }
