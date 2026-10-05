@@ -51,6 +51,6 @@ renderTasks();void openTask();
 })();
 (()=>{
  const score=document.getElementById('songSvg'),wrap=score.parentElement;
- function fit(){const [, ,width,height]=score.getAttribute('viewBox').split(' ').map(Number);if(wrap.classList.contains('whole-score')){score.style.width='100%';score.style.height='auto';return}const available=wrap.clientHeight;if(width&&height&&available){score.style.width=Math.ceil(width*Math.min(available/height,wrap.clientWidth/(wrap.clientWidth<650?550:920)))+'px';score.style.height=available+'px'}score.setAttribute('preserveAspectRatio','xMinYMid meet');if(document.getElementById('songView').classList.contains('active'))syncSongPosition('instant')}
+ function fit(){const [, ,width,height]=score.getAttribute('viewBox').split(' ').map(Number);if(wrap.classList.contains('whole-score')){score.style.width='100%';score.style.height=score.classList.contains('illustrated-score')?'100%':'auto';score.setAttribute('preserveAspectRatio','xMidYMid meet');return}const available=wrap.clientHeight;if(width&&height&&available){score.style.width=Math.ceil(width*Math.min(available/height,wrap.clientWidth/(wrap.clientWidth<650?550:920)))+'px';score.style.height=available+'px'}score.setAttribute('preserveAspectRatio','xMinYMid meet');if(document.getElementById('songView').classList.contains('active'))syncSongPosition('instant')}
  new ResizeObserver(fit).observe(wrap);new MutationObserver(fit).observe(score,{attributes:true,attributeFilter:['viewBox']});document.addEventListener('luwipi:navigate',()=>requestAnimationFrame(fit));
 })();

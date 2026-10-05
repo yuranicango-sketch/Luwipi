@@ -5,3 +5,21 @@
 .simple-workspace #songView .reader-top h2{display:none}.simple-workspace #songView .page-head strong{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;flex:1}.simple-workspace #songView .score-wrap.whole-score{overflow:auto}.simple-workspace #songView .score-wrap:not(.whole-score) #songSvg{min-width:0}.simple-workspace #songView .song-score-toolbar .transport{margin-left:auto}.simple-workspace #songView .reader-top{min-height:28px}
 @font-face{font-family:'Noto Music';src:url('/assets/fonts/noto-music.ttf') format('truetype');font-display:swap}.score-wrap svg text{font-family:'Noto Music',Manrope,system-ui,sans-serif}
 .reading-current-note{fill:#2864e5!important;stroke:#2864e5!important;filter:drop-shadow(0 0 5px #80b6ff)}
+/* The same note palette is used by the keyboard, score and illustrated songs. */
+.piano-white{background:linear-gradient(#fff 52%,var(--key-color));border-bottom:5px solid var(--key-color);color:#17243d}
+.piano-white.target{border-bottom:5px solid var(--key-color)}
+.piano-white.down,.piano-black.down{background:var(--key-color);box-shadow:inset 0 0 0 3px #17243d,0 0 14px var(--key-color)}
+.illustrated-note.note-current rect{stroke:#17243d;stroke-width:4;filter:brightness(1.12)}
+.illustrated-score .measure-current .measure-surface{fill:#f0f5ff}
+.piano-fullscreen-open{overflow:hidden}
+.simple-workspace .reader .piano-dock.piano-fullscreen,.piano-dock.piano-fullscreen{position:fixed!important;inset:0!important;z-index:95;display:flex;flex-direction:column;background:#fff;padding:max(12px,env(safe-area-inset-top)) max(8px,env(safe-area-inset-right)) max(12px,env(safe-area-inset-bottom)) max(8px,env(safe-area-inset-left));height:100dvh!important;width:100vw!important}
+.simple-workspace .reader .piano-fullscreen .piano-head,.piano-fullscreen .piano-head{display:flex;flex:none;min-height:48px;padding:0 8px 8px}
+.piano-fullscreen #closePiano{display:none}
+.piano-fullscreen .piano-scroll{flex:1;min-height:0;overflow-x:auto;overflow-y:hidden}
+.piano-fullscreen .piano-board{height:100%}
+.piano-fullscreen .piano-white{height:calc(100% - 8px)}
+.piano-fullscreen .piano-black{height:62%}
+.piano-fullscreen .piano-white span{font-size:16px;bottom:20px}
+.piano-fullscreen .piano-head button{font-size:14px}
+#songBlocks[aria-pressed=true]{background:#e1ebff}
+@media(max-height:500px) and (min-width:650px){.simple-workspace #songView .reader:has(.illustrated-score) .reader-top{display:none}.simple-workspace #songView .reader:has(.illustrated-score) .aid-row{position:static}.simple-workspace #songView .reader:has(.illustrated-score) .song-score-toolbar{display:none}}

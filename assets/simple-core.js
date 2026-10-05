@@ -198,20 +198,42 @@ const publicMelodies={
   [{n:'D4',d:2},{n:'G4',d:2}]]}
 };
 for(const [key,piece] of Object.entries(publicMelodies))songs[key]={...piece,left:piece.right.map(()=>[{n:'C3',d:4}])};
+// Original beginner songs: one syllable per note, four beats per measure.
+const illustratedMelodies={
+ 'little-sun':{title:'Bom dia, sol',icon:'☀️',lines:[['C4 D4 E4 E4','Bom di- a sol'],['E4 D4 C4:2','Vem bri- lhar'],['C4 D4 E4 G4','Lá no céu azul'],['E4 D4 C4:2','Vou can- tar']]},
+ 'little-train':{title:'O comboio das notas',icon:'🚂',lines:[['C4 C4 D4 D4','Chu chu lá vai'],['E4 E4 G4:2','O com- boio'],['G4 E4 D4 C4','So- be des- ce'],['D4 D4 C4:2','Sem pa- rar']]},
+ 'little-rain':{title:'Pinguinhos de chuva',icon:'🌧️',lines:[['E4 D4 C4:2','Pim pam pum'],['E4 D4 C4:2','Pim pam pum'],['C4 D4 E4 G4','Go- tas a cair'],['E4 D4 C4:2','Vou sor- rir']]},
+ 'little-cat':{title:'O gato e a lua',icon:'🐱',lines:[['C4 E4 G4:2','Mi- au miau'],['G4 E4 C4:2','Mi- au miau'],['D4 E4 F4 E4','Ga- to vê lua'],['D4 D4 C4:2','Vai so- nhar']]},
+ 'little-butterfly':{title:'Voa, borboleta',icon:'🦋',lines:[['C4 D4 E4 F4','Bor- bo- le- ta'],['G4 E4 G4:2','Vai vo- ar'],['G4 F4 E4 D4','Pe- lo jar- dim'],['E4 D4 C4:2','Vem dan- çar']]}
+};
+for(const [key,piece] of Object.entries(illustratedMelodies)){
+ const right=piece.lines.map(([notes,words])=>{const syllables=words.split(' ');return notes.split(' ').map((token,i)=>{const [n,d]=token.split(':');return {n,d:Number(d)||1,lyric:syllables[i]}})});
+ songs[key]={title:piece.title,icon:piece.icon,tempo:80,meter:[4,4],illustrated:true,right,left:[],description:'Canção original Luwipi · uma sílaba por nota'};
+}
+let songIllustrated=true;
+function illustratedMeasure(m,idx,x0,w,top,meter,transpose){
+ let out='',beat=0;const usable=w-24;
+ m.forEach((item,i)=>{
+  const n=transposeNote(item.n,transpose),p=parsePitch(n),y=top+65-(dia(n)-dia(transposeNote('C4',transpose)))*16;
+  const x=x0+12+beat/meter[0]*usable,width=item.d/meter[0]*usable-5;
+  out+=`<g id="R-${idx}-${i}" class="illustrated-note" data-note="${n}"><rect x="${x}" y="${y}" width="${width}" height="38" rx="3" fill="${colors[p.l]}"/><text x="${x+width/2}" y="${y+24}" text-anchor="middle" font-size="24" font-weight="700" fill="#17243d">${item.lyric}</text></g>`;
+  beat+=item.d;
+ });return out;
+}
 let songKey='mary',songVersionKey='right',songPage=0,songMode={colors:false,characters:false,names:false},tempo=88,metro=true,timers=[],audioCtx=null,songTranspose=0;
 let songLayoutSize=4;
 function songPageSize(){return 2}
 let songFullScore=false;
 const songScoreWrap=document.querySelector('#songView .score-wrap');
 function syncSongPosition(behavior='instant'){
-  if(songFullScore)return;
+  if(songFullScore||(songs[songKey].illustrated&&songIllustrated))return;
   const width=Number(songSvg.getAttribute('viewBox')?.split(' ')[2])||920;
   const rendered=songSvg.getBoundingClientRect().width;
   const unit=rendered*(362.5/width);
   songScoreWrap.scrollTo({left:Math.max(0,Math.floor(songPage*2)*unit),behavior});
 }
 function syncSongPositionLabel(){
-  if(songFullScore)return;
+  if(songFullScore||(songs[songKey].illustrated&&songIllustrated))return;
   const width=Number(songSvg.getAttribute('viewBox')?.split(' ')[2])||920;
   const unit=songSvg.getBoundingClientRect().width*(362.5/width);
   if(!unit)return;
@@ -221,7 +243,7 @@ function syncSongPositionLabel(){
   syncPianoTargets();
 }
 songScoreWrap.addEventListener('scroll',syncSongPositionLabel,{passive:true});
-document.querySelectorAll('[data-song]').forEach(b=>b.onclick=()=>{songKey=b.dataset.song;songVersionKey=b.dataset.version;songPage=0;tempo=songs[songKey].tempo;songTranspose=0;songFullScore=false;songScoreWrap.classList.remove('whole-score');songScoreModeButton.textContent='▤ Partitura inteira';renderSong();songScoreWrap.scrollLeft=0;nav('song')});
+document.querySelectorAll('[data-song]').forEach(b=>b.onclick=()=>{songKey=b.dataset.song;songVersionKey=b.dataset.version;songPage=0;tempo=songs[songKey].tempo;songTranspose=0;songIllustrated=true;songFullScore=false;songScoreWrap.classList.remove('whole-score');songScoreModeButton.textContent='▤ Partitura inteira';renderSong();songScoreWrap.scrollLeft=0;nav('song')});
 function validMeasure(m,meter){return Math.abs(m.reduce((s,x)=>s+x.d,0)-meter[0])<.001}
 function drawMeasure(m,idx,x0,w,top,clefKey,meter,mode,transpose=0,keySignature='C'){
   let o=staffLines(x0,x0+w,top),bottom=top+48,beat=0,eighth=[],groups=[],padL=30,padR=22,usable=w-padL-padR;
@@ -238,26 +260,34 @@ function drawMeasure(m,idx,x0,w,top,clefKey,meter,mode,transpose=0,keySignature=
   return o+`<line x1="${x0+w}" y1="${top}" x2="${x0+w}" y2="${top+48}" stroke="#454950" stroke-width="2"/>`
 }
 function renderSong(){
-  const s=songs[songKey],both=songVersionKey==='both',count=s.right.length,full=songFullScore;
-  const left=155,mw=362.5,gap=both?270:200,systems=full?Math.ceil(count/2):1;
-  const W=full?920:left+count*mw+35,H=full?90+systems*gap:(both?300:210);
+  const s=songs[songKey],both=songVersionKey==='both',count=s.right.length,full=songFullScore||(s.illustrated&&songIllustrated);
+  const illustrated=!!s.illustrated&&songIllustrated;
+  document.getElementById('songBlocks')?.classList.toggle('hidden',!s.illustrated);
+  document.getElementById('songBlocks')?.setAttribute('aria-pressed',String(illustrated));
+  songSvg.classList.toggle('illustrated-score',illustrated);
+  songScoreWrap.classList.toggle('whole-score',full);
+  songScoreModeButton.classList.toggle('hidden',illustrated);
+  document.querySelector('#songView .pager').classList.toggle('hidden',illustrated);
+  const blocksPerRow=illustrated&&matchMedia('(max-height:500px) and (min-width:650px)').matches?count:1;
+  const left=illustrated?20:155,mw=362.5,gap=illustrated?120:both?270:200,systems=full?(illustrated?Math.ceil(count/blocksPerRow):Math.ceil(count/2)):1;
+  const W=full?(illustrated?left+mw*blocksPerRow+20:920):left+count*mw+35,H=full?(illustrated?20:90)+systems*gap:(both?300:210);
   songTitle.textContent=s.title;songHeading.textContent=s.title;songVersion.textContent=both?'Duas mãos':'Mão direita';
   songMeta.textContent=`${s.meter[0]}/${s.meter[1]} · ${both?'Clave de Sol + Clave de Fá':'Clave de Sol'}`;
   songHint.textContent=s.description||'Desliza a partitura para avançar.';
   tempoLabel.textContent=`♩ = ${tempo}`;
   transposeLabel.textContent=`Tom: ${transposeKeyName(songTranspose+(s.keyOffset||0))} ${songTranspose===0?'':`(${songTranspose>0?'+':''}${songTranspose})`}`;
-  songPageLabel.textContent=full?`Partitura inteira · ${count} compassos`:`Compassos ${songPage*2+1}–${Math.min(songPage*2+2,count)} de ${count}`;
+  songPageLabel.textContent=illustrated?'Blocos e sílabas · 4 frases':full?`Partitura inteira · ${count} compassos`:`Compassos ${songPage*2+1}–${Math.min(songPage*2+2,count)} de ${count}`;
   let out=`<rect width="${W}" height="${H}" fill="#fff"/>`;
   for(let sys=0;sys<systems;sys++){
-    const tt=90+sys*gap,bt=tt+92;
-    out+=clef('treble',64,tt-4)+(songKey==='minuet'&&songTranspose===0?`<text x="106" y="${tt+8}" font-size="29" fill="#34373d">♯</text>`:'')+timeSig(s.meter,128,tt);
+    const tt=(illustrated?50:90)+sys*gap,bt=tt+92;
+    if(!illustrated)out+=clef('treble',64,tt-4)+(songKey==='minuet'&&songTranspose===0?`<text x="106" y="${tt+8}" font-size="29" fill="#34373d">♯</text>`:'')+timeSig(s.meter,128,tt);
     if(both)out+=clef('bass',68,bt-4)+(songKey==='minuet'&&songTranspose===0?`<text x="106" y="${bt+20}" font-size="29" fill="#34373d">♯</text>`:'')+timeSig(s.meter,128,bt)+`<line x1="58" y1="${tt}" x2="58" y2="${bt+48}" stroke="#34373d" stroke-width="2"/>`;
-    const start=full?sys*2:0,end=full?Math.min(start+2,count):count;
+    const start=full?sys*(illustrated?blocksPerRow:2):0,end=full?Math.min(start+(illustrated?blocksPerRow:2),count):count;
     for(let bi=start;bi<end;bi++){
       const x=left+(full?bi-start:bi)*mw;
       if(!validMeasure(s.right[bi],s.meter))console.warn('Compasso inválido RH',bi+1);
       out+=`<g class="song-measure" data-measure="${bi}" role="button" tabindex="0" aria-label="Ouvir compasso ${bi+1}"><rect class="measure-surface" x="${x}" y="${tt-22}" width="${mw}" height="${both?190:100}" rx="10"/>`;
-      out+=`<text x="${x+6}" y="${tt-11}" font-size="10" font-weight="800" fill="#8a8e97">${bi+1}</text>`+drawMeasure(s.right[bi],bi,x,mw,tt,'treble',s.meter,songMode,songTranspose,songKey==='minuet'&&songTranspose===0?'G':'C');
+      out+=`<text x="${x+6}" y="${tt-11}" font-size="10" font-weight="800" fill="#8a8e97">${bi+1}</text>`+(illustrated?illustratedMeasure(s.right[bi],bi,x,mw,tt-40,s.meter,songTranspose):drawMeasure(s.right[bi],bi,x,mw,tt,'treble',s.meter,songMode,songTranspose,songKey==='minuet'&&songTranspose===0?'G':'C'));
       if(both&&s.left[bi]){if(!validMeasure(s.left[bi],s.meter))console.warn('Compasso inválido LH',bi+1);out+=drawMeasure(s.left[bi],bi,x,mw,bt,'bass',s.meter,songMode,songTranspose,songKey==='minuet'&&songTranspose===0?'G':'C')}
       out+='</g>';
     }
@@ -267,7 +297,7 @@ function renderSong(){
   songSvg.innerHTML=out;
   songPrev.disabled=songPage===0;songNext.disabled=songPage>=Math.ceil(count/2)-1;
   songLegend.innerHTML=legendHtml();songLegend.classList.toggle('hidden',!songMode.characters);
-  document.querySelectorAll('[data-song-aid]').forEach(b=>b.classList.toggle('active',(b.dataset.songAid==='normal'&&!songMode.colors&&!songMode.characters&&!songMode.names)||songMode[b.dataset.songAid]));
+  document.querySelectorAll('[data-song-aid]').forEach(b=>b.classList.toggle('active',(b.dataset.songAid==='normal'&&!illustrated&&!songMode.colors&&!songMode.characters&&!songMode.names)||songMode[b.dataset.songAid]));
   songLayoutSize=2;syncPianoTargets();
 }
 const songScoreModeButton=document.getElementById('songScoreMode');
@@ -278,7 +308,7 @@ songScoreModeButton.onclick=()=>{
   songScoreModeButton.setAttribute('aria-pressed',String(songFullScore));
   renderSong();if(!songFullScore)requestAnimationFrame(()=>syncSongPosition('instant'));
 };
-document.querySelectorAll('[data-song-aid]').forEach(b=>b.onclick=()=>{const a=b.dataset.songAid;if(a==='normal')songMode={colors:false,characters:false,names:false};else{songMode[a]=!songMode[a];if(a==='characters'&&songMode[a])songMode.names=false;if(a==='names'&&songMode[a])songMode.characters=false}renderSong()});
+document.querySelectorAll('[data-song-aid]').forEach(b=>b.onclick=()=>{songIllustrated=false;const a=b.dataset.songAid;if(a==='normal')songMode={colors:false,characters:false,names:false};else{songMode[a]=!songMode[a];if(a==='characters'&&songMode[a])songMode.names=false;if(a==='names'&&songMode[a])songMode.characters=false}renderSong()});
 songPrev.onclick=()=>{songPage=Math.max(0,songPage-1);syncSongPosition()};songNext.onclick=()=>{songPage=Math.min(Math.ceil(songs[songKey].right.length/2)-1,songPage+1);syncSongPosition()};
 tempoDown.onclick=()=>{tempo=Math.max(50,tempo-4);tempoLabel.textContent=`♩ = ${tempo}`};tempoUp.onclick=()=>{tempo=Math.min(160,tempo+4);tempoLabel.textContent=`♩ = ${tempo}`};metroBtn.onclick=()=>{metro=!metro;metroBtn.classList.toggle('active',metro);metroBtn.textContent=`Metrónomo · ${metro?'ON':'OFF'}`};
 transposeDown.onclick=()=>{stopPlay();songTranspose=Math.max(-5,songTranspose-1);renderSong()};transposeUp.onclick=()=>{stopPlay();songTranspose=Math.min(5,songTranspose+1);renderSong()};
@@ -465,7 +495,7 @@ function playSongRange(first,last){
   }
   timers.push(setTimeout(stopPlay,elapsed+150));
 }
-playBtn.onclick=()=>{if(playBtn.textContent.includes('Parar')){stopPlay();return}playSongRange(songPage*2,songs[songKey].right.length)};
+playBtn.onclick=()=>{if(playBtn.textContent.includes('Parar')){stopPlay();return}playSongRange(songs[songKey].illustrated&&songIllustrated?0:songPage*2,songs[songKey].right.length)};
 document.addEventListener('keydown',event=>{if(event.code!=='Space'||event.repeat||!views.song.classList.contains('active')||event.target.closest('button,input,textarea,select,[contenteditable],[data-measure]'))return;event.preventDefault();playBtn.click()});
 songSvg.addEventListener('click',event=>{const group=event.target.closest('[data-measure]');if(group)playSongRange(+group.dataset.measure,+group.dataset.measure+1)});
 songSvg.addEventListener('keydown',event=>{if(event.key!=='Enter'&&event.key!==' ')return;const group=event.target.closest('[data-measure]');if(group){event.preventDefault();playSongRange(+group.dataset.measure,+group.dataset.measure+1)}});
@@ -492,12 +522,12 @@ const noteColorByLetter=n=>colors[parsePitch(n)?.l||'C'];
 function buildPiano(){
   const whites=[];for(let octave=0;octave<=8;octave++)for(const l of ['C','D','E','F','G','A','B']){const n=l+octave,m=noteMidi(n);if(m>=21&&m<=108)whites.push(n)}
   const W=46;pianoBoard.style.width=(whites.length*W)+'px';
-  let h='';whites.forEach((n,i)=>{h+=`<button class="piano-white" data-piano-note="${n}" style="left:${i*W}px;--key-color:${noteColorByLetter(n)}"><span>${names[n[0]]}</span></button>`});
+  let h='';whites.forEach((n,i)=>{h+=`<button class="piano-white" data-piano-note="${n}" aria-label="${names[n[0]]} ${n.slice(1)}" style="left:${i*W}px;--key-color:${noteColorByLetter(n)}"><span>${names[n[0]]}</span></button>`});
   const blackAfter={C:'C#',D:'D#',F:'F#',G:'G#',A:'A#'};
   whites.forEach((n,i)=>{const l=n[0],o=n.slice(1);if(blackAfter[l]){const bn=blackAfter[l]+o;if(noteMidi(bn)>108)return;h+=`<button class="piano-black" data-piano-note="${bn}" style="left:${i*W+W-14}px;--key-color:${noteColorByLetter(n)}" aria-label="${bn}"></button>`}});
   pianoBoard.innerHTML=h;
   pianoBoard.querySelectorAll('[data-piano-note]').forEach(k=>{
-    const down=e=>{e.preventDefault();const n=k.dataset.pianoNote;k.classList.add('down');pianoNoteOn(n,.98);};
+    const down=e=>{e.preventDefault();k.setPointerCapture?.(e.pointerId);const n=k.dataset.pianoNote;k.classList.add('down');pianoNoteOn(n,.98);};
     const up=()=>{const n=k.dataset.pianoNote;k.classList.remove('down');pianoNoteOff(n)};
     k.addEventListener('pointerdown',down);k.addEventListener('pointerup',up);k.addEventListener('pointerleave',up);k.addEventListener('pointercancel',up);
   });
