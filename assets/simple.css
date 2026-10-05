@@ -26,11 +26,16 @@
 /* Large touch targets with the full 88-key keyboard available horizontally. */
 .piano-fullscreen{--fullscreen-key-width:clamp(84px,12vw,120px)}
 .piano-fullscreen .piano-board{width:calc(var(--white-keys)*var(--fullscreen-key-width))!important;margin:0}
-.piano-fullscreen .piano-white{left:calc(var(--key-index)*var(--fullscreen-key-width))!important;width:var(--fullscreen-key-width);touch-action:pan-x}
-.piano-fullscreen .piano-black{left:calc((var(--key-index) - .3)*var(--fullscreen-key-width))!important;width:calc(var(--fullscreen-key-width)*.6);touch-action:pan-x}
+.piano-fullscreen .piano-white{left:calc(var(--key-index)*var(--fullscreen-key-width))!important;width:var(--fullscreen-key-width);touch-action:none}
+.piano-fullscreen .piano-black{left:calc((var(--key-index) - .3)*var(--fullscreen-key-width))!important;width:calc(var(--fullscreen-key-width)*.6);touch-action:none}
 .piano-fullscreen .piano-scroll{touch-action:pan-x;overscroll-behavior-x:contain;scrollbar-width:none}
 .piano-fullscreen .piano-scroll::-webkit-scrollbar{display:none}
 .piano-fullscreen .piano-white span{font-size:20px;user-select:none}
 .piano-fullscreen .piano-head button{min-height:44px;padding:10px 16px}
-.piano-slide-control{display:flex;align-items:center;gap:14px;flex:none;padding:8px 12px 0;font-size:14px;font-weight:700;min-height:48px;user-select:none}
-.piano-slide-control input{flex:1;min-width:0;height:36px;accent-color:#2864e5;touch-action:none}
+/* Keyboard-only mode: every pixel belongs to the keys. Browser Back / Escape exits. */
+.simple-workspace .reader .piano-fullscreen .piano-head,.piano-fullscreen .piano-head{display:none!important}
+.simple-workspace .reader .piano-dock.piano-fullscreen,.piano-dock.piano-fullscreen{padding:0!important}
+.piano-fullscreen .piano-white{height:100%;border-radius:0}
+.piano-fullscreen .piano-black{border-radius:0 0 6px 6px}
+.piano-fullscreen .piano-scroll{width:100%;height:100%;flex:1}
+@media(pointer:coarse),(max-width:1100px){#readingImmersive{display:none!important}}
